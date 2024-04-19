@@ -11,7 +11,7 @@ enabled = true
 [project]
 name = "EasyScience"
 dynamic = ["version"]
-description = "Core foundation of the EasyScience family of projects, providing the building blocks for libraries and applications"
+description = "Generic logic for easyScience libraries"
 readme = "README.md"
 authors = [{name = "EasyScience contributors"}]
 license = { file = "LICENSE" }
@@ -30,31 +30,34 @@ classifiers = [
 ]
 requires-python = ">=3.8,<3.12"
 dependencies = [
-    "easyScienceCore>=0.3.1",
-    "scipp>=23.12.0",
+    "asteval",
+    "bumps",
+    "DFO-LS",
+    "lmfit",
+    "numpy",
+    "pint",
+    "uncertainties",
+    "xarray"
 ]
 
 [project.optional-dependencies]
 dev = [
     "build",
-    "codecov>=2.1.11",
-    "coverage",
-    "coveralls",
-    "flake8>=6.0.0",
-    "ipykernel",
-    "jupyter>=1.0.0",
-    "jupyterlab",
-    "plopp",
-    "pytest>=5.2",
-    "pytest-cov>=3.0.0",
+    "codecov",
+    "flake8",
+    "matplotlib",
+    "pytest",
+    "pytest-cov",
     "ruff",
-    "toml>=0.10",
-    "yapf>=0.31.0",
+    "tox-gh-actions"
 ]
 docs = [
-    "nbsphinx",
-    "sphinx_book_theme",
-    "sphinx_autodoc_typehints",
+    "doc8",
+    "readme-renderer",
+    "Sphinx",
+    "sphinx-rtd-theme",
+    "sphinx-autodoc-typehints", 
+    "sphinx-gallery",
     "toml"
 ]
 
@@ -85,6 +88,8 @@ repo = "easyscience"
 line-length = 127
 exclude = [
     "docs",
+    "examples_old",
+    "tests"
 ]
 
 [tool.ruff.format]

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg viewBox="0 0 189 189" width="189" height="189" style="enable-background:new 0 0 189 189;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style type="text/css">
+	.st0{fill:#848688;}
+	.st1{font-family:'Nunito-Light';}
+	.st2{font-size:156px;}
+	.st3{font-family:'Nunito-SemiBold';}
+	.st4{fill:#009CD3;}
+	.st5{fill:#00B4D5;stroke:#A3D9EA;stroke-width:6;stroke-miterlimit:1.1061;}
+	.st6{fill:#33CCFF;stroke:#A3D9EA;stroke-width:6;stroke-miterlimit:1.1061;}
+	.st7{fill:#DBEFF8;stroke:#A3D9EA;stroke-width:6;stroke-miterlimit:1.1061;}
+	.st8{fill:#009CD3;stroke:#A3D9EA;stroke-width:6;stroke-miterlimit:1.1061;}
+</style>
+  </defs>
+  <g>
+    <circle class="st4" cx="94.5" cy="94.5" r="94.5"/>
+    <rect x="28.82" y="28.82" transform="matrix(0.707107, -0.707107, 0.707107, 0.707107, -36.260201, 94.5)" class="st5" width="127.279" height="127.279" style="stroke-miterlimit: 2;"/>
+    <rect x="28.82" y="28.82" transform="matrix(0, 1, -1, 0, 186.974869, 2.033016)" class="st6" width="127.281" height="127.281" style="stroke-miterlimit: 2;"/>
+    <circle class="st7" cx="94.798" cy="94.79" r="60.099"/>
+    <circle class="st8" cx="94.01" cy="94.986" r="31.869"/>
+  </g>
+</svg>

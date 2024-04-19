@@ -37,6 +37,6 @@ jobs:
         pytest ../
     - uses: actions/upload-artifact@v4
       with:
-        name: Upload - Python ${{ matrix.python-version }}
+        name: EasyScience - Python ${{ matrix.python-version }}
         path: ${{ github.workspace }}/dist/*
         overwrite: true
