@@ -1,0 +1,42 @@
+# This workflow will for a variety of Python versions
+# - build a python package
+# - run tests on the produced package
+# - upload the package as an artifact
+#
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Create Python Package
+
+on:
+  push:
+    branches: [ main, pre-release ]
+  pull_request:
+    branches: [ main, pre-release ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+    if: "!contains(github.event.head_commit.message, '[ci skip]')"
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies and build
+      run: |
+        pip install -e '.[dev]'
+        python -m build
+    - name: Test with pytest
+      run: |
+        cd ./dist
+        pytest ../
+    - uses: actions/upload-artifact@v4
+      with:
+        name: Upload - Python ${{ matrix.python-version }}
+        path: ${{ github.workspace }}/dist/*
+        overwrite: true

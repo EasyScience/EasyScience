@@ -1,0 +1,39 @@
+# This workflow will
+# - build distribution package, pure python wheel
+# - publish produced distribution package to PyPI
+#
+# For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
+
+name: Publish Python Package
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on tag creation
+  push:
+    tags:
+      - 'v*'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: 3.9
+
+    - name: Install dependencies and build
+      run: |
+        pip install -e '.[dev]'
+        python -m build
+
+    - name: Publish distribution 📦 to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_PASSWORD }}

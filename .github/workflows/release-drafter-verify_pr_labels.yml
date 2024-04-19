@@ -1,0 +1,22 @@
+# This workflow will be verify that all PRs have at
+# least on the label: 'bugs', 'enhancement' before
+# they can be merged.
+
+name: Verify PR labels
+on:
+  pull_request_target:
+    types: [opened, labeled, unlabeled, synchronize]
+
+jobs:
+  check_pr_labels:
+    runs-on: ubuntu-latest
+    name: Verify that the PR has a valid label
+    steps:
+    - name: Verify PR label action
+      uses: jesusvasquez333/verify-pr-label-action@v1.4.0
+      id: verify-pr-label
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        valid-labels: chore, fix, bugfix, bug, enhancement, feature, dependencies, documentation
+        pull-request-number: ${{ github.event.pull_request.number }}
+        disable-reviews: false
