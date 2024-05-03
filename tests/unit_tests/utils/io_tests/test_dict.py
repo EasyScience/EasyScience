@@ -211,7 +211,7 @@ def test_custom_class_full_encode_with_numpy():
             self.b = b
     # Same as in __init__.py for easyscience
     try:
-        version = metadata.version(__package__ or __name__)
+        version = metadata.version('easyscience')  # 'easyscience' is the name of the package in 'setup.py
     except metadata.PackageNotFoundError:
         version = '0.0.0'
 

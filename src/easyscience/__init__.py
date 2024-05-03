@@ -10,11 +10,7 @@ import numpy as np  # noqa: F401  This is used in the other codebases that uses 
 import pint
 
 from easyscience.Objects.Borg import Borg
-
-try:
-    __version__ = metadata.version(__package__ or __name__)
-except metadata.PackageNotFoundError:
-    __version__ = '0.0.0'
+from easyscience.__version__ import __version__
 
 default_fitting_engine = 'lmfit'
 
