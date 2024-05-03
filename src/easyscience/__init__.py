@@ -4,13 +4,11 @@
 
 __author__ = 'github.com/wardsimon'
 
-from importlib import metadata
-
 import numpy as np  # noqa: F401  This is used in the other codebases that uses easyscience
 import pint
 
+from easyscience.__version__ import __version__ as __version__
 from easyscience.Objects.Borg import Borg
-from easyscience.__version__ import __version__
 
 default_fitting_engine = 'lmfit'
 
