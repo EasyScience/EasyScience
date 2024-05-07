@@ -9,7 +9,7 @@ build-backend = "hatchling.build"
 enabled = true
 
 [project]
-name = "EasyScience"
+name = "easyscience"
 dynamic = ["version"]
 description = "Generic logic for easyScience libraries"
 readme = "README.md"
@@ -81,7 +81,7 @@ packages = ["src/easyscience"]
 source = ["src/easyscience"]
 
 [tool.github.info]
-organization = 'easyScience'
+organization = 'EasyScience'
 repo = "easyscience"
 
 [tool.ruff]
