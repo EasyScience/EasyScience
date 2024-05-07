@@ -21,7 +21,7 @@ import os
 import sys
 # import toml
 from pathlib import Path
-# import easyscience
+import easyscience
 # sys.path.insert(0, os.path.abspath('.'))
 main_root = Path(__file__).parents[2]
 sys.path.append(str(main_root))
@@ -46,8 +46,7 @@ author = "EasyScience Contributors"
 #version = project_info['project']['version'] 
 # The full version, including alpha/beta/rc tags.
 #version = project_info['project']['version']
-# version = easyscience.__version__
-version = "0.6.0" # hardcoded for testing
+version = easyscience.__version__
 
 
 intersphinx_mapping = {
