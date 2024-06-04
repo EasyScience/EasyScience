@@ -1,0 +1,119 @@
+
+## General
+- Active branches
+-- new_job
+
+- Already using project template
+
+
+## Documentation does not seem to work [<10m]
+- https://easyscience.github.io/EasyScience
+-- https://easyscience.github.io/EasyCore/
+- Are there any tutorials ?
+-- Summerschool tutorials
+--- Would require fake data
+-- Start from examples_old folder convert to new tutorials
+- Developer and User Documentation
+-- Static analysis of the code
+-- Web page with developer documentation
+
+
+## Dictionary, important for us to the same page to be able to discuss [<30m]
+- Theory
+-- Ideal representation of the full physical setup
+-- Described by a series of free parameters that can be tuned, examples
+--- Material properies
+--- Thickness
+--- Roughness
+
+
+- Experiment
+-- Holds data that are recorded when undertaking an experiment 
+-- Measured data, fixed
+-- Corrected by a series of fixed and free parameters, examples
+--- Background
+--- Scale
+--- Resolution 
+
+
+- Fitter
+-- From Theory it knows the function of free parameter (Calculator)
+-- Target curve from Experiment (Measurments)
+-- The free parameters can come from both
+--- Theory
+--- Experiment
+-- Minimizer is utilized to the obtain function that fits the taget curve by tuning the free parameters
+
+
+- Job / Computation
+-- Specific mathematical model reproducing a physical phenomenon (Calculator)
+--- Parameters from Theory
+--- Parameters from Experiment
+-- Functionality to respond to the result from the calculator (Fitter)
+--- Find parameter values for which Theory best matches measurements from Experiment
+
+
+- Parameter
+-- Has a unit
+--- Unit can be unitless
+-- A value that needs to be set before a Job can start
+-- A variable value that will be determined when a Job is done
+--- Has a valid range
+
+
+- Constrains
+-- Valid range for a Parameter
+-- Dependency between two or more Paramters
+
+
+Third party codes
+
+- Calculators  (Factory)
+-- A factory that provides the requested Calculator
+--- Provides a Calculator that is an initialized Calculation engine that can be used by the methods defined in the Calculation Wrapper
+--- For a sample it can simulate a correpsonding measurement 
+-- Calculator (Wrapper / Interface)
+--- Interface definition between our domain model and the third-party libraries  
+--- Enable our code to utilize various third-party libraries
+---- Translate / wraps our domain model to a format that can be passed to the calculation engine
+-- Calculator Engine (Third party code)
+--- Can simulate an experimental measurement from a sample and eventual non-idealities
+--- Raw third-party library
+--- Python
+
+- Minimizers (Factory)
+-- A factory that provides the requested Minimizer
+-- Minimizer (Wrapper / Interface)
+--- Interface definition between our domain model and the third-party libraries  
+--- Enable our code to utilize various third-party libraries
+---- Translate / wraps our domain model to a format that can be passed to the calculation engine
+-- Minimizer Engines (Third party code)
+--- Can determine a local minimum for the difference between a function (fn[p]) and list of known function values (y0)
+---- For a known set of elements (x0) we known the function values (y0)
+---- We have a functions (fn) which shape is determined by its parameters (p)
+---- Minimzer determines the p values, where the sum over all x0 the difference between fn[p] - y0 is smallest   
+--- Raw third-party library
+--- Python
+
+
+- Is there a term for the collection of samples that share the same free parameters? 
+
+
+## Key functionality [<30m]
+- Support for undo / redo in the App
+- Fitting
+-- Allow for the usage of various minimization engines
+-- Optional to support calculation engines provide fitting
+-- Contraints 
+--- Between paramters in different models, example could be a sample with H2O and the same sample with D2O
+- Calculators
+-- Allow for the usage of various calculation engines
+- Ability to save and load: sample, calculator, and experiment to disk
+
+
+
+## Dive into code base [~60m]
+- Where is the key functionality implemented
+
+
+## Conclusions [10 min]
