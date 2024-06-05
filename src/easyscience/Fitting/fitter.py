@@ -21,8 +21,10 @@ import numpy as np
 import easyscience.Fitting.minimizers as minimizers
 from easyscience import default_fitting_engine
 
+from .minimizers import FittingTemplate
+
 _C = TypeVar('_C', bound=ABCMeta)
-_M = TypeVar('_M', bound=minimizers.FittingTemplate)
+_M = TypeVar('_M', bound=FittingTemplate)
 
 if TYPE_CHECKING:
     from easyscience.Utils.typing import B
@@ -56,7 +58,7 @@ class Fitter:
 
         fit_methods = [
             x
-            for x, y in minimizers.FittingTemplate.__dict__.items()
+            for x, y in FittingTemplate.__dict__.items()
             if (isinstance(y, FunctionType) and not x.startswith('_')) and x != 'fit'
         ]
         for method_name in fit_methods:

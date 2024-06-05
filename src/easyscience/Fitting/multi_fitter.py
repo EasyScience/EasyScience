@@ -15,13 +15,13 @@ from typing import TypeVar
 
 import numpy as np
 
-import easyscience.Fitting.minimizers as minimizers
 from easyscience.Objects.Groups import BaseCollection
 
 from .fitter import Fitter
+from .minimizers import FittingTemplate
 
 _C = TypeVar('_C', bound=ABCMeta)
-_M = TypeVar('_M', bound=minimizers.FittingTemplate)
+_M = TypeVar('_M', bound=FittingTemplate)
 
 if TYPE_CHECKING:
     from easyscience.Utils.typing import B
