@@ -2,8 +2,8 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
 
-__author__ = "github.com/wardsimon"
-__version__ = "0.1.0"
+__author__ = 'github.com/wardsimon'
+__version__ = '0.1.0'
 
 import inspect
 from typing import List
@@ -16,12 +16,12 @@ from lmfit import Parameter as lmParameter
 from lmfit import Parameters as lmParameters
 from lmfit.model import ModelResult
 
-from easyscience.Fitting.fitting_template import Callable
-from easyscience.Fitting.fitting_template import FitError
-from easyscience.Fitting.fitting_template import FitResults
-from easyscience.Fitting.fitting_template import FittingTemplate
-from easyscience.Fitting.fitting_template import NameConverter
-from easyscience.Fitting.fitting_template import np
+from .fitting_template import Callable
+from .fitting_template import FitError
+from .fitting_template import FitResults
+from .fitting_template import FittingTemplate
+from .fitting_template import NameConverter
+from .fitting_template import np
 
 
 class lmfit(FittingTemplate):  # noqa: S101
@@ -31,7 +31,7 @@ class lmfit(FittingTemplate):  # noqa: S101
     """
 
     property_type = lmParameter
-    name = "lmfit"
+    name = 'lmfit'
 
     def __init__(self, obj, fit_function: Callable):
         """
@@ -60,8 +60,8 @@ class lmfit(FittingTemplate):  # noqa: S101
         # Create the model
         model = lmModel(
             fit_func,
-            independent_vars=["x"],
-            param_names=["p" + str(key) for key in pars.keys()],
+            independent_vars=['x'],
+            param_names=['p' + str(key) for key in pars.keys()],
         )
         # Assign values from the `Parameter` to the model
         for name, item in pars.items():
@@ -69,9 +69,7 @@ class lmfit(FittingTemplate):  # noqa: S101
                 value = item.value
             else:
                 value = item.raw_value
-            model.set_param_hint(
-                "p" + str(name), value=value, min=item.min, max=item.max
-            )
+            model.set_param_hint('p' + str(name), value=value, min=item.min, max=item.max)
 
         # Cache the model for later reference
         self._cached_model = model
@@ -127,12 +125,10 @@ class lmfit(FittingTemplate):  # noqa: S101
         # f = (x, a=1, b=2)...
         # Where we need to be generic. Note that this won't hold for much outside of this scope.
         params = [
-            inspect.Parameter(
-                "x", inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=inspect._empty
-            ),
+            inspect.Parameter('x', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=inspect._empty),
             *[
                 inspect.Parameter(
-                    "p" + str(name),
+                    'p' + str(name),
                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
                     annotation=inspect._empty,
                     default=parameter.raw_value,
@@ -180,7 +176,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         """
         default_method = {}
         if method is not None and method in self.available_methods():
-            default_method["method"] = method
+            default_method['method'] = method
 
         if weights is None:
             weights = 1 / np.sqrt(np.abs(y))
@@ -191,7 +187,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         if minimizer_kwargs is None:
             minimizer_kwargs = {}
         else:
-            minimizer_kwargs = {"fit_kws": minimizer_kwargs}
+            minimizer_kwargs = {'fit_kws': minimizer_kwargs}
         minimizer_kwargs.update(engine_kwargs)
 
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
@@ -204,9 +200,7 @@ class lmfit(FittingTemplate):  # noqa: S101
             if model is None:
                 model = self.make_model()
 
-            model_results = model.fit(
-                y, x=x, weights=weights, **default_method, **minimizer_kwargs, **kwargs
-            )
+            model_results = model.fit(y, x=x, weights=weights, **default_method, **minimizer_kwargs, **kwargs)
             self._set_parameter_fit_result(model_results, stack_status)
             results = self._gen_fit_results(model_results)
         except Exception as e:
@@ -227,9 +221,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         if par_list is None:
             # Assume that we have a BaseObj for which we can obtain a list
             par_list = self._object.get_fit_parameters()
-        pars_obj = lmParameters().add_many(
-            [self.__class__.convert_to_par_object(obj) for obj in par_list]
-        )
+        pars_obj = lmParameters().add_many([self.__class__.convert_to_par_object(obj) for obj in par_list])
         return pars_obj
 
     @staticmethod
@@ -241,7 +233,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         :rtype: lmParameter
         """
         return lmParameter(
-            "p" + str(NameConverter().get_key(obj)),
+            'p' + str(NameConverter().get_key(obj)),
             value=obj.raw_value,
             vary=not obj.fixed,
             min=obj.min,
@@ -266,11 +258,11 @@ class lmfit(FittingTemplate):  # noqa: S101
                 pars[name].value = self._cached_pars_vals[name][0]
                 pars[name].error = self._cached_pars_vals[name][1]
             borg.stack.enabled = True
-            borg.stack.beginMacro("Fitting routine")
+            borg.stack.beginMacro('Fitting routine')
         for name in pars.keys():
-            pars[name].value = fit_result.params["p" + str(name)].value
+            pars[name].value = fit_result.params['p' + str(name)].value
             if fit_result.errorbars:
-                pars[name].error = fit_result.params["p" + str(name)].stderr
+                pars[name].error = fit_result.params['p' + str(name)].stderr
             else:
                 pars[name].error = 0.0
         if stack_status:
@@ -294,7 +286,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         results.success = fit_results.success
         results.y_obs = fit_results.data
         # results.residual = fit_results.residual
-        results.x = fit_results.userkws["x"]
+        results.x = fit_results.userkws['x']
         results.p = fit_results.values
         results.p0 = fit_results.init_values
         # results.goodness_of_fit = fit_results.chisqr
@@ -309,16 +301,16 @@ class lmfit(FittingTemplate):  # noqa: S101
 
     def available_methods(self) -> List[str]:
         return [
-            "least_squares",
-            "leastsq",
-            "differential_evolution",
-            "basinhopping",
-            "ampgo",
-            "nelder",
-            "lbfgsb",
-            "powell",
-            "cg",
-            "newton",
-            "cobyla",
-            "bfgs",
+            'least_squares',
+            'leastsq',
+            'differential_evolution',
+            'basinhopping',
+            'ampgo',
+            'nelder',
+            'lbfgsb',
+            'powell',
+            'cg',
+            'newton',
+            'cobyla',
+            'bfgs',
         ]

@@ -77,9 +77,9 @@ class FittingTemplate(metaclass=ABCMeta):
         x: np.ndarray,
         y: np.ndarray,
         weights: Optional[Union[np.ndarray]] = None,
-        model: Optional = None,
-        parameters: Optional = None,
-        method: Optional = None,
+        model=None,
+        parameters=None,
+        method=None,
         **kwargs,
     ):
         """

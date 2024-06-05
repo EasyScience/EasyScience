@@ -18,16 +18,15 @@ from typing import TypeVar
 
 import numpy as np
 
-import easyscience.Fitting as Fitting
-from easyscience import borg
+import easyscience.Fitting.minimizers as minimizers
 from easyscience import default_fitting_engine
 from easyscience.Objects.Groups import BaseCollection
 
 _C = TypeVar('_C', bound=ABCMeta)
-_M = TypeVar('_M', bound=Fitting.FittingTemplate)
+_M = TypeVar('_M', bound=minimizers.FittingTemplate)
 
 if TYPE_CHECKING:
-    from easyscience.Fitting.fitting_template import FitResults as FR
+    from easyscience.Fitting.minimizers.fitting_template import FitResults as FR
     from easyscience.Utils.typing import B
 
 
@@ -35,8 +34,6 @@ class Fitter:
     """
     Wrapper to the fitting engines
     """
-
-    _borg = borg
 
     def __init__(self, fit_object: Optional[B] = None, fit_function: Optional[Callable] = None):
         self._fit_object = fit_object
@@ -51,7 +48,7 @@ class Fitter:
             if (fit_object is not None) or (fit_function is not None):
                 raise AttributeError
 
-        self._engines: List[_C] = Fitting.engines
+        self._engines: List[_C] = minimizers.engines
         self._current_engine: _C = None
         self.__engine_obj: _M = None
         self._is_initialized: bool = False
@@ -59,7 +56,7 @@ class Fitter:
 
         fit_methods = [
             x
-            for x, y in Fitting.FittingTemplate.__dict__.items()
+            for x, y in minimizers.FittingTemplate.__dict__.items()
             if (isinstance(y, FunctionType) and not x.startswith('_')) and x != 'fit'
         ]
         for method_name in fit_methods:
@@ -145,9 +142,9 @@ class Fitter:
         :return: List of available fitting engines
         :rtype: List[str]
         """
-        if Fitting.engines is None:
+        if minimizers.engines is None:
             raise ImportError('There are no available fitting engines. Install `lmfit` and/or `bumps`')
-        return [engine.name for engine in Fitting.engines]
+        return [engine.name for engine in minimizers.engines]
 
     @property
     def can_fit(self) -> bool:

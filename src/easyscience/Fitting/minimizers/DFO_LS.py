@@ -2,8 +2,8 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
 
-__author__ = "github.com/wardsimon"
-__version__ = "0.1.0"
+__author__ = 'github.com/wardsimon'
+__version__ = '0.1.0'
 
 from numbers import Number
 from typing import List
@@ -12,12 +12,12 @@ from typing import Optional
 # Import dfols specific objects
 import dfols
 
-from easyscience.Fitting.fitting_template import Callable
-from easyscience.Fitting.fitting_template import FitError
-from easyscience.Fitting.fitting_template import FitResults
-from easyscience.Fitting.fitting_template import FittingTemplate
-from easyscience.Fitting.fitting_template import NameConverter
-from easyscience.Fitting.fitting_template import np
+from .fitting_template import Callable
+from .fitting_template import FitError
+from .fitting_template import FitResults
+from .fitting_template import FittingTemplate
+from .fitting_template import NameConverter
+from .fitting_template import np
 
 
 class DFO(FittingTemplate):  # noqa: S101
@@ -26,7 +26,7 @@ class DFO(FittingTemplate):  # noqa: S101
     """
 
     property_type = Number
-    name = "DFO_LS"
+    name = 'DFO_LS'
 
     def __init__(self, obj, fit_function: Callable):
         """
@@ -57,18 +57,18 @@ class DFO(FittingTemplate):  # noqa: S101
                 par = {}
                 if not pars:
                     for name, item in obj._cached_pars.items():
-                        par["p" + str(name)] = item.raw_value
+                        par['p' + str(name)] = item.raw_value
                 else:
                     for item in pars:
-                        par["p" + str(NameConverter().get_key(item))] = item.raw_value
+                        par['p' + str(NameConverter().get_key(item))] = item.raw_value
 
                 def residuals(x0) -> np.ndarray:
                     for idx, par_name in enumerate(par.keys()):
                         par[par_name] = x0[idx]
                     return (y - fit_func(x, **par)) / weights
 
-                setattr(residuals, "x", x)
-                setattr(residuals, "y", y)
+                setattr(residuals, 'x', x)
+                setattr(residuals, 'y', y)
                 return residuals
 
             return make_func
@@ -157,7 +157,7 @@ class DFO(FittingTemplate):  # noqa: S101
 
         default_method = {}
         if method is not None and method in self.available_methods():
-            default_method["method"] = method
+            default_method['method'] = method
 
         if weights is None:
             weights = np.sqrt(np.abs(y))
@@ -166,10 +166,7 @@ class DFO(FittingTemplate):  # noqa: S101
             model = self.make_model(pars=parameters)
             model = model(x, y, weights)
         self._cached_model = model
-        self.p_0 = {
-            f"p{key}": self._cached_pars[key].raw_value
-            for key in self._cached_pars.keys()
-        }
+        self.p_0 = {f'p{key}': self._cached_pars[key].raw_value for key in self._cached_pars.keys()}
 
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyscience import borg
@@ -202,9 +199,7 @@ class DFO(FittingTemplate):  # noqa: S101
         """
         pass
 
-    def _set_parameter_fit_result(
-        self, fit_result, stack_status, ci: float = 0.95
-    ) -> None:
+    def _set_parameter_fit_result(self, fit_result, stack_status, ci: float = 0.95) -> None:
         """
         Update parameters to their final values and assign a std error to them.
 
@@ -221,11 +216,9 @@ class DFO(FittingTemplate):  # noqa: S101
                 pars[name].value = self._cached_pars_vals[name][0]
                 pars[name].error = self._cached_pars_vals[name][1]
             borg.stack.enabled = True
-            borg.stack.beginMacro("Fitting routine")
+            borg.stack.beginMacro('Fitting routine')
 
-        error_matrix = self._error_from_jacobian(
-            fit_result.jacobian, fit_result.resid, ci
-        )
+        error_matrix = self._error_from_jacobian(fit_result.jacobian, fit_result.resid, ci)
         for idx, par in enumerate(pars.values()):
             par.value = fit_result.x[idx]
             par.error = error_matrix[idx, idx]
@@ -250,7 +243,7 @@ class DFO(FittingTemplate):  # noqa: S101
         pars = self._cached_pars
         item = {}
         for p_name, par in pars.items():
-            item[f"p{p_name}"] = par.raw_value
+            item[f'p{p_name}'] = par.raw_value
         results.p0 = self.p_0
         results.p = item
         results.x = self._cached_model.x
@@ -267,7 +260,7 @@ class DFO(FittingTemplate):  # noqa: S101
         return results
 
     def available_methods(self) -> List[str]:
-        return ["leastsq"]
+        return ['leastsq']
 
     def dfols_fit(self, model: Callable, **kwargs):
         """

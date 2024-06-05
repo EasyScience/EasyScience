@@ -2,8 +2,8 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
 
-__author__ = "github.com/wardsimon"
-__version__ = "0.1.0"
+__author__ = 'github.com/wardsimon'
+__version__ = '0.1.0'
 
 import inspect
 from typing import List
@@ -15,12 +15,12 @@ from bumps.names import Curve
 from bumps.names import FitProblem
 from bumps.parameter import Parameter as bumpsParameter
 
-from easyscience.Fitting.fitting_template import Callable
-from easyscience.Fitting.fitting_template import FitError
-from easyscience.Fitting.fitting_template import FitResults
-from easyscience.Fitting.fitting_template import FittingTemplate
-from easyscience.Fitting.fitting_template import NameConverter
-from easyscience.Fitting.fitting_template import np
+from .fitting_template import Callable
+from .fitting_template import FitError
+from .fitting_template import FitResults
+from .fitting_template import FittingTemplate
+from .fitting_template import NameConverter
+from .fitting_template import np
 
 
 class bumps(FittingTemplate):  # noqa: S101
@@ -30,7 +30,7 @@ class bumps(FittingTemplate):  # noqa: S101
     """
 
     property_type = bumpsParameter
-    name = "bumps"
+    name = 'bumps'
 
     def __init__(self, obj, fit_function: Callable):
         """
@@ -62,12 +62,10 @@ class bumps(FittingTemplate):  # noqa: S101
                 par = {}
                 if not pars:
                     for name, item in obj._cached_pars.items():
-                        par["p" + str(name)] = obj.convert_to_par_object(item)
+                        par['p' + str(name)] = obj.convert_to_par_object(item)
                 else:
                     for item in pars:
-                        par[
-                            "p" + str(NameConverter().get_key(item))
-                        ] = obj.convert_to_par_object(item)
+                        par['p' + str(NameConverter().get_key(item))] = obj.convert_to_par_object(item)
                 return Curve(fit_func, x, y, dy=weights, **par)
 
             return make_func
@@ -125,12 +123,10 @@ class bumps(FittingTemplate):  # noqa: S101
 
         self._cached_pars_order = tuple(self._cached_pars.keys())
         params = [
-            inspect.Parameter(
-                "x", inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=inspect._empty
-            ),
+            inspect.Parameter('x', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=inspect._empty),
             *[
                 inspect.Parameter(
-                    "p" + str(name),
+                    'p' + str(name),
                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
                     annotation=inspect._empty,
                     default=self._cached_pars[name].raw_value,
@@ -148,8 +144,8 @@ class bumps(FittingTemplate):  # noqa: S101
         x: np.ndarray,
         y: np.ndarray,
         weights: Optional[np.ndarray] = None,
-        model: Optional = None,
-        parameters: Optional = None,
+        model=None,
+        parameters=None,
         method: Optional[str] = None,
         minimizer_kwargs: Optional[dict] = None,
         engine_kwargs: Optional[dict] = None,
@@ -177,7 +173,7 @@ class bumps(FittingTemplate):  # noqa: S101
 
         default_method = {}
         if method is not None and method in self.available_methods():
-            default_method["method"] = method
+            default_method['method'] = method
 
         if weights is None:
             weights = np.sqrt(np.abs(y))
@@ -195,10 +191,7 @@ class bumps(FittingTemplate):  # noqa: S101
             model = self.make_model(pars=parameters)
             model = model(x, y, weights)
         self._cached_model = model
-        self.p_0 = {
-            f"p{key}": self._cached_pars[key].raw_value
-            for key in self._cached_pars.keys()
-        }
+        self.p_0 = {f'p{key}': self._cached_pars[key].raw_value for key in self._cached_pars.keys()}
         problem = FitProblem(model)
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyscience import borg
@@ -207,9 +200,7 @@ class bumps(FittingTemplate):  # noqa: S101
         borg.stack.enabled = False
 
         try:
-            model_results = bumps_fit(
-                problem, **default_method, **minimizer_kwargs, **kwargs
-            )
+            model_results = bumps_fit(problem, **default_method, **minimizer_kwargs, **kwargs)
             self._set_parameter_fit_result(model_results, stack_status)
             results = self._gen_fit_results(model_results)
         except Exception as e:
@@ -218,9 +209,7 @@ class bumps(FittingTemplate):  # noqa: S101
             raise FitError(e)
         return results
 
-    def convert_to_pars_obj(
-        self, par_list: Optional[List] = None
-    ) -> List[bumpsParameter]:
+    def convert_to_pars_obj(self, par_list: Optional[List] = None) -> List[bumpsParameter]:
         """
         Create a container with the `Parameters` converted from the base object.
 
@@ -245,7 +234,7 @@ class bumps(FittingTemplate):  # noqa: S101
         :rtype: bumpsParameter
         """
         return bumpsParameter(
-            name="p" + str(NameConverter().get_key(obj)),
+            name='p' + str(NameConverter().get_key(obj)),
             value=obj.raw_value,
             bounds=[obj.min, obj.max],
             fixed=obj.fixed,
@@ -268,7 +257,7 @@ class bumps(FittingTemplate):  # noqa: S101
                 pars[name].value = self._cached_pars_vals[name][0]
                 pars[name].error = self._cached_pars_vals[name][1]
             borg.stack.enabled = True
-            borg.stack.beginMacro("Fitting routine")
+            borg.stack.beginMacro('Fitting routine')
 
         for index, name in enumerate(self._cached_model._pnames):
             dict_name = int(name[1:])

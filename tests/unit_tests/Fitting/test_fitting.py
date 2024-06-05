@@ -5,90 +5,75 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
-from typing import ClassVar
-
 import pytest
 
 import numpy as np
 from easyscience.Fitting.Constraints import ObjConstraint
 from easyscience.Fitting.Fitting import Fitter
 from easyscience.Fitting.Fitting import MultiFitter
-from easyscience.Fitting.fitting_template import FitError
+from easyscience.Fitting.minimizers import FitError
 from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.ObjectClasses import Parameter
 
 
+
+class Line(BaseObj):
+    m: Parameter
+    c: Parameter
+
+    def __init__(self, m_val: float, c_val: float):
+        m = Parameter("m", m_val)
+        c = Parameter("c", c_val)
+        super(Line, self).__init__("line", m=m, c=c)
+
+    def __call__(self, x):
+        return self.m.raw_value * x + self.c.raw_value
+    
+
 class AbsSin(BaseObj):
-    phase: ClassVar[Parameter]
-    offset: ClassVar[Parameter]
+    phase: Parameter
+    offset: Parameter
 
-    def __init__(self, offset: Parameter, phase: Parameter):
-        super(AbsSin, self).__init__("sin", offset=offset, phase=phase)
-
-    @classmethod
-    def from_pars(cls, offset, phase):
-        offset = Parameter("offset", offset)
-        phase = Parameter("phase", phase)
-        return cls(offset=offset, phase=phase)
+    def __init__(self, offset_val: float, phase_val: float):
+        offset = Parameter("offset", offset_val)
+        phase = Parameter("phase", phase_val)
+        super().__init__("sin", offset=offset, phase=phase)
 
     def __call__(self, x):
         return np.abs(np.sin(self.phase.raw_value * x + self.offset.raw_value))
 
 
-class Line(BaseObj):
-    m: ClassVar[Parameter]
-    c: ClassVar[Parameter]
+class AbsSin2D(BaseObj):
+    phase: Parameter
+    offset: Parameter
 
-    def __init__(self, m: Parameter, c: Parameter):
-        super(Line, self).__init__("line", m=m, c=c)
-
-    @classmethod
-    def from_pars(cls, m, c):
-        m = Parameter("m", m)
-        c = Parameter("c", c)
-        return cls(m=m, c=c)
+    def __init__(self, offset_val: float, phase_val: float):
+        offset = Parameter("offset", offset_val)
+        phase = Parameter("phase", phase_val)
+        super().__init__("sin2D", offset=offset, phase=phase)
 
     def __call__(self, x):
-        return self.m.raw_value * x + self.c.raw_value
+        X = x[:, :, 0]   # x is a 2D array
+        Y = x[:, :, 1]
+        return np.abs(
+            np.sin(self.phase.raw_value * X + self.offset.raw_value)
+        ) * np.abs(np.sin(self.phase.raw_value * Y + self.offset.raw_value))
 
 
-@pytest.fixture
-def genObjs():
-    ref_sin = AbsSin.from_pars(0.2, np.pi)
-    sp_sin = AbsSin.from_pars(0.354, 3.05)
-    return ref_sin, sp_sin
-
-
-@pytest.fixture
-def genObjs2():
-    ref_sin = AbsSin.from_pars(np.pi * 0.45, 0.45 * np.pi * 0.5)
-    sp_sin = AbsSin.from_pars(1, 0.5)
-    return ref_sin, sp_sin
-
-
-def test_basic_fit(genObjs):
-    ref_sin = genObjs[0]
-    sp_sin = genObjs[1]
-
-    x = np.linspace(0, 5, 200)
-    y = ref_sin(x)
-
-    sp_sin.offset.fixed = False
-    sp_sin.phase.fixed = False
-
-    f = Fitter(sp_sin, sp_sin)
-
-    _ = f.fit(x, y)
-
-    assert sp_sin.phase.raw_value == pytest.approx(ref_sin.phase.raw_value, rel=1e-3)
-    assert sp_sin.offset.raw_value == pytest.approx(ref_sin.offset.raw_value, rel=1e-3)
+class AbsSin2DL(AbsSin2D):
+    def __call__(self, x):
+        X = x[:, 0]   # x is a 1D array
+        Y = x[:, 1]
+        return np.abs(
+            np.sin(self.phase.raw_value * X + self.offset.raw_value)
+        ) * np.abs(np.sin(self.phase.raw_value * Y + self.offset.raw_value))
 
 
 @pytest.mark.parametrize("with_errors", [False, True])
 @pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "DFO_LS"])
-def test_basic_fit(genObjs, fit_engine, with_errors):
-    ref_sin = genObjs[0]
-    sp_sin = genObjs[1]
+def test_basic_fit(fit_engine, with_errors):
+    ref_sin = AbsSin(0.2, np.pi)
+    sp_sin = AbsSin(0.354, 3.05)
 
     x = np.linspace(0, 5, 200)
     y = ref_sin(x)
@@ -138,9 +123,9 @@ def check_fit_results(result, sp_sin, ref_sin, x, **kwargs):
 
 
 @pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "DFO_LS"])
-def test_fit_result(genObjs, fit_engine):
-    ref_sin = genObjs[0]
-    sp_sin = genObjs[1]
+def test_fit_result(fit_engine):
+    ref_sin = AbsSin(0.2, np.pi)
+    sp_sin = AbsSin(0.354, 3.05)
 
     x = np.linspace(0, 5, 200)
     y = ref_sin(x)
@@ -170,9 +155,9 @@ def test_fit_result(genObjs, fit_engine):
 
 
 @pytest.mark.parametrize("fit_method", ["leastsq", "powell", "cobyla"])
-def test_lmfit_methods(genObjs, fit_method):
-    ref_sin = genObjs[0]
-    sp_sin = genObjs[1]
+def test_lmfit_methods(fit_method):
+    ref_sin = AbsSin(0.2, np.pi)
+    sp_sin = AbsSin(0.354, 3.05)
 
     x = np.linspace(0, 5, 200)
     y = ref_sin(x)
@@ -188,9 +173,9 @@ def test_lmfit_methods(genObjs, fit_method):
 
 @pytest.mark.xfail(reason="known bumps issue")
 @pytest.mark.parametrize("fit_method", ["newton", "lm"])
-def test_bumps_methods(genObjs, fit_method):
-    ref_sin = genObjs[0]
-    sp_sin = genObjs[1]
+def test_bumps_methods(fit_method):
+    ref_sin = AbsSin(0.2, np.pi)
+    sp_sin = AbsSin(0.354, 3.05)
 
     x = np.linspace(0, 5, 200)
     y = ref_sin(x)
@@ -206,9 +191,9 @@ def test_bumps_methods(genObjs, fit_method):
 
 
 @pytest.mark.parametrize("fit_engine", ["lmfit", "bumps", "DFO_LS"])
-def test_fit_constraints(genObjs2, fit_engine):
-    ref_sin = genObjs2[0]
-    sp_sin = genObjs2[1]
+def test_fit_constraints(fit_engine):
+    ref_sin = AbsSin(np.pi * 0.45, 0.45 * np.pi * 0.5)
+    sp_sin = AbsSin(1, 0.5)
 
     x = np.linspace(0, 5, 200)
     y = ref_sin(x)
@@ -234,51 +219,35 @@ def test_fit_constraints(genObjs2, fit_engine):
     assert len(f.fit_constraints()) == 0
 
 
-# def test_fit_makeModel(genObjs):
-#     ref_sin = genObjs[0]
-#     sp_sin = genObjs[1]
-#
-#     x = np.linspace(0, 5, 200)
-#     y = ref_sin(x)
-#
-#     sp_sin.offset.fixed = False
-#     sp_sin.phase.fixed = False
-#
-#     f = Fitter(sp_sin, sp_sin)
-#     model = f.make_model()
-#     result = f.fit(x, y, model=model)
-#     check_fit_results(result, sp_sin, ref_sin, x)
-
 
 @pytest.mark.parametrize("with_errors", [False, True])
 @pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "DFO_LS"])
-def test_multi_fit(genObjs, genObjs2, fit_engine, with_errors):
-    ref_sin1 = genObjs[0]
-    ref_sin2 = genObjs2[0]
+def test_multi_fit(fit_engine, with_errors):
+    ref_sin_1 = AbsSin(0.2, np.pi)
+    sp_sin_1 = AbsSin(0.354, 3.05)
+    ref_sin_2 = AbsSin(np.pi * 0.45, 0.45 * np.pi * 0.5)
+    sp_sin_2 = AbsSin(1, 0.5)
 
-    ref_sin1.offset.user_constraints["ref_sin2"] = ObjConstraint(
-        ref_sin2.offset, "", ref_sin1.offset
+    ref_sin_1.offset.user_constraints["ref_sin2"] = ObjConstraint(
+        ref_sin_2.offset, "", ref_sin_1.offset
     )
-    ref_sin1.offset.user_constraints["ref_sin2"]()
+    ref_sin_1.offset.user_constraints["ref_sin2"]()
 
-    sp_sin1 = genObjs[1]
-    sp_sin2 = genObjs2[1]
-
-    sp_sin1.offset.user_constraints["sp_sin2"] = ObjConstraint(
-        sp_sin2.offset, "", sp_sin1.offset
+    sp_sin_1.offset.user_constraints["sp_sin2"] = ObjConstraint(
+        sp_sin_2.offset, "", sp_sin_1.offset
     )
-    sp_sin1.offset.user_constraints["sp_sin2"]()
+    sp_sin_1.offset.user_constraints["sp_sin2"]()
 
     x1 = np.linspace(0, 5, 200)
-    y1 = ref_sin1(x1)
+    y1 = ref_sin_1(x1)
     x2 = np.copy(x1)
-    y2 = ref_sin2(x2)
+    y2 = ref_sin_2(x2)
 
-    sp_sin1.offset.fixed = False
-    sp_sin1.phase.fixed = False
-    sp_sin2.phase.fixed = False
+    sp_sin_1.offset.fixed = False
+    sp_sin_1.phase.fixed = False
+    sp_sin_2.phase.fixed = False
 
-    f = MultiFitter([sp_sin1, sp_sin2], [sp_sin1, sp_sin2])
+    f = MultiFitter([sp_sin_1, sp_sin_2], [sp_sin_1, sp_sin_2])
     if fit_engine is not None:
         try:
             f.switch_engine(fit_engine)
@@ -293,11 +262,11 @@ def test_multi_fit(genObjs, genObjs2, fit_engine, with_errors):
     results = f.fit(*args, **kwargs)
     X = [x1, x2]
     Y = [y1, y2]
-    F_ref = [ref_sin1, ref_sin2]
-    F_real = [sp_sin1, sp_sin2]
+    F_ref = [ref_sin_1, ref_sin_2]
+    F_real = [sp_sin_1, sp_sin_2]
     for idx, result in enumerate(results):
-        assert result.n_pars == len(sp_sin1.get_fit_parameters()) + len(
-            sp_sin2.get_fit_parameters()
+        assert result.n_pars == len(sp_sin_1.get_fit_parameters()) + len(
+            sp_sin_2.get_fit_parameters()
         )
         assert result.chi2 == pytest.approx(
             0, abs=1.5e-3 * (len(result.x) - result.n_pars)
@@ -314,46 +283,46 @@ def test_multi_fit(genObjs, genObjs2, fit_engine, with_errors):
 
 @pytest.mark.parametrize("with_errors", [False, True])
 @pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "DFO_LS"])
-def test_multi_fit2(genObjs, genObjs2, fit_engine, with_errors):
-    ref_sin1 = genObjs[0]
-    ref_sin2 = genObjs2[0]
-    ref_line = Line.from_pars(1, 4.6)
+def test_multi_fit2(fit_engine, with_errors):
+    ref_sin_1 = AbsSin(0.2, np.pi)
+    sp_sin_1 = AbsSin(0.354, 3.05)
+    ref_sin_2 = AbsSin(np.pi * 0.45, 0.45 * np.pi * 0.5)
+    sp_sin_2 = AbsSin(1, 0.5)#    ref_sin_1_obj = genObjs[0]
+    ref_line_obj = Line(1, 4.6)
 
-    ref_sin1.offset.user_constraints["ref_sin2"] = ObjConstraint(
-        ref_sin2.offset, "", ref_sin1.offset
+    ref_sin_1.offset.user_constraints["ref_sin2"] = ObjConstraint(
+        ref_sin_2.offset, "", ref_sin_1.offset
     )
-    ref_sin1.offset.user_constraints["ref_line"] = ObjConstraint(
-        ref_line.m, "", ref_sin1.offset
+    ref_sin_1.offset.user_constraints["ref_line"] = ObjConstraint(
+        ref_line_obj.m, "", ref_sin_1.offset
     )
-    ref_sin1.offset.user_constraints["ref_sin2"]()
-    ref_sin1.offset.user_constraints["ref_line"]()
+    ref_sin_1.offset.user_constraints["ref_sin2"]()
+    ref_sin_1.offset.user_constraints["ref_line"]()
 
-    sp_sin1 = genObjs[1]
-    sp_sin2 = genObjs2[1]
-    sp_line = Line.from_pars(0.43, 6.1)
+    sp_line = Line(0.43, 6.1)
 
-    sp_sin1.offset.user_constraints["sp_sin2"] = ObjConstraint(
-        sp_sin2.offset, "", sp_sin1.offset
+    sp_sin_1.offset.user_constraints["sp_sin2"] = ObjConstraint(
+        sp_sin_2.offset, "", sp_sin_1.offset
     )
-    sp_sin1.offset.user_constraints["sp_line"] = ObjConstraint(
-        sp_line.m, "", sp_sin1.offset
+    sp_sin_1.offset.user_constraints["sp_line"] = ObjConstraint(
+        sp_line.m, "", sp_sin_1.offset
     )
-    sp_sin1.offset.user_constraints["sp_sin2"]()
-    sp_sin1.offset.user_constraints["sp_line"]()
+    sp_sin_1.offset.user_constraints["sp_sin2"]()
+    sp_sin_1.offset.user_constraints["sp_line"]()
 
     x1 = np.linspace(0, 5, 200)
-    y1 = ref_sin1(x1)
+    y1 = ref_sin_1(x1)
     x3 = np.copy(x1)
-    y3 = ref_sin2(x3)
+    y3 = ref_sin_2(x3)
     x2 = np.copy(x1)
-    y2 = ref_line(x2)
+    y2 = ref_line_obj(x2)
 
-    sp_sin1.offset.fixed = False
-    sp_sin1.phase.fixed = False
-    sp_sin2.phase.fixed = False
+    sp_sin_1.offset.fixed = False
+    sp_sin_1.phase.fixed = False
+    sp_sin_2.phase.fixed = False
     sp_line.c.fixed = False
 
-    f = MultiFitter([sp_sin1, sp_line, sp_sin2], [sp_sin1, sp_line, sp_sin2])
+    f = MultiFitter([sp_sin_1, sp_line, sp_sin_2], [sp_sin_1, sp_line, sp_sin_2])
     if fit_engine is not None:
         try:
             f.switch_engine(fit_engine)
@@ -368,14 +337,14 @@ def test_multi_fit2(genObjs, genObjs2, fit_engine, with_errors):
     results = f.fit(*args, **kwargs)
     X = [x1, x2, x3]
     Y = [y1, y2, y3]
-    F_ref = [ref_sin1, ref_line, ref_sin2]
-    F_real = [sp_sin1, sp_line, sp_sin2]
+    F_ref = [ref_sin_1, ref_line_obj, ref_sin_2]
+    F_real = [sp_sin_1, sp_line, sp_sin_2]
 
     assert len(results) == len(X)
 
     for idx, result in enumerate(results):
-        assert result.n_pars == len(sp_sin1.get_fit_parameters()) + len(
-            sp_sin2.get_fit_parameters()
+        assert result.n_pars == len(sp_sin_1.get_fit_parameters()) + len(
+            sp_sin_2.get_fit_parameters()
         ) + len(sp_line.get_fit_parameters())
         assert result.chi2 == pytest.approx(
             0, abs=1.5e-3 * (len(result.x) - result.n_pars)
@@ -390,39 +359,12 @@ def test_multi_fit2(genObjs, genObjs2, fit_engine, with_errors):
         )
 
 
-class AbsSin2D(BaseObj):
-    def __init__(self, offset: Parameter, phase: Parameter):
-        super(AbsSin2D, self).__init__("sin2D", offset=offset, phase=phase)
-
-    @classmethod
-    def from_pars(cls, offset, phase):
-        offset = Parameter("offset", offset)
-        phase = Parameter("phase", phase)
-        return cls(offset=offset, phase=phase)
-
-    def __call__(self, x):
-        X = x[:, :, 0]
-        Y = x[:, :, 1]
-        return np.abs(
-            np.sin(self.phase.raw_value * X + self.offset.raw_value)
-        ) * np.abs(np.sin(self.phase.raw_value * Y + self.offset.raw_value))
-
-
-class AbsSin2DL(AbsSin2D):
-    def __call__(self, x):
-        X = x[:, 0]
-        Y = x[:, 1]
-        return np.abs(
-            np.sin(self.phase.raw_value * X + self.offset.raw_value)
-        ) * np.abs(np.sin(self.phase.raw_value * Y + self.offset.raw_value))
-
-
 @pytest.mark.parametrize("with_errors", [False, True])
 @pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "DFO_LS"])
 def test_2D_vectorized(fit_engine, with_errors):
     x = np.linspace(0, 5, 200)
-    mm = AbsSin2D.from_pars(0.3, 1.6)
-    m2 = AbsSin2D.from_pars(
+    mm = AbsSin2D(0.3, 1.6)
+    m2 = AbsSin2D(
         0.1, 1.8
     )  # The fit is quite sensitive to the initial values :-(
     X, Y = np.meshgrid(x, x)
@@ -457,8 +399,8 @@ def test_2D_vectorized(fit_engine, with_errors):
 @pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "DFO_LS"])
 def test_2D_non_vectorized(fit_engine, with_errors):
     x = np.linspace(0, 5, 200)
-    mm = AbsSin2DL.from_pars(0.3, 1.6)
-    m2 = AbsSin2DL.from_pars(
+    mm = AbsSin2DL(0.3, 1.6)
+    m2 = AbsSin2DL(
         0.1, 1.8
     )  # The fit is quite sensitive to the initial values :-(
     X, Y = np.meshgrid(x, x)
@@ -493,13 +435,13 @@ def test_2D_non_vectorized(fit_engine, with_errors):
 
 @pytest.mark.parametrize("with_errors", [False, True])
 @pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "DFO_LS"])
-def test_multi_fit_1D_2D(genObjs, fit_engine, with_errors):
+def test_multi_fit_1D_2D(fit_engine, with_errors):
     # Generate fit and reference objects
-    ref_sin1D = genObjs[0]
-    sp_sin1D = genObjs[1]
+    ref_sin1D = AbsSin(0.2, np.pi)
+    sp_sin1D = AbsSin(0.354, 3.05)
 
-    ref_sin2D = AbsSin2D.from_pars(0.3, 1.6)
-    sp_sin2D = AbsSin2D.from_pars(
+    ref_sin2D = AbsSin2D(0.3, 1.6)
+    sp_sin2D = AbsSin2D(
         0.1, 1.75
     )  # The fit is VERY sensitive to the initial values :-(
 
