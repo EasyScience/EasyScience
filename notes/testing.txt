@@ -1,0 +1,27 @@
+Unit tests
+- Should be fast
+- Should only test very specific part of code
+- Should use mocking 
+- Should be easy to understand when they are not working 
+- I prefer to have a 1-to-1 correspondance between code base and tests
+- Take time to get accustomed to write testable code
+-- Small methods
+-- Very limited responsibility
+- Can serve to explain how the code is intended to work
+- Try to use the When, Then, Expect structure to make the tests more readable
+
+
+Integration tests
+- Large code parts play together
+- Often difficult to understand when they are not working
+
+
+GUI tests
+- Qt
+- Able to start up
+- Compare screen shots
+- Toggle through pages
+
+
+Test should be a part of PR
+
