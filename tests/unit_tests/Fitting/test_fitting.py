@@ -9,8 +9,8 @@ import pytest
 
 import numpy as np
 from easyscience.Fitting.Constraints import ObjConstraint
-from easyscience.Fitting.Fitting import Fitter
-from easyscience.Fitting.Fitting import MultiFitter
+from easyscience.Fitting.fitter import Fitter
+from easyscience.Fitting.multi_fitter import MultiFitter
 from easyscience.Fitting.minimizers import FitError
 from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.ObjectClasses import Parameter
