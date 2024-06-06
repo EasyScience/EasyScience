@@ -19,10 +19,10 @@ import easyscience.Fitting.minimizers as minimizers
 from easyscience import default_fitting_engine
 
 from .minimizers import FitResults
-from .minimizers import FittingBase
+from .minimizers import MinimizerBase
 
 _C = TypeVar('_C', bound=ABCMeta)
-_M = TypeVar('_M', bound=FittingBase)
+_M = TypeVar('_M', bound=MinimizerBase)
 
 
 class Fitter:
@@ -51,7 +51,7 @@ class Fitter:
 
         fit_methods = [
             x
-            for x, y in FittingBase.__dict__.items()
+            for x, y in MinimizerBase.__dict__.items()
             if (isinstance(y, FunctionType) and not x.startswith('_')) and x != 'fit'
         ]
         for method_name in fit_methods:

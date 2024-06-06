@@ -17,7 +17,7 @@ import numpy as np
 from .utils import FitResults
 
 
-class FittingBase(metaclass=ABCMeta):
+class MinimizerBase(metaclass=ABCMeta):
     """
     This template class is the basis for all fitting engines in `EasyScience`.
     """

@@ -11,26 +11,25 @@ from typing import List
 from typing import Optional
 
 import numpy as np
-from bumps.fitters import FIT_AVAILABLE_IDS
-from bumps.fitters import fit as bumps_fit
-from bumps.names import Curve
-from bumps.names import FitProblem
-from bumps.parameter import Parameter as bumpsParameter
+from lmfit import Model as lmModel
+from lmfit import Parameter as lmParameter
+from lmfit import Parameters as lmParameters
+from lmfit.model import ModelResult
 
-from .fitting_base import FittingBase
+from .minimizer_base import MinimizerBase
 from .utils import FitError
 from .utils import FitResults
 from .utils import NameConverter
 
 
-class bumps(FittingBase):  # noqa: S101
+class LmFit(MinimizerBase):  # noqa: S101
     """
-    This is a wrapper to bumps: https://bumps.readthedocs.io/
-    It allows for the bumps fitting engine to use parameters declared in an `EasyScience.Objects.Base.BaseObj`.
+    This is a wrapper to lmfit: https://lmfit.github.io/
+    It allows for the lmfit fitting engine to use parameters declared in an `EasyScience.Objects.Base.BaseObj`.
     """
 
-    property_type = bumpsParameter
-    name = 'bumps'
+    property_type = lmParameter
+    name = 'lmfit'
 
     def __init__(self, obj, fit_function: Callable):
         """
@@ -44,45 +43,48 @@ class bumps(FittingBase):  # noqa: S101
         :type fit_function: Callable
         """
         super().__init__(obj, fit_function)
-        self._cached_pars_order = ()
-        self.p_0 = {}
 
-    def make_model(self, pars: Optional[List[bumpsParameter]] = None) -> Callable:
+    def make_model(self, pars: Optional[lmParameters] = None) -> lmModel:
         """
-        Generate a bumps model from the supplied `fit_function` and parameters in the base object.
-        Note that this makes a callable as it needs to be initialized with *x*, *y*, *weights*
+        Generate a lmfit model from the supplied `fit_function` and parameters in the base object.
 
-        :return: Callable to make a bumps Curve model
-        :rtype: Callable
+        :return: Callable lmfit model
+        :rtype: lmModel
         """
+        # Generate the fitting function
         fit_func = self._generate_fit_function()
+        if pars is None:
+            pars = self._cached_pars
+        # Create the model
+        model = lmModel(
+            fit_func,
+            independent_vars=['x'],
+            param_names=['p' + str(key) for key in pars.keys()],
+        )
+        # Assign values from the `Parameter` to the model
+        for name, item in pars.items():
+            if isinstance(item, lmParameter):
+                value = item.value
+            else:
+                value = item.raw_value
+            model.set_param_hint('p' + str(name), value=value, min=item.min, max=item.max)
 
-        def outer(obj):
-            def make_func(x, y, weights):
-                par = {}
-                if not pars:
-                    for name, item in obj._cached_pars.items():
-                        par['p' + str(name)] = obj.convert_to_par_object(item)
-                else:
-                    for item in pars:
-                        par['p' + str(NameConverter().get_key(item))] = obj.convert_to_par_object(item)
-                return Curve(fit_func, x, y, dy=weights, **par)
-
-            return make_func
-
-        return outer(self)
+        # Cache the model for later reference
+        self._cached_model = model
+        return model
 
     def _generate_fit_function(self) -> Callable:
         """
         Using the user supplied `fit_function`, wrap it in such a way we can update `Parameter` on
         iterations.
 
-        :return: a fit function which is compatible with bumps models
+        :return: a fit function which is compatible with lmfit models
         :rtype: Callable
         """
         # Original fit function
         func = self._original_fit_function
         # Get a list of `Parameters`
+        self._cached_pars = {}
         self._cached_pars_vals = {}
         for parameter in self._object.get_fit_parameters():
             key = NameConverter().get_key(parameter)
@@ -92,7 +94,7 @@ class bumps(FittingBase):  # noqa: S101
         # Make a new fit function
         def fit_function(x: np.ndarray, **kwargs):
             """
-            Wrapped fit function which now has a bumps compatible form
+            Wrapped fit function which now has a lmfit compatible form.
 
             :param x: array of data points to be calculated
             :type x: np.ndarray
@@ -101,14 +103,14 @@ class bumps(FittingBase):  # noqa: S101
             :rtype: np.ndarray
             """
             # Update the `Parameter` values and the callback if needed
+            # TODO THIS IS NOT THREAD SAFE :-(
             for name, value in kwargs.items():
                 par_name = int(name[1:])
                 if par_name in self._cached_pars.keys():
+                    # This will take into account constraints
                     if self._cached_pars[par_name].raw_value != value:
                         self._cached_pars[par_name].value = value
-                    # update_fun = self._cached_pars[par_name]._callback.fset
-                    # if update_fun:
-                    #     update_fun(value)
+                    # Since we are calling the parameter fset will be called.
             # TODO Pre processing here
             for constraint in self.fit_constraints():
                 constraint()
@@ -120,8 +122,6 @@ class bumps(FittingBase):  # noqa: S101
         # This is done as lmfit wants the function to be in the form:
         # f = (x, a=1, b=2)...
         # Where we need to be generic. Note that this won't hold for much outside of this scope.
-
-        self._cached_pars_order = tuple(self._cached_pars.keys())
         params = [
             inspect.Parameter('x', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=inspect._empty),
             *[
@@ -129,9 +129,9 @@ class bumps(FittingBase):  # noqa: S101
                     'p' + str(name),
                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
                     annotation=inspect._empty,
-                    default=self._cached_pars[name].raw_value,
+                    default=parameter.raw_value,
                 )
-                for name in self._cached_pars_order
+                for name, parameter in self._cached_pars.items()
             ],
         ]
         # Sign the function
@@ -144,8 +144,8 @@ class bumps(FittingBase):  # noqa: S101
         x: np.ndarray,
         y: np.ndarray,
         weights: Optional[np.ndarray] = None,
-        model=None,
-        parameters=None,
+        model: Optional[lmModel] = None,
+        parameters: Optional[lmParameters] = None,
         method: Optional[str] = None,
         minimizer_kwargs: Optional[dict] = None,
         engine_kwargs: Optional[dict] = None,
@@ -154,45 +154,40 @@ class bumps(FittingBase):  # noqa: S101
         """
         Perform a fit using the lmfit engine.
 
+        :param method:
+        :type method:
         :param x: points to be calculated at
         :type x: np.ndarray
         :param y: measured points
         :type y: np.ndarray
-        :param weights: Weights for supplied measured points * Not really optional*
+        :param weights: Weights for supplied measured points
         :type weights: np.ndarray
         :param model: Optional Model which is being fitted to
         :type model: lmModel
         :param parameters: Optional parameters for the fit
-        :type parameters: List[bumpsParameter]
+        :type parameters: lmParameters
+        :param minimizer_kwargs: Arguments to be passed directly to the minimizer
+        :type minimizer_kwargs: dict
         :param kwargs: Additional arguments for the fitting function.
-        :param method: Method for minimization
-        :type method: str
         :return: Fit results
         :rtype: ModelResult
         """
-
         default_method = {}
         if method is not None and method in self.available_methods():
             default_method['method'] = method
 
         if weights is None:
-            weights = np.sqrt(np.abs(y))
+            weights = 1 / np.sqrt(np.abs(y))
 
         if engine_kwargs is None:
             engine_kwargs = {}
 
         if minimizer_kwargs is None:
             minimizer_kwargs = {}
-        # else:
-        #     minimizer_kwargs = {"fit_kws": minimizer_kwargs}
+        else:
+            minimizer_kwargs = {'fit_kws': minimizer_kwargs}
         minimizer_kwargs.update(engine_kwargs)
 
-        if model is None:
-            model = self.make_model(pars=parameters)
-            model = model(x, y, weights)
-        self._cached_model = model
-        self.p_0 = {f'p{key}': self._cached_pars[key].raw_value for key in self._cached_pars.keys()}
-        problem = FitProblem(model)
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyscience import borg
 
@@ -200,7 +195,10 @@ class bumps(FittingBase):  # noqa: S101
         borg.stack.enabled = False
 
         try:
-            model_results = bumps_fit(problem, **default_method, **minimizer_kwargs, **kwargs)
+            if model is None:
+                model = self.make_model()
+
+            model_results = model.fit(y, x=x, weights=weights, **default_method, **minimizer_kwargs, **kwargs)
             self._set_parameter_fit_result(model_results, stack_status)
             results = self._gen_fit_results(model_results)
         except Exception as e:
@@ -209,38 +207,40 @@ class bumps(FittingBase):  # noqa: S101
             raise FitError(e)
         return results
 
-    def convert_to_pars_obj(self, par_list: Optional[List] = None) -> List[bumpsParameter]:
+    def convert_to_pars_obj(self, par_list: Optional[List] = None) -> lmParameters:
         """
-        Create a container with the `Parameters` converted from the base object.
+        Create an lmfit compatible container with the `Parameters` converted from the base object.
 
         :param par_list: If only a single/selection of parameter is required. Specify as a list
         :type par_list: List[str]
-        :return: bumps Parameters list
-        :rtype: List[bumpsParameter]
+        :return: lmfit Parameters compatible object
+        :rtype: lmParameters
         """
         if par_list is None:
             # Assume that we have a BaseObj for which we can obtain a list
             par_list = self._object.get_fit_parameters()
-        pars_obj = [self.__class__.convert_to_par_object(obj) for obj in par_list]
+        pars_obj = lmParameters().add_many([self.__class__.convert_to_par_object(obj) for obj in par_list])
         return pars_obj
 
-    # For some reason I have to double staticmethod :-/
     @staticmethod
-    def convert_to_par_object(obj) -> bumpsParameter:
+    def convert_to_par_object(obj) -> lmParameter:
         """
-        Convert an `EasyScience.Objects.Base.Parameter` object to a bumps Parameter object
+        Convert an `EasyScience.Objects.Base.Parameter` object to a lmfit Parameter object.
 
-        :return: bumps Parameter compatible object.
-        :rtype: bumpsParameter
+        :return: lmfit Parameter compatible object.
+        :rtype: lmParameter
         """
-        return bumpsParameter(
-            name='p' + str(NameConverter().get_key(obj)),
+        return lmParameter(
+            'p' + str(NameConverter().get_key(obj)),
             value=obj.raw_value,
-            bounds=[obj.min, obj.max],
-            fixed=obj.fixed,
+            vary=not obj.fixed,
+            min=obj.min,
+            max=obj.max,
+            expr=None,
+            brute_step=None,
         )
 
-    def _set_parameter_fit_result(self, fit_result, stack_status: bool):
+    def _set_parameter_fit_result(self, fit_result: ModelResult, stack_status: bool):
         """
         Update parameters to their final values and assign a std error to them.
 
@@ -251,53 +251,64 @@ class bumps(FittingBase):  # noqa: S101
         from easyscience import borg
 
         pars = self._cached_pars
-
         if stack_status:
             for name in pars.keys():
                 pars[name].value = self._cached_pars_vals[name][0]
                 pars[name].error = self._cached_pars_vals[name][1]
             borg.stack.enabled = True
             borg.stack.beginMacro('Fitting routine')
-
-        for index, name in enumerate(self._cached_model._pnames):
-            dict_name = int(name[1:])
-            pars[dict_name].value = fit_result.x[index]
-            pars[dict_name].error = fit_result.dx[index]
+        for name in pars.keys():
+            pars[name].value = fit_result.params['p' + str(name)].value
+            if fit_result.errorbars:
+                pars[name].error = fit_result.params['p' + str(name)].stderr
+            else:
+                pars[name].error = 0.0
         if stack_status:
             borg.stack.endMacro()
 
-    def _gen_fit_results(self, fit_results, **kwargs) -> FitResults:
+    def _gen_fit_results(self, fit_results: ModelResult, **kwargs) -> FitResults:
         """
-        Convert fit results into the unified `FitResults` format
+        Convert fit results into the unified `FitResults` format.
+        See https://github.com/lmfit/lmfit-py/blob/480072b9f7834b31ff2ca66277a5ad31246843a4/lmfit/model.py#L1272
 
         :param fit_result: Fit object which contains info on the fit
         :return: fit results container
         :rtype: FitResults
         """
-
         results = FitResults()
         for name, value in kwargs.items():
             if getattr(results, name, False):
                 setattr(results, name, value)
+
+        # We need to unify return codes......
         results.success = fit_results.success
-        pars = self._cached_pars
-        item = {}
-        for index, name in enumerate(self._cached_model._pnames):
-            dict_name = int(name[1:])
-            item[name] = pars[dict_name].raw_value
-        results.p0 = self.p_0
-        results.p = item
-        results.x = self._cached_model.x
-        results.y_obs = self._cached_model.y
-        results.y_calc = self.evaluate(results.x, parameters=results.p)
-        results.y_err = self._cached_model.dy
-        # results.residual = results.y_obs - results.y_calc
-        # results.goodness_of_fit = np.sum(results.residual**2)
+        results.y_obs = fit_results.data
+        # results.residual = fit_results.residual
+        results.x = fit_results.userkws['x']
+        results.p = fit_results.values
+        results.p0 = fit_results.init_values
+        # results.goodness_of_fit = fit_results.chisqr
+        results.y_calc = fit_results.best_fit
+        results.y_err = 1 / fit_results.weights
         results.fitting_engine = self.__class__
         results.fit_args = None
+
         results.engine_result = fit_results
         # results.check_sanity()
         return results
 
     def available_methods(self) -> List[str]:
-        return FIT_AVAILABLE_IDS
+        return [
+            'least_squares',
+            'leastsq',
+            'differential_evolution',
+            'basinhopping',
+            'ampgo',
+            'nelder',
+            'lbfgsb',
+            'powell',
+            'cg',
+            'newton',
+            'cobyla',
+            'bfgs',
+        ]

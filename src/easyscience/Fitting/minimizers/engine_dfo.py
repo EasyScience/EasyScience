@@ -10,17 +10,16 @@ from typing import Callable
 from typing import List
 from typing import Optional
 
-# Import dfols specific objects
 import dfols
 import numpy as np
 
-from .fitting_base import FittingBase
+from .minimizer_base import MinimizerBase
 from .utils import FitError
 from .utils import FitResults
 from .utils import NameConverter
 
 
-class DFO(FittingBase):  # noqa: S101
+class DFO(MinimizerBase):  # noqa: S101
     """
     This is a wrapper to Derivative free optimisation: https://numericalalgorithmsgroup.github.io/dfols/
     """

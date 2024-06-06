@@ -7,31 +7,31 @@ __version__ = '0.1.0'
 
 import warnings
 
-from .fitting_base import FittingBase  # noqa: E402
+from .minimizer_base import MinimizerBase  # noqa: E402
 from .utils import FitError  # noqa: F401, E402
 from .utils import FitResults  # noqa: F401, E402
 
 imported = -1
 try:
-    from .lmfit import lmfit  # noqa: F401, E402
+    from .engine_lmfit import LmFit  # noqa: F401, E402
 
     imported += 1
 except ImportError:
     # TODO make this a proper message (use logging?)
     warnings.warn('lmfit has not been installed.', ImportWarning, stacklevel=2)
 try:
-    from .bumps import bumps  # noqa: F401, E402
+    from .engine_bumps import Bumps  # noqa: F401, E402
 
     imported += 1
 except ImportError:
     # TODO make this a proper message (use logging?)
     warnings.warn('bumps has not been installed.', ImportWarning, stacklevel=2)
 try:
-    from .dfo import DFO  # noqa: F401, E402
+    from .engine_dfo import DFO  # noqa: F401, E402
 
     imported += 1
 except ImportError:
     # TODO make this a proper message (use logging?)
     warnings.warn('dfo-ls has not been installed.', ImportWarning, stacklevel=2)
 
-engines: list = FittingBase._engines
+engines: list = MinimizerBase._engines
