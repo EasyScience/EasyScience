@@ -6,21 +6,21 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
 
 from numbers import Number
+from typing import Callable
 from typing import List
 from typing import Optional
 
 # Import dfols specific objects
 import dfols
+import numpy as np
 
-from .fitting_template import Callable
-from .fitting_template import FitError
-from .fitting_template import FitResults
-from .fitting_template import FittingTemplate
-from .fitting_template import NameConverter
-from .fitting_template import np
+from .fitting_base import FittingBase
+from .utils import FitError
+from .utils import FitResults
+from .utils import NameConverter
 
 
-class DFO(FittingTemplate):  # noqa: S101
+class DFO(FittingBase):  # noqa: S101
     """
     This is a wrapper to Derivative free optimisation: https://numericalalgorithmsgroup.github.io/dfols/
     """

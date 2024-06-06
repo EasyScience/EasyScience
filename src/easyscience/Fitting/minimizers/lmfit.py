@@ -6,9 +6,11 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
 
 import inspect
+from typing import Callable
 from typing import List
 from typing import Optional
 
+import numpy as np
 from lmfit import Model as lmModel
 
 # Import lmfit specific objects
@@ -16,15 +18,13 @@ from lmfit import Parameter as lmParameter
 from lmfit import Parameters as lmParameters
 from lmfit.model import ModelResult
 
-from .fitting_template import Callable
-from .fitting_template import FitError
-from .fitting_template import FitResults
-from .fitting_template import FittingTemplate
-from .fitting_template import NameConverter
-from .fitting_template import np
+from .fitting_base import FittingBase
+from .utils import FitError
+from .utils import FitResults
+from .utils import NameConverter
 
 
-class lmfit(FittingTemplate):  # noqa: S101
+class lmfit(FittingBase):  # noqa: S101
     """
     This is a wrapper to lmfit: https://lmfit.github.io/
     It allows for the lmfit fitting engine to use parameters declared in an `EasyScience.Objects.Base.BaseObj`.

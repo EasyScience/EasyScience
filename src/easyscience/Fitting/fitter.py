@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
@@ -10,7 +8,6 @@ import functools
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
 from abc import ABCMeta
 from types import FunctionType
-from typing import TYPE_CHECKING
 from typing import Callable
 from typing import List
 from typing import Optional
@@ -21,15 +18,11 @@ import numpy as np
 import easyscience.Fitting.minimizers as minimizers
 from easyscience import default_fitting_engine
 
-from .minimizers import FittingTemplate
+from .minimizers import FitResults
+from .minimizers import FittingBase
 
 _C = TypeVar('_C', bound=ABCMeta)
-_M = TypeVar('_M', bound=FittingTemplate)
-
-if TYPE_CHECKING:
-    from easyscience.Utils.typing import B
-
-    from .minimizers.fitting_template import FitResults
+_M = TypeVar('_M', bound=FittingBase)
 
 
 class Fitter:
@@ -37,7 +30,7 @@ class Fitter:
     Wrapper to the fitting engines
     """
 
-    def __init__(self, fit_object: Optional[B] = None, fit_function: Optional[Callable] = None):
+    def __init__(self, fit_object=None, fit_function: Optional[Callable] = None):
         self._fit_object = fit_object
         self._fit_function = fit_function
         self._dependent_dims = None
@@ -58,7 +51,7 @@ class Fitter:
 
         fit_methods = [
             x
-            for x, y in FittingTemplate.__dict__.items()
+            for x, y in FittingBase.__dict__.items()
             if (isinstance(y, FunctionType) and not x.startswith('_')) and x != 'fit'
         ]
         for method_name in fit_methods:
@@ -88,7 +81,7 @@ class Fitter:
 
         return wrapped_fit_function
 
-    def initialize(self, fit_object: B, fit_function: Callable):
+    def initialize(self, fit_object, fit_function: Callable):
         """
         Set the model and callable in the calculator interface.
 
@@ -197,7 +190,7 @@ class Fitter:
         self.__initialize()
 
     @property
-    def fit_object(self) -> B:
+    def fit_object(self):
         """
         The EasyScience object which will be used as a model
         :return: EasyScience Model
@@ -205,7 +198,7 @@ class Fitter:
         return self._fit_object
 
     @fit_object.setter
-    def fit_object(self, fit_object: B):
+    def fit_object(self, fit_object):
         """
         Set the EasyScience object which wil be used as a model
         :param fit_object: New EasyScience object

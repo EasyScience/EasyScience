@@ -1,32 +1,19 @@
-from __future__ import annotations
-
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
 #  SPDX-FileCopyrightText: 2023 EasyScience contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
-from abc import ABCMeta
-from typing import TYPE_CHECKING
 from typing import Callable
 from typing import List
 from typing import Optional
-from typing import TypeVar
 
 import numpy as np
 
 from easyscience.Objects.Groups import BaseCollection
 
 from .fitter import Fitter
-from .minimizers import FittingTemplate
-
-_C = TypeVar('_C', bound=ABCMeta)
-_M = TypeVar('_M', bound=FittingTemplate)
-
-if TYPE_CHECKING:
-    from easyscience.Utils.typing import B
-
-    from .minimizers.fitting_template import FitResults
+from .minimizers import FitResults
 
 
 class MultiFitter(Fitter):
@@ -37,7 +24,7 @@ class MultiFitter(Fitter):
 
     def __init__(
         self,
-        fit_objects: Optional[List[B]] = None,
+        fit_objects: Optional[List] = None,
         fit_functions: Optional[List[Callable]] = None,
     ):
         # Create a dummy core object to hold all the fit objects.

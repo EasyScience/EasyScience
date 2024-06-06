@@ -6,24 +6,24 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
 
 import inspect
+from typing import Callable
 from typing import List
 from typing import Optional
 
+import numpy as np
 from bumps.fitters import FIT_AVAILABLE_IDS
 from bumps.fitters import fit as bumps_fit
 from bumps.names import Curve
 from bumps.names import FitProblem
 from bumps.parameter import Parameter as bumpsParameter
 
-from .fitting_template import Callable
-from .fitting_template import FitError
-from .fitting_template import FitResults
-from .fitting_template import FittingTemplate
-from .fitting_template import NameConverter
-from .fitting_template import np
+from .fitting_base import FittingBase
+from .utils import FitError
+from .utils import FitResults
+from .utils import NameConverter
 
 
-class bumps(FittingTemplate):  # noqa: S101
+class bumps(FittingBase):  # noqa: S101
     """
     This is a wrapper to bumps: https://bumps.readthedocs.io/
     It allows for the bumps fitting engine to use parameters declared in an `EasyScience.Objects.Base.BaseObj`.
