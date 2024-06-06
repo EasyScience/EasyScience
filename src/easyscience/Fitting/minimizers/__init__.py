@@ -7,6 +7,10 @@ __version__ = '0.1.0'
 
 import warnings
 
+from .fitting_base import FittingBase  # noqa: E402
+from .utils import FitError  # noqa: F401, E402
+from .utils import FitResults  # noqa: F401, E402
+
 imported = -1
 try:
     from .lmfit import lmfit  # noqa: F401, E402
@@ -30,9 +34,4 @@ except ImportError:
     # TODO make this a proper message (use logging?)
     warnings.warn('dfo-ls has not been installed.', ImportWarning, stacklevel=2)
 
-from .fitting_base import FittingBase  # noqa: E402
-
 engines: list = FittingBase._engines
-
-from .utils import FitError  # noqa: F401, E402
-from .utils import FitResults  # noqa: F401, E402
