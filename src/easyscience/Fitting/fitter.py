@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
@@ -10,7 +8,6 @@ import functools
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
 from abc import ABCMeta
 from types import FunctionType
-from typing import TYPE_CHECKING
 from typing import Callable
 from typing import List
 from typing import Optional
@@ -18,17 +15,14 @@ from typing import TypeVar
 
 import numpy as np
 
-import easyscience.Fitting as Fitting
-from easyscience import borg
+import easyscience.Fitting.minimizers as minimizers
 from easyscience import default_fitting_engine
-from easyscience.Objects.Groups import BaseCollection
+
+from .minimizers import FitResults
+from .minimizers import MinimizerBase
 
 _C = TypeVar('_C', bound=ABCMeta)
-_M = TypeVar('_M', bound=Fitting.FittingTemplate)
-
-if TYPE_CHECKING:
-    from easyscience.Fitting.fitting_template import FitResults as FR
-    from easyscience.Utils.typing import B
+_M = TypeVar('_M', bound=MinimizerBase)
 
 
 class Fitter:
@@ -36,9 +30,7 @@ class Fitter:
     Wrapper to the fitting engines
     """
 
-    _borg = borg
-
-    def __init__(self, fit_object: Optional[B] = None, fit_function: Optional[Callable] = None):
+    def __init__(self, fit_object=None, fit_function: Optional[Callable] = None):
         self._fit_object = fit_object
         self._fit_function = fit_function
         self._dependent_dims = None
@@ -51,7 +43,7 @@ class Fitter:
             if (fit_object is not None) or (fit_function is not None):
                 raise AttributeError
 
-        self._engines: List[_C] = Fitting.engines
+        self._engines: List[_C] = minimizers.engines
         self._current_engine: _C = None
         self.__engine_obj: _M = None
         self._is_initialized: bool = False
@@ -59,7 +51,7 @@ class Fitter:
 
         fit_methods = [
             x
-            for x, y in Fitting.FittingTemplate.__dict__.items()
+            for x, y in MinimizerBase.__dict__.items()
             if (isinstance(y, FunctionType) and not x.startswith('_')) and x != 'fit'
         ]
         for method_name in fit_methods:
@@ -89,7 +81,7 @@ class Fitter:
 
         return wrapped_fit_function
 
-    def initialize(self, fit_object: B, fit_function: Callable):
+    def initialize(self, fit_object, fit_function: Callable):
         """
         Set the model and callable in the calculator interface.
 
@@ -145,9 +137,9 @@ class Fitter:
         :return: List of available fitting engines
         :rtype: List[str]
         """
-        if Fitting.engines is None:
+        if minimizers.engines is None:
             raise ImportError('There are no available fitting engines. Install `lmfit` and/or `bumps`')
-        return [engine.name for engine in Fitting.engines]
+        return [engine.name for engine in minimizers.engines]
 
     @property
     def can_fit(self) -> bool:
@@ -198,7 +190,7 @@ class Fitter:
         self.__initialize()
 
     @property
-    def fit_object(self) -> B:
+    def fit_object(self):
         """
         The EasyScience object which will be used as a model
         :return: EasyScience Model
@@ -206,7 +198,7 @@ class Fitter:
         return self._fit_object
 
     @fit_object.setter
-    def fit_object(self, fit_object: B):
+    def fit_object(self, fit_object):
         """
         Set the EasyScience object which wil be used as a model
         :param fit_object: New EasyScience object
@@ -248,7 +240,7 @@ class Fitter:
             weights: Optional[np.ndarray] = None,
             vectorized: bool = False,
             **kwargs,
-        ) -> FR:
+        ) -> FitResults:
             """
             This is a wrapped callable which performs the actual fitting. It is split into
             3 sections, PRE/ FIT/ POST.
@@ -334,7 +326,7 @@ class Fitter:
         return x_for_fit, x_new, y_new, weights, x_shape, kwargs
 
     @staticmethod
-    def _post_compute_reshaping(fit_result: FR, x: np.ndarray, y: np.ndarray, weights: np.ndarray) -> FR:
+    def _post_compute_reshaping(fit_result: FitResults, x: np.ndarray, y: np.ndarray, weights: np.ndarray) -> FitResults:
         """
         Reshape the output of the fitter into the correct dimensions.
         :param fit_result: Output from the fitter
@@ -347,127 +339,3 @@ class Fitter:
         setattr(fit_result, 'y_calc', np.reshape(fit_result.y_calc, y.shape))
         setattr(fit_result, 'y_err', np.reshape(fit_result.y_err, y.shape))
         return fit_result
-
-
-class MultiFitter(Fitter):
-    """
-    Extension of Fitter to enable multiple dataset/fit function fitting. We can fit these types of data simultaneously:
-    - Multiple models on multiple datasets.
-    """
-
-    def __init__(
-        self,
-        fit_objects: Optional[List[B]] = None,
-        fit_functions: Optional[List[Callable]] = None,
-    ):
-        # Create a dummy core object to hold all the fit objects.
-        self._fit_objects = BaseCollection('multi', *fit_objects)
-        self._fit_functions = fit_functions
-        # Initialize with the first of the fit_functions, without this it is
-        # not possible to change the fitting engine.
-        super().__init__(self._fit_objects, self._fit_functions[0])
-
-    def _fit_function_wrapper(self, real_x=None, flatten: bool = True) -> Callable:
-        """
-        Simple fit function which injects the N real X (independent) values into the
-        optimizer function. This will also flatten the results if needed.
-        :param real_x: List of independent x parameters to be injected
-        :param flatten: Should the result be a flat 1D array?
-        :return: Wrapped optimizer function.
-        """
-        # Extract of a list of callable functions
-        wrapped_fns = []
-        for this_x, this_fun in zip(real_x, self._fit_functions):
-            self._fit_function = this_fun
-            wrapped_fns.append(Fitter._fit_function_wrapper(self, this_x, flatten=flatten))
-
-        def wrapped_fun(x, **kwargs):
-            # Generate an empty Y based on x
-            y = np.zeros_like(x)
-            i = 0
-            # Iterate through wrapped functions, passing the WRONG x, the correct
-            # x was injected in the step above.
-            for idx, dim in enumerate(self._dependent_dims):
-                ep = i + np.prod(dim)
-                y[i:ep] = wrapped_fns[idx](x, **kwargs)
-                i = ep
-            return y
-
-        return wrapped_fun
-
-    @staticmethod
-    def _precompute_reshaping(
-        x: List[np.ndarray],
-        y: List[np.ndarray],
-        weights: Optional[List[np.ndarray]],
-        vectorized: bool,
-        kwargs,
-    ):
-        """
-        Convert an array of X's and Y's  to an acceptable shape for fitting.
-        :param x: List of independent variables.
-        :param y: List of dependent variables.
-        :param vectorized: Is the fn input vectorized or point based?
-        :param kwargs: Additional kwy words.
-        :return: Variables for optimization
-        """
-        if weights is None:
-            weights = [None] * len(x)
-        _, _x_new, _y_new, _weights, _dims, kwargs = Fitter._precompute_reshaping(x[0], y[0], weights[0], vectorized, kwargs)
-        x_new = [_x_new]
-        y_new = [_y_new]
-        w_new = [_weights]
-        dims = [_dims]
-        for _x, _y, _w in zip(x[1::], y[1::], weights[1::]):
-            _, _x_new, _y_new, _weights, _dims, _ = Fitter._precompute_reshaping(_x, _y, _w, vectorized, kwargs)
-            x_new.append(_x_new)
-            y_new.append(_y_new)
-            w_new.append(_weights)
-            dims.append(_dims)
-        y_new = np.hstack(y_new)
-        if w_new[0] is None:
-            w_new = None
-        else:
-            w_new = np.hstack(w_new)
-        x_fit = np.linspace(0, y_new.size - 1, y_new.size)
-        return x_fit, x_new, y_new, w_new, dims, kwargs
-
-    def _post_compute_reshaping(
-        self,
-        fit_result_obj: FR,
-        x: List[np.ndarray],
-        y: List[np.ndarray],
-        weights: List[np.ndarray],
-    ) -> List[FR]:
-        """
-        Take a fit results object and split it into n chuncks based on the size of the x, y inputs
-        :param fit_result_obj: Result from a multifit
-        :param x: List of X co-ords
-        :param y: List of Y co-ords
-        :return: List of fit results
-        """
-
-        cls = fit_result_obj.__class__
-        sp = 0
-        fit_results_list = []
-        for idx, this_x in enumerate(x):
-            # Create a new Results obj
-            current_results = cls()
-            ep = sp + int(np.array(self._dependent_dims[idx]).prod())
-
-            #  Fill out the new result obj (see EasyScience.Fitting.Fitting_template.FitResults)
-            current_results.success = fit_result_obj.success
-            current_results.fitting_engine = fit_result_obj.fitting_engine
-            current_results.p = fit_result_obj.p
-            current_results.p0 = fit_result_obj.p0
-            current_results.x = this_x
-            current_results.y_obs = y[idx]
-            current_results.y_calc = np.reshape(fit_result_obj.y_calc[sp:ep], current_results.y_obs.shape)
-            current_results.y_err = np.reshape(fit_result_obj.y_err[sp:ep], current_results.y_obs.shape)
-            current_results.engine_result = fit_result_obj.engine_result
-
-            # Attach an additional field for the un-modified results
-            current_results.total_results = fit_result_obj
-            fit_results_list.append(current_results)
-            sp = ep
-        return fit_results_list

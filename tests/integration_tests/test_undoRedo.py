@@ -229,7 +229,7 @@ def test_UndoRedoMacros():
         assert item.raw_value == old_value + offset
 
 
-@pytest.mark.parametrize("fit_engine", ["lmfit", "bumps", "DFO_LS"])
+@pytest.mark.parametrize("fit_engine", ["lmfit", "bumps", "dfo_ls"])
 def test_fittingUndoRedo(fit_engine):
     m_value = 6
     c_value = 2
@@ -265,7 +265,7 @@ def test_fittingUndoRedo(fit_engine):
 
     y = l1(x) + 0.125 * (dy - 0.5)
 
-    from easyscience.Fitting.Fitting import Fitter
+    from easyscience.Fitting import Fitter
 
     f = Fitter(l2, l2)
     try:

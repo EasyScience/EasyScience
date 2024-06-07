@@ -2,76 +2,59 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
 
-__author__ = "github.com/wardsimon"
-__version__ = "0.1.0"
+__author__ = 'github.com/wardsimon'
+__version__ = '0.1.0'
 
 import inspect
+from typing import Callable
 from typing import List
 from typing import Optional
 
-from lmfit import Model as lmModel
-
-# Import lmfit specific objects
-from lmfit import Parameter as lmParameter
-from lmfit import Parameters as lmParameters
+import numpy as np
+from lmfit import Model as LMModel
+from lmfit import Parameter as LMParameter
+from lmfit import Parameters as LMParameters
 from lmfit.model import ModelResult
 
-from easyscience.Fitting.fitting_template import Callable
-from easyscience.Fitting.fitting_template import FitError
-from easyscience.Fitting.fitting_template import FitResults
-from easyscience.Fitting.fitting_template import FittingTemplate
-from easyscience.Fitting.fitting_template import NameConverter
-from easyscience.Fitting.fitting_template import np
+from .minimizer_base import MinimizerBase
+from .utils import FitError
+from .utils import FitResults
+from .utils import NameConverter
 
 
-class lmfit(FittingTemplate):  # noqa: S101
+class LMFit(MinimizerBase):  # noqa: S101
     """
-    This is a wrapper to lmfit: https://lmfit.github.io/
+    This is a wrapper to the extended Levenberg-Marquardt Fit: https://lmfit.github.io/lmfit-py/
     It allows for the lmfit fitting engine to use parameters declared in an `EasyScience.Objects.Base.BaseObj`.
     """
 
-    property_type = lmParameter
-    name = "lmfit"
+    property_type = LMParameter
+    name = 'lmfit'
 
-    def __init__(self, obj, fit_function: Callable):
-        """
-        Initialize the fitting engine with a `BaseObj` and an arbitrary fitting function.
-
-        :param obj: Object containing elements of the `Parameter` class
-        :type obj: BaseObj
-        :param fit_function: function that when called returns y values. 'x' must be the first
-                            and only positional argument. Additional values can be supplied by
-                            keyword/value pairs
-        :type fit_function: Callable
-        """
-        super().__init__(obj, fit_function)
-
-    def make_model(self, pars: Optional[lmParameters] = None) -> lmModel:
+    def make_model(self, pars: Optional[LMParameters] = None) -> LMModel:
         """
         Generate a lmfit model from the supplied `fit_function` and parameters in the base object.
 
         :return: Callable lmfit model
-        :rtype: lmModel
+        :rtype: LMModel
         """
         # Generate the fitting function
         fit_func = self._generate_fit_function()
         if pars is None:
             pars = self._cached_pars
         # Create the model
-        model = lmModel(
+        model = LMModel(
             fit_func,
-            independent_vars=["x"],
-            param_names=["p" + str(key) for key in pars.keys()],
+            independent_vars=['x'],
+            param_names=['p' + str(key) for key in pars.keys()],
         )
         # Assign values from the `Parameter` to the model
         for name, item in pars.items():
-            if isinstance(item, lmParameter):
+            if isinstance(item, LMParameter):
                 value = item.value
             else:
                 value = item.raw_value
-            model.set_param_hint(
-                "p" + str(name), value=value, min=item.min, max=item.max
-            )
+            model.set_param_hint('p' + str(name), value=value, min=item.min, max=item.max)
 
         # Cache the model for later reference
         self._cached_model = model
@@ -127,12 +110,10 @@ class lmfit(FittingTemplate):  # noqa: S101
         # f = (x, a=1, b=2)...
         # Where we need to be generic. Note that this won't hold for much outside of this scope.
         params = [
-            inspect.Parameter(
-                "x", inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=inspect._empty
-            ),
+            inspect.Parameter('x', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=inspect._empty),
             *[
                 inspect.Parameter(
-                    "p" + str(name),
+                    'p' + str(name),
                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
                     annotation=inspect._empty,
                     default=parameter.raw_value,
@@ -150,8 +131,8 @@ class lmfit(FittingTemplate):  # noqa: S101
         x: np.ndarray,
         y: np.ndarray,
         weights: Optional[np.ndarray] = None,
-        model: Optional[lmModel] = None,
-        parameters: Optional[lmParameters] = None,
+        model: Optional[LMModel] = None,
+        parameters: Optional[LMParameters] = None,
         method: Optional[str] = None,
         minimizer_kwargs: Optional[dict] = None,
         engine_kwargs: Optional[dict] = None,
@@ -169,9 +150,9 @@ class lmfit(FittingTemplate):  # noqa: S101
         :param weights: Weights for supplied measured points
         :type weights: np.ndarray
         :param model: Optional Model which is being fitted to
-        :type model: lmModel
+        :type model: LMModel
         :param parameters: Optional parameters for the fit
-        :type parameters: lmParameters
+        :type parameters: LMParameters
         :param minimizer_kwargs: Arguments to be passed directly to the minimizer
         :type minimizer_kwargs: dict
         :param kwargs: Additional arguments for the fitting function.
@@ -180,7 +161,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         """
         default_method = {}
         if method is not None and method in self.available_methods():
-            default_method["method"] = method
+            default_method['method'] = method
 
         if weights is None:
             weights = 1 / np.sqrt(np.abs(y))
@@ -191,7 +172,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         if minimizer_kwargs is None:
             minimizer_kwargs = {}
         else:
-            minimizer_kwargs = {"fit_kws": minimizer_kwargs}
+            minimizer_kwargs = {'fit_kws': minimizer_kwargs}
         minimizer_kwargs.update(engine_kwargs)
 
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
@@ -204,9 +185,7 @@ class lmfit(FittingTemplate):  # noqa: S101
             if model is None:
                 model = self.make_model()
 
-            model_results = model.fit(
-                y, x=x, weights=weights, **default_method, **minimizer_kwargs, **kwargs
-            )
+            model_results = model.fit(y, x=x, weights=weights, **default_method, **minimizer_kwargs, **kwargs)
             self._set_parameter_fit_result(model_results, stack_status)
             results = self._gen_fit_results(model_results)
         except Exception as e:
@@ -215,33 +194,31 @@ class lmfit(FittingTemplate):  # noqa: S101
             raise FitError(e)
         return results
 
-    def convert_to_pars_obj(self, par_list: Optional[List] = None) -> lmParameters:
+    def convert_to_pars_obj(self, par_list: Optional[List] = None) -> LMParameters:
         """
         Create an lmfit compatible container with the `Parameters` converted from the base object.
 
         :param par_list: If only a single/selection of parameter is required. Specify as a list
         :type par_list: List[str]
         :return: lmfit Parameters compatible object
-        :rtype: lmParameters
+        :rtype: LMParameters
         """
         if par_list is None:
             # Assume that we have a BaseObj for which we can obtain a list
             par_list = self._object.get_fit_parameters()
-        pars_obj = lmParameters().add_many(
-            [self.__class__.convert_to_par_object(obj) for obj in par_list]
-        )
+        pars_obj = LMParameters().add_many([self.__class__.convert_to_par_object(obj) for obj in par_list])
         return pars_obj
 
     @staticmethod
-    def convert_to_par_object(obj) -> lmParameter:
+    def convert_to_par_object(obj) -> LMParameter:
         """
         Convert an `EasyScience.Objects.Base.Parameter` object to a lmfit Parameter object.
 
         :return: lmfit Parameter compatible object.
-        :rtype: lmParameter
+        :rtype: LMParameter
         """
-        return lmParameter(
-            "p" + str(NameConverter().get_key(obj)),
+        return LMParameter(
+            'p' + str(NameConverter().get_key(obj)),
             value=obj.raw_value,
             vary=not obj.fixed,
             min=obj.min,
@@ -266,11 +243,11 @@ class lmfit(FittingTemplate):  # noqa: S101
                 pars[name].value = self._cached_pars_vals[name][0]
                 pars[name].error = self._cached_pars_vals[name][1]
             borg.stack.enabled = True
-            borg.stack.beginMacro("Fitting routine")
+            borg.stack.beginMacro('Fitting routine')
         for name in pars.keys():
-            pars[name].value = fit_result.params["p" + str(name)].value
+            pars[name].value = fit_result.params['p' + str(name)].value
             if fit_result.errorbars:
-                pars[name].error = fit_result.params["p" + str(name)].stderr
+                pars[name].error = fit_result.params['p' + str(name)].stderr
             else:
                 pars[name].error = 0.0
         if stack_status:
@@ -294,7 +271,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         results.success = fit_results.success
         results.y_obs = fit_results.data
         # results.residual = fit_results.residual
-        results.x = fit_results.userkws["x"]
+        results.x = fit_results.userkws['x']
         results.p = fit_results.values
         results.p0 = fit_results.init_values
         # results.goodness_of_fit = fit_results.chisqr
@@ -309,16 +286,16 @@ class lmfit(FittingTemplate):  # noqa: S101
 
     def available_methods(self) -> List[str]:
         return [
-            "least_squares",
-            "leastsq",
-            "differential_evolution",
-            "basinhopping",
-            "ampgo",
-            "nelder",
-            "lbfgsb",
-            "powell",
-            "cg",
-            "newton",
-            "cobyla",
-            "bfgs",
+            'least_squares',
+            'leastsq',
+            'differential_evolution',
+            'basinhopping',
+            'ampgo',
+            'nelder',
+            'lbfgsb',
+            'powell',
+            'cg',
+            'newton',
+            'cobyla',
+            'bfgs',
         ]

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 from easyscience.Datasets.xarray import xr
-from easyscience.Fitting.Fitting import Fitter
+from easyscience.Fitting import Fitter
 from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.ObjectClasses import Parameter
 
@@ -41,7 +41,7 @@ fig, ax = plt.subplots(2, 3, sharey=True, sharex=True)
 cbar_ax1 = fig.add_axes([0.85, 0.15, 0.05, 0.3])
 cbar_ax2 = fig.add_axes([0.85, 0.60, 0.05, 0.3])
 
-for idx, minimizer in enumerate(['lmfit', 'bumps', 'DFO_LS']):
+for idx, minimizer in enumerate(['lmfit', 'bumps', 'dfo_ls']):
     b.s_off = s_off_start_point
     b.c_off = c_off_start_point
 
