@@ -7,7 +7,8 @@ import functools
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
 from abc import ABCMeta
-from types import FunctionType
+
+# from types import FunctionType
 from typing import Callable
 from typing import List
 from typing import Optional
@@ -15,11 +16,14 @@ from typing import TypeVar
 
 import numpy as np
 
-import easyscience.Fitting.minimizers as minimizers
+# import easyscience.Fitting.minimizers as minimizers
 from easyscience import default_fitting_engine
 
 from .minimizers import FitResults
 from .minimizers import MinimizerBase
+from .minimizers.factory import Minimizers
+from .minimizers.factory import from_string
+from .minimizers.factory import minimizer_class_factory
 
 _C = TypeVar('_C', bound=ABCMeta)
 _M = TypeVar('_M', bound=MinimizerBase)
@@ -43,22 +47,43 @@ class Fitter:
             if (fit_object is not None) or (fit_function is not None):
                 raise AttributeError
 
-        self._engines: List[_C] = minimizers.engines
+        #        self._engines: List[_C] = minimizers.engines
         self._current_engine: _C = None
         self.__engine_obj: _M = None
         self._is_initialized: bool = False
         self.create()
 
-        fit_methods = [
-            x
-            for x, y in MinimizerBase.__dict__.items()
-            if (isinstance(y, FunctionType) and not x.startswith('_')) and x != 'fit'
-        ]
-        for method_name in fit_methods:
-            setattr(self, method_name, self.__pass_through_generator(method_name))
+        # fit_methods = [
+        #     x
+        #     for x, y in MinimizerBase.__dict__.items()
+        #     if (isinstance(y, FunctionType) and not x.startswith('_')) and x != 'fit'
+        # ]
+        # for method_name in fit_methods:
+        #     setattr(self, method_name, self.__pass_through_generator(method_name))
 
         if can_initialize:
             self.__initialize()
+
+    def fit_constraints(self) -> list:
+        return self.__engine_obj.fit_constraints()
+
+    def add_fit_constraint(self, constraint) -> None:
+        self.__engine_obj.add_fit_constraint(constraint)
+
+    def remove_fit_constraint(self, index: int) -> None:
+        self.__engine_obj.remove_fit_constraint(index)
+
+    def make_model(self, pars=None) -> Callable:
+        return self.__engine_obj.make_model(pars)
+
+    def evaluate(self, pars=None) -> np.ndarray:
+        return self.__engine_obj.evaluate(pars)
+
+    def convert_to_pars_obj(self, pars) -> object:
+        return self.__engine_obj.convert_to_pars_obj(pars)
+
+    def available_methods(self) -> list:
+        return self.__engine_obj.available_methods()
 
     def _fit_function_wrapper(self, real_x=None, flatten: bool = True) -> Callable:
         """
@@ -107,12 +132,14 @@ class Fitter:
         :param engine_name: The label of the optimization engine to create.
         :return: None
         """
-        engines = self.available_engines
-        if engine_name in engines:
-            self._current_engine = self._engines[engines.index(engine_name)]
-            self._is_initialized = False
-        else:
-            raise AttributeError(f"The supplied optimizer engine '{engine_name}' is unknown.")
+        self._current_engine = minimizer_class_factory(from_string(engine_name))
+
+    #        engines = self.available_engines
+    #        if engine_name in engines:
+    #            self._current_engine = self._engines[engines.index(engine_name)]
+    #            self._is_initialized = False
+    #        else:
+    #            raise AttributeError(f"The supplied optimizer engine '{engine_name}' is unknown.")
 
     def switch_engine(self, engine_name: str):
         """
@@ -121,8 +148,8 @@ class Fitter:
         :return: None
         """
         # There isn't any state to carry over
-        if not self._is_initialized:
-            raise ReferenceError('The fitting engine must be initialized before switching')
+        #        if not self._is_initialized:
+        #            raise ReferenceError('The fitting engine must be initialized before switching')
         # Constrains are not carried over. Do it manually.
         constraints = self.__engine_obj._constraints
         self.create(engine_name)
@@ -137,9 +164,10 @@ class Fitter:
         :return: List of available fitting engines
         :rtype: List[str]
         """
-        if minimizers.engines is None:
-            raise ImportError('There are no available fitting engines. Install `lmfit` and/or `bumps`')
-        return [engine.name for engine in minimizers.engines]
+        #        if minimizers.engines is None:
+        #            raise ImportError('There are no available fitting engines. Install `lmfit` and/or `bumps`')
+        #        return [engine.name for engine in minimizers.engines]
+        return [minimize.name for minimize in Minimizers]
 
     @property
     def can_fit(self) -> bool:
@@ -207,23 +235,23 @@ class Fitter:
         self._fit_object = fit_object
         self.__initialize()
 
-    def __pass_through_generator(self, name: str):
-        """
-        Attach the attributes of the calculator template to the current fitter instance.
-        :param name: Attribute name to attach
-        :return: Wrapped calculator interface object.
-        """
-        obj = self
+    # def __pass_through_generator(self, name: str):
+    #     """
+    #     Attach the attributes of the calculator template to the current fitter instance.
+    #     :param name: Attribute name to attach
+    #     :return: Wrapped calculator interface object.
+    #     """
+    #     obj = self
 
-        def inner(*args, **kwargs):
-            if not obj.can_fit:
-                raise ReferenceError('The fitting engine must first be initialized')
-            func = getattr(obj.engine, name, None)
-            if func is None:
-                raise ValueError('The fitting engine does not have the attribute "{}"'.format(name))
-            return func(*args, **kwargs)
+    #     def inner(*args, **kwargs):
+    #         if not obj.can_fit:
+    #             raise ReferenceError('The fitting engine must first be initialized')
+    #         func = getattr(obj.engine, name, None)
+    #         if func is None:
+    #             raise ValueError('The fitting engine does not have the attribute "{}"'.format(name))
+    #         return func(*args, **kwargs)
 
-        return inner
+    #     return inner
 
     @property
     def fit(self) -> Callable:
