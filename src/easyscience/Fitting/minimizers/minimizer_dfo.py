@@ -21,11 +21,11 @@ from .utils import NameConverter
 
 class DFO(MinimizerBase):  # noqa: S101
     """
-    This is a wrapper to Derivative free optimisation: https://numericalalgorithmsgroup.github.io/dfols/
+    This is a wrapper to Derivative Free Optimisation for Least Square: https://numericalalgorithmsgroup.github.io/dfols/
     """
 
     property_type = Number
-    name = 'DFO_LS'
+    name = 'dfo_ls'
 
     def __init__(self, obj, fit_function: Callable):
         """
@@ -39,7 +39,7 @@ class DFO(MinimizerBase):  # noqa: S101
         :type fit_function: Callable
         """
         super().__init__(obj, fit_function)
-        self.p_0 = {}
+        self._p_0 = {}
 
     def make_model(self, pars: Optional[List] = None) -> Callable:
         """
@@ -165,7 +165,7 @@ class DFO(MinimizerBase):  # noqa: S101
             model = self.make_model(pars=parameters)
             model = model(x, y, weights)
         self._cached_model = model
-        self.p_0 = {f'p{key}': self._cached_pars[key].raw_value for key in self._cached_pars.keys()}
+        self._p_0 = {f'p{key}': self._cached_pars[key].raw_value for key in self._cached_pars.keys()}
 
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyscience import borg
@@ -243,7 +243,7 @@ class DFO(MinimizerBase):  # noqa: S101
         item = {}
         for p_name, par in pars.items():
             item[f'p{p_name}'] = par.raw_value
-        results.p0 = self.p_0
+        results.p0 = self._p_0
         results.p = item
         results.x = self._cached_model.x
         results.y_obs = self._cached_model.y

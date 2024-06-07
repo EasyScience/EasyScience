@@ -15,7 +15,7 @@ from bumps.fitters import FIT_AVAILABLE_IDS
 from bumps.fitters import fit as bumps_fit
 from bumps.names import Curve
 from bumps.names import FitProblem
-from bumps.parameter import Parameter as bumpsParameter
+from bumps.parameter import Parameter as BumpsParameter
 
 from .minimizer_base import MinimizerBase
 from .utils import FitError
@@ -25,11 +25,11 @@ from .utils import NameConverter
 
 class Bumps(MinimizerBase):  # noqa: S101
     """
-    This is a wrapper to bumps: https://bumps.readthedocs.io/
-    It allows for the bumps fitting engine to use parameters declared in an `EasyScience.Objects.Base.BaseObj`.
+    This is a wrapper to Bumps: https://bumps.readthedocs.io/
+    It allows for the Bumps fitting engine to use parameters declared in an `EasyScience.Objects.Base.BaseObj`.
     """
 
-    property_type = bumpsParameter
+    property_type = BumpsParameter
     name = 'bumps'
 
     def __init__(self, obj, fit_function: Callable):
@@ -45,9 +45,9 @@ class Bumps(MinimizerBase):  # noqa: S101
         """
         super().__init__(obj, fit_function)
         self._cached_pars_order = ()
-        self.p_0 = {}
+        self._p_0 = {}
 
-    def make_model(self, pars: Optional[List[bumpsParameter]] = None) -> Callable:
+    def make_model(self, pars: Optional[List[BumpsParameter]] = None) -> Callable:
         """
         Generate a bumps model from the supplied `fit_function` and parameters in the base object.
         Note that this makes a callable as it needs to be initialized with *x*, *y*, *weights*
@@ -163,7 +163,7 @@ class Bumps(MinimizerBase):  # noqa: S101
         :param model: Optional Model which is being fitted to
         :type model: lmModel
         :param parameters: Optional parameters for the fit
-        :type parameters: List[bumpsParameter]
+        :type parameters: List[BumpsParameter]
         :param kwargs: Additional arguments for the fitting function.
         :param method: Method for minimization
         :type method: str
@@ -191,7 +191,7 @@ class Bumps(MinimizerBase):  # noqa: S101
             model = self.make_model(pars=parameters)
             model = model(x, y, weights)
         self._cached_model = model
-        self.p_0 = {f'p{key}': self._cached_pars[key].raw_value for key in self._cached_pars.keys()}
+        self._p_0 = {f'p{key}': self._cached_pars[key].raw_value for key in self._cached_pars.keys()}
         problem = FitProblem(model)
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyscience import borg
@@ -209,14 +209,14 @@ class Bumps(MinimizerBase):  # noqa: S101
             raise FitError(e)
         return results
 
-    def convert_to_pars_obj(self, par_list: Optional[List] = None) -> List[bumpsParameter]:
+    def convert_to_pars_obj(self, par_list: Optional[List] = None) -> List[BumpsParameter]:
         """
         Create a container with the `Parameters` converted from the base object.
 
         :param par_list: If only a single/selection of parameter is required. Specify as a list
         :type par_list: List[str]
         :return: bumps Parameters list
-        :rtype: List[bumpsParameter]
+        :rtype: List[BumpsParameter]
         """
         if par_list is None:
             # Assume that we have a BaseObj for which we can obtain a list
@@ -226,14 +226,14 @@ class Bumps(MinimizerBase):  # noqa: S101
 
     # For some reason I have to double staticmethod :-/
     @staticmethod
-    def convert_to_par_object(obj) -> bumpsParameter:
+    def convert_to_par_object(obj) -> BumpsParameter:
         """
         Convert an `EasyScience.Objects.Base.Parameter` object to a bumps Parameter object
 
         :return: bumps Parameter compatible object.
-        :rtype: bumpsParameter
+        :rtype: BumpsParameter
         """
-        return bumpsParameter(
+        return BumpsParameter(
             name='p' + str(NameConverter().get_key(obj)),
             value=obj.raw_value,
             bounds=[obj.min, obj.max],
@@ -285,7 +285,7 @@ class Bumps(MinimizerBase):  # noqa: S101
         for index, name in enumerate(self._cached_model._pnames):
             dict_name = int(name[1:])
             item[name] = pars[dict_name].raw_value
-        results.p0 = self.p_0
+        results.p0 = self._p_0
         results.p = item
         results.x = self._cached_model.x
         results.y_obs = self._cached_model.y

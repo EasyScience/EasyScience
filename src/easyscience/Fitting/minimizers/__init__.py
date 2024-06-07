@@ -13,7 +13,7 @@ from .utils import FitResults  # noqa: F401, E402
 
 imported = -1
 try:
-    from .minimizer_lmfit import LmFit  # noqa: F401, E402
+    from .minimizer_lmfit import LMFit  # noqa: F401, E402
 
     imported += 1
 except ImportError:

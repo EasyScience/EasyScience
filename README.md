@@ -35,6 +35,6 @@ Documentation can be found at:
 We absolutely welcome contributions. **EasyScience** is maintained by the ESS and on a volunteer basis and thus we need to foster a community that can support user questions and develop new features to make this software a useful tool for all users while encouraging every member of the community to share their ideas.
 
 ## License
-While **EasyScience** is under the BSD-3 license, DFO_LS is subject to the GPL license.
+While **EasyScience** is under the BSD-3 license, DFO-LS is subject to the GPL license.
 
 

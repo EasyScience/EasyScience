@@ -39,7 +39,7 @@ f = Fitter()
 f.initialize(b, fit_fun)
 
 fig, ax = plt.subplots(2, 3, sharey='row')
-for idx, minimizer in enumerate(['lmfit', 'bumps', 'DFO_LS']):
+for idx, minimizer in enumerate(['lmfit', 'bumps', 'dfo_ls']):
 
     b.m = m_starting_point
     b.c = c_starting_point

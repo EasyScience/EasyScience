@@ -11,9 +11,9 @@ from typing import List
 from typing import Optional
 
 import numpy as np
-from lmfit import Model as lmModel
-from lmfit import Parameter as lmParameter
-from lmfit import Parameters as lmParameters
+from lmfit import Model as LMModel
+from lmfit import Parameter as LMParameter
+from lmfit import Parameters as LMParameters
 from lmfit.model import ModelResult
 
 from .minimizer_base import MinimizerBase
@@ -22,48 +22,35 @@ from .utils import FitResults
 from .utils import NameConverter
 
 
-class LmFit(MinimizerBase):  # noqa: S101
+class LMFit(MinimizerBase):  # noqa: S101
     """
-    This is a wrapper to lmfit: https://lmfit.github.io/
+    This is a wrapper to the extended Levenberg-Marquardt Fit: https://lmfit.github.io/lmfit-py/
     It allows for the lmfit fitting engine to use parameters declared in an `EasyScience.Objects.Base.BaseObj`.
     """
 
-    property_type = lmParameter
+    property_type = LMParameter
     name = 'lmfit'
 
-    def __init__(self, obj, fit_function: Callable):
-        """
-        Initialize the fitting engine with a `BaseObj` and an arbitrary fitting function.
-
-        :param obj: Object containing elements of the `Parameter` class
-        :type obj: BaseObj
-        :param fit_function: function that when called returns y values. 'x' must be the first
-                            and only positional argument. Additional values can be supplied by
-                            keyword/value pairs
-        :type fit_function: Callable
-        """
-        super().__init__(obj, fit_function)
-
-    def make_model(self, pars: Optional[lmParameters] = None) -> lmModel:
+    def make_model(self, pars: Optional[LMParameters] = None) -> LMModel:
         """
         Generate a lmfit model from the supplied `fit_function` and parameters in the base object.
 
         :return: Callable lmfit model
-        :rtype: lmModel
+        :rtype: LMModel
         """
         # Generate the fitting function
         fit_func = self._generate_fit_function()
         if pars is None:
             pars = self._cached_pars
         # Create the model
-        model = lmModel(
+        model = LMModel(
             fit_func,
             independent_vars=['x'],
             param_names=['p' + str(key) for key in pars.keys()],
         )
         # Assign values from the `Parameter` to the model
         for name, item in pars.items():
-            if isinstance(item, lmParameter):
+            if isinstance(item, LMParameter):
                 value = item.value
             else:
                 value = item.raw_value
@@ -144,8 +131,8 @@ class LmFit(MinimizerBase):  # noqa: S101
         x: np.ndarray,
         y: np.ndarray,
         weights: Optional[np.ndarray] = None,
-        model: Optional[lmModel] = None,
-        parameters: Optional[lmParameters] = None,
+        model: Optional[LMModel] = None,
+        parameters: Optional[LMParameters] = None,
         method: Optional[str] = None,
         minimizer_kwargs: Optional[dict] = None,
         engine_kwargs: Optional[dict] = None,
@@ -163,9 +150,9 @@ class LmFit(MinimizerBase):  # noqa: S101
         :param weights: Weights for supplied measured points
         :type weights: np.ndarray
         :param model: Optional Model which is being fitted to
-        :type model: lmModel
+        :type model: LMModel
         :param parameters: Optional parameters for the fit
-        :type parameters: lmParameters
+        :type parameters: LMParameters
         :param minimizer_kwargs: Arguments to be passed directly to the minimizer
         :type minimizer_kwargs: dict
         :param kwargs: Additional arguments for the fitting function.
@@ -207,30 +194,30 @@ class LmFit(MinimizerBase):  # noqa: S101
             raise FitError(e)
         return results
 
-    def convert_to_pars_obj(self, par_list: Optional[List] = None) -> lmParameters:
+    def convert_to_pars_obj(self, par_list: Optional[List] = None) -> LMParameters:
         """
         Create an lmfit compatible container with the `Parameters` converted from the base object.
 
         :param par_list: If only a single/selection of parameter is required. Specify as a list
         :type par_list: List[str]
         :return: lmfit Parameters compatible object
-        :rtype: lmParameters
+        :rtype: LMParameters
         """
         if par_list is None:
             # Assume that we have a BaseObj for which we can obtain a list
             par_list = self._object.get_fit_parameters()
-        pars_obj = lmParameters().add_many([self.__class__.convert_to_par_object(obj) for obj in par_list])
+        pars_obj = LMParameters().add_many([self.__class__.convert_to_par_object(obj) for obj in par_list])
         return pars_obj
 
     @staticmethod
-    def convert_to_par_object(obj) -> lmParameter:
+    def convert_to_par_object(obj) -> LMParameter:
         """
         Convert an `EasyScience.Objects.Base.Parameter` object to a lmfit Parameter object.
 
         :return: lmfit Parameter compatible object.
-        :rtype: lmParameter
+        :rtype: LMParameter
         """
-        return lmParameter(
+        return LMParameter(
             'p' + str(NameConverter().get_key(obj)),
             value=obj.raw_value,
             vary=not obj.fixed,
