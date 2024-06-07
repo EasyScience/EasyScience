@@ -17,7 +17,7 @@ from typing import TypeVar
 import numpy as np
 
 # import easyscience.Fitting.minimizers as minimizers
-from easyscience import default_fitting_engine
+from easyscience import DEFAULT_FITTING_ENGINE
 
 from .minimizers import FitResults
 from .minimizers import MinimizerBase
@@ -34,56 +34,60 @@ class Fitter:
     Wrapper to the fitting engines
     """
 
-    def __init__(self, fit_object=None, fit_function: Optional[Callable] = None):
+    def __init__(self, fit_object, fit_function: Callable):
         self._fit_object = fit_object
         self._fit_function = fit_function
         self._dependent_dims = None
 
-        can_initialize = False
-        # We can only proceed if both obj and func are not None
-        if (fit_object is not None) & (fit_function is not None):
-            can_initialize = True
-        else:
-            if (fit_object is not None) or (fit_function is not None):
-                raise AttributeError
+        # can_initialize = False
+        # # We can only proceed if both obj and func are not None
+        # if (fit_object is not None) & (fit_function is not None):
+        #     can_initialize = True
+        # else:
+        #     if (fit_object is not None) or (fit_function is not None):
+        #         raise AttributeError
 
         #        self._engines: List[_C] = minimizers.engines
-        self._current_engine: _C = None
-        self.__engine_obj: _M = None
-        self._is_initialized: bool = False
-        self.create()
+        self._minimizer: MinimizerBase  # _minimizer is set in the create method
+        #        self._initialize()
+        self.create(DEFAULT_FITTING_ENGINE)
 
-        # fit_methods = [
-        #     x
-        #     for x, y in MinimizerBase.__dict__.items()
-        #     if (isinstance(y, FunctionType) and not x.startswith('_')) and x != 'fit'
-        # ]
-        # for method_name in fit_methods:
-        #     setattr(self, method_name, self.__pass_through_generator(method_name))
+    #        self._current_engine: _C = None
+    #        self.__engine_obj: _M = None
+    #        self._is_initialized: bool = False
+    #        self.create()
 
-        if can_initialize:
-            self.__initialize()
+    # fit_methods = [
+    #     x
+    #     for x, y in MinimizerBase.__dict__.items()
+    #     if (isinstance(y, FunctionType) and not x.startswith('_')) and x != 'fit'
+    # ]
+    # for method_name in fit_methods:
+    #     setattr(self, method_name, self.__pass_through_generator(method_name))
+
+    #        if can_initialize:
+    #            self.__initialize()
 
     def fit_constraints(self) -> list:
-        return self.__engine_obj.fit_constraints()
+        return self._minimizer.fit_constraints()
 
     def add_fit_constraint(self, constraint) -> None:
-        self.__engine_obj.add_fit_constraint(constraint)
+        self._minimizer.add_fit_constraint(constraint)
 
     def remove_fit_constraint(self, index: int) -> None:
-        self.__engine_obj.remove_fit_constraint(index)
+        self._minimizer.remove_fit_constraint(index)
 
     def make_model(self, pars=None) -> Callable:
-        return self.__engine_obj.make_model(pars)
+        return self._minimizer.make_model(pars)
 
     def evaluate(self, pars=None) -> np.ndarray:
-        return self.__engine_obj.evaluate(pars)
+        return self._minimizer.evaluate(pars)
 
     def convert_to_pars_obj(self, pars) -> object:
-        return self.__engine_obj.convert_to_pars_obj(pars)
+        return self._minimizer.convert_to_pars_obj(pars)
 
     def available_methods(self) -> list:
-        return self.__engine_obj.available_methods()
+        return self._minimizer.available_methods()
 
     def _fit_function_wrapper(self, real_x=None, flatten: bool = True) -> Callable:
         """
@@ -116,23 +120,31 @@ class Fitter:
         """
         self._fit_object = fit_object
         self._fit_function = fit_function
-        self.__initialize()
+        #        self.__initialize()
+        #        self._initialize()
+        self.create(DEFAULT_FITTING_ENGINE)
 
-    def __initialize(self):
-        """
-        The real initialization. Setting the optimizer object properly
-        :return: None
-        """
-        self.__engine_obj = self._current_engine(self._fit_object, self.fit_function)
-        self._is_initialized = True
+    # def _initialize(self):
+    #     #    def __initialize(self):
+    #     """
+    #     The real initialization. Setting the optimizer object properly
+    #     :return: None
+    #     """
+    #     minimizer_class = minimizer_class_factory(from_string(DEFAULT_FITTING_ENGINE))
+    #     self._minimizer = minimizer_class(self._fit_object, self.fit_function)
 
-    def create(self, engine_name: str = default_fitting_engine):
+    #        self.__engine_obj = self._current_engine(self._fit_object, self.fit_function)
+    #        self._is_initialized = True
+
+    def create(self, engine_name: str = DEFAULT_FITTING_ENGINE):
         """
         Create a backend optimization engine.
         :param engine_name: The label of the optimization engine to create.
         :return: None
         """
-        self._current_engine = minimizer_class_factory(from_string(engine_name))
+        #        self._current_engine = minimizer_class_factory(from_string(engine_name))
+        minimizer_class = minimizer_class_factory(from_string(engine_name))
+        self._minimizer = minimizer_class(self._fit_object, self.fit_function)
 
     #        engines = self.available_engines
     #        if engine_name in engines:
@@ -151,10 +163,15 @@ class Fitter:
         #        if not self._is_initialized:
         #            raise ReferenceError('The fitting engine must be initialized before switching')
         # Constrains are not carried over. Do it manually.
-        constraints = self.__engine_obj._constraints
-        self.create(engine_name)
-        self.__initialize()
-        self.__engine_obj._constraints = constraints
+        #        constraints = self.__engine_obj._constraints
+        #        self.create(engine_name)
+        #        self.__initialize()
+        #        self.__engine_obj._constraints = constraints
+
+        constraints = self._minimizer._constraints
+        minimizer_class = minimizer_class_factory(from_string(engine_name))
+        self._minimizer = minimizer_class(self._fit_object, self.fit_function)
+        self._minimizer._constraints = constraints
 
     @property
     def available_engines(self) -> List[str]:
@@ -169,40 +186,43 @@ class Fitter:
         #        return [engine.name for engine in minimizers.engines]
         return [minimize.name for minimize in Minimizers]
 
+    # @property
+    # def can_fit(self) -> bool:
+    #     """
+    #     Can a fit be performed. i.e has the object been created properly
+
+    #     :return: Can a fit be performed
+    #     :rtype: bool
+    #     """
+    #     return self._is_initialized
+
+    # @property
+    # def current_engine(self) -> _C:
+    #     """
+    #     Get the class object of the current fitting engine.
+
+    #     :return: Class of the current fitting engine (based on the `FittingTemplate` class)
+    #     :rtype: _T
+    #     """
+    #     return self._current_engine
+
     @property
-    def can_fit(self) -> bool:
-        """
-        Can a fit be performed. i.e has the object been created properly
-
-        :return: Can a fit be performed
-        :rtype: bool
-        """
-        return self._is_initialized
-
-    @property
-    def current_engine(self) -> _C:
-        """
-        Get the class object of the current fitting engine.
-
-        :return: Class of the current fitting engine (based on the `FittingTemplate` class)
-        :rtype: _T
-        """
-        return self._current_engine
-
-    @property
-    def engine(self) -> _M:
+    def minimizer(self) -> MinimizerBase:
+        #    def engine(self) -> MinimizerBase:
+        #    def engine(self) -> _M:
         """
         Get the current fitting engine object.
 
         :return:
         :rtype: _M
         """
-        return self.__engine_obj
+        #        return self.__engine_obj
+        return self._minimizer
 
     @property
     def fit_function(self) -> Callable:
         """
-        The raw fit function that the  optimizer will call (no wrapping)
+        The raw fit function that the optimizer will call (no wrapping)
         :return: Raw fit function
         """
         return self._fit_function
@@ -215,7 +235,9 @@ class Fitter:
         :return: None
         """
         self._fit_function = fit_function
-        self.__initialize()
+        #        self.__initialize()
+        #        self._initialize()
+        self.create(self._minimizer.name)
 
     @property
     def fit_object(self):
@@ -233,7 +255,10 @@ class Fitter:
         :return: None
         """
         self._fit_object = fit_object
-        self.__initialize()
+        #        self._initialize()
+        self.create(self._minimizer.name)
+
+    #        self.__initialize()
 
     # def __pass_through_generator(self, name: str):
     #     """
@@ -261,7 +286,8 @@ class Fitter:
         re-constitute the independent variables and once the fit is completed, reshape the inputs to those expected.
         """
 
-        @functools.wraps(self.engine.fit)
+        @functools.wraps(self.minimizer.fit)
+        #        @functools.wraps(self.engine.fit)
         def inner_fit_callable(
             x: np.ndarray,
             y: np.ndarray,
@@ -276,9 +302,9 @@ class Fitter:
             - FIT = Wrapping the fit function and performing the fit
             - POST = Reshaping the outputs so it is coherent with the inputs.
             """
-            # Check to see if we can perform a fit
-            if not self.can_fit:
-                raise ReferenceError('The fitting engine must first be initialized')
+            # # Check to see if we can perform a fit
+            # if not self.can_fit:
+            #     raise ReferenceError('The fitting engine must first be initialized')
 
             # Precompute - Reshape all independents into the correct dimensionality
             x_fit, x_new, y_new, weights, dims, kwargs = self._precompute_reshaping(x, y, weights, vectorized, kwargs)
@@ -289,16 +315,20 @@ class Fitter:
             fit_fun_wrap = self._fit_function_wrapper(x_new, flatten=True)  # This should be wrapped.
 
             # We change the  fit function, so have to  reset constraints
-            constraints = self.__engine_obj._constraints
+            constraints = self._minimizer._constraints
+            #            constraints = self.__engine_obj._constraints
             self.fit_function = fit_fun_wrap
-            self.__engine_obj._constraints = constraints
-            f_res = self.engine.fit(x_fit, y_new, weights=weights, **kwargs)
+            self._minimizer._constraints = constraints
+            #            self.__engine_obj._constraints = constraints
+            #            f_res = self.engine.fit(x_fit, y_new, weights=weights, **kwargs)
+            f_res = self.minimizer.fit(x_fit, y_new, weights=weights, **kwargs)
 
             # Postcompute
             fit_result = self._post_compute_reshaping(f_res, x, y, weights)
             # Reset the function and constrains
             self.fit_function = fit_fun
-            self.__engine_obj._constraints = constraints
+            #            self.__engine_obj._constraints = constraints
+            self._minimizer._constraints = constraints
             return fit_result
 
         return inner_fit_callable

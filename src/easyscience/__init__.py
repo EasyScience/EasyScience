@@ -10,7 +10,7 @@ import pint
 from easyscience.__version__ import __version__ as __version__
 from easyscience.Objects.Borg import Borg
 
-default_fitting_engine = 'lmfit'
+DEFAULT_FITTING_ENGINE = 'lmfit'
 
 ureg = pint.UnitRegistry()
 borg = Borg()
