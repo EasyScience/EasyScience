@@ -13,21 +13,21 @@ from .utils import FitResults  # noqa: F401, E402
 
 imported = -1
 try:
-    from .engine_lmfit import LmFit  # noqa: F401, E402
+    from .minimizer_lmfit import LmFit  # noqa: F401, E402
 
     imported += 1
 except ImportError:
     # TODO make this a proper message (use logging?)
     warnings.warn('lmfit has not been installed.', ImportWarning, stacklevel=2)
 try:
-    from .engine_bumps import Bumps  # noqa: F401, E402
+    from .minimizer_bumps import Bumps  # noqa: F401, E402
 
     imported += 1
 except ImportError:
     # TODO make this a proper message (use logging?)
     warnings.warn('bumps has not been installed.', ImportWarning, stacklevel=2)
 try:
-    from .engine_dfo import DFO  # noqa: F401, E402
+    from .minimizer_dfo import DFO  # noqa: F401, E402
 
     imported += 1
 except ImportError:
