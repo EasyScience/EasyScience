@@ -474,7 +474,7 @@ class EasyScienceDatasetAccessor:
             return f_res
 
 
-@xr.register_dataarray_accessor('EasyScience')
+@xr.register_dataarray_accessor('easyscience')
 class EasyScienceDataarrayAccessor:
     """
     Accessor to extend an xarray DataArray to EasyScience. These functions can be accessed by `obj.EasyScience.func`.

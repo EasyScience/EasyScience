@@ -94,3 +94,4 @@ for pendulum in pendulum_array:
     pendulum.plot(t, label=f'Phase = {pendulum.p}')
 plt.legend(loc='lower right')
 fig.show()
+plt.show()
