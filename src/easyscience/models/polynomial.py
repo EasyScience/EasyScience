@@ -16,7 +16,7 @@ import numpy as np
 
 from easyscience.Objects.Groups import BaseCollection
 from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.ObjectClasses import Parameter
+from easyscience.Objects import Parameter
 
 
 def designate_calc_fn(func):

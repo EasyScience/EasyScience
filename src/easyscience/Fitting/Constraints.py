@@ -25,7 +25,7 @@ from easyscience import borg
 from easyscience.Objects.core import ComponentSerializer
 
 if TYPE_CHECKING:
-    from easyscience.Objects.Variable import V
+    from easyscience.Objects.Parameter import V
 
 
 class ConstraintBase(ComponentSerializer, metaclass=ABCMeta):

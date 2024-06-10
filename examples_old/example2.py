@@ -5,7 +5,7 @@ import numpy as np
 
 from easyscience.Fitting.Fitting import Fitter
 from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.ObjectClasses import Parameter
+from easyscience.Objects import Parameter
 
 # In this case we have inherited from `BaseObj` to create a class which has fitable attributes.
 

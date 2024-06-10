@@ -9,8 +9,8 @@ import pytest
 
 from easyscience.models.polynomial import Line
 from easyscience.Objects.Groups import BaseCollection
-from easyscience.Objects.Variable import Descriptor
-from easyscience.Objects.Variable import Parameter
+from easyscience.Objects import Descriptor
+from easyscience.Objects import Parameter
 from easyscience.Utils.io.star import ItemHolder
 from easyscience.Utils.io.star import StarLoop
 from easyscience.Utils.io.star import StarSection

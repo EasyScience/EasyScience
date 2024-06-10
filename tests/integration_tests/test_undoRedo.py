@@ -12,8 +12,8 @@ import pytest
 
 from easyscience.Objects.Groups import BaseCollection
 from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.Variable import Descriptor
-from easyscience.Objects.Variable import Parameter
+from easyscience.Objects import Descriptor
+from easyscience.Objects import Parameter
 
 
 def createSingleObjs(idx):

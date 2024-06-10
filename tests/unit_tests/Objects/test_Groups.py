@@ -12,8 +12,8 @@ import pytest
 import easyscience
 from easyscience.Objects.Groups import BaseCollection
 from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.ObjectClasses import Descriptor
-from easyscience.Objects.ObjectClasses import Parameter
+from easyscience.Objects import Descriptor
+from easyscience.Objects import Parameter
 
 test_dict = {
     "@module": "easyscience.Objects.Groups",

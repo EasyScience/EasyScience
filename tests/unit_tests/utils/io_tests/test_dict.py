@@ -228,7 +228,7 @@ def test_custom_class_full_encode_with_numpy():
             "data": [1.0, 2.0, 3.0],
         },
         "a": {
-            "@module": "easyscience.Objects.Variable",
+            "@module": "easyscience.Objects.Descriptor",
             "@class": "Descriptor",
             "@version": version,
             "description": "",

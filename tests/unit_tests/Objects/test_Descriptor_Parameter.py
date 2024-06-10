@@ -12,12 +12,12 @@ import numpy as np
 import pytest
 
 import easyscience
-from easyscience.Objects.Variable import Q_
-from easyscience.Objects.Variable import CoreSetException
-from easyscience.Objects.Variable import Descriptor
-from easyscience.Objects.Variable import Parameter
-from easyscience.Objects.Variable import borg
-from easyscience.Objects.Variable import ureg
+from easyscience.Objects.Parameter import Q_
+from easyscience.Utils.Exceptions import CoreSetException
+from easyscience.Objects import Descriptor
+from easyscience.Objects import Parameter
+from easyscience import borg
+from easyscience import ureg
 
 
 @pytest.fixture

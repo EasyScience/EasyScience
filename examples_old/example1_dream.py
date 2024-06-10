@@ -5,7 +5,7 @@ import numpy as np
 
 from easyscience.Fitting.Fitting import Fitter
 from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.ObjectClasses import Parameter
+from easyscience.Objects import Parameter
 
 # This is a simple example of creating an object which has fitable parameters
 

@@ -82,7 +82,7 @@ class UniqueIdMap(WeakKeyDictionary):
             self.update(this_dict)
 
 
-uniqueidmap = UniqueIdMap()
+unique_id_map = UniqueIdMap()
 
 
 class Graph:
@@ -303,14 +303,14 @@ class Graph:
     def convert_id(input_value) -> UUID:
         """Sometimes we're dopy and"""
         if not validate_id(input_value):
-            input_value = unique_id(input_value)
+            input_value = unique_id_map(input_value)
         return input_value
 
     @staticmethod
     def convert_id_to_key(input_value: Union[object, UUID]) -> int:
         """Sometimes we're dopy and"""
         if not validate_id(input_value):
-            input_value: UUID = unique_id(input_value)
+            input_value: UUID = unique_id_map(input_value)
         return input_value.int
 
     def __repr__(self) -> str:
@@ -324,10 +324,11 @@ def unique_id(obj) -> UUID:
     across Python invocations.
 
     """
-    return uniqueidmap[obj]
+    return unique_id_map[obj]
 
 
 def validate_id(potential_id) -> bool:
+    """Check if the object is a valid UUID or already a UUID."""
     test = True
     try:
         if isinstance(potential_id, UUID):

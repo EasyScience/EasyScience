@@ -21,8 +21,8 @@ from easyscience import borg
 from easyscience.Utils.classTools import addLoggedProp
 
 from .core import ComponentSerializer
-from .Variable import Descriptor
-from .Variable import Parameter
+from .Descriptor import Descriptor
+from .Parameter import Parameter
 
 if TYPE_CHECKING:
     from easyscience.Utils.typing import C

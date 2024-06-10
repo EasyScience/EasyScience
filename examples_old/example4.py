@@ -13,7 +13,7 @@ from easyscience import borg
 from easyscience.Fitting.Fitting import Fitter
 from easyscience.Objects.core import ComponentSerializer
 from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.ObjectClasses import Parameter
+from easyscience.Objects import Parameter
 
 # This is a much more complex case where we have calculators, interfaces, interface factory and an
 # inherited object (from `BaseObj`). In this case the Line class is available with/without an interface

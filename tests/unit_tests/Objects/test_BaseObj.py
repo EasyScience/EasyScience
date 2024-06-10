@@ -17,8 +17,8 @@ import pytest
 
 import easyscience
 from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.ObjectClasses import Descriptor
-from easyscience.Objects.ObjectClasses import Parameter
+from easyscience.Objects import Descriptor
+from easyscience.Objects import Parameter
 from easyscience.Utils.io.dict import DictSerializer
 
 
@@ -309,7 +309,7 @@ def test_subclassing():
     from typing import ClassVar
 
     from easyscience.models.polynomial import Line
-    from easyscience.Objects.Variable import Parameter
+    from easyscience.Objects import Parameter
 
     class L2(Line):
         diff: ClassVar[Parameter]

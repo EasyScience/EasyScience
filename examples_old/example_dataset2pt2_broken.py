@@ -7,7 +7,7 @@ import numpy as np
 from easyscience.Datasets.xarray import xr
 from easyscience.Fitting.Fitting import Fitter
 from easyscience.Objects.Base import BaseObj
-from easyscience.Objects.Base import Parameter
+from easyscience.Objects import Parameter
 
 d = xr.Dataset()
 

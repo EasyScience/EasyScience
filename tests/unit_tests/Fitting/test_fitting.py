@@ -15,7 +15,7 @@ from easyscience.Fitting.Fitting import Fitter
 from easyscience.Fitting.Fitting import MultiFitter
 from easyscience.Fitting.fitting_template import FitError
 from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.ObjectClasses import Parameter
+from easyscience.Objects import Parameter
 
 
 class AbsSin(BaseObj):

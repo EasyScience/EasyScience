@@ -2,7 +2,7 @@
 Subclassing BaseObj - Simple Pendulum
 =====================================
 This  example shows how to subclass :class:`easyscience.Objects.Base.BaseObj` with parameters from
-:class:`EasyScience.Objects.Base.Parameter`. For this example a simple pendulum will be modeled.
+:class:`EasyScience.Objects.Parameter`. For this example a simple pendulum will be modeled.
 
 .. math::
     y = A \sin (2 \pi f t + \phi )
@@ -16,8 +16,8 @@ saving time from multiple imports.
 
 import matplotlib.pyplot as plt
 import numpy as np
+from easyscience.Objects import Parameter
 from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.ObjectClasses import Parameter
 
 # %%
 # Subclassing

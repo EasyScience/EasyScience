@@ -43,7 +43,7 @@ def realizer(obj: BV):
     """
     if getattr(obj, "_is_virtual", False):
         klass = getattr(obj, "__non_virtual_class__")
-        import easyscience.Objects.Variable as ec_var
+        import easyscience.Objects.Variable as ec_var # broken import, not sure what this is supposed to do
 
         args = []
         if klass in ec_var.__dict__.values():  # is_variable check

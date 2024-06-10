@@ -5,7 +5,7 @@ This  example shows the usages of the different constraints.
 """
 
 from easyscience.Fitting import Constraints
-from easyscience.Objects.ObjectClasses import Parameter
+from easyscience.Objects import Parameter
 
 p1 = Parameter('p1', 1)
 constraint = Constraints.NumericConstraint(p1, '<', 5)

@@ -10,7 +10,7 @@ import pytest
 
 from easyscience.models.polynomial import Line
 from easyscience.models.polynomial import Polynomial
-from easyscience.Objects.Variable import Parameter
+from easyscience.Objects import Parameter
 
 line_test_cases = ((1, 2), (-1, -2), (0.72, 6.48))
 poly_test_cases = (
