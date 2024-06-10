@@ -6,18 +6,17 @@ import functools
 #  SPDX-FileCopyrightText: 2023 EasyScience contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
-from abc import ABCMeta
-
+# from abc import ABCMeta
 # from types import FunctionType
 from typing import Callable
 from typing import List
 from typing import Optional
-from typing import TypeVar
 
+# from typing import TypeVar
 import numpy as np
 
 # import easyscience.Fitting.minimizers as minimizers
-from easyscience import DEFAULT_FITTING_ENGINE
+from easyscience import DEFAULT_MINIMIZER
 
 from .minimizers import FitResults
 from .minimizers import MinimizerBase
@@ -25,13 +24,13 @@ from .minimizers.factory import Minimizers
 from .minimizers.factory import from_string
 from .minimizers.factory import minimizer_class_factory
 
-_C = TypeVar('_C', bound=ABCMeta)
-_M = TypeVar('_M', bound=MinimizerBase)
+# _C = TypeVar('_C', bound=ABCMeta)
+# _M = TypeVar('_M', bound=MinimizerBase)
 
 
 class Fitter:
     """
-    Wrapper to the fitting engines
+    Fitter is a class which provides a common interface to the supported minimizers.
     """
 
     def __init__(self, fit_object, fit_function: Callable):
@@ -50,7 +49,7 @@ class Fitter:
         #        self._engines: List[_C] = minimizers.engines
         self._minimizer: MinimizerBase  # _minimizer is set in the create method
         #        self._initialize()
-        self.create(DEFAULT_FITTING_ENGINE)
+        self.create(DEFAULT_MINIMIZER)
 
     #        self._current_engine: _C = None
     #        self.__engine_obj: _M = None
@@ -122,7 +121,7 @@ class Fitter:
         self._fit_function = fit_function
         #        self.__initialize()
         #        self._initialize()
-        self.create(DEFAULT_FITTING_ENGINE)
+        self._update_minimizer(DEFAULT_MINIMIZER)
 
     # def _initialize(self):
     #     #    def __initialize(self):
@@ -136,15 +135,17 @@ class Fitter:
     #        self.__engine_obj = self._current_engine(self._fit_object, self.fit_function)
     #        self._is_initialized = True
 
-    def create(self, engine_name: str = DEFAULT_FITTING_ENGINE):
+    def create(self, minimizer_name: str = DEFAULT_MINIMIZER):
         """
-        Create a backend optimization engine.
-        :param engine_name: The label of the optimization engine to create.
+        Create a backend minimization engine.
+        :param minimizer_name: The label of the minimization engine to create.
         :return: None
         """
-        #        self._current_engine = minimizer_class_factory(from_string(engine_name))
-        minimizer_class = minimizer_class_factory(from_string(engine_name))
-        self._minimizer = minimizer_class(self._fit_object, self.fit_function)
+        self._update_minimizer(minimizer_name)
+        #        self._current_engine = minimizer_class_factory(from_string(minimizer_name))
+
+    #        minimizer_class = minimizer_class_factory(from_string(minimizer_name))
+    #        self._minimizer = minimizer_class(self._fit_object, self.fit_function)
 
     #        engines = self.available_engines
     #        if engine_name in engines:
@@ -153,10 +154,10 @@ class Fitter:
     #        else:
     #            raise AttributeError(f"The supplied optimizer engine '{engine_name}' is unknown.")
 
-    def switch_engine(self, engine_name: str):
+    def switch_minimizer(self, minimizer_name: str):
         """
-        Switch backend optimization engines and initialize.
-        :param engine_name: The label of the optimization engine to create and instantiate.
+        Switch backend minimization engine and initialize.
+        :param minimizer_name: The label of the  minimization engine to create and instantiate.
         :return: None
         """
         # There isn't any state to carry over
@@ -169,16 +170,21 @@ class Fitter:
         #        self.__engine_obj._constraints = constraints
 
         constraints = self._minimizer._constraints
-        minimizer_class = minimizer_class_factory(from_string(engine_name))
-        self._minimizer = minimizer_class(self._fit_object, self.fit_function)
+        self._update_minimizer(minimizer_name)
+        # minimizer_class = minimizer_class_factory(from_string(engine_name))
+        # self._minimizer = minimizer_class(self._fit_object, self.fit_function)
         self._minimizer._constraints = constraints
 
-    @property
-    def available_engines(self) -> List[str]:
-        """
-        Get a list of the names of available fitting engines
+    def _update_minimizer(self, minimizer_name: str):
+        minimizer_class = minimizer_class_factory(from_string(minimizer_name))
+        self._minimizer = minimizer_class(self._fit_object, self.fit_function)
 
-        :return: List of available fitting engines
+    @property
+    def available_minimizers(self) -> List[str]:
+        """
+        Get a list of the names of available fitting minimizers
+
+        :return: List of available fitting minimizers
         :rtype: List[str]
         """
         #        if minimizers.engines is None:
@@ -211,7 +217,7 @@ class Fitter:
         #    def engine(self) -> MinimizerBase:
         #    def engine(self) -> _M:
         """
-        Get the current fitting engine object.
+        Get the current fitting minimizer object.
 
         :return:
         :rtype: _M

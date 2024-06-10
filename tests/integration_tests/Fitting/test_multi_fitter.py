@@ -88,7 +88,7 @@ def test_multi_fit(fit_engine, with_errors):
     f = MultiFitter([sp_sin_1, sp_sin_2], [sp_sin_1, sp_sin_2])
     if fit_engine is not None:
         try:
-            f.switch_engine(fit_engine)
+            f.switch_minimizer(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
 
@@ -163,7 +163,7 @@ def test_multi_fit2(fit_engine, with_errors):
     f = MultiFitter([sp_sin_1, sp_line, sp_sin_2], [sp_sin_1, sp_line, sp_sin_2])
     if fit_engine is not None:
         try:
-            f.switch_engine(fit_engine)
+            f.switch_minimizer(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
 
@@ -232,7 +232,7 @@ def test_multi_fit_1D_2D(fit_engine, with_errors):
     ff = MultiFitter([sp_sin1D, sp_sin2D], [sp_sin1D, sp_sin2D])
     if fit_engine is not None:
         try:
-            ff.switch_engine(fit_engine)
+            ff.switch_minimizer(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
 
@@ -243,7 +243,7 @@ def test_multi_fit_1D_2D(fit_engine, with_errors):
     f = MultiFitter([sp_sin1D, sp_sin2D], [sp_sin1D, sp_sin2D])
     if fit_engine is not None:
         try:
-            f.switch_engine(fit_engine)
+            f.switch_minimizer(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
     try:

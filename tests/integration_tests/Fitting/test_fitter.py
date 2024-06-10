@@ -92,7 +92,7 @@ def test_basic_fit(fit_engine, with_errors):
     f = Fitter(sp_sin, sp_sin)
     if fit_engine is not None:
         try:
-            f.switch_engine(fit_engine)
+            f.switch_minimizer(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
     args = [x, y]
@@ -131,7 +131,7 @@ def test_fit_result(fit_engine):
 
     if fit_engine is not None:
         try:
-            f.switch_engine(fit_engine)
+            f.switch_minimizer(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
 
@@ -169,7 +169,7 @@ def test_bumps_methods(fit_method):
     sp_sin.phase.fixed = False
 
     f = Fitter(sp_sin, sp_sin)
-    f.switch_engine("bumps")
+    f.switch_minimizer("bumps")
     assert fit_method in f.available_methods()
     result = f.fit(x, y, method=fit_method)
     check_fit_results(result, sp_sin, ref_sin, x)
@@ -193,7 +193,7 @@ def test_fit_constraints(fit_engine):
 
     if fit_engine is not None:
         try:
-            f.switch_engine(fit_engine)
+            f.switch_minimizer(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
 
@@ -217,7 +217,7 @@ def test_2D_vectorized(fit_engine, with_errors):
     ff = Fitter(m2, m2)
     if fit_engine is not None:
         try:
-            ff.switch_engine(fit_engine)
+            ff.switch_minimizer(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
     try:
@@ -253,7 +253,7 @@ def test_2D_non_vectorized(fit_engine, with_errors):
     ff = Fitter(m2, m2)
     if fit_engine is not None:
         try:
-            ff.switch_engine(fit_engine)
+            ff.switch_minimizer(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
     try:

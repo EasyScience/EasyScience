@@ -269,7 +269,7 @@ def test_fittingUndoRedo(fit_engine):
 
     f = Fitter(l2, l2)
     try:
-        f.switch_engine(fit_engine)
+        f.switch_minimizer(fit_engine)
     except AttributeError:
         pytest.skip(msg=f"{fit_engine} is not installed")
 

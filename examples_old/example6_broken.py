@@ -436,7 +436,7 @@ print(f_res)
 print(hybrid)
 
 # Now lets change fitting engine
-f.switch_engine("bumps")
+f.switch_minimizer("bumps")
 # Reset the values so we don't cheat
 hybrid.m = 1
 hybrid.c = 0
