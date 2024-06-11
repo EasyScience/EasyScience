@@ -55,27 +55,6 @@ class Fitter:
     def available_methods(self) -> list:
         return self._minimizer.available_methods()
 
-    def _fit_function_wrapper(self, real_x=None, flatten: bool = True) -> Callable:
-        """
-        Simple fit function which injects the real X (independent) values into the
-        optimizer function. This will also flatten the results if needed.
-        :param real_x: Independent x parameters to be injected
-        :param flatten: Should the result be a flat 1D array?
-        :return: Wrapped optimizer function.
-        """
-        fun = self._fit_function
-
-        @functools.wraps(fun)
-        def wrapped_fit_function(x, **kwargs):
-            if real_x is not None:
-                x = real_x
-            dependent = fun(x, **kwargs)
-            if flatten:
-                dependent = dependent.flatten()
-            return dependent
-
-        return wrapped_fit_function
-
     def initialize(self, fit_object, fit_function: Callable):
         """
         Set the model and callable in the calculator interface.
@@ -165,6 +144,27 @@ class Fitter:
         """
         self._fit_object = fit_object
         self._update_minimizer(self._minimizer.name)
+
+    def _fit_function_wrapper(self, real_x=None, flatten: bool = True) -> Callable:
+        """
+        Simple fit function which injects the real X (independent) values into the
+        optimizer function. This will also flatten the results if needed.
+        :param real_x: Independent x parameters to be injected
+        :param flatten: Should the result be a flat 1D array?
+        :return: Wrapped optimizer function.
+        """
+        fun = self._fit_function
+
+        @functools.wraps(fun)
+        def wrapped_fit_function(x, **kwargs):
+            if real_x is not None:
+                x = real_x
+            dependent = fun(x, **kwargs)
+            if flatten:
+                dependent = dependent.flatten()
+            return dependent
+
+        return wrapped_fit_function
 
     @property
     def fit(self) -> Callable:
