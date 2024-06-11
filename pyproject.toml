@@ -35,7 +35,7 @@ dependencies = [
     "DFO-LS",
     "lmfit",
     "numpy",
-    "pint",
+    "pint < 0.24",
     "uncertainties",
     "xarray"
 ]
