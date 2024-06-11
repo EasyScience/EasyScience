@@ -39,14 +39,13 @@ class AnalysisBase(BaseObj, metaclass=ABCMeta):
     @property
     def calculator(self):
         if self._calculator is None:
-            self._calculator = self.interface.calculator
+            self._calculator = self.interface.current_interface_name
         return self._calculator
 
     @calculator.setter
     def calculator(self, value):
         # TODO: check if the calculator is available for the given JobType
         self.interface.switch(value, fitter=self._fitter)
-        self.interface.calculator = value
 
     @property
     def minimizer(self):
