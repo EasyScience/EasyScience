@@ -10,8 +10,6 @@ import pint
 from easyscience.__version__ import __version__ as __version__
 from easyscience.Objects.Borg import Borg
 
-DEFAULT_MINIMIZER = 'lmfit'
-
 ureg = pint.UnitRegistry()
 borg = Borg()
 borg.instantiate_stack()

@@ -1,24 +1,20 @@
-__author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
-
-import functools
-
 #  SPDX-FileCopyrightText: 2023 EasyScience contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
+import functools
 from typing import Callable
 from typing import List
 from typing import Optional
 
 import numpy as np
 
-from easyscience import DEFAULT_MINIMIZER
-
 from .minimizers import FitResults
 from .minimizers import MinimizerBase
 from .minimizers.factory import Minimizers
 from .minimizers.factory import from_string
 from .minimizers.factory import minimizer_class_factory
+
+DEFAULT_MINIMIZER = 'lmfit'
 
 
 class Fitter:
@@ -175,7 +171,6 @@ class Fitter:
         """
 
         @functools.wraps(self.minimizer.fit)
-        #        @functools.wraps(self.engine.fit)
         def inner_fit_callable(
             x: np.ndarray,
             y: np.ndarray,
@@ -190,10 +185,6 @@ class Fitter:
             - FIT = Wrapping the fit function and performing the fit
             - POST = Reshaping the outputs so it is coherent with the inputs.
             """
-            # # Check to see if we can perform a fit
-            # if not self.can_fit:
-            #     raise ReferenceError('The fitting engine must first be initialized')
-
             # Precompute - Reshape all independents into the correct dimensionality
             x_fit, x_new, y_new, weights, dims, kwargs = self._precompute_reshaping(x, y, weights, vectorized, kwargs)
             self._dependent_dims = dims
