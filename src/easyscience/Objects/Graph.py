@@ -73,24 +73,14 @@ class _EntryList(list):
         return "returned" in self._type
 
 
-class UniqueIdMap(WeakKeyDictionary):
-    def __init__(self, this_dict: dict = None):
-        super().__init__(self)
-        # replace data with a defaultdict to generate uuids
-        self.data = defaultdict(uuid4)
-        if this_dict is not None:
-            self.update(this_dict)
-
-
-uniqueidmap = UniqueIdMap()
-
-
 class Graph:
     def __init__(self):
+        # A dictionary of object names and their corresponding objects
         self._store = weakref.WeakValueDictionary()
+        # A dict with object names as keys and a list of their object types as values, with weak references
         self.__graph_dict = {}
 
-    def vertices(self) -> List[int]:
+    def vertices(self) -> List[str]:
         """returns the vertices of a graph"""
         return list(self._store.keys())
 
@@ -99,63 +89,69 @@ class Graph:
         return self.__generate_edges()
 
     @property
-    def argument_objs(self) -> List[int]:
+    def argument_objs(self) -> List[str]:
         return self._nested_get("argument")
 
     @property
-    def created_objs(self) -> List[int]:
+    def created_objs(self) -> List[str]:
         return self._nested_get("created")
 
     @property
-    def created_internal(self) -> List[int]:
+    def created_internal(self) -> List[str]:
         return self._nested_get("created_internal")
 
     @property
-    def returned_objs(self) -> List[int]:
+    def returned_objs(self) -> List[str]:
         return self._nested_get("returned")
 
-    def get_item_by_key(self, item_id: int) -> object:
+    def _nested_get(self, obj_type: str) -> List[str]:
+        """Access a nested object in root by key sequence."""
+        extracted_list = []
+        for key, item in self.__graph_dict.items():
+            if obj_type in item.type:
+                extracted_list.append(key)
+        return extracted_list
+
+
+    def get_item_by_key(self, item_id: str) -> object:
         if item_id in self._store.keys():
             return self._store[item_id]
         raise ValueError
 
     def is_known(self, vertex: object) -> bool:
-        return self.convert_id(vertex).int in self._store.keys()
+        # All objects should have a 'name' attribute
+        return vertex.name in self._store.keys()
 
     def find_type(self, vertex: object) -> List[str]:
         if self.is_known(vertex):
-            oid = self.convert_id(vertex)
-            return self.__graph_dict[oid].type
+            return self.__graph_dict[vertex.name].type
 
     def reset_type(self, obj, default_type: str):
-        if self.convert_id(obj).int in self.__graph_dict.keys():
-            self.__graph_dict[self.convert_id(obj).int].reset_type(default_type)
+        if obj.name in self.__graph_dict.keys():
+            self.__graph_dict[obj.name].reset_type(default_type)
 
     def change_type(self, obj, new_type: str):
-        if self.convert_id(obj).int in self.__graph_dict.keys():
-            self.__graph_dict[self.convert_id(obj).int].type = new_type
+        if obj.name in self.__graph_dict.keys():
+            self.__graph_dict[obj.name].type = new_type
 
     def add_vertex(self, obj: object, obj_type: str = None):
-        oid = self.convert_id(obj).int
-        self._store[oid] = obj
-        self.__graph_dict[oid] = _EntryList()  # Enhanced list of keys
-        self.__graph_dict[oid].finalizer = weakref.finalize(
-            self._store[oid], self.prune, oid
+        name = obj.name
+        self._store[name] = obj
+        self.__graph_dict[name] = _EntryList()  # Add objects type to the list of types
+        self.__graph_dict[name].finalizer = weakref.finalize(
+            self._store[name], self.prune, name
         )
-        self.__graph_dict[oid].type = obj_type
+        self.__graph_dict[name].type = obj_type
 
     def add_edge(self, start_obj: object, end_obj: object):
-        vertex1 = self.convert_id(start_obj).int
-        vertex2 = self.convert_id(end_obj).int
-        if vertex1 in self.__graph_dict.keys():
-            self.__graph_dict[vertex1].append(vertex2)
+        if start_obj.name in self.__graph_dict.keys():
+            self.__graph_dict[start_obj.name].append(end_obj.name)
         else:
             raise AttributeError
 
     def get_edges(self, start_obj) -> List[str]:
-        vertex1 = self.convert_id(start_obj).int
-        if vertex1 in self.__graph_dict.keys():
-            return list(self.__graph_dict[vertex1])
+        if start_obj.name in self.__graph_dict.keys():
+            return list(self.__graph_dict[start_obj.name])
         else:
             raise AttributeError
 
@@ -173,10 +169,10 @@ class Graph:
         return edges
 
     def prune_vertex_from_edge(self, parent_obj, child_obj):
-        vertex1 = self.convert_id(parent_obj).int
+        vertex1 = parent_obj.name
         if child_obj is None:
             return
-        vertex2 = self.convert_id(child_obj).int
+        vertex2 = child_obj.name
 
         if (
             vertex1 in self.__graph_dict.keys()
@@ -184,7 +180,7 @@ class Graph:
         ):
             del self.__graph_dict[vertex1][self.__graph_dict[vertex1].index(vertex2)]
 
-    def prune(self, key: int):
+    def prune(self, key: str):
         if key in self.__graph_dict.keys():
             del self.__graph_dict[key]
 
@@ -203,8 +199,8 @@ class Graph:
         in graph"""
 
         try:
-            start_vertex = self.convert_id(start_obj).int
-            end_vertex = self.convert_id(end_obj).int
+            start_vertex = start_obj.name
+            end_vertex = end_obj.name
         except TypeError:
             start_vertex = start_obj
             end_vertex = end_obj
@@ -226,8 +222,8 @@ class Graph:
         """find all paths from start_vertex to
         end_vertex in graph"""
 
-        start_vertex = self.convert_id(start_obj).int
-        end_vertex = self.convert_id(end_obj).int
+        start_vertex = start_obj.name
+        end_vertex = end_obj.name
 
         graph = self.__graph_dict
         path = path + [start_vertex]
@@ -254,7 +250,7 @@ class Graph:
         :return:
         :rtype:
         """
-        end_vertex = self.convert_id(end_obj).int
+        end_vertex = end_obj.name
 
         path_length = sys.maxsize
         optimum_path = []
@@ -291,49 +287,6 @@ class Graph:
             return True
         return False
 
-    def _nested_get(self, obj_type: str) -> List[int]:
-        """Access a nested object in root by key sequence."""
-        extracted_list = []
-        for key, item in self.__graph_dict.items():
-            if obj_type in item.type:
-                extracted_list.append(key)
-        return extracted_list
-
-    @staticmethod
-    def convert_id(input_value) -> UUID:
-        """Sometimes we're dopy and"""
-        if not validate_id(input_value):
-            input_value = unique_id(input_value)
-        return input_value
-
-    @staticmethod
-    def convert_id_to_key(input_value: Union[object, UUID]) -> int:
-        """Sometimes we're dopy and"""
-        if not validate_id(input_value):
-            input_value: UUID = unique_id(input_value)
-        return input_value.int
-
     def __repr__(self) -> str:
         return f"Graph object of {len(self._store)} vertices."
 
-
-def unique_id(obj) -> UUID:
-    """Produce a unique integer id for the object.
-
-    Object must me *hashable*. Id is a UUID and should be unique
-    across Python invocations.
-
-    """
-    return uniqueidmap[obj]
-
-
-def validate_id(potential_id) -> bool:
-    test = True
-    try:
-        if isinstance(potential_id, UUID):
-            UUID(str(potential_id), version=4)
-        else:
-            UUID(potential_id, version=4)
-    except (ValueError, AttributeError):
-        test = False
-    return test
