@@ -19,7 +19,7 @@ DEFAULT_MINIMIZER = 'lmfit'
 
 class Fitter:
     """
-    Fitter is a class which provides a common interface to the supported minimizers.
+    Fitter is a class which makes it possible to undertake fitting utilizing one of the supported minimizers.
     """
 
     def __init__(self, fit_object, fit_function: Callable):
@@ -51,37 +51,34 @@ class Fitter:
     def available_methods(self) -> list:
         return self._minimizer.available_methods()
 
-    def initialize(self, fit_object, fit_function: Callable):
+    def initialize(self, fit_object, fit_function: Callable) -> None:
         """
         Set the model and callable in the calculator interface.
 
         :param fit_object: The EasyScience model object
         :param fit_function: The function to be optimized against.
-        :return: None
         """
         self._fit_object = fit_object
         self._fit_function = fit_function
         self._update_minimizer(DEFAULT_MINIMIZER)
 
-    def create(self, minimizer_name: str = DEFAULT_MINIMIZER):
+    def create(self, minimizer_name: str = DEFAULT_MINIMIZER) -> None:
         """
-        Create a backend minimization engine.
+        Create the required minimizer.
         :param minimizer_name: The label of the minimization engine to create.
-        :return: None
         """
         self._update_minimizer(minimizer_name)
 
-    def switch_minimizer(self, minimizer_name: str):
+    def switch_minimizer(self, minimizer_name: str) -> None:
         """
-        Switch backend minimization engine and initialize.
-        :param minimizer_name: The label of the  minimization engine to create and instantiate.
-        :return: None
+        Switch minimizer and initialize.
+        :param minimizer_name: The label of the  minimizer to create and instantiate.
         """
         constraints = self._minimizer._constraints
         self._update_minimizer(minimizer_name)
         self._minimizer._constraints = constraints
 
-    def _update_minimizer(self, minimizer_name: str):
+    def _update_minimizer(self, minimizer_name: str) -> None:
         minimizer_class = minimizer_class_factory(from_string(minimizer_name))
         self._minimizer = minimizer_class(self._fit_object, self.fit_function)
 
@@ -114,7 +111,7 @@ class Fitter:
         return self._fit_function
 
     @fit_function.setter
-    def fit_function(self, fit_function: Callable):
+    def fit_function(self, fit_function: Callable) -> None:
         """
         Set the raw fit function to a new one.
         :param fit_function: New fit function
@@ -132,7 +129,7 @@ class Fitter:
         return self._fit_object
 
     @fit_object.setter
-    def fit_object(self, fit_object):
+    def fit_object(self, fit_object) -> None:
         """
         Set the EasyScience object which wil be used as a model
         :param fit_object: New EasyScience object
