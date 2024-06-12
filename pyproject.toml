@@ -37,7 +37,8 @@ dependencies = [
     "numpy",
     "pint",
     "uncertainties",
-    "xarray"
+    "xarray",
+    "pint==0.23"  # Only to ensure that unit is reported as dimensionless rather than empty string
 ]
 
 [project.optional-dependencies]
