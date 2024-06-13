@@ -15,12 +15,13 @@ class AnalysisBase(BaseObj, metaclass=ABCMeta):
     """
     This virtual class allows for the creation of technique-specific Analysis objects.
     """
-    def __init__(self, name: str, *args, **kwargs):
+    def __init__(self, name: str, interface=None, *args, **kwargs):
         super(AnalysisBase, self).__init__(name, *args, **kwargs)
         self.name = name
         self._calculator = None
         self._minimizer = None
         self._fitter = None
+        self.interface = interface
 
     @abstractmethod
     def calculate_theory(self,
