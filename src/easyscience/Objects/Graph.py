@@ -130,7 +130,8 @@ class Graph:
 
     def add_vertex(self, obj: object, obj_type: str = None):
         name = obj.name
-        
+        if name in self._store.keys():
+            raise ValueError(f"Object name {name} already exists in the graph.")
         self._store[name] = obj
         self.__graph_dict[name] = _EntryList()  # Add objects type to the list of types
         self.__graph_dict[name].finalizer = weakref.finalize(
