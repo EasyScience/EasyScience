@@ -108,13 +108,13 @@ class Descriptor(ComponentSerializer):
         if not hasattr(self, '_args'):
             self._args = {'value': None, 'units': ''}
 
+        self.name: str = name
         # Let the collective know we've been assimilated
         self._borg.map.add_vertex(self, obj_type='created')
         # Make the connection between self and parent
         if parent is not None:
             self._borg.map.add_edge(parent, self)
 
-        self.name: str = name
         # Attach units if necessary
         if isinstance(units, ureg.Unit):
             self._units = ureg.Quantity(1, units=deepcopy(units))

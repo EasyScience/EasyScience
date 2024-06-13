@@ -16,7 +16,6 @@ from easyscience.Fitting.fitting_template import Callable
 from easyscience.Fitting.fitting_template import FitError
 from easyscience.Fitting.fitting_template import FitResults
 from easyscience.Fitting.fitting_template import FittingTemplate
-from easyscience.Fitting.fitting_template import NameConverter
 from easyscience.Fitting.fitting_template import np
 
 
@@ -60,7 +59,7 @@ class DFO(FittingTemplate):  # noqa: S101
                         par["p" + str(name)] = item.raw_value
                 else:
                     for item in pars:
-                        par["p" + str(NameConverter().get_key(item))] = item.raw_value
+                        par["p" + item.name] = item.raw_value
 
                 def residuals(x0) -> np.ndarray:
                     for idx, par_name in enumerate(par.keys()):
@@ -89,7 +88,7 @@ class DFO(FittingTemplate):  # noqa: S101
         self._cached_pars = {}
         self._cached_pars_vals = {}
         for parameter in self._object.get_fit_parameters():
-            key = NameConverter().get_key(parameter)
+            key = parameter.name
             self._cached_pars[key] = parameter
             self._cached_pars_vals[key] = (parameter.value, parameter.error)
 

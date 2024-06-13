@@ -19,7 +19,6 @@ from easyscience.Fitting.fitting_template import Callable
 from easyscience.Fitting.fitting_template import FitError
 from easyscience.Fitting.fitting_template import FitResults
 from easyscience.Fitting.fitting_template import FittingTemplate
-from easyscience.Fitting.fitting_template import NameConverter
 from easyscience.Fitting.fitting_template import np
 
 
@@ -66,7 +65,7 @@ class bumps(FittingTemplate):  # noqa: S101
                 else:
                     for item in pars:
                         par[
-                            "p" + str(NameConverter().get_key(item))
+                            "p" + item.name
                         ] = obj.convert_to_par_object(item)
                 return Curve(fit_func, x, y, dy=weights, **par)
 
@@ -87,7 +86,7 @@ class bumps(FittingTemplate):  # noqa: S101
         # Get a list of `Parameters`
         self._cached_pars_vals = {}
         for parameter in self._object.get_fit_parameters():
-            key = NameConverter().get_key(parameter)
+            key = parameter.name
             self._cached_pars[key] = parameter
             self._cached_pars_vals[key] = (parameter.value, parameter.error)
 
@@ -245,7 +244,7 @@ class bumps(FittingTemplate):  # noqa: S101
         :rtype: bumpsParameter
         """
         return bumpsParameter(
-            name="p" + str(NameConverter().get_key(obj)),
+            name="p" + obj.name,
             value=obj.raw_value,
             bounds=[obj.min, obj.max],
             fixed=obj.fixed,

@@ -20,7 +20,6 @@ from easyscience.Fitting.fitting_template import Callable
 from easyscience.Fitting.fitting_template import FitError
 from easyscience.Fitting.fitting_template import FitResults
 from easyscience.Fitting.fitting_template import FittingTemplate
-from easyscience.Fitting.fitting_template import NameConverter
 from easyscience.Fitting.fitting_template import np
 
 
@@ -91,7 +90,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         self._cached_pars = {}
         self._cached_pars_vals = {}
         for parameter in self._object.get_fit_parameters():
-            key = NameConverter().get_key(parameter)
+            key = parameter.name
             self._cached_pars[key] = parameter
             self._cached_pars_vals[key] = (parameter.value, parameter.error)
 
@@ -241,7 +240,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         :rtype: lmParameter
         """
         return lmParameter(
-            "p" + str(NameConverter().get_key(obj)),
+            "p" + obj.name,
             value=obj.raw_value,
             vary=not obj.fixed,
             min=obj.min,

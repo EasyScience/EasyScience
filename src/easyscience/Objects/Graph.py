@@ -130,6 +130,7 @@ class Graph:
 
     def add_vertex(self, obj: object, obj_type: str = None):
         name = obj.name
+        
         self._store[name] = obj
         self.__graph_dict[name] = _EntryList()  # Add objects type to the list of types
         self.__graph_dict[name].finalizer = weakref.finalize(
