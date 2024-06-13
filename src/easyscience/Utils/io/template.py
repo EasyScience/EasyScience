@@ -223,7 +223,7 @@ class BaseEncoderDecoder:
         if hasattr(obj, '_convert_to_dict'):
             d = obj._convert_to_dict(d, self, skip=skip, **kwargs)
         if hasattr(obj, '_borg') and '@id' not in d:
-            d['@id'] = str(obj._borg.map.convert_id(obj).int)
+            d['@id'] = obj.name
         return d
 
     @staticmethod

@@ -7,13 +7,7 @@ __version__ = "0.1.0"
 
 import sys
 import weakref
-from collections import defaultdict
 from typing import List
-from typing import Union
-from uuid import UUID
-from uuid import uuid4
-from weakref import WeakKeyDictionary
-
 
 class _EntryList(list):
     def __init__(self, *args, my_type=None, **kwargs):

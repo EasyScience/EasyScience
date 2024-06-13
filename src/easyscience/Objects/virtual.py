@@ -28,7 +28,7 @@ def raise_(ex):
 def _remover(a_obj_id: str, v_obj_id: str):
     try:
         # Try to get parent object (might be deleted)
-        a_obj = borg.map.get_item_by_key(int(a_obj_id))
+        a_obj = borg.map.get_item_by_key(a_obj_id)
     except ValueError:
         return
     if a_obj._constraints['virtual'].get(v_obj_id, False):
@@ -131,8 +131,8 @@ def virtualizer(obj: BV) -> BV:
         weakref.finalize(
             new_obj,
             _remover,
-            str(borg.map.convert_id(old_obj).int),
-            str(borg.map.convert_id(new_obj).int),
+            old_obj.name,
+            new_obj.name,
         )
         return new_obj
 
@@ -174,8 +174,8 @@ def virtualizer(obj: BV) -> BV:
         weakref.finalize(
             v_p,
             _remover,
-            str(borg.map.convert_id(obj).int),
-            str(borg.map.convert_id(v_p).int),
+            obj.name,
+            v_p.name,
         )
     else:
         # In this case, we need to be recursive.

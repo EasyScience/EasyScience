@@ -43,18 +43,18 @@ class ConstraintBase(ComponentSerializer, metaclass=ABCMeta):
         value: Optional[Number] = None,
     ):
         self.aeval = Interpreter()
-        self.dependent_obj_ids = self.get_key(dependent_obj)
+        self.dependent_obj_ids = dependent_obj.name
         self.independent_obj_ids = None
         self._enabled = True
         self.external = False
         self._finalizer = None
         if independent_obj is not None:
             if isinstance(independent_obj, list):
-                self.independent_obj_ids = [self.get_key(obj) for obj in independent_obj]
+                self.independent_obj_ids = [obj.name for obj in independent_obj]
                 if self.dependent_obj_ids in self.independent_obj_ids:
                     raise AttributeError('A dependent object can not be an independent object')
             else:
-                self.independent_obj_ids = self.get_key(independent_obj)
+                self.independent_obj_ids = independent_obj.name
                 if self.dependent_obj_ids == self.independent_obj_ids:
                     raise AttributeError('A dependent object can not be an independent object')
             # Test if dependent is a parameter or a descriptor.
@@ -146,15 +146,6 @@ class ConstraintBase(ComponentSerializer, metaclass=ABCMeta):
     @abstractmethod
     def __repr__(self):
         pass
-
-    def get_key(self, obj) -> int:
-        """
-        Get the unique key of a EasyScience object
-
-        :param obj: EasyScience object
-        :return: key for EasyScience object
-        """
-        return self._borg.map.convert_id_to_key(obj)
 
     def get_obj(self, key: int) -> V:
         """
