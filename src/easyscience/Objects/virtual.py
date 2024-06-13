@@ -28,7 +28,7 @@ def raise_(ex):
 def _remover(a_obj_id: str, v_obj_id: str):
     try:
         # Try to get parent object (might be deleted)
-        a_obj = borg.map.get_item_by_key(int(a_obj_id))
+        a_obj = borg.map.get_item_by_key(a_obj_id)
     except ValueError:
         return
     if a_obj._constraints["virtual"].get(v_obj_id, False):
@@ -93,7 +93,7 @@ def component_realizer(obj: BV, component: str, recursive: bool = True):
                 value = component._kwargs[key]
             else:
                 value = key
-                key = value._borg.map.convert_id_to_key(value)
+                key = value.name
             if (
                 getattr(value, "__old_class__", value.__class__)
                 in ec_var.__dict__.values()
@@ -131,15 +131,15 @@ def virtualizer(obj: BV) -> BV:
         constraint = ObjConstraint(new_obj, "", old_obj)
         constraint.external = True
         old_obj._constraints["virtual"][
-            str(obj._borg.map.convert_id(new_obj).int)
+            obj.name
         ] = constraint
         new_obj._constraints["builtin"] = dict()
         # setattr(new_obj, "__previous_set", getattr(olobj, "__previous_set", None))
         weakref.finalize(
             new_obj,
             _remover,
-            str(borg.map.convert_id(old_obj).int),
-            str(borg.map.convert_id(new_obj).int),
+            old_obj.name,
+            new_obj.name,
         )
         return new_obj
 
@@ -148,7 +148,7 @@ def virtualizer(obj: BV) -> BV:
     virtual_options = {
         "_is_virtual": True,
         "is_virtual": property(fget=lambda self: self._is_virtual),
-        "_derived_from": property(fget=lambda self: self._borg.map.convert_id(obj).int),
+        "_derived_from": property(fget=obj.name),
         "__non_virtual_class__": klass,
         "realize": realizer,
         "relalize_component": component_realizer,
@@ -177,14 +177,14 @@ def virtualizer(obj: BV) -> BV:
         v_p._enabled = False
         constraint = ObjConstraint(v_p, "", obj)
         constraint.external = True
-        obj._constraints["virtual"][str(cls._borg.map.convert_id(v_p).int)] = constraint
+        obj._constraints["virtual"][v_p.name] = constraint
         v_p._constraints["builtin"] = dict()
         setattr(v_p, "__previous_set", getattr(obj, "__previous_set", None))
         weakref.finalize(
             v_p,
             _remover,
-            str(borg.map.convert_id(obj).int),
-            str(borg.map.convert_id(v_p).int),
+            obj.name,
+            v_p.name,
         )
     else:
         # In this case, we need to be recursive.

@@ -251,14 +251,11 @@ class NameConverter:
 
         self._borg = borg
 
-    def get_name_from_key(self, item_key: int) -> str:
+    def get_name_from_key(self, item_key: str) -> str:
         return getattr(self._borg.map.get_item_by_key(item_key), 'name', '')
 
-    def get_item_from_key(self, item_key: int) -> object:
+    def get_item_from_key(self, item_key: str) -> object:
         return self._borg.map.get_item_by_key(item_key)
-
-    def get_key(self, item: object) -> int:
-        return self._borg.map.convert_id_to_key(item)
 
 
 class FitError(Exception):

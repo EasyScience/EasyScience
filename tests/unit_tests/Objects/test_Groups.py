@@ -486,8 +486,8 @@ def test_baseCollection_set_index(cls):
     edges = obj._borg.map.get_edges(obj)
     assert len(edges) == len(obj)
     for item in obj:
-        assert obj._borg.map.convert_id_to_key(item) in edges
-    assert obj._borg.map.convert_id_to_key(p2) not in edges
+        assert item.name in edges
+    assert p2.name not in edges
 
 
 @pytest.mark.parametrize("cls", class_constructors)
@@ -510,8 +510,8 @@ def test_baseCollection_set_index_based(cls):
     edges = obj._borg.map.get_edges(obj)
     assert len(edges) == len(obj)
     for item in obj:
-        assert obj._borg.map.convert_id_to_key(item) in edges
-    assert obj._borg.map.convert_id_to_key(p4) not in edges
+        assert item.name in edges
+    assert p4.name not in edges
 
 
 @pytest.mark.parametrize("cls", class_constructors)
