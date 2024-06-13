@@ -74,10 +74,10 @@ class JobBase(BaseObj, metaclass=ABCMeta):
     # def info(self, info: InfoBase):
     #     raise NotImplementedError("info setter not implemented")
 
-    @abstractmethod
-    def calculate_theory(self, *args, **kwargs):
-        raise NotImplementedError("calculate_theory not implemented")
-        #pass
+    # @abstractmethod
+    # def calculate_theory(self, *args, **kwargs):
+    #     raise NotImplementedError("calculate_theory not implemented")
+    #     #pass
 
     @abstractmethod
     def fit(self, *args, **kwargs):
