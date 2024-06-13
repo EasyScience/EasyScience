@@ -494,7 +494,7 @@ def test_baseCollection_set_index(cls):
 def test_baseCollection_set_index_based(cls):
     name = "test"
     p1 = Parameter("p1", 1)
-    p2 = Parameter("p1", 2)
+    p2 = Parameter("p2", 2)
     p3 = Parameter("p3", 3)
     p4 = Parameter("p4", 4)
     p5 = Parameter("p5", 5)
