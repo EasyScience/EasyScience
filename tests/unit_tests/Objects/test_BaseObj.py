@@ -428,20 +428,17 @@ def test_Base_GETSET_v3():
     a = A.from_pars(a_start)
     graph = a._borg.map
 
-    def get_key(obj):
-        return graph.convert_id_to_key(obj)
-
     assert a.a.raw_value == a_start
     assert len(graph.get_edges(a)) == 1
     a_ = Parameter("a", a_end)
-    assert get_key(a.a) in graph.get_edges(a)
+    assert a.a.name in graph.get_edges(a)
     a__ = a.a
 
     setattr(a, "a", a_)
     assert a.a.raw_value == a_end
     assert len(graph.get_edges(a)) == 1
-    assert get_key(a_) in graph.get_edges(a)
-    assert get_key(a__) not in graph.get_edges(a)
+    assert a_.name in graph.get_edges(a)
+    assert a__.name not in graph.get_edges(a)
 
 
 def test_BaseCreation():
