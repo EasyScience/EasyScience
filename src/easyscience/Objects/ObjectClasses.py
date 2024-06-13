@@ -39,11 +39,11 @@ class BasedBase(ComponentSerializer):
     _REDIRECT = {}
 
     def __init__(self, name: str, interface: Optional[iF] = None):
+        self._name: str = name
         self._borg = borg
         self._borg.map.add_vertex(self, obj_type='created')
         self.interface = interface
         self.user_data: dict = {}
-        self._name: str = name
 
     @property
     def _arg_spec(self) -> Set[str]:

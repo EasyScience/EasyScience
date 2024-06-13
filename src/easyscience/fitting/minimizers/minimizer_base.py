@@ -226,18 +226,6 @@ class FitResults:
         return self.chi2 / (len(self.x) - self.n_pars)
 
 
-class NameConverter:
-    def __init__(self):
-        from easyscience import borg
-
-        self._borg = borg
-
-    def get_name_from_key(self, item_key: str) -> str:
-        return getattr(self._borg.map.get_item_by_key(item_key), 'name', '')
-
-    def get_item_from_key(self, item_key: str) -> object:
-        return self._borg.map.get_item_by_key(item_key)
-
 
 class FitError(Exception):
     def __init__(self, e: Exception = None):

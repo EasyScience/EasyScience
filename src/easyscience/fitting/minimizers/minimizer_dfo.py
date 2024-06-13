@@ -97,7 +97,7 @@ class DFO(MinimizerBase):  # noqa: S101
         self._cached_pars = {}
         self._cached_pars_vals = {}
         for parameter in self._object.get_fit_parameters():
-            key = NameConverter().get_key(parameter)
+            key = parameter.name
             self._cached_pars[key] = parameter
             self._cached_pars_vals[key] = (parameter.value, parameter.error)
 
