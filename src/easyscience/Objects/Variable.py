@@ -66,8 +66,8 @@ class Descriptor(ComponentSerializer):
 
     def __init__(
         self,
-        name: str,
         value: Any,
+        name: Union(str, None) = None,
         units: Optional[Union[str, ureg.Unit]] = None,
         description: Optional[str] = None,
         url: Optional[str] = None,
@@ -107,8 +107,9 @@ class Descriptor(ComponentSerializer):
         """
         if not hasattr(self, '_args'):
             self._args = {'value': None, 'units': ''}
-
-        self.name: str = name
+        if name is None:
+            name = self._generate_default_name()
+        self._name = name
         # Let the collective know we've been assimilated
         self._borg.map.add_vertex(self, obj_type='created')
         # Make the connection between self and parent
@@ -383,6 +384,16 @@ class Descriptor(ComponentSerializer):
 
     def __copy__(self):
         return self.__class__.from_dict(self.as_dict())
+
+    def _generate_default_name(self) -> str:
+        """
+        Generate a default name for the object.
+        """
+        class_name = self.__class__.__name__
+        iterator = 0
+        while class_name+"_"+str(iterator) in self._borg.map.vertices():
+            iterator += 1
+        return class_name+"_"+str(iterator)
 
 
 V = TypeVar('V', bound=Descriptor)

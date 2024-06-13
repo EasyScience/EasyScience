@@ -38,8 +38,10 @@ class BasedBase(ComponentSerializer):
 
     _REDIRECT = {}
 
-    def __init__(self, name: str, interface: Optional[iF] = None):
-        self._name: str = name
+    def __init__(self, name: Union(str, None) = None, interface: Optional[iF] = None):
+        if name is None:
+            name = self._generate_default_name()
+        self._name = name
         self._borg = borg
         self._borg.map.add_vertex(self, obj_type='created')
         self.interface = interface
@@ -194,6 +196,16 @@ class BasedBase(ComponentSerializer):
         """
         new_class_objs = list(k for k in dir(self.__class__) if not k.startswith('_'))
         return sorted(new_class_objs)
+    
+    def _generate_default_name(self) -> str:
+        """
+        Generate a default name for the object.
+        """
+        class_name = self.__class__.__name__
+        iterator = 0
+        while class_name+"_"+str(iterator) in self._borg.map.vertices():
+            iterator += 1
+        return class_name+"_"+str(iterator)
 
 
 if TYPE_CHECKING:
