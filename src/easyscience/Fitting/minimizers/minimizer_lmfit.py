@@ -25,7 +25,7 @@ class LMFit(MinimizerBase):  # noqa: S101
     It allows for the lmfit fitting engine to use parameters declared in an `EasyScience.Objects.Base.BaseObj`.
     """
 
-    property_type = LMParameter
+    # property_type = LMParameter
     name = 'lmfit'
 
     def make_model(self, pars: Optional[LMParameters] = None) -> LMModel:
@@ -157,6 +157,8 @@ class LMFit(MinimizerBase):  # noqa: S101
         :rtype: ModelResult
         """
         default_method = {}
+        if self._method is not None:
+            default_method = {'method': self._method}
         if method is not None and method in self.available_methods():
             default_method['method'] = method
 

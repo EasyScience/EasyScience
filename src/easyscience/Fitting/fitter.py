@@ -10,11 +10,11 @@ import numpy as np
 
 from .minimizers import FitResults
 from .minimizers import MinimizerBase
-from .minimizers.factory import Minimizers
+from .minimizers.factory import AvailableMinimizers
 from .minimizers.factory import from_string
 from .minimizers.factory import minimizer_class_factory
 
-DEFAULT_MINIMIZER = 'lmfit'
+DEFAULT_MINIMIZER = 'lmfit-leastsq'
 
 
 class Fitter:
@@ -27,8 +27,9 @@ class Fitter:
         self._fit_function = fit_function
         self._dependent_dims = None
 
+        self._name_current_minimizer = DEFAULT_MINIMIZER
         self._minimizer: MinimizerBase  # _minimizer is set in the create method
-        self.create(DEFAULT_MINIMIZER)
+        self._update_minimizer(self._name_current_minimizer)
 
     def fit_constraints(self) -> list:
         return self._minimizer.fit_constraints()
@@ -49,6 +50,13 @@ class Fitter:
         return self._minimizer.convert_to_pars_obj(pars)
 
     def available_methods(self) -> list:
+        """
+        Return the available fitting methods for minimizer engine contaning the current minimizer.
+        This should only be used to inspect potential methods.
+        The supported minizers are the ones in the minimizers.factory.AvailableMinimizers enum.
+
+        :return: List of available fitting methods
+        """
         return self._minimizer.available_methods()
 
     def initialize(self, fit_object, fit_function: Callable) -> None:
@@ -79,8 +87,11 @@ class Fitter:
         self._minimizer._constraints = constraints
 
     def _update_minimizer(self, minimizer_name: str) -> None:
-        minimizer_class = minimizer_class_factory(from_string(minimizer_name))
-        self._minimizer = minimizer_class(self._fit_object, self.fit_function)
+        minimizer_enum = from_string(minimizer_name)
+        self._minimizer = minimizer_class_factory(
+            minimizer_enum=minimizer_enum, fit_object=self._fit_object, fit_function=self.fit_function
+        )
+        self._name_current_minimizer = minimizer_name
 
     @property
     def available_minimizers(self) -> List[str]:
@@ -90,7 +101,7 @@ class Fitter:
         :return: List of available fitting minimizers
         :rtype: List[str]
         """
-        return [minimize.name for minimize in Minimizers]
+        return [minimize.name for minimize in AvailableMinimizers]
 
     @property
     def minimizer(self) -> MinimizerBase:
@@ -118,7 +129,7 @@ class Fitter:
         :return: None
         """
         self._fit_function = fit_function
-        self._update_minimizer(self._minimizer.name)
+        self._update_minimizer(self._name_current_minimizer)
 
     @property
     def fit_object(self):
@@ -136,7 +147,7 @@ class Fitter:
         :return: None
         """
         self._fit_object = fit_object
-        self._update_minimizer(self._minimizer.name)
+        self._update_minimizer(self._name_current_minimizer)
 
     def _fit_function_wrapper(self, real_x=None, flatten: bool = True) -> Callable:
         """

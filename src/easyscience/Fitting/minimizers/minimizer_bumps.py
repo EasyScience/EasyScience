@@ -26,10 +26,10 @@ class Bumps(MinimizerBase):  # noqa: S101
     It allows for the Bumps fitting engine to use parameters declared in an `EasyScience.Objects.Base.BaseObj`.
     """
 
-    property_type = BumpsParameter
+    # property_type = BumpsParameter
     name = 'bumps'
 
-    def __init__(self, obj, fit_function: Callable):
+    def __init__(self, obj, fit_function: Callable, method: Optional[str] = None):
         """
         Initialize the fitting engine with a `BaseObj` and an arbitrary fitting function.
 
@@ -40,7 +40,7 @@ class Bumps(MinimizerBase):  # noqa: S101
                             keyword/value pairs
         :type fit_function: Callable
         """
-        super().__init__(obj, fit_function)
+        super().__init__(obj=obj, fit_function=fit_function, method=method)
         self._cached_pars_order = ()
         self._p_0 = {}
 
@@ -167,8 +167,9 @@ class Bumps(MinimizerBase):  # noqa: S101
         :return: Fit results
         :rtype: ModelResult
         """
-
         default_method = {}
+        if self._method is not None:
+            default_method = {'method': self._method}
         if method is not None and method in self.available_methods():
             default_method['method'] = method
 

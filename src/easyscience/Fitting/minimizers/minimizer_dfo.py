@@ -2,7 +2,7 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
 
-from numbers import Number
+# from numbers import Number
 from typing import Callable
 from typing import List
 from typing import Optional
@@ -21,10 +21,10 @@ class DFO(MinimizerBase):  # noqa: S101
     This is a wrapper to Derivative Free Optimisation for Least Square: https://numericalalgorithmsgroup.github.io/dfols/
     """
 
-    property_type = Number
+    # property_type = Number
     name = 'dfo_ls'
 
-    def __init__(self, obj, fit_function: Callable):
+    def __init__(self, obj, fit_function: Callable, method: Optional[str] = None):
         """
         Initialize the fitting engine with a `BaseObj` and an arbitrary fitting function.
 
@@ -35,7 +35,7 @@ class DFO(MinimizerBase):  # noqa: S101
                             keyword/value pairs
         :type fit_function: Callable
         """
-        super().__init__(obj, fit_function)
+        super().__init__(obj=obj, fit_function=fit_function, method=method)
         self._p_0 = {}
 
     def make_model(self, pars: Optional[List] = None) -> Callable:
@@ -150,8 +150,9 @@ class DFO(MinimizerBase):  # noqa: S101
         :return: Fit results
         :rtype: ModelResult
         """
-
         default_method = {}
+        if self._method is not None:
+            default_method = {'method': self._method}
         if method is not None and method in self.available_methods():
             default_method['method'] = method
 
