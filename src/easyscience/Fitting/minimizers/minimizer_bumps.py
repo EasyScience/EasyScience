@@ -27,7 +27,7 @@ class Bumps(MinimizerBase):  # noqa: S101
     """
 
     # property_type = BumpsParameter
-    name = 'bumps'
+    wrapping = 'bumps'
 
     def __init__(self, obj, fit_function: Callable, method: Optional[str] = None):
         """
@@ -291,7 +291,7 @@ class Bumps(MinimizerBase):  # noqa: S101
         results.y_err = self._cached_model.dy
         # results.residual = results.y_obs - results.y_calc
         # results.goodness_of_fit = np.sum(results.residual**2)
-        results.fitting_engine = self.__class__
+        results.minimizer_engine = self.__class__
         results.fit_args = None
         results.engine_result = fit_results
         # results.check_sanity()

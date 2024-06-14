@@ -121,7 +121,7 @@ class MultiFitter(Fitter):
 
             #  Fill out the new result obj (see EasyScience.Fitting.Fitting_template.FitResults)
             current_results.success = fit_result_obj.success
-            current_results.fitting_engine = fit_result_obj.fitting_engine
+            current_results.minimizer_engine = fit_result_obj.minimizer_engine
             current_results.p = fit_result_obj.p
             current_results.p0 = fit_result_obj.p0
             current_results.x = this_x

@@ -22,7 +22,7 @@ class DFO(MinimizerBase):  # noqa: S101
     """
 
     # property_type = Number
-    name = 'dfo_ls'
+    wrapping = 'dfo_ls'
 
     def __init__(self, obj, fit_function: Callable, method: Optional[str] = None):
         """
@@ -250,7 +250,7 @@ class DFO(MinimizerBase):  # noqa: S101
         # results.residual = results.y_obs - results.y_calc
         # results.goodness_of_fit = fit_results.f
 
-        results.fitting_engine = self.__class__
+        results.minimizer_engine = self.__class__
         results.fit_args = None
         # results.check_sanity()
 

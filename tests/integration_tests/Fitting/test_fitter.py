@@ -102,7 +102,7 @@ def test_basic_fit(fit_engine, with_errors):
     result = f.fit(*args, **kwargs)
 
     if fit_engine is not None:
-        assert result.fitting_engine.name == fit_engine
+        assert result.minimizer_engine.wrapping == fit_engine
     assert sp_sin.phase.raw_value == pytest.approx(ref_sin.phase.raw_value, rel=1e-3)
     assert sp_sin.offset.raw_value == pytest.approx(ref_sin.offset.raw_value, rel=1e-3)
 

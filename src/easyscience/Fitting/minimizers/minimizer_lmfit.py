@@ -26,7 +26,7 @@ class LMFit(MinimizerBase):  # noqa: S101
     """
 
     # property_type = LMParameter
-    name = 'lmfit'
+    wrapping = 'lmfit'
 
     def make_model(self, pars: Optional[LMParameters] = None) -> LMModel:
         """
@@ -276,7 +276,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         # results.goodness_of_fit = fit_results.chisqr
         results.y_calc = fit_results.best_fit
         results.y_err = 1 / fit_results.weights
-        results.fitting_engine = self.__class__
+        results.minimizer_engine = self.__class__
         results.fit_args = None
 
         results.engine_result = fit_results

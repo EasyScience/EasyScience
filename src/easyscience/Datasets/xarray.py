@@ -803,7 +803,7 @@ def check_sanity_multiple(fit_results: FitResults, originals: List[xr.DataArray]
         current_results = fit_results.__class__()
         # Fill out the basic stuff....
         current_results.engine_result = fit_results.engine_result
-        current_results.fitting_engine = fit_results.fitting_engine
+        current_results.minimizer_engine = fit_results.minimizer_engine
         current_results.success = fit_results.success
         current_results.p = fit_results.p
         current_results.p0 = fit_results.p0

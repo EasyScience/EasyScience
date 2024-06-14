@@ -8,7 +8,7 @@ class FitResults:
 
     __slots__ = [
         'success',
-        'fitting_engine',
+        'minimizer_engine',
         'fit_args',
         'p',
         'p0',
@@ -23,7 +23,7 @@ class FitResults:
 
     def __init__(self):
         self.success = False
-        self.fitting_engine = None
+        self.minimizer_engine = None
         self.fit_args = {}
         self.p = {}
         self.p0 = {}
