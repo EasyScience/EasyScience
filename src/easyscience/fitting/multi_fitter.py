@@ -119,7 +119,7 @@ class MultiFitter(Fitter):
             current_results = cls()
             ep = sp + int(np.array(self._dependent_dims[idx]).prod())
 
-            #  Fill out the new result obj (see EasyScience.Fitting.Fitting_template.FitResults)
+            #  Fill out the new result obj (see EasyScience.fitting.Fitting_template.FitResults)
             current_results.success = fit_result_obj.success
             current_results.minimizer_engine = fit_result_obj.minimizer_engine
             current_results.p = fit_result_obj.p

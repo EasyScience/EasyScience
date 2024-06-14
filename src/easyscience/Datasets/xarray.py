@@ -20,7 +20,7 @@ import numpy as np
 import xarray as xr
 
 from easyscience import ureg
-from easyscience.Fitting import FitResults
+from easyscience.fitting import FitResults
 
 T_ = TypeVar('T_')
 

@@ -187,7 +187,7 @@ class NumericConstraint(ConstraintBase):
         :example:
         .. code-block:: python
 
-             from easyscience.Fitting.Constraints import NumericConstraint
+             from easyscience.fitting.Constraints import NumericConstraint
              from easyscience.Objects.Base import Parameter
              # Create an `a < 1` constraint
              a = Parameter('a', 0.2)
@@ -243,7 +243,7 @@ class SelfConstraint(ConstraintBase):
         :example:
         .. code-block:: python
 
-             from easyscience.Fitting.Constraints import SelfConstraint
+             from easyscience.fitting.Constraints import SelfConstraint
              from easyscience.Objects.Base import Parameter
              # Create an `a < a.max` constraint
              a = Parameter('a', 0.2, max=1)
@@ -297,7 +297,7 @@ class ObjConstraint(ConstraintBase):
         :example:
         .. code-block:: python
 
-             from easyscience.Fitting.Constraints import ObjConstraint
+             from easyscience.fitting.Constraints import ObjConstraint
              from easyscience.Objects.Base import Parameter
              # Create an `a = 2 * b` constraint
              a = Parameter('a', 0.2)
@@ -331,7 +331,7 @@ class ObjConstraint(ConstraintBase):
 
 class MultiObjConstraint(ConstraintBase):
     """
-    A `MultiObjConstraint` is similar to :class:`EasyScience.Fitting.Constraints.ObjConstraint` except that it relates to
+    A `MultiObjConstraint` is similar to :class:`EasyScience.fitting.Constraints.ObjConstraint` except that it relates to
     multiple independent objects.
     """
 
@@ -343,7 +343,7 @@ class MultiObjConstraint(ConstraintBase):
         value: Number,
     ):
         """
-        A `MultiObjConstraint` is similar to :class:`EasyScience.Fitting.Constraints.ObjConstraint` except that it relates
+        A `MultiObjConstraint` is similar to :class:`EasyScience.fitting.Constraints.ObjConstraint` except that it relates
         to one or more independent objects.
 
         E.g.
@@ -360,7 +360,7 @@ class MultiObjConstraint(ConstraintBase):
 
         .. code-block:: python
 
-             from easyscience.Fitting.Constraints import MultiObjConstraint
+             from easyscience.fitting.Constraints import MultiObjConstraint
              from easyscience.Objects.Base import Parameter
              # Create an `a + b = 1` constraint
              a = Parameter('a', 0.2)
@@ -376,7 +376,7 @@ class MultiObjConstraint(ConstraintBase):
 
         .. code-block:: python
 
-             from easyscience.Fitting.Constraints import MultiObjConstraint
+             from easyscience.fitting.Constraints import MultiObjConstraint
              from easyscience.Objects.Base import Parameter
              # Create an `a + b - 2c = 0` constraint
              a = Parameter('a', 0.5)
@@ -442,7 +442,7 @@ class FunctionalConstraint(ConstraintBase):
         .. code-block:: python
 
             import numpy as np
-            from easyscience.Fitting.Constraints import FunctionalConstraint
+            from easyscience.fitting.Constraints import FunctionalConstraint
             from easyscience.Objects.Base import Parameter
 
             a = Parameter('a', 0.2, max=1)
