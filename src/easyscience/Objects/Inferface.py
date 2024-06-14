@@ -65,7 +65,7 @@ class InterfaceFactoryTemplate:
         :param new_interface: name of new interface to be created
         :type new_interface: str
         :param fitter: Fitting interface which contains the fitting object which may have bindings which will be updated.
-        :type fitter: EasyScience.Fitting.Fitting.Fitter
+        :type fitter: EasyScience.fitting.Fitter
         :return: None
         :rtype: noneType
         """

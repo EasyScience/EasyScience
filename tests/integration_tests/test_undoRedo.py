@@ -14,6 +14,7 @@ from easyscience.Objects.Groups import BaseCollection
 from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.Variable import Descriptor
 from easyscience.Objects.Variable import Parameter
+from easyscience.fitting import Fitter
 
 
 def createSingleObjs(idx):
@@ -264,8 +265,6 @@ def test_fittingUndoRedo(fit_engine):
     l2.c.fixed = False
 
     y = l1(x) + 0.125 * (dy - 0.5)
-
-    from easyscience.Fitting import Fitter
 
     f = Fitter(l2, l2)
     try:

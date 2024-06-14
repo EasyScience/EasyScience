@@ -8,9 +8,9 @@ __version__ = "0.0.1"
 import pytest
 
 import numpy as np
-from easyscience.Fitting.Constraints import ObjConstraint
-from easyscience.Fitting.multi_fitter import MultiFitter
-from easyscience.Fitting.minimizers import FitError
+from easyscience.fitting.Constraints import ObjConstraint
+from easyscience.fitting.multi_fitter import MultiFitter
+from easyscience.fitting.minimizers import FitError
 from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.ObjectClasses import Parameter
 

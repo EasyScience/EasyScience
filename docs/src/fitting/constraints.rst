@@ -19,7 +19,7 @@ Constraints on Parameters
 Constraints on Fitting
 ^^^^^^^^^^^^^^^^^^^^^^
 
-:class:`easyscience.Fitting.Fitting.Fitter` has the ability to evaluate user supplied constraints which effect the value of both fixed and non-fixed parameters. A good example of one such use case would be the ratio between two parameters, where you would create a :class:`easyscience.Fitting.Constraints.ObjConstraint`.
+:class:`easyscience.fitting.Fitter` has the ability to evaluate user supplied constraints which effect the value of both fixed and non-fixed parameters. A good example of one such use case would be the ratio between two parameters, where you would create a :class:`easyscience.fitting.Constraints.ObjConstraint`.
 
 Using constraints
 -----------------
@@ -28,7 +28,7 @@ A constraint can be used in one of three ways; Assignment to a parameter, assign
 
 .. code-block:: python
 
-     from easyscience.Fitting.Constraints import NumericConstraint
+     from easyscience.fitting.Constraints import NumericConstraint
      from easyscience.Objects.Base import Parameter
      # Create an `a < 1` constraint
      a = Parameter('a', 0.5)
@@ -41,7 +41,7 @@ A constraint can be used in one of three ways; Assignment to a parameter, assign
 Constraint Reference
 --------------------
 
-.. minigallery:: easyscience.Fitting.Constraints.NumericConstraint
+.. minigallery:: easyscience.fitting.Constraints.NumericConstraint
     :add-heading: Examples using `Constraints`
 
 Built-in constraints
@@ -49,27 +49,27 @@ Built-in constraints
 
 These are the built in constraints which you can use
 
-.. autoclass:: easyscience.Fitting.Constraints.SelfConstraint
+.. autoclass:: easyscience.fitting.Constraints.SelfConstraint
    :members: +enabled
 
-.. autoclass:: easyscience.Fitting.Constraints.NumericConstraint
+.. autoclass:: easyscience.fitting.Constraints.NumericConstraint
   :members: +enabled
 
-.. autoclass:: easyscience.Fitting.Constraints.ObjConstraint
+.. autoclass:: easyscience.fitting.Constraints.ObjConstraint
   :members: +enabled
 
-.. autoclass:: easyscience.Fitting.Constraints.FunctionalConstraint
+.. autoclass:: easyscience.fitting.Constraints.FunctionalConstraint
   :members: +enabled
 
-.. autoclass:: easyscience.Fitting.Constraints.MultiObjConstraint
+.. autoclass:: easyscience.fitting.Constraints.MultiObjConstraint
   :members: +enabled
 
 User created constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can also make your own constraints by subclassing the :class:`easyscience.Fitting.Constraints.ConstraintBase` class. For this at a minimum the abstract methods ``_parse_operator`` and ``__repr__`` need to be written.
+You can also make your own constraints by subclassing the :class:`easyscience.fitting.Constraints.ConstraintBase` class. For this at a minimum the abstract methods ``_parse_operator`` and ``__repr__`` need to be written.
 
-.. autoclass:: easyscience.Fitting.Constraints.ConstraintBase
+.. autoclass:: easyscience.fitting.Constraints.ConstraintBase
   :members:
   :private-members:
   :special-members: __repr__
