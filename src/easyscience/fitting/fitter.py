@@ -49,6 +49,7 @@ class Fitter:
     def convert_to_pars_obj(self, pars) -> object:
         return self._minimizer.convert_to_pars_obj(pars)
 
+    # TODO: remove this method when we are ready to adjust the dependent products
     def initialize(self, fit_object, fit_function: Callable) -> None:
         """
         Set the model and callable in the calculator interface.
@@ -60,6 +61,7 @@ class Fitter:
         self._fit_function = fit_function
         self._update_minimizer(DEFAULT_MINIMIZER)
 
+    # TODO: remove this method when we are ready to adjust the dependent products
     def create(self, minimizer_name: str = DEFAULT_MINIMIZER) -> None:
         """
         Create the required minimizer.
