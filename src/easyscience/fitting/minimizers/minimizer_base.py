@@ -18,6 +18,8 @@ class MinimizerBase(metaclass=ABCMeta):
     This template class is the basis for all fitting engines in `EasyScience`.
     """
 
+    wrapping: str = None
+
     def __init__(self, obj, fit_function: Callable, method: Optional[str] = None):
         self._object = obj
         self._original_fit_function = fit_function

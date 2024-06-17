@@ -51,6 +51,7 @@ class AvailableMinimizers(Enum):
         DFO_leastsq = auto()
 
 
+# Temporary solution to convert string to enum
 def from_string_to_enum(minimizer_name: str) -> AvailableMinimizers:
     if minimizer_name == 'lmfit':
         minmizer_enum = AvailableMinimizers.LMFit
