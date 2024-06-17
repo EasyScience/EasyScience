@@ -26,7 +26,6 @@ class Bumps(MinimizerBase):  # noqa: S101
     It allows for the Bumps fitting engine to use parameters declared in an `EasyScience.Objects.Base.BaseObj`.
     """
 
-    # property_type = BumpsParameter
     wrapping = 'bumps'
 
     def __init__(self, obj, fit_function: Callable, method: Optional[str] = None):

@@ -10,9 +10,7 @@ import numpy as np
 
 from .minimizers import FitResults
 from .minimizers import MinimizerBase
-from .minimizers.factory import AvailableMinimizers
-from .minimizers.factory import from_string
-from .minimizers.factory import minimizer_class_factory
+from .minimizers import factory as minmizer_factory
 
 DEFAULT_MINIMIZER = 'lmfit-leastsq'
 
@@ -87,8 +85,8 @@ class Fitter:
         self._minimizer._constraints = constraints
 
     def _update_minimizer(self, minimizer_name: str) -> None:
-        minimizer_enum = from_string(minimizer_name)
-        self._minimizer = minimizer_class_factory(
+        minimizer_enum = minmizer_factory.from_string_to_enum(minimizer_name)
+        self._minimizer = minmizer_factory.factory(
             minimizer_enum=minimizer_enum, fit_object=self._fit_object, fit_function=self.fit_function
         )
         self._name_current_minimizer = minimizer_name
@@ -101,7 +99,7 @@ class Fitter:
         :return: List of available fitting minimizers
         :rtype: List[str]
         """
-        return [minimize.name for minimize in AvailableMinimizers]
+        return [minimize.name for minimize in minmizer_factory.AvailableMinimizers]
 
     @property
     def minimizer(self) -> MinimizerBase:

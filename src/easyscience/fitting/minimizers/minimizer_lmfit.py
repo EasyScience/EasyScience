@@ -25,7 +25,6 @@ class LMFit(MinimizerBase):  # noqa: S101
     It allows for the lmfit fitting engine to use parameters declared in an `EasyScience.Objects.Base.BaseObj`.
     """
 
-    # property_type = LMParameter
     wrapping = 'lmfit'
 
     def make_model(self, pars: Optional[LMParameters] = None) -> LMModel:
