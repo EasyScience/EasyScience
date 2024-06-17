@@ -34,7 +34,7 @@ dependencies = [
     "bumps",
     "DFO-LS",
     "lmfit",
-    "numpy",
+    "numpy==1.26",  # Should be updated to numpy 2.0
     "pint",
     "uncertainties",
     "xarray",
