@@ -36,6 +36,9 @@ class MinimizerBase(metaclass=ABCMeta):
     def fit_constraints(self) -> list:
         return self._constraints
 
+    def set_fit_constraint(self, constraints):
+        self._constraints = constraints
+
     def add_fit_constraint(self, constraint):
         self._constraints.append(constraint)
 

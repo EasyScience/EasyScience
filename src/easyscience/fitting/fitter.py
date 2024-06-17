@@ -10,7 +10,9 @@ import numpy as np
 
 from .minimizers import FitResults
 from .minimizers import MinimizerBase
-from .minimizers import factory as minmizer_factory
+from .minimizers.factory import AvailableMinimizers
+from .minimizers.factory import factory
+from .minimizers.factory import from_string_to_enum
 
 DEFAULT_MINIMIZER = 'lmfit-leastsq'
 
@@ -47,16 +49,6 @@ class Fitter:
     def convert_to_pars_obj(self, pars) -> object:
         return self._minimizer.convert_to_pars_obj(pars)
 
-    def available_methods(self) -> list:
-        """
-        Return the available fitting methods for minimizer engine contaning the current minimizer.
-        This should only be used to inspect potential methods.
-        The supported minizers are the ones in the minimizers.factory.AvailableMinimizers enum.
-
-        :return: List of available fitting methods
-        """
-        return self._minimizer.available_methods()
-
     def initialize(self, fit_object, fit_function: Callable) -> None:
         """
         Set the model and callable in the calculator interface.
@@ -80,15 +72,13 @@ class Fitter:
         Switch minimizer and initialize.
         :param minimizer_name: The label of the  minimizer to create and instantiate.
         """
-        constraints = self._minimizer._constraints
+        constraints = self._minimizer.fit_constraints()
         self._update_minimizer(minimizer_name)
-        self._minimizer._constraints = constraints
+        self._minimizer.set_fit_constraint(constraints)
 
     def _update_minimizer(self, minimizer_name: str) -> None:
-        minimizer_enum = minmizer_factory.from_string_to_enum(minimizer_name)
-        self._minimizer = minmizer_factory.factory(
-            minimizer_enum=minimizer_enum, fit_object=self._fit_object, fit_function=self.fit_function
-        )
+        minimizer_enum = from_string_to_enum(minimizer_name)
+        self._minimizer = factory(minimizer_enum=minimizer_enum, fit_object=self._fit_object, fit_function=self.fit_function)
         self._name_current_minimizer = minimizer_name
 
     @property
@@ -99,7 +89,7 @@ class Fitter:
         :return: List of available fitting minimizers
         :rtype: List[str]
         """
-        return [minimize.name for minimize in minmizer_factory.AvailableMinimizers]
+        return [minimize.name for minimize in AvailableMinimizers]
 
     @property
     def minimizer(self) -> MinimizerBase:

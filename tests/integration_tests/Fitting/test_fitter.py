@@ -151,7 +151,7 @@ def test_lmfit_methods(fit_method):
     sp_sin.phase.fixed = False
 
     f = Fitter(sp_sin, sp_sin)
-    assert fit_method in f.available_methods()
+    assert fit_method in f._minimizer.available_methods()
     result = f.fit(x, y, method=fit_method)
     check_fit_results(result, sp_sin, ref_sin, x)
 
@@ -170,7 +170,7 @@ def test_bumps_methods(fit_method):
 
     f = Fitter(sp_sin, sp_sin)
     f.switch_minimizer("bumps")
-    assert fit_method in f.available_methods()
+    assert fit_method in f._minimizer.available_methods()
     result = f.fit(x, y, method=fit_method)
     check_fit_results(result, sp_sin, ref_sin, x)
 
