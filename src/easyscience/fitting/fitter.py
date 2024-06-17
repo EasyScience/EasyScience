@@ -186,7 +186,7 @@ class Fitter:
             self._dependent_dims = dims
 
             # Fit
-            fit_fun = self._fit_function
+            fit_fun_org = self._fit_function
             fit_fun_wrap = self._fit_function_wrapper(x_new, flatten=True)  # This should be wrapped.
 
             # We change the  fit function, so have to  reset constraints
@@ -198,7 +198,7 @@ class Fitter:
             # Postcompute
             fit_result = self._post_compute_reshaping(f_res, x, y)
             # Reset the function and constrains
-            self.fit_function = fit_fun
+            self.fit_function = fit_fun_org
             self._minimizer.set_fit_constraint(constraints)
             return fit_result
 

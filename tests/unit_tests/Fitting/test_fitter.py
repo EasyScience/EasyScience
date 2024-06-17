@@ -218,14 +218,34 @@ class TestFitter():
         fitter._minimizer = MagicMock()
         fitter._minimizer.fit = MagicMock(return_value='result')
 
-        x = np.array([1, 2, 3])
-        y = np.array([10, 20, 30])
-        weights = np.array([0.1, 0.2, 0.3])
-
         # Then
         result = fitter.fit('x', 'y', 'weights', 'vectorized')
 
-    # TODO
- #   def test_fit_function_wrapper()
- #   def test_precompute_reshaping()
- #   def test_post_compute_reshaping()
+        # Expect
+        fitter._precompute_reshaping.assert_called_once_with('x', 'y', 'weights', 'vectorized')
+        fitter._fit_function_wrapper.assert_called_once_with('x_new', flatten=True) 
+        fitter._post_compute_reshaping.assert_called_once_with('result', 'x', 'y')
+        assert result == 'fit_result'
+        assert fitter._dependent_dims == 'dims'
+        assert fitter._fit_function == self.mock_fit_function
+
+    def test_post_compute_reshaping(self, fitter: Fitter):
+        # When
+        fit_result = MagicMock()
+        fit_result.y_calc = np.array([[10], [20], [30]]) 
+        fit_result.y_err = np.array([[40], [50], [60]]) 
+        x = np.array([1, 2, 3])
+        y = np.array([4, 5, 6])
+
+        # Then
+        result = fitter._post_compute_reshaping(fit_result, x, y)
+
+        # Expect
+        assert np.array_equal(result.y_calc, np.array([10, 20, 30]))
+        assert np.array_equal(result.y_err, np.array([40, 50, 60])) 
+        assert np.array_equal(result.x, x)
+        assert np.array_equal(result.y_obs, y)
+
+# TODO
+#       def test_fit_function_wrapper()
+#       def test_precompute_reshaping()
