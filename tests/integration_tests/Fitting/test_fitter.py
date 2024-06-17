@@ -78,7 +78,7 @@ def check_fit_results(result, sp_sin, ref_sin, x, **kwargs):
 
 
 @pytest.mark.parametrize("with_errors", [False, True])
-@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo_ls"])
+@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo"])
 def test_basic_fit(fit_engine, with_errors):
     ref_sin = AbsSin(0.2, np.pi)
     sp_sin = AbsSin(0.354, 3.05)
@@ -107,7 +107,7 @@ def test_basic_fit(fit_engine, with_errors):
     assert sp_sin.offset.raw_value == pytest.approx(ref_sin.offset.raw_value, rel=1e-3)
 
 
-@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo_ls"])
+@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo"])
 def test_fit_result(fit_engine):
     ref_sin = AbsSin(0.2, np.pi)
     sp_sin = AbsSin(0.354, 3.05)
@@ -175,7 +175,7 @@ def test_bumps_methods(fit_method):
     check_fit_results(result, sp_sin, ref_sin, x)
 
 
-@pytest.mark.parametrize("fit_engine", ["lmfit", "bumps", "dfo_ls"])
+@pytest.mark.parametrize("fit_engine", ["lmfit", "bumps", "dfo"])
 def test_fit_constraints(fit_engine):
     ref_sin = AbsSin(np.pi * 0.45, 0.45 * np.pi * 0.5)
     sp_sin = AbsSin(1, 0.5)
@@ -205,7 +205,7 @@ def test_fit_constraints(fit_engine):
 
 
 @pytest.mark.parametrize("with_errors", [False, True])
-@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo_ls"])
+@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo"])
 def test_2D_vectorized(fit_engine, with_errors):
     x = np.linspace(0, 5, 200)
     mm = AbsSin2D(0.3, 1.6)
@@ -241,7 +241,7 @@ def test_2D_vectorized(fit_engine, with_errors):
 
 
 @pytest.mark.parametrize("with_errors", [False, True])
-@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo_ls"])
+@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo"])
 def test_2D_non_vectorized(fit_engine, with_errors):
     x = np.linspace(0, 5, 200)
     mm = AbsSin2DL(0.3, 1.6)

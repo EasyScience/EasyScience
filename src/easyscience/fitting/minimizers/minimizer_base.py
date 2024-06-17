@@ -5,7 +5,6 @@
 from abc import ABCMeta
 from abc import abstractmethod
 from typing import Callable
-from typing import List
 from typing import Optional
 from typing import Union
 
@@ -153,15 +152,6 @@ class MinimizerBase(metaclass=ABCMeta):
         :param fit_result: Fit object which contains info on the fit
         :return: fit results container
         :rtype: FitResults
-        """
-
-    @abstractmethod
-    def available_methods(self) -> List[str]:
-        """
-        Generate a list of available methods
-
-        :return: List of available methods for minimization
-        :rtype: List[str]
         """
 
     @staticmethod

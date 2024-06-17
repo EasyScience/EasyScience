@@ -48,6 +48,7 @@ class AvailableMinimizers(Enum):
 
     if dfo_engine_imported:
         DFO = auto()
+        DFO_leastsq = auto()
 
 
 def from_string_to_enum(minimizer_name: str) -> AvailableMinimizers:
@@ -69,8 +70,10 @@ def from_string_to_enum(minimizer_name: str) -> AvailableMinimizers:
     elif minimizer_name == 'bumps-lm':
         minmizer_enum = AvailableMinimizers.Bumps_lm
 
-    elif minimizer_name == 'dfo_ls':
+    elif minimizer_name == 'dfo':
         minmizer_enum = AvailableMinimizers.DFO
+    elif minimizer_name == 'dfo-leastsq':
+        minmizer_enum = AvailableMinimizers.DFO_leastsq
 
     return minmizer_enum
 
@@ -95,6 +98,8 @@ def factory(minimizer_enum: AvailableMinimizers, fit_object, fit_function: Calla
         minimizer = Bumps(obj=fit_object, fit_function=fit_function, method='lm')
 
     elif minimizer_enum == AvailableMinimizers.DFO:
-        minimizer = DFO(obj=fit_object, fit_function=fit_function)
+        minimizer = DFO(obj=fit_object, fit_function=fit_function, method='leastsq')
+    elif minimizer_enum == AvailableMinimizers.DFO_leastsq:
+        minimizer = DFO(obj=fit_object, fit_function=fit_function, method='leastsq')
 
     return minimizer

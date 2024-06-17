@@ -21,7 +21,7 @@ class DFO(MinimizerBase):  # noqa: S101
     This is a wrapper to Derivative Free Optimisation for Least Square: https://numericalalgorithmsgroup.github.io/dfols/
     """
 
-    wrapping = 'dfo_ls'
+    wrapping = 'dfo'
 
     def __init__(self, obj, fit_function: Callable, method: Optional[str] = None):
         """
