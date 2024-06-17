@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+import numpy as np
 from easyscience.fitting.fitter import Fitter
 import easyscience.fitting.fitter
 
@@ -208,3 +209,23 @@ class TestFitter():
         # Expect
         assert fitter.fit_object == 'new-fit-object'
         fitter._update_minimizer.assert_called_with('current_minimizer')
+
+    def test_fit(self, fitter: Fitter):
+        # When
+        fitter._precompute_reshaping = MagicMock(return_value=('x_fit', 'x_new', 'y_new', 'weights', 'dims'))
+        fitter._fit_function_wrapper = MagicMock(return_value='wrapped_fit_function')
+        fitter._post_compute_reshaping = MagicMock(return_value='fit_result')
+        fitter._minimizer = MagicMock()
+        fitter._minimizer.fit = MagicMock(return_value='result')
+
+        x = np.array([1, 2, 3])
+        y = np.array([10, 20, 30])
+        weights = np.array([0.1, 0.2, 0.3])
+
+        # Then
+        result = fitter.fit('x', 'y', 'weights', 'vectorized')
+
+    # TODO
+ #   def test_fit_function_wrapper()
+ #   def test_precompute_reshaping()
+ #   def test_post_compute_reshaping()

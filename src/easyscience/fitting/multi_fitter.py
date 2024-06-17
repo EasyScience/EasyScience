@@ -65,7 +65,6 @@ class MultiFitter(Fitter):
         y: List[np.ndarray],
         weights: Optional[List[np.ndarray]],
         vectorized: bool,
-        kwargs,
     ):
         """
         Convert an array of X's and Y's  to an acceptable shape for fitting.
@@ -77,13 +76,13 @@ class MultiFitter(Fitter):
         """
         if weights is None:
             weights = [None] * len(x)
-        _, _x_new, _y_new, _weights, _dims, kwargs = Fitter._precompute_reshaping(x[0], y[0], weights[0], vectorized, kwargs)
+        _, _x_new, _y_new, _weights, _dims = Fitter._precompute_reshaping(x[0], y[0], weights[0], vectorized)
         x_new = [_x_new]
         y_new = [_y_new]
         w_new = [_weights]
         dims = [_dims]
         for _x, _y, _w in zip(x[1::], y[1::], weights[1::]):
-            _, _x_new, _y_new, _weights, _dims, _ = Fitter._precompute_reshaping(_x, _y, _w, vectorized, kwargs)
+            _, _x_new, _y_new, _weights, _dims = Fitter._precompute_reshaping(_x, _y, _w, vectorized)
             x_new.append(_x_new)
             y_new.append(_y_new)
             w_new.append(_weights)
@@ -94,14 +93,13 @@ class MultiFitter(Fitter):
         else:
             w_new = np.hstack(w_new)
         x_fit = np.linspace(0, y_new.size - 1, y_new.size)
-        return x_fit, x_new, y_new, w_new, dims, kwargs
+        return x_fit, x_new, y_new, w_new, dims
 
     def _post_compute_reshaping(
         self,
         fit_result_obj: FitResults,
         x: List[np.ndarray],
         y: List[np.ndarray],
-        weights: List[np.ndarray],
     ) -> List[FitResults]:
         """
         Take a fit results object and split it into n chuncks based on the size of the x, y inputs

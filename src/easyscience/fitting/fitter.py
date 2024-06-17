@@ -182,7 +182,7 @@ class Fitter:
             - POST = Reshaping the outputs so it is coherent with the inputs.
             """
             # Precompute - Reshape all independents into the correct dimensionality
-            x_fit, x_new, y_new, weights, dims, kwargs = self._precompute_reshaping(x, y, weights, vectorized, kwargs)
+            x_fit, x_new, y_new, weights, dims = self._precompute_reshaping(x, y, weights, vectorized)
             self._dependent_dims = dims
 
             # Fit
@@ -190,16 +190,16 @@ class Fitter:
             fit_fun_wrap = self._fit_function_wrapper(x_new, flatten=True)  # This should be wrapped.
 
             # We change the  fit function, so have to  reset constraints
-            constraints = self._minimizer._constraints
+            constraints = self._minimizer.fit_constraints()
             self.fit_function = fit_fun_wrap
-            self._minimizer._constraints = constraints
+            self._minimizer.set_fit_constraint(constraints)
             f_res = self.minimizer.fit(x_fit, y_new, weights=weights, **kwargs)
 
             # Postcompute
-            fit_result = self._post_compute_reshaping(f_res, x, y, weights)
+            fit_result = self._post_compute_reshaping(f_res, x, y)
             # Reset the function and constrains
             self.fit_function = fit_fun
-            self._minimizer._constraints = constraints
+            self._minimizer.set_fit_constraint(constraints)
             return fit_result
 
         return inner_fit_callable
@@ -210,7 +210,6 @@ class Fitter:
         y: np.ndarray,
         weights: Optional[np.ndarray],
         vectorized: bool,
-        kwargs,
     ):
         """
         Check the dimensions of the inputs and reshape if necessary.
@@ -252,10 +251,10 @@ class Fitter:
             weights = np.array(weights).flatten()
         # Make a 'dummy' x array for the fit function
         x_for_fit = np.array(range(y_new.size))
-        return x_for_fit, x_new, y_new, weights, x_shape, kwargs
+        return x_for_fit, x_new, y_new, weights, x_shape
 
     @staticmethod
-    def _post_compute_reshaping(fit_result: FitResults, x: np.ndarray, y: np.ndarray, weights: np.ndarray) -> FitResults:
+    def _post_compute_reshaping(fit_result: FitResults, x: np.ndarray, y: np.ndarray) -> FitResults:
         """
         Reshape the output of the fitter into the correct dimensions.
         :param fit_result: Output from the fitter
@@ -263,8 +262,8 @@ class Fitter:
         :param y: Input y dependent
         :return: Reshaped Fit Results
         """
-        setattr(fit_result, 'x', x)
-        setattr(fit_result, 'y_obs', y)
-        setattr(fit_result, 'y_calc', np.reshape(fit_result.y_calc, y.shape))
-        setattr(fit_result, 'y_err', np.reshape(fit_result.y_err, y.shape))
+        fit_result.x = x
+        fit_result.y_obs = y
+        fit_result.y_calc = np.reshape(fit_result.y_calc, y.shape)
+        fit_result.y_err = np.reshape(fit_result.y_err, y.shape)
         return fit_result
