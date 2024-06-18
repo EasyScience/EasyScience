@@ -431,14 +431,14 @@ def test_Base_GETSET_v3():
     assert a.a.raw_value == a_start
     assert len(graph.get_edges(a)) == 1
     a_ = Parameter("a", a_end)
-    assert a.a.name in graph.get_edges(a)
+    assert a.a.unique_name in graph.get_edges(a)
     a__ = a.a
 
     setattr(a, "a", a_)
     assert a.a.raw_value == a_end
     assert len(graph.get_edges(a)) == 1
-    assert a_.name in graph.get_edges(a)
-    assert a__.name not in graph.get_edges(a)
+    assert a_.unique_name in graph.get_edges(a)
+    assert a__.unique_name not in graph.get_edges(a)
 
 
 def test_BaseCreation():
