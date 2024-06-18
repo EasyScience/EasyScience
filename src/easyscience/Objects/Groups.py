@@ -17,7 +17,6 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
-from easyscience import borg
 from easyscience.Objects.ObjectClasses import BasedBase
 from easyscience.Objects.ObjectClasses import Descriptor
 from easyscience.Utils.UndoRedo import NotarizedDict
