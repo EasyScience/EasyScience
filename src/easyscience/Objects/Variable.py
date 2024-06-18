@@ -499,8 +499,8 @@ class Parameter(Descriptor):
         name: str,
         value: Union[numbers.Number, np.ndarray],
         error: Optional[Union[numbers.Number, np.ndarray]] = 0.0,
-        min: Optional[numbers.Number] = -np.Inf,
-        max: Optional[numbers.Number] = np.Inf,
+        min: Optional[numbers.Number] = -np.inf,
+        max: Optional[numbers.Number] = np.inf,
         fixed: Optional[bool] = False,
         **kwargs,
     ):
