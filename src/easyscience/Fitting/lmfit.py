@@ -90,7 +90,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         self._cached_pars = {}
         self._cached_pars_vals = {}
         for parameter in self._object.get_fit_parameters():
-            key = parameter.name
+            key = parameter.unique_name
             self._cached_pars[key] = parameter
             self._cached_pars_vals[key] = (parameter.value, parameter.error)
 
@@ -240,7 +240,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         :rtype: lmParameter
         """
         return lmParameter(
-            "p" + obj.name,
+            "p" + obj.unique_name,
             value=obj.raw_value,
             vary=not obj.fixed,
             min=obj.min,

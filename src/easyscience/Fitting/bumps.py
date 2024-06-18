@@ -65,7 +65,7 @@ class bumps(FittingTemplate):  # noqa: S101
                 else:
                     for item in pars:
                         par[
-                            "p" + item.name
+                            "p" + item.unique_name
                         ] = obj.convert_to_par_object(item)
                 return Curve(fit_func, x, y, dy=weights, **par)
 
@@ -86,7 +86,7 @@ class bumps(FittingTemplate):  # noqa: S101
         # Get a list of `Parameters`
         self._cached_pars_vals = {}
         for parameter in self._object.get_fit_parameters():
-            key = parameter.name
+            key = parameter.unique_name
             self._cached_pars[key] = parameter
             self._cached_pars_vals[key] = (parameter.value, parameter.error)
 
@@ -244,7 +244,7 @@ class bumps(FittingTemplate):  # noqa: S101
         :rtype: bumpsParameter
         """
         return bumpsParameter(
-            name="p" + obj.name,
+            name="p" + obj.unique_name,
             value=obj.raw_value,
             bounds=[obj.min, obj.max],
             fixed=obj.fixed,
