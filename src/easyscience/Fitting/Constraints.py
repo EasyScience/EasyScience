@@ -111,11 +111,11 @@ class ConstraintBase(ComponentSerializer, metaclass=ABCMeta):
                 return None
             return
         independent_objs = None
-        if isinstance(self.dependent_obj_ids, int):
+        if isinstance(self.dependent_obj_ids, str):
             dependent_obj = self.get_obj(self.dependent_obj_ids)
         else:
             raise AttributeError
-        if isinstance(self.independent_obj_ids, int):
+        if isinstance(self.independent_obj_ids, str):
             independent_objs = self.get_obj(self.independent_obj_ids)
         elif isinstance(self.independent_obj_ids, list):
             independent_objs = [self.get_obj(obj_id) for obj_id in self.independent_obj_ids]

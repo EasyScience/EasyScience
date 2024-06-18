@@ -109,7 +109,7 @@ class Descriptor(ComponentSerializer):
             self._args = {'value': None, 'units': ''}
         if name is None:
             name = self._generate_default_name()
-        self._name = name
+        self.name = name
         # Let the collective know we've been assimilated
         self._borg.map.add_vertex(self, obj_type='created')
         # Make the connection between self and parent
@@ -122,7 +122,7 @@ class Descriptor(ComponentSerializer):
         elif isinstance(units, (str, type(None))):
             self._units = ureg.parse_expression(units)
         else:
-            raise AttributeError
+            raise AttributeError('Units must be a string or a pint unit object')
         # Clunky method of keeping self.value up to date
         self._type = type(value)
         self.__isBooleanValue = isinstance(value, bool)
@@ -486,8 +486,8 @@ class Parameter(Descriptor):
 
     def __init__(
         self,
-        name: str,
         value: Union[numbers.Number, np.ndarray],
+        name: str,
         error: Optional[Union[numbers.Number, np.ndarray]] = 0.0,
         min: Optional[numbers.Number] = -np.Inf,
         max: Optional[numbers.Number] = np.Inf,
@@ -530,7 +530,7 @@ class Parameter(Descriptor):
         if error < 0:
             raise ValueError('Standard deviation `error` must be positive')
 
-        super().__init__(name, value, **kwargs)
+        super().__init__(name=name, value=value, **kwargs)
         self._args['units'] = str(self.unit)
 
         # Warnings if we are given a boolean
