@@ -9,6 +9,7 @@ import sys
 import weakref
 from typing import List
 
+
 class _EntryList(list):
     def __init__(self, *args, my_type=None, **kwargs):
         super(_EntryList, self).__init__(*args, **kwargs)
