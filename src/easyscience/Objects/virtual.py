@@ -48,6 +48,7 @@ def realizer(obj: BV):
         args = []
         if klass in ec_var.__dict__.values():  # is_variable check
             kwargs = obj.encode_data()
+            kwargs["unique_name"] = None
             return klass(**kwargs)
         else:
             kwargs = {name: realizer(item) for name, item in obj._kwargs.items()}
@@ -93,7 +94,7 @@ def component_realizer(obj: BV, component: str, recursive: bool = True):
                 value = component._kwargs[key]
             else:
                 value = key
-                key = value.name
+                key = value.unique_name
             if (
                 getattr(value, "__old_class__", value.__class__)
                 in ec_var.__dict__.values()
@@ -131,15 +132,15 @@ def virtualizer(obj: BV) -> BV:
         constraint = ObjConstraint(new_obj, "", old_obj)
         constraint.external = True
         old_obj._constraints["virtual"][
-            obj.name
+            obj.unique_name
         ] = constraint
         new_obj._constraints["builtin"] = dict()
         # setattr(new_obj, "__previous_set", getattr(olobj, "__previous_set", None))
         weakref.finalize(
             new_obj,
             _remover,
-            old_obj.name,
-            new_obj.name,
+            old_obj.unique_name,
+            new_obj.unique_name,
         )
         return new_obj
 
@@ -148,7 +149,7 @@ def virtualizer(obj: BV) -> BV:
     virtual_options = {
         "_is_virtual": True,
         "is_virtual": property(fget=lambda self: self._is_virtual),
-        "_derived_from": property(fget=obj.name),
+        "_derived_from": property(fget=obj.unique_name),
         "__non_virtual_class__": klass,
         "realize": realizer,
         "relalize_component": component_realizer,
@@ -173,18 +174,19 @@ def virtualizer(obj: BV) -> BV:
         d = obj.encode_data()
         if hasattr(d, "fixed"):
             d["fixed"] = True
+        d["unique_name"] = None
         v_p = cls(**d)
         v_p._enabled = False
         constraint = ObjConstraint(v_p, "", obj)
         constraint.external = True
-        obj._constraints["virtual"][v_p.name] = constraint
+        obj._constraints["virtual"][v_p.unique_name] = constraint
         v_p._constraints["builtin"] = dict()
         setattr(v_p, "__previous_set", getattr(obj, "__previous_set", None))
         weakref.finalize(
             v_p,
             _remover,
-            obj.name,
-            v_p.name,
+            obj.unique_name,
+            v_p.unique_name,
         )
     else:
         # In this case, we need to be recursive.

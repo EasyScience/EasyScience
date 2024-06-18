@@ -43,18 +43,18 @@ class ConstraintBase(ComponentSerializer, metaclass=ABCMeta):
         value: Optional[Number] = None,
     ):
         self.aeval = Interpreter()
-        self.dependent_obj_ids = dependent_obj.name
+        self.dependent_obj_ids = dependent_obj.unique_name
         self.independent_obj_ids = None
         self._enabled = True
         self.external = False
         self._finalizer = None
         if independent_obj is not None:
             if isinstance(independent_obj, list):
-                self.independent_obj_ids = [obj.name for obj in independent_obj]
+                self.independent_obj_ids = [obj.unique_name for obj in independent_obj]
                 if self.dependent_obj_ids in self.independent_obj_ids:
                     raise AttributeError('A dependent object can not be an independent object')
             else:
-                self.independent_obj_ids = independent_obj.name
+                self.independent_obj_ids = independent_obj.unique_name
                 if self.dependent_obj_ids == self.independent_obj_ids:
                     raise AttributeError('A dependent object can not be an independent object')
             # Test if dependent is a parameter or a descriptor.

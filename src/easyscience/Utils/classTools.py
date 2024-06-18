@@ -61,9 +61,9 @@ def generatePath(model_obj: B, skip_first: bool = False) -> Tuple[List[int], Lis
     start_idx = 0 + int(skip_first)
     ids = []
     names = []
-    model_id = model_obj.name
+    model_id = model_obj.unique_name
     for par in pars:
-        elem = par.name
+        elem = par.unique_name
         route = borg.map.reverse_route(elem, model_id)
         objs = [getattr(borg.map.get_item_by_key(r), "name") for r in route]
         objs.reverse()

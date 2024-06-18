@@ -52,7 +52,7 @@ def test_virtual_variable_modify(cls):
     obj.value = new_value
     assert obj.raw_value == v_obj.raw_value
 
-    id_vobj = v_obj.name
+    id_vobj = v_obj.unique_name
     assert id_vobj in list(obj._constraints["virtual"].keys())
 
     del v_obj

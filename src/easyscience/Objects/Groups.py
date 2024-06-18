@@ -75,8 +75,8 @@ class BaseCollection(BasedBase, MutableSequence):
         for key, item in kwargs.items():
             _kwargs[key] = item
         for arg in args:
-            kwargs[arg.name] = arg
-            _kwargs[arg.name] = arg
+            kwargs[arg.unique_name] = arg
+            _kwargs[arg.unique_name] = arg
 
         # Set kwargs, also useful for serialization
         self._kwargs = NotarizedDict(**_kwargs)
@@ -109,7 +109,7 @@ class BaseCollection(BasedBase, MutableSequence):
             update_key = list(self._kwargs.keys())
             values = list(self._kwargs.values())
             # Update the internal dict
-            new_key = value.name
+            new_key = value.unique_name
             update_key.insert(index, new_key)
             values.insert(index, value)
             self._kwargs.reorder(**{k: v for k, v in zip(update_key, values)})
