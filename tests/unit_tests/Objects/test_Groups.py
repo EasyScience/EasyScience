@@ -14,6 +14,7 @@ from easyscience.Objects.Groups import BaseCollection
 from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.ObjectClasses import Descriptor
 from easyscience.Objects.ObjectClasses import Parameter
+from easyscience import borg
 
 test_dict = {
     "@module": "easyscience.Objects.Groups",
@@ -28,6 +29,7 @@ test_dict = {
             "name": "par1",
             "value": 1,
             "units": "dimensionless",
+            "unique_name": "BaseCollection_0",
             "description": "",
             "url": "",
             "display_name": "par1",
@@ -307,6 +309,7 @@ def test_baseCollection_dir(cls):
         "constraints",
         "get_fit_parameters",
         "append",
+        "unique_name",
         "index",
         "as_dict",
         "clear",
@@ -346,6 +349,10 @@ def test_baseCollection_as_dict(cls):
             del keys_1[keys_1.index("@id")]
         if "@id" in keys_2:
             del keys_2[keys_2.index("@id")]
+        if "unique_name" in keys_1:
+            del keys_1[keys_1.index("unique_name")]
+        if "unique_name" in keys_2:
+            del keys_2[keys_2.index("unique_name")]
 
         assert not set(keys_1).difference(set(keys_2))
 
@@ -442,6 +449,7 @@ def test_baseCollection_iterator_dict(cls):
 
     obj = cls(name, *l_object)
     d = obj.as_dict()
+    borg.map._clear()
     obj2 = cls.from_dict(d)
 
     for index, item in enumerate(obj2):
@@ -549,11 +557,11 @@ def test_basecollectionGraph(cls):
     name = "test"
     v = [1, 2]
     p = [Parameter(f"p{i}", v[i]) for i in range(len(v))]
-    p_id = [G.convert_id_to_key(_p) for _p in p]
+    p_id = [_p.unique_name for _p in p]
     bb = cls(name, *p)
-    bb_id = G.convert_id_to_key(bb)
+    bb_id = bb.unique_name
     b = Beta("b", bb=bb)
-    b_id = G.convert_id_to_key(b)
+    b_id = b.unique_name
     for _id in p_id:
         assert _id in G.get_edges(bb)
     assert len(p) == len(G.get_edges(bb))

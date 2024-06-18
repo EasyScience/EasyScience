@@ -109,7 +109,7 @@ class Descriptor(ComponentSerializer):
         if not hasattr(self, '_args'):
             self._args = {'value': None, 'units': ''}
         if unique_name is None:
-            unique_name = self._generate_default_name()
+            unique_name = self.__class__.__name__ + "_" + str(self._borg.map._get_name_iterator(self.__class__.__name__))
         self._unique_name = unique_name
         self.name = name
         # Let the collective know we've been assimilated
@@ -404,16 +404,6 @@ class Descriptor(ComponentSerializer):
 
     def __copy__(self):
         return self.__class__.from_dict(self.as_dict())
-
-    def _generate_default_name(self) -> str:
-        """
-        Generate a default name for the object.
-        """
-        class_name = self.__class__.__name__
-        iterator = 0
-        while class_name+"_"+str(iterator) in self._borg.map.vertices():
-            iterator += 1
-        return class_name+"_"+str(iterator)
 
 
 V = TypeVar('V', bound=Descriptor)

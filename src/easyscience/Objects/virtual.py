@@ -149,7 +149,7 @@ def virtualizer(obj: BV) -> BV:
     virtual_options = {
         "_is_virtual": True,
         "is_virtual": property(fget=lambda self: self._is_virtual),
-        "_derived_from": property(fget=obj.unique_name),
+        "_derived_from": property(fget=lambda self: obj.unique_name),
         "__non_virtual_class__": klass,
         "realize": realizer,
         "relalize_component": component_realizer,

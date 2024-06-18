@@ -108,7 +108,7 @@ class lmfit(FittingTemplate):  # noqa: S101
             # Update the `Parameter` values and the callback if needed
             # TODO THIS IS NOT THREAD SAFE :-(
             for name, value in kwargs.items():
-                par_name = int(name[1:])
+                par_name = name[1:]
                 if par_name in self._cached_pars.keys():
                     # This will take into account constraints
                     if self._cached_pars[par_name].raw_value != value:
