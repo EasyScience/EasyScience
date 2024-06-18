@@ -66,8 +66,8 @@ class Descriptor(ComponentSerializer):
 
     def __init__(
         self,
-        value: Any,
         name: str,
+        value: Any,
         units: Optional[Union[str, ureg.Unit]] = None,
         unique_name: Optional[str] = None,
         description: Optional[str] = None,
@@ -506,8 +506,8 @@ class Parameter(Descriptor):
 
     def __init__(
         self,
-        value: Union[numbers.Number, np.ndarray],
         name: str,
+        value: Union[numbers.Number, np.ndarray],
         error: Optional[Union[numbers.Number, np.ndarray]] = 0.0,
         min: Optional[numbers.Number] = -np.Inf,
         max: Optional[numbers.Number] = np.Inf,
@@ -541,7 +541,7 @@ class Parameter(Descriptor):
         # Set the error
         self._args = {'value': value, 'units': '', 'error': error}
 
-        if not isinstance(value, numbers.Number):
+        if not isinstance(value, numbers.Number) or isinstance(value, np.ndarray):
             raise ValueError('In a parameter the `value` must be numeric')
         if value < min:
             raise ValueError('`value` can not be less than `min`')
