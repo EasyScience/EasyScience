@@ -8,9 +8,9 @@ __version__ = "0.0.1"
 import pytest
 
 import numpy as np
-from easyscience.Fitting.Constraints import ObjConstraint
-from easyscience.Fitting.multi_fitter import MultiFitter
-from easyscience.Fitting.minimizers import FitError
+from easyscience.fitting.Constraints import ObjConstraint
+from easyscience.fitting.multi_fitter import MultiFitter
+from easyscience.fitting.minimizers import FitError
 from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.ObjectClasses import Parameter
 
@@ -59,7 +59,7 @@ class AbsSin2D(BaseObj):
 
 
 @pytest.mark.parametrize("with_errors", [False, True])
-@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo_ls"])
+@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo"])
 def test_multi_fit(fit_engine, with_errors):
     ref_sin_1 = AbsSin(0.2, np.pi)
     sp_sin_1 = AbsSin(0.354, 3.05)
@@ -88,7 +88,7 @@ def test_multi_fit(fit_engine, with_errors):
     f = MultiFitter([sp_sin_1, sp_sin_2], [sp_sin_1, sp_sin_2])
     if fit_engine is not None:
         try:
-            f.switch_engine(fit_engine)
+            f.switch_minimizer(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
 
@@ -120,7 +120,7 @@ def test_multi_fit(fit_engine, with_errors):
 
 
 @pytest.mark.parametrize("with_errors", [False, True])
-@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo_ls"])
+@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo"])
 def test_multi_fit2(fit_engine, with_errors):
     ref_sin_1 = AbsSin(0.2, np.pi)
     sp_sin_1 = AbsSin(0.354, 3.05)
@@ -163,7 +163,7 @@ def test_multi_fit2(fit_engine, with_errors):
     f = MultiFitter([sp_sin_1, sp_line, sp_sin_2], [sp_sin_1, sp_line, sp_sin_2])
     if fit_engine is not None:
         try:
-            f.switch_engine(fit_engine)
+            f.switch_minimizer(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
 
@@ -198,7 +198,7 @@ def test_multi_fit2(fit_engine, with_errors):
 
 
 @pytest.mark.parametrize("with_errors", [False, True])
-@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo_ls"])
+@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo"])
 def test_multi_fit_1D_2D(fit_engine, with_errors):
     # Generate fit and reference objects
     ref_sin1D = AbsSin(0.2, np.pi)
@@ -232,7 +232,7 @@ def test_multi_fit_1D_2D(fit_engine, with_errors):
     ff = MultiFitter([sp_sin1D, sp_sin2D], [sp_sin1D, sp_sin2D])
     if fit_engine is not None:
         try:
-            ff.switch_engine(fit_engine)
+            ff.switch_minimizer(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
 
@@ -243,7 +243,7 @@ def test_multi_fit_1D_2D(fit_engine, with_errors):
     f = MultiFitter([sp_sin1D, sp_sin2D], [sp_sin1D, sp_sin2D])
     if fit_engine is not None:
         try:
-            f.switch_engine(fit_engine)
+            f.switch_minimizer(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
     try:

@@ -30,7 +30,7 @@ import numpy as np
 from easyscience import borg
 from easyscience import pint
 from easyscience import ureg
-from easyscience.Fitting.Constraints import SelfConstraint
+from easyscience.fitting.Constraints import SelfConstraint
 from easyscience.Objects.core import ComponentSerializer
 from easyscience.Utils.classTools import addProp
 from easyscience.Utils.Exceptions import CoreSetException

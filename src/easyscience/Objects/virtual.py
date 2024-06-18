@@ -4,8 +4,8 @@
 
 from __future__ import annotations
 
-__author__ = "github.com/wardsimon"
-__version__ = "0.0.1"
+__author__ = 'github.com/wardsimon'
+__version__ = '0.0.1'
 
 import inspect
 import weakref
@@ -15,7 +15,7 @@ from typing import Iterable
 from typing import MutableSequence
 
 from easyscience import borg
-from easyscience.Fitting.Constraints import ObjConstraint
+from easyscience.fitting.Constraints import ObjConstraint
 
 if TYPE_CHECKING:
     from easyscience.Utils.typing import BV
@@ -31,8 +31,8 @@ def _remover(a_obj_id: str, v_obj_id: str):
         a_obj = borg.map.get_item_by_key(int(a_obj_id))
     except ValueError:
         return
-    if a_obj._constraints["virtual"].get(v_obj_id, False):
-        del a_obj._constraints["virtual"][v_obj_id]
+    if a_obj._constraints['virtual'].get(v_obj_id, False):
+        del a_obj._constraints['virtual'][v_obj_id]
 
 
 def realizer(obj: BV):
@@ -41,8 +41,8 @@ def realizer(obj: BV):
 
     :param obj: Virtual object which has the property `component`
     """
-    if getattr(obj, "_is_virtual", False):
-        klass = getattr(obj, "__non_virtual_class__")
+    if getattr(obj, '_is_virtual', False):
+        klass = getattr(obj, '__non_virtual_class__')
         import easyscience.Objects.Variable as ec_var
 
         args = []
@@ -78,7 +78,7 @@ def component_realizer(obj: BV, component: str, recursive: bool = True):
     if not isinstance(obj, Iterable) or not issubclass(obj.__class__, MutableSequence):
         old_component = obj._kwargs[component]
         new_components = realizer(obj._kwargs[component])
-        if hasattr(new_components, "enabled"):
+        if hasattr(new_components, 'enabled'):
             new_components.enabled = True
     else:
         old_component = obj[component]
@@ -94,14 +94,9 @@ def component_realizer(obj: BV, component: str, recursive: bool = True):
             else:
                 value = key
                 key = value._borg.map.convert_id_to_key(value)
-            if (
-                getattr(value, "__old_class__", value.__class__)
-                in ec_var.__dict__.values()
-            ):
+            if getattr(value, '__old_class__', value.__class__) in ec_var.__dict__.values():
                 continue
-            component._borg.map.prune_vertex_from_edge(
-                component, component._kwargs[key]
-            )
+            component._borg.map.prune_vertex_from_edge(component, component._kwargs[key])
             component._borg.map.add_edge(component, old_component._kwargs[key])
             component._kwargs[key] = old_component._kwargs[key]
             done_mapping = False
@@ -125,15 +120,13 @@ def virtualizer(obj: BV) -> BV:
     :rtype:
     """
     # First  check if we're already a virtual object
-    if getattr(obj, "_is_virtual", False):
+    if getattr(obj, '_is_virtual', False):
         new_obj = deepcopy(obj)
         old_obj = obj._borg.map.get_item_by_key(obj._derived_from)
-        constraint = ObjConstraint(new_obj, "", old_obj)
+        constraint = ObjConstraint(new_obj, '', old_obj)
         constraint.external = True
-        old_obj._constraints["virtual"][
-            str(obj._borg.map.convert_id(new_obj).int)
-        ] = constraint
-        new_obj._constraints["builtin"] = dict()
+        old_obj._constraints['virtual'][str(obj._borg.map.convert_id(new_obj).int)] = constraint
+        new_obj._constraints['builtin'] = dict()
         # setattr(new_obj, "__previous_set", getattr(olobj, "__previous_set", None))
         weakref.finalize(
             new_obj,
@@ -144,42 +137,40 @@ def virtualizer(obj: BV) -> BV:
         return new_obj
 
     # The supplied class
-    klass = getattr(obj, "__old_class__", obj.__class__)
+    klass = getattr(obj, '__old_class__', obj.__class__)
     virtual_options = {
-        "_is_virtual": True,
-        "is_virtual": property(fget=lambda self: self._is_virtual),
-        "_derived_from": property(fget=lambda self: self._borg.map.convert_id(obj).int),
-        "__non_virtual_class__": klass,
-        "realize": realizer,
-        "relalize_component": component_realizer,
+        '_is_virtual': True,
+        'is_virtual': property(fget=lambda self: self._is_virtual),
+        '_derived_from': property(fget=lambda self: self._borg.map.convert_id(obj).int),
+        '__non_virtual_class__': klass,
+        'realize': realizer,
+        'relalize_component': component_realizer,
     }
 
     import easyscience.Objects.Variable as ec_var
 
     if klass in ec_var.__dict__.values():  # is_variable check
-        virtual_options["fixed"] = property(
+        virtual_options['fixed'] = property(
             fget=lambda self: self._fixed,
-            fset=lambda self, value: raise_(
-                AttributeError("Virtual parameters cannot be fixed")
-            ),
+            fset=lambda self, value: raise_(AttributeError('Virtual parameters cannot be fixed')),
         )
     # Generate a new class
-    cls = type("Virtual" + klass.__name__, (klass,), virtual_options)
+    cls = type('Virtual' + klass.__name__, (klass,), virtual_options)
     # Determine what to do next.
     args = []
     # If `obj` is a parameter or descriptor etc, then simple mods.
-    if hasattr(obj, "_constructor"):
+    if hasattr(obj, '_constructor'):
         # All Variables are based on the Descriptor.
         d = obj.encode_data()
-        if hasattr(d, "fixed"):
-            d["fixed"] = True
+        if hasattr(d, 'fixed'):
+            d['fixed'] = True
         v_p = cls(**d)
         v_p._enabled = False
-        constraint = ObjConstraint(v_p, "", obj)
+        constraint = ObjConstraint(v_p, '', obj)
         constraint.external = True
-        obj._constraints["virtual"][str(cls._borg.map.convert_id(v_p).int)] = constraint
-        v_p._constraints["builtin"] = dict()
-        setattr(v_p, "__previous_set", getattr(obj, "__previous_set", None))
+        obj._constraints['virtual'][str(cls._borg.map.convert_id(v_p).int)] = constraint
+        v_p._constraints['builtin'] = dict()
+        setattr(v_p, '__previous_set', getattr(obj, '__previous_set', None))
         weakref.finalize(
             v_p,
             _remover,

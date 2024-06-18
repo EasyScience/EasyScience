@@ -14,6 +14,7 @@ from easyscience.Objects.Groups import BaseCollection
 from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.Variable import Descriptor
 from easyscience.Objects.Variable import Parameter
+from easyscience.fitting import Fitter
 
 
 def createSingleObjs(idx):
@@ -229,7 +230,7 @@ def test_UndoRedoMacros():
         assert item.raw_value == old_value + offset
 
 
-@pytest.mark.parametrize("fit_engine", ["lmfit", "bumps", "dfo_ls"])
+@pytest.mark.parametrize("fit_engine", ["lmfit", "bumps", "dfo"])
 def test_fittingUndoRedo(fit_engine):
     m_value = 6
     c_value = 2
@@ -265,11 +266,9 @@ def test_fittingUndoRedo(fit_engine):
 
     y = l1(x) + 0.125 * (dy - 0.5)
 
-    from easyscience.Fitting import Fitter
-
     f = Fitter(l2, l2)
     try:
-        f.switch_engine(fit_engine)
+        f.switch_minimizer(fit_engine)
     except AttributeError:
         pytest.skip(msg=f"{fit_engine} is not installed")
 

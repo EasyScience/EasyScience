@@ -357,7 +357,7 @@ print(line)
 a = line.c
 
 # Now lets change fitting engine
-f.switch_engine("bumps")
+f.switch_minimizer("bumps")
 # Reset the values so we don't cheat
 line.m = 1
 line.c = 0

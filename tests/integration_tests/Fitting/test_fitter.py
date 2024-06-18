@@ -8,9 +8,9 @@ __version__ = "0.0.1"
 import pytest
 
 import numpy as np
-from easyscience.Fitting.Constraints import ObjConstraint
-from easyscience.Fitting.fitter import Fitter
-from easyscience.Fitting.minimizers import FitError
+from easyscience.fitting.Constraints import ObjConstraint
+from easyscience.fitting.fitter import Fitter
+from easyscience.fitting.minimizers import FitError
 from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.ObjectClasses import Parameter
 
@@ -78,7 +78,7 @@ def check_fit_results(result, sp_sin, ref_sin, x, **kwargs):
 
 
 @pytest.mark.parametrize("with_errors", [False, True])
-@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo_ls"])
+@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo"])
 def test_basic_fit(fit_engine, with_errors):
     ref_sin = AbsSin(0.2, np.pi)
     sp_sin = AbsSin(0.354, 3.05)
@@ -92,7 +92,7 @@ def test_basic_fit(fit_engine, with_errors):
     f = Fitter(sp_sin, sp_sin)
     if fit_engine is not None:
         try:
-            f.switch_engine(fit_engine)
+            f.switch_minimizer(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
     args = [x, y]
@@ -102,12 +102,12 @@ def test_basic_fit(fit_engine, with_errors):
     result = f.fit(*args, **kwargs)
 
     if fit_engine is not None:
-        assert result.fitting_engine.name == fit_engine
+        assert result.minimizer_engine.wrapping == fit_engine
     assert sp_sin.phase.raw_value == pytest.approx(ref_sin.phase.raw_value, rel=1e-3)
     assert sp_sin.offset.raw_value == pytest.approx(ref_sin.offset.raw_value, rel=1e-3)
 
 
-@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo_ls"])
+@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo"])
 def test_fit_result(fit_engine):
     ref_sin = AbsSin(0.2, np.pi)
     sp_sin = AbsSin(0.354, 3.05)
@@ -131,7 +131,7 @@ def test_fit_result(fit_engine):
 
     if fit_engine is not None:
         try:
-            f.switch_engine(fit_engine)
+            f.switch_minimizer(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
 
@@ -151,12 +151,12 @@ def test_lmfit_methods(fit_method):
     sp_sin.phase.fixed = False
 
     f = Fitter(sp_sin, sp_sin)
-    assert fit_method in f.available_methods()
+    assert fit_method in f._minimizer.available_methods()
     result = f.fit(x, y, method=fit_method)
     check_fit_results(result, sp_sin, ref_sin, x)
 
 
-@pytest.mark.xfail(reason="known bumps issue")
+#@pytest.mark.xfail(reason="known bumps issue")
 @pytest.mark.parametrize("fit_method", ["newton", "lm"])
 def test_bumps_methods(fit_method):
     ref_sin = AbsSin(0.2, np.pi)
@@ -169,13 +169,13 @@ def test_bumps_methods(fit_method):
     sp_sin.phase.fixed = False
 
     f = Fitter(sp_sin, sp_sin)
-    f.switch_engine("bumps")
-    assert fit_method in f.available_methods()
+    f.switch_minimizer("bumps")
+    assert fit_method in f._minimizer.available_methods()
     result = f.fit(x, y, method=fit_method)
     check_fit_results(result, sp_sin, ref_sin, x)
 
 
-@pytest.mark.parametrize("fit_engine", ["lmfit", "bumps", "dfo_ls"])
+@pytest.mark.parametrize("fit_engine", ["lmfit", "bumps", "dfo"])
 def test_fit_constraints(fit_engine):
     ref_sin = AbsSin(np.pi * 0.45, 0.45 * np.pi * 0.5)
     sp_sin = AbsSin(1, 0.5)
@@ -193,7 +193,7 @@ def test_fit_constraints(fit_engine):
 
     if fit_engine is not None:
         try:
-            f.switch_engine(fit_engine)
+            f.switch_minimizer(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
 
@@ -205,7 +205,7 @@ def test_fit_constraints(fit_engine):
 
 
 @pytest.mark.parametrize("with_errors", [False, True])
-@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo_ls"])
+@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo"])
 def test_2D_vectorized(fit_engine, with_errors):
     x = np.linspace(0, 5, 200)
     mm = AbsSin2D(0.3, 1.6)
@@ -217,7 +217,7 @@ def test_2D_vectorized(fit_engine, with_errors):
     ff = Fitter(m2, m2)
     if fit_engine is not None:
         try:
-            ff.switch_engine(fit_engine)
+            ff.switch_minimizer(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
     try:
@@ -241,7 +241,7 @@ def test_2D_vectorized(fit_engine, with_errors):
 
 
 @pytest.mark.parametrize("with_errors", [False, True])
-@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo_ls"])
+@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo"])
 def test_2D_non_vectorized(fit_engine, with_errors):
     x = np.linspace(0, 5, 200)
     mm = AbsSin2DL(0.3, 1.6)
@@ -253,7 +253,7 @@ def test_2D_non_vectorized(fit_engine, with_errors):
     ff = Fitter(m2, m2)
     if fit_engine is not None:
         try:
-            ff.switch_engine(fit_engine)
+            ff.switch_minimizer(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
     try:
