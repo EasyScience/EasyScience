@@ -38,7 +38,8 @@ class BasedBase(ComponentSerializer):
 
     _REDIRECT = {}
 
-    def __init__(self, name: Union(str, None) = None, interface: Optional[iF] = None):
+    def __init__(self, name: str, interface: Optional[iF] = None):
+        self._borg = borg
         if name is None:
             name = self._generate_default_name()
         self._name = name
@@ -245,7 +246,7 @@ class BaseObj(BasedBase):
         self._kwargs = kwargs
         for key in kwargs.keys():
             if key in known_keys:
-                raise AttributeError
+                raise AttributeError("Kwargs cannot overwrite class attributes in BaseObj.")
             if issubclass(type(kwargs[key]), (BasedBase, Descriptor, DescriptorBase)) or 'BaseCollection' in [
                 c.__name__ for c in type(kwargs[key]).__bases__
             ]:

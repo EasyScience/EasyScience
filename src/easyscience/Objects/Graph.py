@@ -143,7 +143,7 @@ class Graph:
         if start_obj.name in self.__graph_dict.keys():
             self.__graph_dict[start_obj.name].append(end_obj.name)
         else:
-            raise AttributeError
+            raise AttributeError("Start object not in graph.")
 
     def get_edges(self, start_obj) -> List[str]:
         if start_obj.name in self.__graph_dict.keys():
@@ -179,6 +179,7 @@ class Graph:
     def prune(self, key: str):
         if key in self.__graph_dict.keys():
             del self.__graph_dict[key]
+            del self._store[key]
 
     def find_isolated_vertices(self) -> list:
         """returns a list of isolated vertices."""
@@ -282,6 +283,10 @@ class Graph:
         else:
             return True
         return False
+
+    def _clear(self):
+        self._store = weakref.WeakValueDictionary()
+        self.__graph_dict = {}
 
     def __repr__(self) -> str:
         return f"Graph object of {len(self._store)} vertices."
