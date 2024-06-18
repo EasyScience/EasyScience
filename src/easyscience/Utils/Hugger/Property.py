@@ -98,51 +98,51 @@ class LoggedProperty(property):
             returns = [returns]
         if log_type == "get":
             for var in returns:
-                if var.name in borg.map.returned_objs:
+                if var.unique_name in borg.map.returned_objs:
                     index = borg.map.returned_objs.index(
-                        var.name
+                        var.unique_name
                     )
                     temp += f"{Store().var_ident}{index}, "
             if len(returns) > 0:
                 temp = temp[:-2]
                 temp += " = "
-            if self._my_self.name in borg.map.created_objs:
+            if self._my_self.unique_name in borg.map.created_objs:
                 # for edge in route[::-1]:
                 index = borg.map.created_objs.index(
-                    self._my_self.name
+                    self._my_self.unique_name
                 )
                 temp += (
                     f"{self._my_self.__class__.__name__.lower()}_{index}.{self._get_id}"
                 )
-            if self._my_self.name in borg.map.created_internal:
+            if self._my_self.unique_name in borg.map.created_internal:
                 # We now have to trace....
                 route = borg.map.reverse_route(self._my_self)  # noqa: F841
                 index = borg.map.created_objs.index(
-                    self._my_self.name
+                    self._my_self.unique_name
                 )
                 temp += (
                     f"{self._my_self.__class__.__name__.lower()}_{index}.{self._get_id}"
                 )
         elif log_type == "set":
-            if self._my_self.name in borg.map.created_objs:
+            if self._my_self.unique_name in borg.map.created_objs:
                 index = borg.map.created_objs.index(
-                    self._my_self.name
+                    self._my_self.unique_name
                 )
                 temp += f"{self._my_self.__class__.__name__.lower()}_{index}.{self._get_id} = "
             args = args[1:]
             for var in args:
-                if var.name in borg.map.argument_objs:
+                if var.unique_name in borg.map.argument_objs:
                     index = borg.map.argument_objs.index(
-                        var.name
+                        var.unique_name
                     )
                     temp += f"{Store().var_ident}{index}"
-                elif var.name in borg.map.returned_objs:
+                elif var.unique_name in borg.map.returned_objs:
                     index = borg.map.returned_objs.index(
-                        var.name
+                        var.unique_name
                     )
                     temp += f"{Store().var_ident}{index}"
-                elif var.name in borg.map.created_objs:
-                    index = borg.map.created_objs.index(var.name)
+                elif var.unique_name in borg.map.created_objs:
+                    index = borg.map.created_objs.index(var.unique_name)
                     temp += f"{self._my_self.__class__.__name__.lower()}_{index}"
                 else:
                     if isinstance(var, str):

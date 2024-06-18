@@ -287,8 +287,8 @@ def test_fittingUndoRedo(fit_engine):
     assert borg.stack.redoText() == "Fitting routine"
 
     borg.stack.redo()
-    assert l2.m.raw_value == res.p[f"p{l2.m.name}"]
-    assert l2.c.raw_value == res.p[f"p{l2.c.name}"]
+    assert l2.m.raw_value == res.p[f"p{l2.m.unique_name}"]
+    assert l2.c.raw_value == res.p[f"p{l2.c.unique_name}"]
 
 
 # @pytest.mark.parametrize('math_funcs', [pytest.param([Parameter.__iadd__, float.__add__], id='Addition'),
