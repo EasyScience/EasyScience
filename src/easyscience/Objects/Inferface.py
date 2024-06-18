@@ -19,7 +19,7 @@ from typing import TypeVar
 _C = TypeVar('_C', bound=ABCMeta)
 _M = TypeVar('_M')
 if TYPE_CHECKING:
-    from easyscience.Fitting import Fitter
+    from easyscience.fitting import Fitter
 
 
 class InterfaceFactoryTemplate:
