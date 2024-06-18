@@ -36,10 +36,11 @@ class BasedBase(ComponentSerializer):
 
     _REDIRECT = {}
 
-    def __init__(self, name: str, interface: Optional[iF] = None):
+    def __init__(self, name: str, interface: Optional[iF] = None, unique_name: Optional[str] = None):
         self._borg = borg
-        if name is None:
-            name = self._generate_default_name()
+        if unique_name is None:
+            unique_name = self._generate_default_name()
+        self._unique_name = unique_name
         self._name = name
         self._borg.map.add_vertex(self, obj_type="created")
         self.interface = interface
@@ -63,6 +64,16 @@ class BasedBase(ComponentSerializer):
         state = self.encode()
         cls = getattr(self, "__old_class__", self.__class__)
         return cls.from_dict, (state,)
+
+    @property
+    def unique_name(self) -> str:
+        """ Get the unique name of the object."""
+        return self._unique_name
+
+    @unique_name.setter
+    def unique_name(self, new_unique_name: str):
+        """ Set a new unique name for the object. The old name is still kept in the map. """
+        self._unique_name = new_unique_name
 
     @property
     def name(self) -> str:

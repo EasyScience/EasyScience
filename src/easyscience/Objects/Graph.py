@@ -113,23 +113,23 @@ class Graph:
         raise ValueError
 
     def is_known(self, vertex: object) -> bool:
-        # All objects should have a 'name' attribute
-        return vertex.name in self._store.keys()
+        # All objects should have a 'unique_name' attribute
+        return vertex.unique_name in self._store.keys()
 
     def find_type(self, vertex: object) -> List[str]:
         if self.is_known(vertex):
-            return self.__graph_dict[vertex.name].type
+            return self.__graph_dict[vertex.unique_name].type
 
     def reset_type(self, obj, default_type: str):
-        if obj.name in self.__graph_dict.keys():
-            self.__graph_dict[obj.name].reset_type(default_type)
+        if obj.unique_name in self.__graph_dict.keys():
+            self.__graph_dict[obj.unique_name].reset_type(default_type)
 
     def change_type(self, obj, new_type: str):
-        if obj.name in self.__graph_dict.keys():
-            self.__graph_dict[obj.name].type = new_type
+        if obj.unique_name in self.__graph_dict.keys():
+            self.__graph_dict[obj.unique_name].type = new_type
 
     def add_vertex(self, obj: object, obj_type: str = None):
-        name = obj.name
+        name = obj.unique_name
         if name in self._store.keys():
             raise ValueError(f"Object name {name} already exists in the graph.")
         self._store[name] = obj
@@ -140,14 +140,14 @@ class Graph:
         self.__graph_dict[name].type = obj_type
 
     def add_edge(self, start_obj: object, end_obj: object):
-        if start_obj.name in self.__graph_dict.keys():
-            self.__graph_dict[start_obj.name].append(end_obj.name)
+        if start_obj.unique_name in self.__graph_dict.keys():
+            self.__graph_dict[start_obj.unique_name].append(end_obj.unique_name)
         else:
             raise AttributeError("Start object not in graph.")
 
     def get_edges(self, start_obj) -> List[str]:
-        if start_obj.name in self.__graph_dict.keys():
-            return list(self.__graph_dict[start_obj.name])
+        if start_obj.unique_name in self.__graph_dict.keys():
+            return list(self.__graph_dict[start_obj.unique_name])
         else:
             raise AttributeError
 
@@ -165,10 +165,10 @@ class Graph:
         return edges
 
     def prune_vertex_from_edge(self, parent_obj, child_obj):
-        vertex1 = parent_obj.name
+        vertex1 = parent_obj.unique_name
         if child_obj is None:
             return
-        vertex2 = child_obj.name
+        vertex2 = child_obj.unique_name
 
         if (
             vertex1 in self.__graph_dict.keys()
@@ -196,8 +196,8 @@ class Graph:
         in graph"""
 
         try:
-            start_vertex = start_obj.name
-            end_vertex = end_obj.name
+            start_vertex = start_obj.unique_name
+            end_vertex = end_obj.unique_name
         except TypeError:
             start_vertex = start_obj
             end_vertex = end_obj
@@ -219,8 +219,8 @@ class Graph:
         """find all paths from start_vertex to
         end_vertex in graph"""
 
-        start_vertex = start_obj.name
-        end_vertex = end_obj.name
+        start_vertex = start_obj.unique_name
+        end_vertex = end_obj.unique_name
 
         graph = self.__graph_dict
         path = path + [start_vertex]
@@ -247,7 +247,7 @@ class Graph:
         :return:
         :rtype:
         """
-        end_vertex = end_obj.name
+        end_vertex = end_obj.unique_name
 
         path_length = sys.maxsize
         optimum_path = []

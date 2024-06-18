@@ -67,8 +67,9 @@ class Descriptor(ComponentSerializer):
     def __init__(
         self,
         value: Any,
-        name: Union(str, None) = None,
+        name: str,
         units: Optional[Union[str, ureg.Unit]] = None,
+        unique_name: Optional[str] = None,
         description: Optional[str] = None,
         url: Optional[str] = None,
         display_name: Optional[str] = None,
@@ -107,8 +108,9 @@ class Descriptor(ComponentSerializer):
         """
         if not hasattr(self, '_args'):
             self._args = {'value': None, 'units': ''}
-        if name is None:
-            name = self._generate_default_name()
+        if unique_name is None:
+            unique_name = self._generate_default_name()
+        self._unique_name = unique_name
         self.name = name
         # Let the collective know we've been assimilated
         self._borg.map.add_vertex(self, obj_type='created')
@@ -179,6 +181,24 @@ class Descriptor(ComponentSerializer):
         if hasattr(self, '__old_class__'):
             cls = self.__old_class__
         return cls.from_dict, (state,)
+
+    @property
+    def unique_name(self) -> str:
+        """
+        Get the unique name of this object.
+
+        :return: Unique name of this object
+        """
+        return self._unique_name
+    
+    @unique_name.setter
+    def unique_name(self, name: str):
+        """
+        Set the unique name of this object.
+
+        :param name: Unique name of this object
+        """
+        self._unique_name = name
 
     @property
     def display_name(self) -> str:
