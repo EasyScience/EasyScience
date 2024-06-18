@@ -29,7 +29,6 @@ class MinimizerBase(metaclass=ABCMeta):
         self._cached_model = None
         self._fit_function = None
         self._constraints = []
-        self._dataset = None
 
     @property
     def all_constraints(self) -> list:
