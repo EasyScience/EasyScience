@@ -73,6 +73,8 @@ class Graph:
         self._store = weakref.WeakValueDictionary()
         # A dict with object names as keys and a list of their object types as values, with weak references
         self.__graph_dict = {}
+        # A dictionary of class names and their corresponding default name_generator iterators
+        self._name_iterator_dict = {}
 
     def vertices(self) -> List[str]:
         """returns the vertices of a graph"""
@@ -106,11 +108,19 @@ class Graph:
                 extracted_list.append(key)
         return extracted_list
 
+    def _get_name_iterator(self, class_name: str) -> int:
+        """Get the iterator for the name generator for a class"""
+        if class_name in self._name_iterator_dict.keys():
+            self._name_iterator_dict[class_name] += 1
+            return self._name_iterator_dict[class_name] - 1
+        else:
+            self._name_iterator_dict[class_name] = 1
+            return 0
 
     def get_item_by_key(self, item_id: str) -> object:
         if item_id in self._store.keys():
             return self._store[item_id]
-        raise ValueError
+        raise ValueError("Item not in graph.")
 
     def is_known(self, vertex: object) -> bool:
         # All objects should have a 'unique_name' attribute
@@ -198,7 +208,7 @@ class Graph:
         try:
             start_vertex = start_obj.unique_name
             end_vertex = end_obj.unique_name
-        except TypeError:
+        except AttributeError:
             start_vertex = start_obj
             end_vertex = end_obj
 

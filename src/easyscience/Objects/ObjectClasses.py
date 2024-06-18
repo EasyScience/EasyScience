@@ -41,7 +41,7 @@ class BasedBase(ComponentSerializer):
     def __init__(self, name: str, interface: Optional[iF] = None, unique_name: Optional[str] = None):
         self._borg = borg
         if unique_name is None:
-            unique_name = self._generate_default_name()
+            unique_name = self.__class__.__name__ + "_" + str(self._borg.map._get_name_iterator(self.__class__.__name__))
         self._unique_name = unique_name
         self._name = name
         self._borg = borg
@@ -209,15 +209,6 @@ class BasedBase(ComponentSerializer):
         new_class_objs = list(k for k in dir(self.__class__) if not k.startswith('_'))
         return sorted(new_class_objs)
     
-    def _generate_default_name(self) -> str:
-        """
-        Generate a default name for the object.
-        """
-        class_name = self.__class__.__name__
-        iterator = 0
-        while class_name+"_"+str(iterator) in self._borg.map.vertices():
-            iterator += 1
-        return class_name+"_"+str(iterator)
 
 
 if TYPE_CHECKING:

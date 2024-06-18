@@ -98,7 +98,7 @@ class Bumps(MinimizerBase):  # noqa: S101
             """
             # Update the `Parameter` values and the callback if needed
             for name, value in kwargs.items():
-                par_name = int(name[1:])
+                par_name = name[1:]
                 if par_name in self._cached_pars.keys():
 
                     ## TODO clean when full move to new_variable 
@@ -288,7 +288,7 @@ class Bumps(MinimizerBase):  # noqa: S101
             borg.stack.beginMacro('Fitting routine')
 
         for index, name in enumerate(self._cached_model._pnames):
-            dict_name = int(name[1:])
+            dict_name = name[1:]
             pars[dict_name].value = fit_result.x[index]
             pars[dict_name].error = fit_result.dx[index]
         if stack_status:
@@ -311,7 +311,7 @@ class Bumps(MinimizerBase):  # noqa: S101
         pars = self._cached_pars
         item = {}
         for index, name in enumerate(self._cached_model._pnames):
-            dict_name = int(name[1:])
+            dict_name = name[1:]
  
             ## TODO clean when full move to new_variable 
             from easyscience.Objects.new_variable import Parameter

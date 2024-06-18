@@ -117,7 +117,7 @@ class LoggedProperty(property):
             if self._my_self.unique_name in borg.map.created_internal:
                 # We now have to trace....
                 route = borg.map.reverse_route(self._my_self)  # noqa: F841
-                index = borg.map.created_objs.index(
+                index = borg.map.created_internal.index(
                     self._my_self.unique_name
                 )
                 temp += (

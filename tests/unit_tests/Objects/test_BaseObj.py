@@ -20,6 +20,7 @@ from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.ObjectClasses import Descriptor
 from easyscience.Objects.ObjectClasses import Parameter
 from easyscience.Utils.io.dict import DictSerializer
+from easyscience import borg
 
 
 @pytest.fixture
@@ -194,6 +195,7 @@ def test_baseobj_as_dict(setup_pars: dict):
         if isinstance(check, dict) and isinstance(item, dict):
             if "@module" in item.keys():
                 with not_raises([ValueError, AttributeError]):
+                    borg.map._clear()
                     this_obj = DictSerializer().decode(item)
 
             for key in check.keys():
@@ -222,6 +224,7 @@ def test_baseobj_dir(setup_pars):
         "get_fit_parameters",
         "get_parameters",
         "interface",
+        "unique_name",
         "name",
         "par1",
         "par2",
