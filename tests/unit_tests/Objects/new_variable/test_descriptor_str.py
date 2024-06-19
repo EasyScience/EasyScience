@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 from easyscience.Objects.new_variable.descriptor_str import DescriptorStr
 
 
-class TestDesciptorStr:
+class TestDescriptorStr:
     @pytest.fixture
     def descriptor_str(self):
         self.mock_callback = MagicMock()

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import numbers
+
 # from copy import deepcopy
 from typing import Any
 from typing import Dict
@@ -17,12 +19,13 @@ from easyscience.Utils.UndoRedo import property_stack_deco
 from .descriptor_base import DescriptorBase
 
 
-class DescriptorScalar(DescriptorBase):
+class DescriptorNumber(DescriptorBase):
     def __init__(
         self,
         name: str,
-        value: Union[bool, int, float],
-        unit: Optional[Union[str, sc.Unit]] = None,
+        value: numbers.Number,
+        unit: Optional[Union[str, sc.Unit]] = '',
+        variance: Optional[float] = None,
         description: Optional[str] = None,
         url: Optional[str] = None,
         display_name: Optional[str] = None,
@@ -39,7 +42,7 @@ class DescriptorScalar(DescriptorBase):
             enabled=enabled,
             parent=parent,
         )
-        self._value = sc.scalar(value, unit=unit)
+        self._value = sc.scalar(float(value), unit=unit, variance=variance)
 
     @property
     def value(self) -> sc.scalar:
@@ -103,6 +106,25 @@ class DescriptorScalar(DescriptorBase):
         self._value = self._value.to(unit=new_unit)
         self._value.unit = new_unit
 
+    @property
+    def variance(self) -> float:
+        """
+        Get the variance.
+
+        :return: variance.
+        """
+        return self._value.variance
+
+    @variance.setter
+    @property_stack_deco
+    def variance(self, variance_float: str) -> None:
+        """
+        Set the variance.
+
+        :param variance_float: Variance as a float
+        """
+        self._value.variance = variance_float
+
     # # @cached_property
     # @property
     # def compatible_units(self) -> List[str]:
@@ -114,7 +136,7 @@ class DescriptorScalar(DescriptorBase):
     #     return [str(u) for u in self._scalar.unit.compatible_units()]
 
     @property
-    def raw_value(self) -> Union[bool, int, float]:
+    def raw_value(self) -> numbers.Number:
         """
         Return the raw value of self without a unit.
 
@@ -122,7 +144,7 @@ class DescriptorScalar(DescriptorBase):
         """
         return self._value.value
 
-    def __copy__(self) -> DescriptorScalar:
+    def __copy__(self) -> DescriptorNumber:
         return super().__copy__()
 
     def __repr__(self) -> str:
@@ -137,4 +159,5 @@ class DescriptorScalar(DescriptorBase):
         raw_dict = super().as_dict()
         raw_dict['value'] = self._value.value
         raw_dict['unit'] = str(self._value.unit)
+        raw_dict['variance'] = self._value.variance
         return raw_dict
