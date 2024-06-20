@@ -31,17 +31,17 @@ class TestParameter:
         assert parameter._min.unit == "m"
         assert parameter._max.value == 10
         assert parameter._max.unit == "m"
+        assert parameter._callback == self.mock_callback
+        assert parameter._enabled == "enabled"
 
         # From super
-        assert parameter._value.value == 1
-        assert parameter._value.unit == "m"
-        assert parameter._value.variance == 0.01
+        assert parameter._scalar.value == 1
+        assert parameter._scalar.unit == "m"
+        assert parameter._scalar.variance == 0.01
         assert parameter._name == "name"
         assert parameter._description == "description"
         assert parameter._url == "url"
         assert parameter._display_name == "display_name"
-        assert parameter._callback == self.mock_callback
-        assert parameter._enabled == "enabled"
 
     def test_init_value_min_exception(self):
         # When 
@@ -77,28 +77,6 @@ class TestParameter:
                 value=value,
                 unit="m",
                 variance=0.01,
-                min=0,
-                max=10,
-                description="description",
-                url="url",
-                display_name="display_name",
-                callback=mock_callback,
-                enabled="enabled",
-                parent=None,
-            )
-
-    def test_init_variance_exception(self):
-        # When 
-        mock_callback = MagicMock()
-        variance = -1
-
-        # Then Expect
-        with pytest.raises(ValueError):
-            Parameter(
-                name="name",
-                value=1,
-                unit="m",
-                variance=variance,
                 min=0,
                 max=10,
                 description="description",
@@ -158,6 +136,156 @@ class TestParameter:
         # Expect
         assert parameter.fixed == True
 
+    @pytest.mark.parametrize("fixed", ["True", 1])
+    def test_set_fixed_exception(self, parameter: Parameter, fixed):
+        # When Then Expect
+        with pytest.raises(ValueError):
+            parameter.fixed = fixed
+
     def test_error(self, parameter: Parameter):
         # When Then Expect
         assert parameter.error == 0.1
+    
+    def test_set_error(self, parameter: Parameter):
+        # When 
+        parameter.error = 10
+
+        # Then Expect
+        assert parameter.error == 10
+        assert parameter._scalar.variance == 100
+
+    def test_set_error_exception(self, parameter: Parameter):
+        # When Then Expect
+        with pytest.raises(ValueError):
+            parameter.error = -0.1
+
+    def test_float(self, parameter: Parameter):
+        # When Then Expect
+        assert float(parameter) == 1.0
+
+    def test_repr(self, parameter: Parameter):
+        # When Then Expect
+        assert repr(parameter) == "<Parameter 'name': 1.0000m, bounds=[0.0:10.0]>"
+
+    def test_repr_fixed(self, parameter: Parameter):
+        # When 
+        parameter.fixed = True
+
+        # Then Expect
+        assert repr(parameter) == "<Parameter 'name': 1.0000m (fixed), bounds=[0.0:10.0]>"
+
+    def test_bounds(self, parameter: Parameter):
+        # When Then Expect
+        assert parameter.bounds == (0, 10)
+    
+    def test_set_bounds(self, parameter: Parameter):
+        # When 
+        parameter._enabled = False
+        parameter._fixed = True
+
+        # Then 
+        parameter.bounds = (-10, 5)
+
+        # Expect
+        assert parameter.min == -10
+        assert parameter.max == 5
+        assert parameter._enabled == True
+        assert parameter._fixed == False
+
+    def test_set_bounds_exception_min(self, parameter: Parameter):
+        # When 
+        parameter._enabled = False
+        parameter._fixed = True
+
+        # Then
+        with pytest.raises(ValueError):
+            parameter.bounds = (2, 10)
+
+        # Expect
+        assert parameter.min == 0
+        assert parameter.max == 10
+        assert parameter._enabled == False
+        assert parameter._fixed == True
+
+    def test_set_bounds_exception_max(self, parameter: Parameter):
+        # When 
+        parameter._enabled = False
+        parameter._fixed = True
+
+        # Then
+        with pytest.raises(ValueError):
+            parameter.bounds = (0, 0.1)
+
+        # Expect
+        assert parameter.min == 0
+        assert parameter.max == 10
+        assert parameter._enabled == False
+        assert parameter._fixed == True
+
+    def test_enabled(self, parameter: Parameter):
+        # When
+        parameter._enabled = True
+        
+        # Then Expect
+        assert parameter.enabled is True
+
+    def test_set_enabled(self, parameter: Parameter):
+        # When
+        parameter.enabled = False
+
+        # Then Expect
+        assert parameter._enabled is False
+
+    def test_value_match_callback(self, parameter: Parameter):
+        # When
+        self.mock_callback.fget.return_value = sc.scalar(1, unit='m')
+
+        # Then Expect
+        assert parameter.value == 1
+        assert parameter._callback.fget.call_count == 1
+        
+    def test_value_no_match_callback(self, parameter: Parameter):
+        # When
+        self.mock_callback.fget.return_value = sc.scalar(2, unit='m')
+
+        # Then Expect
+        assert parameter.value == 2
+        assert parameter._callback.fget.call_count == 1
+
+    def test_set_value(self, parameter: Parameter):
+        # When
+        self.mock_callback.fget.return_value = sc.scalar(1, unit='m')
+
+        # Then
+        parameter.value = 2
+
+        # Expect
+        parameter._callback.fset.assert_called_once_with(sc.scalar(2, unit='m')) 
+        assert parameter._scalar == sc.scalar(2, unit='m')
+
+    def test_full_value_match_callback(self, parameter: Parameter):
+        # When
+        self.mock_callback.fget.return_value = sc.scalar(1, unit='m')
+
+        # Then Expect
+        assert parameter.full_value == sc.scalar(1, unit='m')
+        assert parameter._callback.fget.call_count == 1
+        
+    def test_full_value_no_match_callback(self, parameter: Parameter):
+        # When
+        self.mock_callback.fget.return_value = sc.scalar(2, unit='m')
+
+        # Then Expect
+        assert parameter.full_value == sc.scalar(2, unit='m')
+        assert parameter._callback.fget.call_count == 1
+
+    def test_set_full_value(self, parameter: Parameter):
+        # When
+        self.mock_callback.fget.return_value = sc.scalar(1, unit='m')
+
+        # Then
+        parameter.full_value = sc.scalar(2, unit='m')
+
+        # Expect
+        parameter._callback.fset.assert_called_once_with(sc.scalar(2, unit='m')) 
+        assert parameter._scalar == sc.scalar(2, unit='m')

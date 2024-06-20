@@ -9,11 +9,11 @@ from typing import Optional
 from typing import Union
 
 import scipp as sc
-from easyscience import borg
 
+# from easyscience import borg
 # from easyscience import pint
 # from easyscience import ureg
-from easyscience.Utils.Exceptions import CoreSetException
+# from easyscience.Utils.Exceptions import CoreSetException
 from easyscience.Utils.UndoRedo import property_stack_deco
 
 from .descriptor_base import DescriptorBase
@@ -29,23 +29,27 @@ class DescriptorNumber(DescriptorBase):
         description: Optional[str] = None,
         url: Optional[str] = None,
         display_name: Optional[str] = None,
-        callback: Optional[property] = None,
-        enabled: Optional[bool] = True,
+        #        callback: Optional[property] = None,
+        #        enabled: Optional[bool] = True,
         parent: Optional[Any] = None,
     ):
+        if not isinstance(value, numbers.Number) or isinstance(value, bool):
+            raise ValueError(f'{value=} must be type numeric')
+        if variance < 0:
+            raise ValueError(f'{variance=} must be positive')
         super().__init__(
             name=name,
             description=description,
             url=url,
             display_name=display_name,
-            callback=callback,
-            enabled=enabled,
+            #            callback=callback,
+            #            enabled=enabled,
             parent=parent,
         )
-        self._value = sc.scalar(float(value), unit=unit, variance=variance)
+        self._scalar = sc.scalar(float(value), unit=unit, variance=variance)
 
     @property
-    def value(self) -> sc.scalar:
+    def full_value(self) -> sc.scalar:
         """
         Get the value of self as a pint. This is should be usable for most cases. If a pint
         is not acceptable then the raw value can be obtained through `obj.raw_value`.
@@ -54,27 +58,57 @@ class DescriptorNumber(DescriptorBase):
         """
         # Cached property? Should reference callback.
         # Also should reference for undo/redo
-        if self._callback.fget is not None:
-            value = self._callback.fget()
-            if value != self._value:
-                self._value = value
-        return self._value
+        # if self._callback.fget is not None:
+        #     value = self._callback.fget()
+        #     if value != self._value:
+        #         self._value = value
+        return self._scalar
 
-    @value.setter
+    @full_value.setter
     @property_stack_deco
-    def value(self, value: sc.scalar) -> None:
+    def full_value(self, full_value: sc.scalar) -> None:
         """
         Set the value of self. This creates a pint with a unit.
 
         :param value: New value of self
         """
-        if not self.enabled:
-            if borg.debug:
-                raise CoreSetException(f'{str(self)} is not enabled.')
-            return
-        self._value = value
-        if self._callback.fset is not None:
-            self._callback.fset(value)
+        # if not self.enabled:
+        #     if borg.debug:
+        #         raise CoreSetException(f'{str(self)} is not enabled.')
+        #     return
+        self._scalar = full_value
+        # if self._callback.fset is not None:
+        #     self._callback.fset(value)
+
+    @property
+    def value(self) -> numbers.Number:
+        """
+        Get the value of self as a pint. This is should be usable for most cases. If a pint
+        is not acceptable then the raw value can be obtained through `obj.raw_value`.
+
+        :return: Value of self with unit.
+        """
+        # Cached property? Should reference callback.
+        # Also should reference for undo/redo
+        # if self._callback.fget is not None:
+        #     value = self._callback.fget()
+        #     if value != self._value:
+        #         self._value = value
+        return self._scalar.value
+
+    @value.setter
+    @property_stack_deco
+    def value(self, value: numbers.Number) -> None:
+        """
+        Set the value of self. This creates a pint with a unit.
+
+        :param value: New value of self
+        """
+        # if not self.enabled:
+        #     if borg.debug:
+        #         raise CoreSetException(f'{str(self)} is not enabled.')
+        #     return
+        self._scalar.value = value
 
     @property
     def unit(self) -> str:
@@ -83,7 +117,7 @@ class DescriptorNumber(DescriptorBase):
 
         :return: Unit as a string.
         """
-        return str(self._value.unit)
+        return str(self._scalar.unit)
 
     @unit.setter
     @property_stack_deco
@@ -93,7 +127,7 @@ class DescriptorNumber(DescriptorBase):
 
         :param unit_str: String representation of the unit required. i.e `m/s`
         """
-        self._value.unit = sc.Unit(unit_str)
+        self._scalar.unit = sc.Unit(unit_str)
 
     def convert_unit(self, unit_str: str):
         """
@@ -103,7 +137,7 @@ class DescriptorNumber(DescriptorBase):
         :param unit_str: New unit in string form
         """
         new_unit = sc.Unit(unit_str)
-        self._value = self._value.to(unit=new_unit)
+        self._scalar = self._scalar.to(unit=new_unit)
 
     #        self._value.unit = new_unit
 
@@ -114,7 +148,7 @@ class DescriptorNumber(DescriptorBase):
 
         :return: variance.
         """
-        return self._value.variance
+        return self._scalar.variance
 
     @variance.setter
     @property_stack_deco
@@ -124,7 +158,7 @@ class DescriptorNumber(DescriptorBase):
 
         :param variance_float: Variance as a float
         """
-        self._value.variance = variance_float
+        self._scalar.variance = variance_float
 
     # # @cached_property
     # @property
@@ -137,28 +171,25 @@ class DescriptorNumber(DescriptorBase):
     #     return [str(u) for u in self._scalar.unit.compatible_units()]
 
     @property
-    def raw_value(self) -> numbers.Number:
+    def value(self) -> numbers.Number:
         """
         Return the raw value of self without a unit.
 
         :return: The raw value of self
         """
-        return self._value.value
+        return self._scalar.value
 
-    @raw_value.setter
+    @value.setter
     @property_stack_deco
-    def raw_value(self, value: numbers.Number) -> None:
+    def value(self, value: numbers.Number) -> None:
         """
         Set the raw value.
 
         :param value: value to set
         """
-        self._raw_value_property_setter(value)
+        self._scalar.value = value
 
-    # Needed by child classes
-    def _raw_value_property_setter(self, value: numbers.Number) -> None:
-        self._value.value = value
-
+    # Just to get return type right
     def __copy__(self) -> DescriptorNumber:
         return super().__copy__()
 
@@ -166,13 +197,13 @@ class DescriptorNumber(DescriptorBase):
         """Return printable representation."""
         class_name = self.__class__.__name__
         obj_name = self._name
-        obj_value = self._value.value
-        obj_unit = self._value.unit
+        obj_value = self._scalar.value
+        obj_unit = self._scalar.unit
         return f"<{class_name} '{obj_name}': {obj_value:0.04f}{obj_unit}>"
 
     def as_dict(self) -> Dict[str, Any]:
         raw_dict = super().as_dict()
-        raw_dict['value'] = self._value.value
-        raw_dict['unit'] = str(self._value.unit)
-        raw_dict['variance'] = self._value.variance
+        raw_dict['value'] = self._scalar.value
+        raw_dict['unit'] = str(self._scalar.unit)
+        raw_dict['variance'] = self._scalar.variance
         return raw_dict

@@ -7,7 +7,7 @@ from easyscience.Objects.new_variable.descriptor_base import DescriptorBase
 class TestDesciptorBase:
     @pytest.fixture
     def descriptor(self):
-        self.mock_callback = MagicMock()
+#        self.mock_callback = MagicMock()
         # This avoids the error: TypeError: Can't instantiate abstract class DescriptorBase with abstract methods __init__
         DescriptorBase.__abstractmethods__ = set()
         DescriptorBase.__repr__ = lambda x: "DescriptorBase"
@@ -16,8 +16,8 @@ class TestDesciptorBase:
             description="description",
             url="url",
             display_name="display_name",
-            callback=self.mock_callback,
-            enabled=True,
+#            callback=self.mock_callback,
+#            enabled=True,
             parent=None,
         )
         return descriptor
@@ -27,8 +27,8 @@ class TestDesciptorBase:
         assert descriptor._description == "description"
         assert descriptor._url == "url"
         assert descriptor._display_name == "display_name"
-        assert descriptor._callback == self.mock_callback
-        assert descriptor._enabled is True
+#        assert descriptor._callback == self.mock_callback
+#        assert descriptor._enabled is True
         assert len(descriptor._borg.map.created_objs) == 1
 
 
@@ -57,16 +57,16 @@ class TestDesciptorBase:
         assert descriptor.display_name == "new_display_name"
         assert len(descriptor._borg.stack.history)  == stack_elements
 
-    def test_enabled(self, descriptor: DescriptorBase):
-        # When Then Expect
-        assert descriptor.enabled is True
+    # def test_enabled(self, descriptor: DescriptorBase):
+    #     # When Then Expect
+    #     assert descriptor.enabled is True
 
-    def test_set_enabled(self, descriptor: DescriptorBase):
-        # When
-        descriptor.enabled = False
+    # def test_set_enabled(self, descriptor: DescriptorBase):
+    #     # When
+    #     descriptor.enabled = False
 
-        # Then Expect
-        assert descriptor._enabled is False
+    #     # Then Expect
+    #     assert descriptor._enabled is False
 
     def test_copy(self, descriptor: DescriptorBase):
         # When Then
@@ -78,5 +78,5 @@ class TestDesciptorBase:
         assert descriptor_copy._description == descriptor._description
         assert descriptor_copy._url == descriptor._url
         assert descriptor_copy._display_name == descriptor._display_name
-        assert descriptor_copy._callback == descriptor._callback
-        assert descriptor_copy._enabled == descriptor._enabled
+#        assert descriptor_copy._callback == descriptor._callback
+#        assert descriptor_copy._enabled == descriptor._enabled

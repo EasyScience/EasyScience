@@ -7,9 +7,10 @@ from __future__ import annotations
 __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
 
+import copy
 import numbers
-import warnings
 
+# import warnings
 # import weakref
 # from copy import deepcopy
 # from inspect import getfullargspec
@@ -98,14 +99,12 @@ class Parameter(DescriptorNumber):
         # Set the error
         #        self._args = {'value': value, 'units': '', 'error': error}
 
-        if not isinstance(value, numbers.Number):
-            raise ValueError('In a parameter the `value` must be numeric')
         if value < min:
-            raise ValueError('`value` can not be less than `min`')
+            raise ValueError(f'{value=} can not be less than {min=}')
         if value > max:
-            raise ValueError('`value` can not be greater than `max`')
-        if variance < 0:
-            raise ValueError('`variance` must be positive')
+            raise ValueError(f'{value=} can not be greater than {max=}')
+        #        if variance < 0:
+        #            raise ValueError('`variance` must be positive')
 
         #        self._value: sc.scalar  # set in super().__init__
 
@@ -117,24 +116,29 @@ class Parameter(DescriptorNumber):
             description=description,
             url=url,
             display_name=display_name,
-            callback=callback,
-            enabled=enabled,
+            #            callback=callback,
+            #            enabled=enabled,
             parent=parent,
         )
+        if callback is None:
+            callback = property()
+        self._callback = callback
+
         #        self._args['units'] = str(self.unit)
 
-        # Warnings if we are given a boolean
-        if isinstance(value, bool):
-            warnings.warn(
-                'Boolean values are not officially supported in Parameter. Use a Descriptor instead',
-                UserWarning,
-            )
+        # # Warnings if we are given a boolean
+        # if isinstance(value, bool):
+        #     warnings.warn(
+        #         'Boolean values are not officially supported in Parameter. Use a Descriptor instead',
+        #         UserWarning,
+        #     )
 
         # Create additional fitting elements
         self._min = sc.scalar(float(min), unit=unit)
         self._max = sc.scalar(float(max), unit=unit)
         self._fixed = fixed
-        self._initial_raw_value = self.raw_value
+        self._enabled = enabled
+        self._initial_scalar = copy.deepcopy(self._scalar)
         self._constraints = {
             'user': {},
             'builtin': {
@@ -165,32 +169,32 @@ class Parameter(DescriptorNumber):
         #     fdel=self.__class__.value.fdel,
         # )
 
-    # Property from DescriptorNumber
-    def _raw_value_property_setter(self, value: numbers.Number) -> None:
-        old_value = self._value
-        # self._value = self.__class__._constructor(value=set_value, units=self._args['units'], error=self._args['error'])
+    # # Property from DescriptorNumber
+    # def _raw_value_property_setter(self, value: numbers.Number) -> None:
+    #     old_value = self._value
+    #     # self._value = self.__class__._constructor(value=set_value, units=self._args['units'], error=self._args['error'])
 
-        # First run the built in constraints. i.e. min/max
-        constraint_type = self.builtin_constraints
-        #        constraint_type: MappingProxyType[str, C] = self.builtin_constraints
-        #        new_value = self.__constraint_runner(constraint_type, set_value)
-        # Then run any user constraints.
-        constraint_type: dict = self.user_constraints
-        state = self._borg.stack.enabled
-        if state:
-            self._borg.stack.force_state(False)
-        # try:
-        #     new_value = self.__constraint_runner(constraint_type, new_value)
-        # finally:
-        #     self._borg.stack.force_state(state)
+    #     # First run the built in constraints. i.e. min/max
+    #     constraint_type = self.builtin_constraints
+    #     #        constraint_type: MappingProxyType[str, C] = self.builtin_constraints
+    #     #        new_value = self.__constraint_runner(constraint_type, set_value)
+    #     # Then run any user constraints.
+    #     constraint_type: dict = self.user_constraints
+    #     state = self._borg.stack.enabled
+    #     if state:
+    #         self._borg.stack.force_state(False)
+    #     # try:
+    #     #     new_value = self.__constraint_runner(constraint_type, new_value)
+    #     # finally:
+    #     #     self._borg.stack.force_state(state)
 
-        # # And finally update any virtual constraints
-        # constraint_type: dict = self._constraints['virtual']
-        # _ = self.__constraint_runner(constraint_type, new_value)
+    #     # # And finally update any virtual constraints
+    #     # constraint_type: dict = self._constraints['virtual']
+    #     # _ = self.__constraint_runner(constraint_type, new_value)
 
-        # # Restore to the old state
-        # # self._value = old_value
-        # self.__previous_set(self, new_value)
+    #     # # Restore to the old state
+    #     # # self._value = old_value
+    #     # self.__previous_set(self, new_value)
 
     # @property
     # #    def _property_value(self) -> Union[numbers.Number, np.ndarray, M_]:
@@ -235,6 +239,67 @@ class Parameter(DescriptorNumber):
     #     # self._value = old_value
     #     self.__previous_set(self, new_value)
 
+    @property
+    def full_value(self) -> sc.scalar:
+        """
+        Get the value of self as a scipp scalar. This is should be usable for most cases.
+        If a scipp scalar is not acceptable then the raw value can be obtained through `obj.value`.
+
+        :return: Value of self with unit and variance.
+        """
+        # Also should reference for undo/redo
+        if self._callback.fget is not None:
+            scalar = self._callback.fget()
+            if scalar != self._scalar:
+                self._scalar = scalar
+        return self._scalar
+
+    @full_value.setter
+    @property_stack_deco
+    def full_value(self, scalar: sc.scalar) -> None:
+        """
+        Set the value of self. This creates a scipp scalar with a unit.
+
+        :param full_value: New value of self
+        """
+        if not self.enabled:
+            if borg.debug:
+                raise CoreSetException(f'{str(self)} is not enabled.')
+            return
+        self._scalar = scalar
+        if self._callback.fset is not None:
+            self._callback.fset(scalar)
+
+    @property
+    def value(self) -> numbers.Number:
+        """
+        Get the value of self as a Number.
+
+        :return: Value of self without unit.
+        """
+        # Also should reference for undo/redo
+        if self._callback.fget is not None:
+            scalar = self._callback.fget()
+            if scalar.value != self._scalar.value:
+                self._scalar.value = scalar.value
+        return self._scalar.value
+
+    @value.setter
+    @property_stack_deco
+    def value(self, value: numbers.Number) -> None:
+        """
+        Set the value of self. This only update the value of the scipp scalar.
+
+        :param value: New value of self
+        """
+        if not self.enabled:
+            if borg.debug:
+                raise CoreSetException(f'{str(self)} is not enabled.')
+            return
+        self._scalar.value = value
+        if self._callback.fset is not None:
+            self._callback.fset(self._scalar)
+
     def convert_unit(self, unit_str: str) -> None:
         """
         Perform unit conversion. The value, max and min can change on unit change.
@@ -275,10 +340,10 @@ class Parameter(DescriptorNumber):
         :param value: new minimum value
         :return: None
         """
-        if value <= self.raw_value:
+        if value <= self.value:
             self._min.value = value
         else:
-            raise ValueError(f'The current value ({self.raw_value}) is less than the desired min value ({value}).')
+            raise ValueError(f'The current value ({self.value}) is less than the desired min value ({value}).')
 
     @property
     def max(self) -> numbers.Number:
@@ -299,10 +364,10 @@ class Parameter(DescriptorNumber):
         :param value: new maximum value
         :return: None
         """
-        if value >= self.raw_value:
+        if value >= self.value:
             self._max.value = value
         else:
-            raise ValueError(f'The current value ({self.raw_value}) is greater than the desired max value ({value}).')
+            raise ValueError(f'The current value ({self.value}) is greater than the desired max value ({value}).')
 
     @property
     def fixed(self) -> bool:
@@ -315,23 +380,23 @@ class Parameter(DescriptorNumber):
 
     @fixed.setter
     @property_stack_deco
-    def fixed(self, value: bool) -> None:
+    def fixed(self, fixed: bool) -> None:
         """
         Change the parameter vary while fitting state.
         - implements undo/redo functionality.
 
-        :param value: True = fixed, False = can vary
+        :param fixed: True = fixed, False = can vary
         """
         if not self.enabled:
             if self._borg.stack.enabled:
+                # Remove the recorded change from the stack
                 self._borg.stack.pop()
             if borg.debug:
                 raise CoreSetException(f'{str(self)} is not enabled.')
             return
-        # TODO Should we try and cast value to bool rather than throw ValueError?
-        if not isinstance(value, bool):
-            raise ValueError
-        self._fixed = value
+        if not isinstance(fixed, bool):
+            raise ValueError(f'{fixed=} must be a boolean. Got {type(fixed)}')
+        self._fixed = fixed
 
     @property
     def error(self) -> float:
@@ -340,22 +405,68 @@ class Parameter(DescriptorNumber):
 
         :return: Error associated with parameter
         """
-        return float(np.sqrt(self._value.variance))
+        return float(np.sqrt(self._scalar.variance))
 
-    # @error.setter
-    # @property_stack_deco
-    # def error(self, value: float):
-    #     """
-    #     Set the error associated with the parameter.
-    #     - implements undo/redo functionality.
+    @error.setter
+    @property_stack_deco
+    def error(self, value: float) -> None:
+        """
+        Set the standard deviation for the parameter.
 
-    #     :param value: New error value
-    #     :return: None
-    #     """
-    #     if value < 0:
-    #         raise ValueError
-    #     self._args['error'] = value
-    #     self._value = self.__class__._constructor(**self._args)
+        :param value: New error value
+        """
+        if value < 0:
+            raise ValueError(f'{value} must be positive')
+        self._scalar.variance = value**2
+
+    @property
+    def bounds(self) -> Tuple[numbers.Number, numbers.Number]:
+        """
+        Get the bounds of the parameter.
+
+        :return: Tuple of the parameters minimum and maximum values
+        """
+        return self.min, self.max
+
+    @bounds.setter
+    def bounds(self, new_bound: Tuple[numbers.Number, numbers.Number]) -> None:
+        """
+        Set the bounds of the parameter. *This will also enable the parameter*.
+
+        :param new_bound: New bounds. This should be a tuple of (min, max).
+        """
+        # # Macro checking and opening for undo/redo
+        # close_macro = False
+        # if self._borg.stack.enabled:
+        #     self._borg.stack.beginMacro('Setting bounds')
+        #     close_macro = True
+        # # Have we only been given a single number (MIN)?
+        # if isinstance(new_bound, numbers.Number):
+        #     self.min = new_bound
+        # # Have we been given a tuple?
+        # if isinstance(new_bound, tuple):
+        old_min = self.min
+        old_max = self.max
+        new_min, new_max = new_bound
+
+        try:
+            self.min = new_min
+            self.max = new_max
+        except ValueError:
+            self.min = old_min
+            self.max = old_max
+            raise ValueError(f'Current paramter value: {self._scalar.value} must be within {new_bound=}')
+
+        # Enable the parameter if needed
+        if not self.enabled:
+            self.enabled = True
+        # Free parameter if needed
+        if self.fixed:
+            self.fixed = False
+
+        # # Close the macro if we opened it
+        # if close_macro:
+        #     self._borg.stack.endMacro()
 
     def __repr__(self) -> str:
         """
@@ -371,7 +482,7 @@ class Parameter(DescriptorNumber):
         return '%s>' % ', '.join(s)
 
     def __float__(self) -> float:
-        return float(self.raw_value)
+        return float(self._scalar.value)
 
     @property
     def builtin_constraints(self):
@@ -452,52 +563,30 @@ class Parameter(DescriptorNumber):
             if this_new_value != newer_value:
                 if borg.debug:
                     print(f'Constraint `{constraint}` has been applied')
-                self._value = self.__class__._constructor(
-                    value=this_new_value,
-                    units=self._args['units'],
-                    error=self._args['error'],
-                )
+                raise SyntaxError('implement constraints')
+                # self._value = self.__class__._constructor(
+                #     value=this_new_value,
+                #     units=self._args['units'],
+                #     error=self._args['error'],
+                # )
             newer_value = this_new_value
         return newer_value
 
     @property
-    def bounds(self) -> Tuple[numbers.Number, numbers.Number]:
+    def enabled(self) -> bool:
         """
-        Get the bounds of the parameter.
+        Logical property to see if the objects value can be directly set.
 
-        :return: Tuple of the parameters minimum and maximum values
+        :return: Can the objects value be set
         """
-        return self._min, self._max
+        return self._enabled
 
-    @bounds.setter
-    def bounds(self, new_bound: Union[Tuple[numbers.Number, numbers.Number], numbers.Number]) -> None:
+    @enabled.setter
+    @property_stack_deco
+    def enabled(self, value: bool) -> None:
         """
-        Set the bounds of the parameter. *This will also enable the parameter*.
+        Enable and disable the direct setting of an objects value field.
 
-        :param new_bound: New bounds. This can be a tuple of (min, max) or a single number (min).
-        For changing the max use (None, max_value).
+        :param value: True - objects value can be set, False - the opposite
         """
-        # Macro checking and opening for undo/redo
-        close_macro = False
-        if self._borg.stack.enabled:
-            self._borg.stack.beginMacro('Setting bounds')
-            close_macro = True
-        # Have we only been given a single number (MIN)?
-        if isinstance(new_bound, numbers.Number):
-            self.min = new_bound
-        # Have we been given a tuple?
-        if isinstance(new_bound, tuple):
-            new_min, new_max = new_bound
-            # Are there any None values?
-            if isinstance(new_min, numbers.Number):
-                self.min = new_min
-            if isinstance(new_max, numbers.Number):
-                self.max = new_max
-        # Enable the parameter if needed
-        if not self.enabled:
-            self.enabled = True
-        # This parameter is now not fixed.
-        self.fixed = False
-        # Close the macro if we opened it
-        if close_macro:
-            self._borg.stack.endMacro()
+        self._enabled = value
