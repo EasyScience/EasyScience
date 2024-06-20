@@ -18,9 +18,8 @@ from typing import Any
 
 # from typing import TYPE_CHECKING
 # from typing import Any
-from typing import Callable
-from typing import Dict
-
+# from typing import Callable
+# from typing import Dict
 # from typing import List
 from typing import Optional
 
@@ -40,7 +39,7 @@ from easyscience import borg
 from easyscience.fitting.Constraints import SelfConstraint
 
 # from easyscience.Objects.core import ComponentSerializer
-from easyscience.Utils.classTools import addProp
+# from easyscience.Utils.classTools import addProp
 from easyscience.Utils.Exceptions import CoreSetException
 from easyscience.Utils.UndoRedo import property_stack_deco
 
@@ -108,6 +107,8 @@ class Parameter(DescriptorNumber):
         if variance < 0:
             raise ValueError('`variance` must be positive')
 
+        #        self._value: sc.scalar  # set in super().__init__
+
         super().__init__(
             name=name,
             value=value,
@@ -130,8 +131,8 @@ class Parameter(DescriptorNumber):
             )
 
         # Create additional fitting elements
-        self._min = min
-        self._max = max
+        self._min = sc.scalar(float(min), unit=unit)
+        self._max = sc.scalar(float(max), unit=unit)
         self._fixed = fixed
         self._initial_raw_value = self.raw_value
         self._constraints = {
@@ -145,80 +146,115 @@ class Parameter(DescriptorNumber):
         # # This is for the serialization. Otherwise we wouldn't catch the values given to `super()`
         # self._kwargs = kwargs
 
-        # We have initialized from the Descriptor class where value has it's own undo/redo decorator
-        # This needs to be bypassed to use the Parameter undo/redo stack
-        fun = self.__class__.value.fset
-        if hasattr(fun, 'func'):
-            fun = getattr(fun, 'func')
-        self.__previous_set: Callable[
-            [V, Union[numbers.Number, np.ndarray]],
-            Union[numbers.Number, np.ndarray],
-        ] = fun
+        # # We have initialized from the Descriptor class where value has it's own undo/redo decorator
+        # # This needs to be bypassed to use the Parameter undo/redo stack
+        # fun = self.__class__.value.fset
+        # if hasattr(fun, 'func'):
+        #     fun = getattr(fun, 'func')
+        # self.__previous_set: Callable[
+        #     [V, Union[numbers.Number, np.ndarray]],
+        #     Union[numbers.Number, np.ndarray],
+        # ] = fun
 
-        # Monkey patch the unit and the value to take into account the new max/min situation
-        addProp(
-            self,
-            'value',
-            fget=self.__class__.value.fget,
-            fset=self.__class__._property_value.fset,
-            fdel=self.__class__.value.fdel,
-        )
+        # # Monkey patch the unit and the value to take into account the new max/min situation
+        # addProp(
+        #     self,
+        #     'value',
+        #     fget=self.__class__.value.fget,
+        #     fset=self.__class__._property_value.fset,
+        #     fdel=self.__class__.value.fdel,
+        # )
 
-    @property
-    def _property_value(self) -> Union[numbers.Number, np.ndarray, M_]:
-        return self.value
-
-    @_property_value.setter
-    @property_stack_deco
-    def _property_value(self, set_value: Union[numbers.Number, np.ndarray, M_]) -> None:
-        """
-        Verify value against constraints. This hasn't really been implemented as fitting is tricky.
-
-        :param set_value: value to be verified
-        :return: new value from constraint
-        """
-        if isinstance(set_value, M_):
-            set_value = set_value.magnitude.nominal_value
-        # Save the old state and create the new state
+    # Property from DescriptorNumber
+    def _raw_value_property_setter(self, value: numbers.Number) -> None:
         old_value = self._value
-        self._value = self.__class__._constructor(value=set_value, units=self._args['units'], error=self._args['error'])
+        # self._value = self.__class__._constructor(value=set_value, units=self._args['units'], error=self._args['error'])
 
         # First run the built in constraints. i.e. min/max
-        constraint_type: MappingProxyType[str, C] = self.builtin_constraints
-        new_value = self.__constraint_runner(constraint_type, set_value)
+        constraint_type = self.builtin_constraints
+        #        constraint_type: MappingProxyType[str, C] = self.builtin_constraints
+        #        new_value = self.__constraint_runner(constraint_type, set_value)
         # Then run any user constraints.
         constraint_type: dict = self.user_constraints
         state = self._borg.stack.enabled
         if state:
             self._borg.stack.force_state(False)
-        try:
-            new_value = self.__constraint_runner(constraint_type, new_value)
-        finally:
-            self._borg.stack.force_state(state)
+        # try:
+        #     new_value = self.__constraint_runner(constraint_type, new_value)
+        # finally:
+        #     self._borg.stack.force_state(state)
 
-        # And finally update any virtual constraints
-        constraint_type: dict = self._constraints['virtual']
-        _ = self.__constraint_runner(constraint_type, new_value)
+        # # And finally update any virtual constraints
+        # constraint_type: dict = self._constraints['virtual']
+        # _ = self.__constraint_runner(constraint_type, new_value)
 
-        # Restore to the old state
-        self._value = old_value
-        self.__previous_set(self, new_value)
+        # # Restore to the old state
+        # # self._value = old_value
+        # self.__previous_set(self, new_value)
 
-    def convert_unit(self, new_unit: str):  # noqa: S1144
+    # @property
+    # #    def _property_value(self) -> Union[numbers.Number, np.ndarray, M_]:
+    # def _property_value(self) -> Union[numbers.Number, np.ndarray]:
+    #     return self.value
+
+    # @_property_value.setter
+    # @property_stack_deco
+    # def _property_value(self, set_value: Union[numbers.Number, np.ndarray]) -> None:
+    #     #    def _property_value(self, set_value: Union[numbers.Number, np.ndarray, M_]) -> None:
+    #     """
+    #     Verify value against constraints. This hasn't really been implemented as fitting is tricky.
+
+    #     :param set_value: value to be verified
+    #     :return: new value from constraint
+    #     """
+    #     #        if isinstance(set_value, M_):
+    #     #            set_value = set_value.magnitude.nominal_value
+    #     # Save the old state and create the new state
+    #     old_value = self._value
+    #     # self._value = self.__class__._constructor(value=set_value, units=self._args['units'], error=self._args['error'])
+
+    #     # First run the built in constraints. i.e. min/max
+    #     constraint_type = self.builtin_constraints
+    #     #        constraint_type: MappingProxyType[str, C] = self.builtin_constraints
+    #     new_value = self.__constraint_runner(constraint_type, set_value)
+    #     # Then run any user constraints.
+    #     constraint_type: dict = self.user_constraints
+    #     state = self._borg.stack.enabled
+    #     if state:
+    #         self._borg.stack.force_state(False)
+    #     try:
+    #         new_value = self.__constraint_runner(constraint_type, new_value)
+    #     finally:
+    #         self._borg.stack.force_state(state)
+
+    #     # And finally update any virtual constraints
+    #     constraint_type: dict = self._constraints['virtual']
+    #     _ = self.__constraint_runner(constraint_type, new_value)
+
+    #     # Restore to the old state
+    #     # self._value = old_value
+    #     self.__previous_set(self, new_value)
+
+    def convert_unit(self, unit_str: str) -> None:
         """
         Perform unit conversion. The value, max and min can change on unit change.
 
         :param new_unit: new unit
         :return: None
         """
-        old_unit = str(self._args['units'])
-        super().convert_unit(new_unit)
-        # Deal with min/max. Error is auto corrected
-        if not self.value.unitless and old_unit != 'dimensionless':
-            self._min = Q_(self.min, old_unit).to(self._units).magnitude
-            self._max = Q_(self.max, old_unit).to(self._units).magnitude
-        # Log the new converted error
-        self._args['error'] = self.value.error.magnitude
+        #        old_unit = self._value.unit  # str(self._args['units'])
+        super().convert_unit(unit_str)
+        new_unit = sc.Unit(unit_str)
+        self._min = self._min.to(unit=new_unit)
+        self._max = self._max.to(unit=new_unit)
+        # Deal with min/max.
+        #        if not self.value.unitless and old_unit != 'dimensionless':
+
+    #        self._min = sc.to_unit(self._min * old_unit, unit_str).value
+    #        self._max = sc.to_unit(self._max * old_unit, unit_str).value
+
+    #        # Log the new converted error
+    #        self._args['error'] = self.value.error.magnitude
 
     @property
     def min(self) -> numbers.Number:
@@ -227,11 +263,11 @@ class Parameter(DescriptorNumber):
 
         :return: minimum value
         """
-        return self._min
+        return self._min.value
 
     @min.setter
     @property_stack_deco
-    def min(self, value: numbers.Number):
+    def min(self, value: numbers.Number) -> None:
         """
         Set the minimum value for fitting.
         - implements undo/redo functionality.
@@ -240,9 +276,9 @@ class Parameter(DescriptorNumber):
         :return: None
         """
         if value <= self.raw_value:
-            self._min = value
+            self._min.value = value
         else:
-            raise ValueError(f'The current set value ({self.raw_value}) is less than the desired min value ({value}).')
+            raise ValueError(f'The current value ({self.raw_value}) is less than the desired min value ({value}).')
 
     @property
     def max(self) -> numbers.Number:
@@ -251,11 +287,11 @@ class Parameter(DescriptorNumber):
 
         :return: maximum value
         """
-        return self._max
+        return self._max.value
 
     @max.setter
     @property_stack_deco
-    def max(self, value: numbers.Number):
+    def max(self, value: numbers.Number) -> None:
         """
         Get the maximum value for fitting.
         - implements undo/redo functionality.
@@ -264,9 +300,9 @@ class Parameter(DescriptorNumber):
         :return: None
         """
         if value >= self.raw_value:
-            self._max = value
+            self._max.value = value
         else:
-            raise ValueError(f'The current set value ({self.raw_value}) is greater than the desired max value ({value}).')
+            raise ValueError(f'The current value ({self.raw_value}) is greater than the desired max value ({value}).')
 
     @property
     def fixed(self) -> bool:
@@ -274,19 +310,17 @@ class Parameter(DescriptorNumber):
         Can the parameter vary while fitting?
 
         :return: True = fixed, False = can vary
-        :rtype: bool
         """
         return self._fixed
 
     @fixed.setter
     @property_stack_deco
-    def fixed(self, value: bool):
+    def fixed(self, value: bool) -> None:
         """
         Change the parameter vary while fitting state.
         - implements undo/redo functionality.
 
         :param value: True = fixed, False = can vary
-        :return: None
         """
         if not self.enabled:
             if self._borg.stack.enabled:
@@ -302,26 +336,26 @@ class Parameter(DescriptorNumber):
     @property
     def error(self) -> float:
         """
-        The error associated with the parameter.
+        The standard deviation for the parameter.
 
         :return: Error associated with parameter
         """
-        return float(self._value.error.magnitude)
+        return float(np.sqrt(self._value.variance))
 
-    @error.setter
-    @property_stack_deco
-    def error(self, value: float):
-        """
-        Set the error associated with the parameter.
-        - implements undo/redo functionality.
+    # @error.setter
+    # @property_stack_deco
+    # def error(self, value: float):
+    #     """
+    #     Set the error associated with the parameter.
+    #     - implements undo/redo functionality.
 
-        :param value: New error value
-        :return: None
-        """
-        if value < 0:
-            raise ValueError
-        self._args['error'] = value
-        self._value = self.__class__._constructor(**self._args)
+    #     :param value: New error value
+    #     :return: None
+    #     """
+    #     if value < 0:
+    #         raise ValueError
+    #     self._args['error'] = value
+    #     self._value = self.__class__._constructor(**self._args)
 
     def __repr__(self) -> str:
         """
@@ -340,7 +374,8 @@ class Parameter(DescriptorNumber):
         return float(self.raw_value)
 
     @property
-    def builtin_constraints(self) -> MappingProxyType[str, C]:
+    def builtin_constraints(self):
+        #    def builtin_constraints(self) -> MappingProxyType[str, C]:
         """
         Get the built in constrains of the object. Typically these are the min/max
 
@@ -349,7 +384,8 @@ class Parameter(DescriptorNumber):
         return MappingProxyType(self._constraints['builtin'])
 
     @property
-    def user_constraints(self) -> Dict[str, C]:
+    def user_constraints(self):
+        #    def user_constraints(self) -> Dict[str, C]:
         """
         Get the user specified constrains of the object.
 
@@ -358,8 +394,11 @@ class Parameter(DescriptorNumber):
         return self._constraints['user']
 
     @user_constraints.setter
-    def user_constraints(self, constraints_dict: Dict[str, C]) -> None:
+    def user_constraints(self, constraints_dict) -> None:
         self._constraints['user'] = constraints_dict
+
+    # def user_constraints(self, constraints_dict: Dict[str, C]) -> None:
+    #     self._constraints['user'] = constraints_dict
 
     def _quick_set(
         self,
@@ -401,7 +440,8 @@ class Parameter(DescriptorNumber):
 
     def __constraint_runner(
         self,
-        this_constraint_type: Union[dict, MappingProxyType[str, C]],
+        this_constraint_type,
+        #        this_constraint_type: Union[dict, MappingProxyType[str, C]],
         newer_value: numbers.Number,
     ) -> float:
         for constraint in this_constraint_type.values():

@@ -104,7 +104,8 @@ class DescriptorNumber(DescriptorBase):
         """
         new_unit = sc.Unit(unit_str)
         self._value = self._value.to(unit=new_unit)
-        self._value.unit = new_unit
+
+    #        self._value.unit = new_unit
 
     @property
     def variance(self) -> float:
@@ -143,6 +144,20 @@ class DescriptorNumber(DescriptorBase):
         :return: The raw value of self
         """
         return self._value.value
+
+    @raw_value.setter
+    @property_stack_deco
+    def raw_value(self, value: numbers.Number) -> None:
+        """
+        Set the raw value.
+
+        :param value: value to set
+        """
+        self._raw_value_property_setter(value)
+
+    # Needed by child classes
+    def _raw_value_property_setter(self, value: numbers.Number) -> None:
+        self._value.value = value
 
     def __copy__(self) -> DescriptorNumber:
         return super().__copy__()

@@ -6,9 +6,9 @@ from easyscience.Objects.new_variable.descriptor_str import DescriptorStr
 
 class TestDescriptorStr:
     @pytest.fixture
-    def descriptor_str(self):
+    def descriptor(self):
         self.mock_callback = MagicMock()
-        descriptor_str = DescriptorStr(
+        descriptor = DescriptorStr(
             name="name",
             string="string",
             description="description",
@@ -18,55 +18,58 @@ class TestDescriptorStr:
             enabled="enabled",
             parent=None,
         )
-        return descriptor_str
+        return descriptor
     
-    def test_init(self, descriptor_str: DescriptorStr):
-        assert descriptor_str._string == "string"
-        assert descriptor_str._name == "name"
-        assert descriptor_str._description == "description"
-        assert descriptor_str._url == "url"
-        assert descriptor_str._display_name == "display_name"
-        assert descriptor_str._callback == self.mock_callback
-        assert descriptor_str._enabled == "enabled"
+    def test_init(self, descriptor: DescriptorStr):
+        # When Then Expect
+        assert descriptor._string == "string"
 
-    def test_value_match_callback(self, descriptor_str: DescriptorStr):
+        # From super
+        assert descriptor._name == "name"
+        assert descriptor._description == "description"
+        assert descriptor._url == "url"
+        assert descriptor._display_name == "display_name"
+        assert descriptor._callback == self.mock_callback
+        assert descriptor._enabled == "enabled"
+
+    def test_value_match_callback(self, descriptor: DescriptorStr):
         # When Then
         self.mock_callback.fget.return_value = "string"
 
         # Expect
-        assert descriptor_str.value == "string"
-        assert descriptor_str._callback.fget.call_count == 1
+        assert descriptor.value == "string"
+        assert descriptor._callback.fget.call_count == 1
         
-    def test_value_no_match_callback(self, descriptor_str: DescriptorStr):
+    def test_value_no_match_callback(self, descriptor: DescriptorStr):
         # When Then
         self.mock_callback.fget.return_value = "call_back"
 
         # Expect
-        assert descriptor_str.value == "call_back"
-        assert descriptor_str._callback.fget.call_count == 1
+        assert descriptor.value == "call_back"
+        assert descriptor._callback.fget.call_count == 1
 
-    def test_set_value(self, descriptor_str: DescriptorStr):
+    def test_set_value(self, descriptor: DescriptorStr):
         # When
         self.mock_callback.fget.return_value = "string"
 
         # Then
-        descriptor_str.value = "new_string"
+        descriptor.value = "new_string"
 
         # Expect
-        descriptor_str._callback.fset.assert_called_once_with("new_string") 
-        assert descriptor_str._string == "new_string"
+        descriptor._callback.fset.assert_called_once_with("new_string") 
+        assert descriptor._string == "new_string"
 
-    def test_repr(self, descriptor_str: DescriptorStr):
+    def test_repr(self, descriptor: DescriptorStr):
         # When Then
-        repr_str = str(descriptor_str)
+        repr_str = str(descriptor)
 
         # Expect
         assert repr_str == "<DescriptorStr 'name': string>"
 
-    def test_copy(self, descriptor_str: DescriptorStr):
+    def test_copy(self, descriptor: DescriptorStr):
         # When Then
-        descriptor_str_copy = descriptor_str.__copy__()
+        descriptor_copy = descriptor.__copy__()
 
         # Expect
-        assert type(descriptor_str_copy) == DescriptorStr
-        assert descriptor_str_copy._string == descriptor_str._string
+        assert type(descriptor_copy) == DescriptorStr
+        assert descriptor_copy._string == descriptor._string
