@@ -289,3 +289,22 @@ class TestParameter:
         # Expect
         parameter._callback.fset.assert_called_once_with(sc.scalar(2, unit='m')) 
         assert parameter._scalar == sc.scalar(2, unit='m')
+    
+    def test_copy(self, parameter: Parameter):
+        # When Then
+        parameter_copy = parameter.__copy__()
+
+        # Expect
+        assert type(parameter_copy) == Parameter
+        assert id(parameter_copy._scalar) != id(parameter._scalar)
+
+        assert parameter_copy._name == parameter._name
+        assert parameter_copy._scalar == parameter._scalar
+        assert parameter_copy._min == parameter._min
+        assert parameter_copy._max == parameter._max
+        assert parameter_copy._fixed == parameter._fixed
+        assert parameter_copy._description == parameter._description
+        assert parameter_copy._url == parameter._url
+        assert parameter_copy._display_name == parameter._display_name
+        assert parameter_copy._callback == parameter._callback
+        assert parameter_copy._enabled == parameter._enabled

@@ -468,22 +468,6 @@ class Parameter(DescriptorNumber):
         # if close_macro:
         #     self._borg.stack.endMacro()
 
-    def __repr__(self) -> str:
-        """
-        Return printable representation of a Parameter object.
-        """
-        super_str = super().__repr__()
-        super_str = super_str[:-1]
-        s = []
-        if self.fixed:
-            super_str += ' (fixed)'
-        s.append(super_str)
-        s.append('bounds=[%s:%s]' % (repr(self.min), repr(self.max)))
-        return '%s>' % ', '.join(s)
-
-    def __float__(self) -> float:
-        return float(self._scalar.value)
-
     @property
     def builtin_constraints(self):
         #    def builtin_constraints(self) -> MappingProxyType[str, C]:
@@ -590,3 +574,25 @@ class Parameter(DescriptorNumber):
         :param value: True - objects value can be set, False - the opposite
         """
         self._enabled = value
+
+    # Just to get return type right
+    def __copy__(self) -> Parameter:
+        new_obj = super().__copy__()
+        new_obj._callback = self._callback
+        return new_obj
+
+    def __repr__(self) -> str:
+        """
+        Return printable representation of a Parameter object.
+        """
+        super_str = super().__repr__()
+        super_str = super_str[:-1]
+        s = []
+        if self.fixed:
+            super_str += ' (fixed)'
+        s.append(super_str)
+        s.append('bounds=[%s:%s]' % (repr(self.min), repr(self.max)))
+        return '%s>' % ', '.join(s)
+
+    def __float__(self) -> float:
+        return float(self._scalar.value)
