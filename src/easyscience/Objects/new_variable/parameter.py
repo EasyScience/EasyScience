@@ -11,7 +11,8 @@ import copy
 import numbers
 
 # import warnings
-# import weakref
+import weakref
+
 # from copy import deepcopy
 # from inspect import getfullargspec
 from types import MappingProxyType
@@ -120,9 +121,12 @@ class Parameter(DescriptorNumber):
             #            enabled=enabled,
             parent=parent,
         )
+
         if callback is None:
             callback = property()
         self._callback = callback
+        if self._callback.fdel is not None:
+            weakref.finalize(self, self._callback.fdel)
 
         #        self._args['units'] = str(self.unit)
 
@@ -537,24 +541,24 @@ class Parameter(DescriptorNumber):
         self,
         this_constraint_type,
         #        this_constraint_type: Union[dict, MappingProxyType[str, C]],
-        newer_value: numbers.Number,
+        new_value: numbers.Number,
     ) -> float:
         for constraint in this_constraint_type.values():
             if constraint.external:
                 constraint()
                 continue
-            this_new_value = constraint(no_set=True)
-            if this_new_value != newer_value:
+            constained_new_value = constraint(no_set=True)
+            if constained_new_value != new_value:
                 if borg.debug:
                     print(f'Constraint `{constraint}` has been applied')
-                raise SyntaxError('implement constraints')
+                self._scalar.value = constained_new_value
                 # self._value = self.__class__._constructor(
                 #     value=this_new_value,
                 #     units=self._args['units'],
                 #     error=self._args['error'],
                 # )
-            newer_value = this_new_value
-        return newer_value
+            new_value = constained_new_value
+        return new_value
 
     @property
     def enabled(self) -> bool:

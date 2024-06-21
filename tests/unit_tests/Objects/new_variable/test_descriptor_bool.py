@@ -1,14 +1,14 @@
 import pytest
 
-from easyscience.Objects.new_variable.descriptor_str import DescriptorStr
+from easyscience.Objects.new_variable.descriptor_bool import DescriptorBool
 
 
-class TestDescriptorStr:
+class TestDescriptorBool:
     @pytest.fixture
     def descriptor(self):
-        descriptor = DescriptorStr(
+        descriptor = DescriptorBool(
             name="name",
-            value="string",
+            value=True,
             description="description",
             url="url",
             display_name="display_name",
@@ -16,9 +16,9 @@ class TestDescriptorStr:
         )
         return descriptor
     
-    def test_init(self, descriptor: DescriptorStr):
+    def test_init(self, descriptor: DescriptorBool):
         # When Then Expect
-        assert descriptor._string == "string"
+        assert descriptor._bool_value == True
 
         # From super
         assert descriptor._name == "name"
@@ -26,41 +26,42 @@ class TestDescriptorStr:
         assert descriptor._url == "url"
         assert descriptor._display_name == "display_name"
 
-    @pytest.mark.parametrize("string", [True, 0, 1.0])
-    def test_init_string_type_exception(self, string):
+    @pytest.mark.parametrize("bool_value", ["string", 0, 1.0])
+    def test_init_bool_value_type_exception(self, bool_value):
+
         # When Then Expect
         with pytest.raises(ValueError):
-            DescriptorStr(
+            DescriptorBool(
                 name="name",
-                value=string,
+                value=bool_value,
                 description="description",
                 url="url",
                 display_name="display_name",
                 parent=None,
             )
 
-    def test_value(self, descriptor: DescriptorStr):
+    def test_value(self, descriptor: DescriptorBool):
         # When Then Expect
-        assert descriptor.value == "string"
+        assert descriptor.value == True
 
-    def test_set_value(self, descriptor: DescriptorStr):
+    def test_set_value(self, descriptor: DescriptorBool):
         # When Then
-        descriptor.value = "new_string"
+        descriptor.value = False
 
         # Expect
-        assert descriptor._string == "new_string"
+        assert descriptor._bool_value == False
 
-    def test_repr(self, descriptor: DescriptorStr):
+    def test_repr(self, descriptor: DescriptorBool):
         # When Then
         repr_str = str(descriptor)
 
         # Expect
-        assert repr_str == "<DescriptorStr 'name': string>"
+        assert repr_str == "<DescriptorBool 'name': True>"
 
-    def test_copy(self, descriptor: DescriptorStr):
+    def test_copy(self, descriptor: DescriptorBool):
         # When Then
         descriptor_copy = descriptor.__copy__()
 
         # Expect
-        assert type(descriptor_copy) == DescriptorStr
-        assert descriptor_copy._string == descriptor._string
+        assert type(descriptor_copy) == DescriptorBool
+        assert descriptor_copy._bool_value == descriptor._bool_value

@@ -35,7 +35,7 @@ class DescriptorNumber(DescriptorBase):
     ):
         if not isinstance(value, numbers.Number) or isinstance(value, bool):
             raise ValueError(f'{value=} must be type numeric')
-        if variance < 0:
+        if variance is not None and variance < 0:
             raise ValueError(f'{variance=} must be positive')
         super().__init__(
             name=name,
@@ -187,6 +187,8 @@ class DescriptorNumber(DescriptorBase):
 
         :param value: value to set
         """
+        if not isinstance(value, numbers.Number) or isinstance(value, bool):
+            raise ValueError(f'{value=} must be type numbers.Number')
         self._scalar.value = value
 
     # Just to get return type right
@@ -199,6 +201,10 @@ class DescriptorNumber(DescriptorBase):
         obj_name = self._name
         obj_value = self._scalar.value
         obj_unit = self._scalar.unit
+        if obj_unit == 'dimensionless':
+            obj_unit = ''
+        else:
+            obj_unit = f' {obj_unit}'
         return f"<{class_name} '{obj_name}': {obj_value:0.04f}{obj_unit}>"
 
     def as_dict(self) -> Dict[str, Any]:
