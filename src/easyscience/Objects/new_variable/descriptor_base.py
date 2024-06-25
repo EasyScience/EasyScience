@@ -33,8 +33,6 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
         description: Optional[str] = None,
         url: Optional[str] = None,
         display_name: Optional[str] = None,
-        #        callback: Optional[property] = None,
-        # enabled: Optional[bool] = True,
         parent: Optional[Any] = None,
     ):
         """
@@ -66,6 +64,17 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
 
         .. note:: Undo/Redo functionality is implemented for the attributes `value`, `unit` and `display name`.
         """
+        self._name: str = name
+        self._display_name: str = display_name
+
+        if description is None:
+            description = ''
+        self._description: str = description
+
+        if url is None:
+            url = ''
+        self._url: str = url
+
         # Let the collective know we've been assimilated
         self._parent = parent
         self._borg.map.add_vertex(self, obj_type='created')
@@ -73,29 +82,19 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
         if parent is not None:
             self._borg.map.add_edge(parent, self)
 
-        self._name: str = name
+    @property
+    def name(self) -> str:
+        return self._name
 
-        #        self._enabled = enabled
+    @name.setter
+    @property_stack_deco
+    def name(self, new_name: str) -> None:
+        """
+        Set the name.
 
-        if description is None:
-            description = ''
-        self._description: str = description
-
-        self._display_name: str = display_name
-
-        if url is None:
-            url = ''
-        self._url: str = url
-
-        # if callback is None:
-        #     callback = property()
-        # self._callback: property = callback
-
-        #        finalizer = None
-        # if self._callback.fdel is not None:
-        #     weakref.finalize(self, self._callback.fdel)
-
-    #        self._finalizer = finalizer
+        :param new_name: name of the object.
+        """
+        self._name = new_name
 
     @property
     def display_name(self) -> str:
@@ -111,33 +110,21 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
 
     @display_name.setter
     @property_stack_deco
-    def display_name(self, name_str: str) -> None:
+    def display_name(self, name: str) -> None:
         """
         Set the pretty display name.
 
-        :param name_str: Pretty display name of the object.
-        :return: None
+        :param name: Pretty display name of the object.
         """
-        self._display_name = name_str
+        self._display_name = name
 
-    # @property
-    # def enabled(self) -> bool:
-    #     """
-    #     Logical property to see if the objects value can be directly set.
+    @property
+    def description(self) -> str:
+        return self._description
 
-    #     :return: Can the objects value be set
-    #     """
-    #     return self._enabled
-
-    # @enabled.setter
-    # @property_stack_deco
-    # def enabled(self, value: bool) -> None:
-    #     """
-    #     Enable and disable the direct setting of an objects value field.
-
-    #     :param value: True - objects value can be set, False - the opposite
-    #     """
-    #     self._enabled = value
+    @property
+    def url(self) -> str:
+        return self._url
 
     @abc.abstractmethod
     def __repr__(self) -> str:

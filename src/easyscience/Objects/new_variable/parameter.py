@@ -592,6 +592,8 @@ class Parameter(DescriptorNumber):
         super_str = super().__repr__()
         super_str = super_str[:-1]
         s = []
+        if self.variance:
+            super_str += f' +/-{self.variance}'
         if self.fixed:
             super_str += ' (fixed)'
         s.append(super_str)

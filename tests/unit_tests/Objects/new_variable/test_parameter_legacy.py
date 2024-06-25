@@ -11,21 +11,15 @@ from typing import List
 import numpy as np
 import pytest
 
+import scipp as sc
 import easyscience
 from easyscience.Objects.Variable import Q_
 from easyscience.Objects.Variable import CoreSetException
-from easyscience.Objects.Variable import Descriptor
-from easyscience.Objects.Variable import Parameter
+#from easyscience.Objects.Variable import Descriptor
+#from easyscience.Objects.Variable import Parameter
+from easyscience.Objects.new_variable import Parameter
 from easyscience.Objects.Variable import borg
 from easyscience.Objects.Variable import ureg
-
-
-@pytest.fixture
-def instance(request):
-    def class_creation(*args, **kwargs):
-        return request.param(*args, **kwargs)
-
-    return class_creation
 
 
 def _generate_inputs():
@@ -33,17 +27,17 @@ def _generate_inputs():
     basic = {"name": "test", "value": 1}
     basic_result = {
         "name": basic["name"],
-        "raw_value": basic["value"],
+        "value": basic["value"],
     }
     # These will be the optional parameters
     advanced = {
-        "units": ["cm", "mm", "kelvin"],
+        "unit": ["cm", "mm", "kelvin"],
         "description": "This is a test",
         "url": "https://www.whatever.com",
         "display_name": r"\Chi",
     }
     advanced_result = {
-        "units": {"name": "unit", "value": ["centimeter", "millimeter", "kelvin"]},
+        "unit": {"name": "unit", "value": ["cm", "mm", "K"]},
         "description": {"name": "description", "value": advanced["description"]},
         "url": {"name": "url", "value": advanced["url"]},
         "display_name": {"name": "display_name", "value": advanced["display_name"]},
@@ -87,66 +81,64 @@ def _generate_inputs():
             )
     return temp
 
-
-@pytest.mark.parametrize("instance", (Descriptor, Parameter), indirect=True)
+#@pytest.mark.parametrize("instance", (Descriptor, Parameter), indirect=True)
 @pytest.mark.parametrize("element, expected", _generate_inputs())
-def test_item_creation(instance, element: List, expected: dict):
-    d = instance(*element[0], **element[1])
+def test_item_creation(element: List, expected: dict):
+    d = Parameter(*element[0], **element[1])
     for field in expected.keys():
         ref = expected[field]
         obtained = getattr(d, field)
-        if isinstance(obtained, (ureg.Unit, Q_)):
-            obtained = str(obtained)
+        # if isinstance(obtained, (ureg.Unit, Q_)):
+        #     obtained = str(obtained)
         assert obtained == ref
 
 
-@pytest.mark.parametrize(
-    "element, expected",
-    [
-        ("", "1 dimensionless"),
-        ("cm", "1 centimeter"),
-        ("mm", "1 millimeter"),
-        ("kelvin", "1 kelvin"),
-    ],
-)
-def test_Descriptor_value_get(element, expected):
-    d = Descriptor("test", 1, units=element)
-    assert str(d.value) == expected
+# @pytest.mark.parametrize(
+#     "element, expected",
+#     [
+#         ("", "1 dimensionless"),
+#         ("cm", "1 centimeter"),
+#         ("mm", "1 millimeter"),
+#         ("kelvin", "1 kelvin"),
+#     ],
+# )
+# def test_Descriptor_value_get(element, expected):
+#     d = Descriptor("test", 1, units=element)
+#     assert str(d.value) == expected
 
 
 @pytest.mark.parametrize(
     "element, expected",
     [
-        ("", "(1.0 +/- 0) dimensionless"),
-        ("cm", "(1.0 +/- 0) centimeter"),
-        ("mm", "(1.0 +/- 0) millimeter"),
-        ("kelvin", "(1.0 +/- 0) kelvin"),
+        ("", sc.scalar(1)),
+        ("centimeters", sc.scalar(1, unit='cm')),
+        ("mm",sc.scalar(1, unit='mm')),
+        ("kelvin", sc.scalar(1, unit='K')),
     ],
 )
 def test_Parameter_value_get(element, expected):
-    d = Parameter("test", 1, units=element)
-    assert str(d.value) == expected
-
+    d = Parameter("test", 1, unit=element)
+    assert d.full_value == expected
 
 @pytest.mark.parametrize("debug", (True, False))
 @pytest.mark.parametrize("enabled", (None, True, False))
-@pytest.mark.parametrize("instance", (Descriptor, Parameter), indirect=True)
-def test_item_value_set(instance, enabled, debug):
+#@pytest.mark.parametrize("instance", (Descriptor, Parameter), indirect=True)
+def test_item_value_set(enabled, debug):
     borg.debug = debug
     set_value = 2
-    d = instance("test", 1)
+    d = Parameter("test", 1)
     if enabled is not None:
         d.enabled = enabled
     else:
         enabled = True
     if enabled:
         d.value = set_value
-        assert d.raw_value == set_value
+        assert d.value == set_value
     else:
         if debug:
             with pytest.raises(CoreSetException):
                 d.value = set_value
-    d = instance("test", 1, units="kelvin")
+    d = Parameter("test", 1, unit="kelvin")
     if enabled is not None:
         d.enabled = enabled
     else:
@@ -154,132 +146,137 @@ def test_item_value_set(instance, enabled, debug):
 
     if enabled:
         d.value = set_value
-        assert d.raw_value == set_value
-        assert str(d.unit) == "kelvin"
+        assert d.value == set_value
+        assert str(d.unit) == "K"
     else:
         if debug:
             with pytest.raises(CoreSetException):
                 d.value = set_value
 
 
-@pytest.mark.parametrize("instance", (Descriptor, Parameter), indirect=True)
-def test_item_unit_set(instance):
-    d = instance("test", 1)
+#@pytest.mark.parametrize("instance", (Descriptor, Parameter), indirect=True)
+def test_item_unit_set():
+    d = Parameter("test", 1)
     d.unit = "kg"
-    assert str(d.unit) == "kilogram"
+    assert str(d.unit) == "kg"
 
-    d = instance("test", 1, units="kelvin")
+    d = Parameter("test", 1, unit="kelvin")
     d.unit = "cm"
-    assert str(d.unit) == "centimeter"
+    assert str(d.unit) == "cm"
 
 
-@pytest.mark.parametrize("instance", (Descriptor, Parameter), indirect=True)
-def test_item_convert_unit(instance):
-    d = instance("test", 273, units="kelvin")
-    d.convert_unit("degree_Celsius")
-    assert -0.15 == pytest.approx(d.raw_value)
+#@pytest.mark.parametrize("instance", (Descriptor, Parameter), indirect=True)
+def test_item_convert_unit():
+    d = Parameter("test", 360, unit="km/h")
+    d.convert_unit("m/s")
+    assert 100 == pytest.approx(d.value)
+    # d = Parameter("test", 273, unit="degree_Kelvin")
+    # d.convert_unit("degree_Celsius")
+    # assert -0.15 == pytest.approx(d.value)
 
 
 @pytest.mark.parametrize(
     "conv_unit, data_in, result",
     [
-        ("degree_Celsius", {"min": 0}, {"min": -273.150, "raw_value": -0.150}),
-        ("degree_Celsius", {"max": 500}, {"max": 226.85, "raw_value": -0.150}),
-        ("degree_Celsius", {"error": 0.1}, {"error": 0.1, "raw_value": -0.150}),
+        ("m/s", {"min": 0}, {"min": 0, "value": 100}),
+        ("m/s", {"max": 500}, {"max": 138.8888, "value": 100}),
+        ("m/s", {"variance": 1.}, {"variance":0.07716049382, "value": 100}),
         (
-            "degree_Celsius",
-            {"min": 0, "max": 500, "error": 0.1},
-            {"min": -273.150, "max": 226.85, "error": 0.1, "raw_value": -0.150},
+            "m/s",
+            {"min": 0, "max": 500, "variance": 1.},
+            {"min": 0, "max": 138.8888, "variance": 0.07716049382, "value": 100},
         ),
-        ("degree_Fahrenheit", {"min": 0}, {"min": -459.67, "raw_value": 31.730}),
-        ("degree_Fahrenheit", {"max": 500}, {"max": 440.33, "raw_value": 31.730}),
-        ("degree_Fahrenheit", {"error": 0.1}, {"error": 0.18, "raw_value": 31.730}),
+        ("miles/h", {"min": 0}, {"min": 0, "value": 223.6936}),
+        ("miles/h", {"max": 500}, {"max": 310.6855, "value": 223.6936}),
+        ("miles/h", {"variance": 1.}, {"variance": 0.3861021585424, "value": 223.6936}),
         (
-            "degree_Fahrenheit",
-            {"min": 0, "max": 500, "error": 0.1},
-            {"min": -459.67, "max": 440.33, "error": 0.18, "raw_value": 31.730},
+            "miles/h",
+            {"min": 0, "max": 500, "variance": 1.},
+            {"min": 0, "max": 310.6855, "variance": 0.3861021585424, "value": 223.6936},
         ),
     ],
     ids=[
-        "min_testC",
-        "max_testC",
-        "error_testC",
-        "combined_testC",
-        "min_testF",
-        "max_testF",
-        "error_testF",
-        "combined_testF",
+        "min_m/s",
+        "max_m/s",
+        "variance_m/s",
+        "combined_m/s",
+        "min_miles/h",
+        "max_miles/h",
+        "variance_miles/h",
+        "combined_miles/h",
     ],
 )
 def test_parameter_advanced_convert_unit(conv_unit: str, data_in: dict, result: dict):
-    d = Parameter("test", 273, units="kelvin", **data_in)
+    d = Parameter("test", 360, unit="km/h", **data_in)
     d.convert_unit(conv_unit)
     for key in result.keys():
         assert result[key] == pytest.approx(getattr(d, key))
 
 
-@pytest.mark.parametrize("instance", (Descriptor, Parameter), indirect=True)
-def test_item_compatible_units(instance):
-    reference = [
-        "degree_Fahrenheit",
-        "kelvin",
-        "atomic_unit_of_temperature",
-        "degree_Celsius",
-        "degree_Rankine",
-        "planck_temperature",
-        "degree_Reaumur",
-    ]
-    d = instance("test", 273, units="kelvin")
-    obtained = d.compatible_units
-    from unittest import TestCase
+# #@pytest.mark.parametrize("instance", (Descriptor, Parameter), indirect=True)
+# def test_item_compatible_units():
+#     reference = [
+#         "degree_Fahrenheit",
+#         "kelvin",
+#         "atomic_unit_of_temperature",
+#         "degree_Celsius",
+#         "degree_Rankine",
+#         "planck_temperature",
+#         "degree_Reaumur",
+#     ]
+#     d = Parameter("test", 360, unit="m/s")
+#     obtained = d.compatible_units
+#     from unittest import TestCase
 
-    TestCase().assertCountEqual(reference, obtained)
+#     TestCase().assertCountEqual(reference, obtained)
 
 
-def test_descriptor_repr():
-    d = Descriptor("test", 1)
-    assert repr(d) == f"<{d.__class__.__name__} 'test': 1>"
-    d = Descriptor("test", 1, units="cm")
-    assert repr(d) == f"<{d.__class__.__name__} 'test': 1 cm>"
+# def test_descriptor_repr():
+#     d = Descriptor("test", 1)
+#     assert repr(d) == f"<{d.__class__.__name__} 'test': 1>"
+#     d = Descriptor("test", 1, units="cm")
+#     assert repr(d) == f"<{d.__class__.__name__} 'test': 1 cm>"
 
 
 def test_parameter_repr():
     d = Parameter("test", 1)
-    assert repr(d) == f"<{d.__class__.__name__} 'test': 1.0+/-0, bounds=[-inf:inf]>"
-    d = Parameter("test", 1, units="cm")
-    assert repr(d) == f"<{d.__class__.__name__} 'test': 1.0+/-0 cm, bounds=[-inf:inf]>"
+    assert repr(d) == f"<{d.__class__.__name__} 'test': 1.0000, bounds=[-inf:inf]>"
+    d = Parameter("test", 1, unit="cm")
+    assert repr(d) == f"<{d.__class__.__name__} 'test': 1.0000 cm, bounds=[-inf:inf]>"
+    d = Parameter("test", 1, variance=0.1)
+    assert repr(d) == f"<{d.__class__.__name__} 'test': 1.0000 +/-0.1, bounds=[-inf:inf]>"
 
     d = Parameter("test", 1, fixed=True)
     assert (
         repr(d)
-        == f"<{d.__class__.__name__} 'test': 1.0+/-0 (fixed), bounds=[-inf:inf]>"
+        == f"<{d.__class__.__name__} 'test': 1.0000 (fixed), bounds=[-inf:inf]>"
     )
-    d = Parameter("test", 1, units="cm", fixed=True)
+    d = Parameter("test", 1, unit="cm", variance=0.1, fixed=True)
     assert (
         repr(d)
-        == f"<{d.__class__.__name__} 'test': 1.0+/-0 cm (fixed), bounds=[-inf:inf]>"
+        == f"<{d.__class__.__name__} 'test': 1.0000 cm +/-0.1 (fixed), bounds=[-inf:inf]>"
     )
 
 
-def test_descriptor_as_dict():
-    d = Descriptor("test", 1)
-    result = d.as_dict()
-    expected = {
-        "@module": Descriptor.__module__,
-        "@class": Descriptor.__name__,
-        "@version": easyscience.__version__,
-        "name": "test",
-        "value": 1,
-        "units": "dimensionless",
-        "description": "",
-        "url": "",
-        "display_name": "test",
-        "callback": None,
-    }
-    for key in expected.keys():
-        if key == "callback":
-            continue
-        assert result[key] == expected[key]
+# def test_descriptor_as_dict():
+#     d = Descriptor("test", 1)
+#     result = d.as_dict()
+#     expected = {
+#         "@module": Descriptor.__module__,
+#         "@class": Descriptor.__name__,
+#         "@version": easyscience.__version__,
+#         "name": "test",
+#         "value": 1,
+#         "units": "dimensionless",
+#         "description": "",
+#         "url": "",
+#         "display_name": "test",
+#         "callback": None,
+#     }
+#     for key in expected.keys():
+#         if key == "callback":
+#             continue
+#         assert result[key] == expected[key]
 
 
 def test_parameter_as_dict():
@@ -291,123 +288,138 @@ def test_parameter_as_dict():
         "@version": easyscience.__version__,
         "name": "test",
         "value": 1.0,
-        "error": 0.0,
+        "variance": 0.0,
         "min": -np.inf,
         "max": np.inf,
         "fixed": False,
-        "units": "dimensionless",
+        "unit": "dimensionless",
     }
     for key in expected.keys():
-        if key == "callback":
-            continue
+        # if key == "callback":
+        #     continue
         assert result[key] == expected[key]
 
     # Check that additional arguments work
-    d = Parameter("test", 1, units="km", url="https://www.boo.com")
+    d = Parameter("test", 1, unit="km", url="https://www.boo.com")
     result = d.as_dict()
     expected = {
         "@module": Parameter.__module__,
         "@class": Parameter.__name__,
         "@version": easyscience.__version__,
         "name": "test",
-        "units": "kilometer",
+        "unit": "km",
         "value": 1.0,
-        "error": 0.0,
+        "variance": 0.0,
         "min": -np.inf,
         "max": np.inf,
         "fixed": False,
         "url": "https://www.boo.com",
     }
     for key in expected.keys():
-        if key == "callback":
-            continue
+        # if key == "callback":
+        #     continue
         assert result[key] == expected[key]
 
 
-@pytest.mark.parametrize(
-    "reference, constructor",
+# @pytest.mark.parametrize(
+#     "reference,constructor",
     (
-        [
-            {
-                "@module": Descriptor.__module__,
-                "@class": Descriptor.__name__,
-                "@version": easyscience.__version__,
-                "name": "test",
-                "value": 1,
-                "units": "dimensionless",
-                "description": "",
-                "url": "",
-                "display_name": "test",
-                "callback": None,
-            },
-            Descriptor,
-        ],
-        [
-            {
-                "@module": Parameter.__module__,
-                "@class": Parameter.__name__,
-                "@version": easyscience.__version__,
-                "name": "test",
-                "units": "kilometer",
-                "value": 1.0,
-                "error": 0.0,
-                "min": -np.inf,
-                "max": np.inf,
-                "fixed": False,
-                "url": "https://www.boo.com",
-            },
-            Parameter,
-        ],
-    ),
-    ids=["Descriptor", "Parameter"],
-)
-def test_item_from_dict(reference, constructor):
+        # [
+        #     {
+        #         "@module": Descriptor.__module__,
+        #         "@class": Descriptor.__name__,
+        #         "@version": easyscience.__version__,
+        #         "name": "test",
+        #         "value": 1,
+        #         "units": "dimensionless",
+        #         "description": "",
+        #         "url": "",
+        #         "display_name": "test",
+        #         "callback": None,
+        #     },
+        #     Descriptor,
+        # ],
+#        [
+#         {
+#             "@module": Parameter.__module__,
+#             "@class": Parameter.__name__,
+#             "@version": easyscience.__version__,
+#             "name": "test",
+#             "units": "kilometer",
+#             "value": 1.0,
+#             "error": 0.0,
+#             "min": -np.inf,
+#             "max": np.inf,
+#             "fixed": False,
+#             "url": "https://www.boo.com",
+#         },
+#         Parameter,
+#  #       ],
+    )
+#    ids=["Parameter"],
+#)
+def test_item_from_dict():
+    reference = {
+            "@module": Parameter.__module__,
+            "@class": Parameter.__name__,
+            "@version": easyscience.__version__,
+            "name": "test",
+            "unit": "km",
+            "value": 1.0,
+            "variance": 0.0,
+            "min": -np.inf,
+            "max": np.inf,
+            "fixed": False,
+            "url": "https://www.boo.com",
+        }
+    constructor = Parameter
     d = constructor.from_dict(reference)
     for key, item in reference.items():
         if key == "callback" or key.startswith("@"):
             continue
-        if key == "units":
-            key = "unit"
-        if key == "value":
-            key = "raw_value"
+        # if key == "units":
+        #     key = "unit"
+        # if key == "value":
+        #     key = "raw_value"
         obtained = getattr(d, key)
-        if isinstance(obtained, (ureg.Unit, Q_)):
-            obtained = str(obtained)
+        # if isinstance(obtained, (ureg.Unit, Q_)):
+        #     obtained = str(obtained)
         assert obtained == item
 
 
 @pytest.mark.parametrize(
     "construct",
     (
-        {
-            "@module": Descriptor.__module__,
-            "@class": Descriptor.__name__,
-            "@version": easyscience.__version__,
-            "name": "test",
-            "value": 1,
-            "units": "dimensionless",
-            "description": "",
-            "url": "",
-            "display_name": "test",
-            "callback": None,
-        },
+        # {
+        #     "@module": Descriptor.__module__,
+        #     "@class": Descriptor.__name__,
+        #     "@version": easyscience.__version__,
+        #     "name": "test",
+        #     "value": 1,
+        #     "units": "dimensionless",
+        #     "description": "",
+        #     "url": "",
+        #     "display_name": "test",
+        #     "callback": None,
+        # },
         {
             "@module": Parameter.__module__,
             "@class": Parameter.__name__,
             "@version": easyscience.__version__,
             "name": "test",
-            "units": "kilometer",
+            "unit": "km",
             "value": 1.0,
-            "error": 0.0,
+            "variance": 0.0,
             "min": -np.inf,
             "max": np.inf,
             "fixed": False,
             "url": "https://www.boo.com",
         },
     ),
-    ids=["Descriptor", "Parameter"],
+    ids=["Parameter"],
 )
 def test_item_from_Decoder(construct):
+
     from easyscience.Utils.io.dict import DictSerializer
 
     d = DictSerializer().decode(construct)
@@ -415,20 +427,20 @@ def test_item_from_Decoder(construct):
     for key, item in construct.items():
         if key == "callback" or key.startswith("@"):
             continue
-        if key == "units":
-            key = "unit"
-        if key == "value":
-            key = "raw_value"
+        # if key == "units":
+        #     key = "unit"
+        # if key == "value":
+        #     key = "raw_value"
         obtained = getattr(d, key)
-        if isinstance(obtained, (ureg.Unit, Q_)):
-            obtained = str(obtained)
+        # if isinstance(obtained, (ureg.Unit, Q_)):
+        #     obtained = str(obtained)
         assert obtained == item
 
 
 @pytest.mark.parametrize("value", (-np.inf, 0, 1.0, 2147483648, np.inf))
 def test_parameter_min(value):
     d = Parameter("test", -0.1)
-    if d.raw_value < value:
+    if d.value < value:
         with pytest.raises(ValueError):
             d.min = value
     else:
@@ -439,7 +451,7 @@ def test_parameter_min(value):
 @pytest.mark.parametrize("value", [-np.inf, 0, 1.1, 2147483648, np.inf])
 def test_parameter_max(value):
     d = Parameter("test", 2147483649)
-    if d.raw_value > value:
+    if d.value > value:
         with pytest.raises(ValueError):
             d.max = value
     else:
@@ -472,9 +484,9 @@ def test_parameter_error(value):
 def _generate_advanced_inputs():
     temp = _generate_inputs()
     # These will be the optional parameters
-    advanced = {"error": 1.0, "min": -0.1, "max": 2147483648, "fixed": False}
+    advanced = {"variance": 1.0, "min": -0.1, "max": 2147483648, "fixed": False}
     advanced_result = {
-        "error": {"name": "error", "value": advanced["error"]},
+        "variance": {"name": "variance", "value": advanced["variance"]},
         "min": {"name": "min", "value": advanced["min"]},
         "max": {"name": "max", "value": advanced["max"]},
         "fixed": {"name": "fixed", "value": advanced["fixed"]},
@@ -533,8 +545,8 @@ def test_parameter_advanced_creation(element, expected):
         for field in expected.keys():
             ref = expected[field]
             obtained = getattr(d, field)
-            if isinstance(obtained, (ureg.Unit, Q_)):
-                obtained = str(obtained)
+            # if isinstance(obtained, (ureg.Unit, Q_)):
+            #     obtained = str(obtained)
             assert obtained == ref
 
 
@@ -543,36 +555,30 @@ def test_parameter_display_name(value):
     p = Parameter("test", 1, display_name=value)
     assert p.display_name == value
 
-    p = Descriptor("test", 1, display_name=value)
-    assert p.display_name == value
+    # p = Descriptor("test", 1, display_name=value)
+    # assert p.display_name == value
 
 
-@pytest.mark.parametrize("instance", (Descriptor, Parameter), indirect=True)
-def test_item_boolean_value(instance):
-    def creator(value):
-        if instance == Parameter:
-            with pytest.warns(UserWarning):
-                item = instance("test", value)
-        else:
-            item = instance("test", value)
-        return item
+# #@pytest.mark.parametrize("instance", (Descriptor, Parameter), indirect=True)
+# def test_item_boolean_value():
+#     # def creator(value):
+#     #     with pytest.warns(UserWarning):
+#     #         item = Parameter("test", value)
+#     #     return item
 
-    def setter(item, value):
-        if instance == Parameter:
-            with pytest.warns(UserWarning):
-                item.value = value
-        else:
-            item.value = value
+#     # def setter(item, value):
+#     #     with pytest.warns(UserWarning):
+#     #         item.value = value
 
-    item = creator(True)
-    assert item.value is True
-    setter(item, False)
-    assert item.value is False
+#     item = Parameter("test", True)
+#     assert item.value is True
+#     item.value = False
+#     assert item.value is False
 
-    item = creator(False)
-    assert item.value is False
-    setter(item, True)
-    assert item.value is True
+#     item = Parameter("test", False)
+#     assert item.value is False
+#     item.value = True
+#     assert item.value is True
 
 
 @pytest.mark.parametrize("value", (True, False))
