@@ -4,12 +4,10 @@
 
 from __future__ import annotations
 
-__author__ = 'github.com/wardsimon'
-__version__ = '0.1.0'
-
 import copy
 import numbers
-import weakref
+
+# import weakref
 from types import MappingProxyType
 from typing import Any
 from typing import Optional
@@ -29,9 +27,7 @@ from .descriptor_number import DescriptorNumber
 
 class Parameter(DescriptorNumber):
     """
-    This class is an extension of a ``EasyScience.Object.Base.Descriptor``. Where the descriptor was for static objects,
-    a `Parameter` is for dynamic objects. A parameter has the ability to be used in fitting and
-    has additional fields to facilitate this.
+    A Parameter is a DescriptorNumber which can be used in fitting. It has additional fields to facilitate this.
     """
 
     def __init__(
@@ -46,30 +42,27 @@ class Parameter(DescriptorNumber):
         description: Optional[str] = None,
         url: Optional[str] = None,
         display_name: Optional[str] = None,
-        callback: Optional[property] = None,
+        #        callback: Optional[property] = None,
         enabled: Optional[bool] = True,
         parent: Optional[Any] = None,
     ):
         """
-        This class is an extension of a ``EasyScience.Object.Base.Descriptor``. Where the descriptor was for static
+        This class is an extension of a `DescriptorNumber`. Where the descriptor was for static
         objects, a `Parameter` is for dynamic objects. A parameter has the ability to be used in fitting and has
         additional fields to facilitate this.
 
-        :param name: Name of this obj
+        :param name: Name of this object
         :param value: Value of this object
-        :param error: Error associated as sigma for this parameter
-        :param min: Minimum value for fitting
-        :param max: Maximum value for fitting
-        :param fixed: Should this parameter vary when fitting?
-        :param kwargs: Key word arguments for the `Descriptor` class.
-
-        .. code-block:: python
-
-             from easyscience.Objects.Base import Parameter
-             # Describe a phase
-             phase_basic = Parameter('phase', 3)
-             # Describe a phase with a unit
-             phase_unit = Parameter('phase', 3, units,='rad/s')
+        :param unit: This object can have a physical unit associated with it
+        :param variance: The variance of the value
+        :param min: The minimum value for fitting
+        :param max: The maximum value for fitting
+        :param fixed: Can the parameter vary while fitting?
+        :param description: A brief summary of what this object is
+        :param url: Lookup url for documentation/information
+        :param display_name: The name of the object as it should be displayed
+        :param enabled: Can the objects value be set
+        :param parent: The object which is the parent to this one
 
         .. note::
             Undo/Redo functionality is implemented for the attributes `value`, `error`, `min`, `max`, `fixed`
@@ -91,11 +84,11 @@ class Parameter(DescriptorNumber):
             parent=parent,
         )
 
-        if callback is None:
-            callback = property()
-        self._callback = callback
-        if self._callback.fdel is not None:
-            weakref.finalize(self, self._callback.fdel)
+        # if callback is None:
+        #     callback = property()
+        # self._callback = callback
+        # if self._callback.fdel is not None:
+        #     weakref.finalize(self, self._callback.fdel)
 
         # Create additional fitting elements
         self._min = sc.scalar(float(min), unit=unit)
@@ -122,10 +115,10 @@ class Parameter(DescriptorNumber):
         :return: Value of self with unit and variance.
         """
         # Also should reference for undo/redo
-        if self._callback.fget is not None:
-            scalar = self._callback.fget()
-            if scalar != self._scalar:
-                self._scalar: sc.scalar = scalar
+        # if self._callback.fget is not None:
+        #     scalar = self._callback.fget()
+        #     if scalar != self._scalar:
+        #         self._scalar: sc.scalar = scalar
         return self._scalar
 
     @full_value.setter
@@ -141,8 +134,8 @@ class Parameter(DescriptorNumber):
                 raise CoreSetException(f'{str(self)} is not enabled.')
             return
         self._scalar = scalar
-        if self._callback.fset is not None:
-            self._callback.fset(scalar)
+        # if self._callback.fset is not None:
+        #     self._callback.fset(scalar)
 
     @property
     def value(self) -> numbers.Number:
@@ -152,10 +145,10 @@ class Parameter(DescriptorNumber):
         :return: Value of self without unit.
         """
         # Also should reference for undo/redo
-        if self._callback.fget is not None:
-            scalar = self._callback.fget()
-            if scalar.value != self._scalar.value:
-                self._scalar.value = scalar.value
+        # if self._callback.fget is not None:
+        #     scalar = self._callback.fget()
+        #     if scalar.value != self._scalar.value:
+        #         self._scalar.value = scalar.value
         return self._scalar.value
 
     @value.setter
@@ -189,8 +182,8 @@ class Parameter(DescriptorNumber):
         value = self._constraint_runner(self._constraints['virtual'], value)
 
         self._scalar.value = value
-        if self._callback.fset is not None:
-            self._callback.fset(self._scalar)
+        # if self._callback.fset is not None:
+        #     self._callback.fset(self._scalar)
 
     def convert_unit(self, unit_str: str) -> None:
         """
@@ -339,7 +332,6 @@ class Parameter(DescriptorNumber):
 
     @property
     def builtin_constraints(self):
-        #    def builtin_constraints(self) -> MappingProxyType[str, C]:
         """
         Get the built in constrains of the object. Typically these are the min/max
 
@@ -360,48 +352,9 @@ class Parameter(DescriptorNumber):
     def user_constraints(self, constraints_dict) -> None:
         self._constraints['user'] = constraints_dict
 
-    # def _quick_set(
-    #     self,
-    #     set_value: float,
-    #     run_builtin_constraints: bool = False,
-    #     run_user_constraints: bool = False,
-    #     run_virtual_constraints: bool = False,
-    # ) -> None:
-    #     """
-    #     This is a quick setter for the parameter. It bypasses all the checks and constraints,
-    #     just setting the value and issuing the interface callbacks.
-
-    #     WARNING: This is a dangerous function and should only be used when you know what you are doing.
-    #     """
-    #     # First run the built-in constraints. i.e. min/max
-    #     if run_builtin_constraints:
-    #         constraint_type: MappingProxyType = self.builtin_constraints
-    #         set_value = self._constraint_runner(constraint_type, set_value)
-    #     # Then run any user constraints.
-    #     if run_user_constraints:
-    #         constraint_type: dict = self.user_constraints
-    #         state = self._borg.stack.enabled
-    #         if state:
-    #             self._borg.stack.force_state(False)
-    #         try:
-    #             set_value = self._constraint_runner(constraint_type, set_value)
-    #         finally:
-    #             self._borg.stack.force_state(state)
-    #     if run_virtual_constraints:
-    #         # And finally update any virtual constraints
-    #         constraint_type: dict = self._constraints['virtual']
-    #         _ = self._constraint_runner(constraint_type, set_value)
-
-    #     # Finally set the value
-    #     self._property_value._magnitude._nominal_value = set_value
-    #     self._args['value'] = set_value
-    #     if self._callback.fset is not None:
-    #         self._callback.fset(set_value)
-
     def _constraint_runner(
         self,
         this_constraint_type,
-        #        this_constraint_type: Union[dict, MappingProxyType[str, C]],
         value: numbers.Number,
     ) -> float:
         for constraint in this_constraint_type.values():
@@ -436,11 +389,11 @@ class Parameter(DescriptorNumber):
         """
         self._enabled = value
 
-    # Just to get return type right
-    def __copy__(self) -> Parameter:
-        new_obj = super().__copy__()
-        new_obj._callback = self._callback
-        return new_obj
+    #     # Just to get return type right
+    #     def __copy__(self) -> Parameter:
+    #         new_obj = super().__copy__()
+    # #        new_obj._callback = self._callback
+    #         return new_obj
 
     def __repr__(self) -> str:
         """

@@ -35,33 +35,19 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
         parent: Optional[Any] = None,
     ):
         """
-        This is the base of all variable descriptions for models. It contains all information to describe a single
-        unique property of an object. This description includes a name and value as well as optionally a unit,
-        description and url (for reference material). Also implemented is a callback so that the value can be read/set
-        from a linked library object.
+        This is the base of variables for models. It contains all information to describe a single
+        unique property of an object. This description includes a name, description and url (for reference material).
 
         A `Descriptor` is typically something which describes part of a model and is non-fittable and generally changes
         the state of an object.
 
-        Units are provided by pint: https://github.com/hgrecco/pint
-
         :param name: Name of this object
-        :param value: Value of this object
-        :param units: This object can have a physical unit associated with it
         :param description: A brief summary of what this object is
         :param url: Lookup url for documentation/information
-        :param callback: The property which says how the object is linked to another one
-        :param parent: The object which is the parent to this one
+        :param display_name: A pretty name for the object
+        :param parent: The object which this descriptor is attached to
 
-        .. code-block:: python
-
-             from easyscience.Objects.Base import Descriptor
-             # Describe a color by text
-             color_text = Descriptor('fav_colour', 'red')
-             # Describe a color by RGB
-             color_num = Descriptor('fav_colour', [1, 0, 0])
-
-        .. note:: Undo/Redo functionality is implemented for the attributes `value`, `unit` and `display name`.
+        .. note:: Undo/Redo functionality is implemented for the attributes `name` and `display name`.
         """
         self._name: str = name
         self._display_name: str = display_name

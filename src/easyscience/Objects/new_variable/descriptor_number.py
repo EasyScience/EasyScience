@@ -14,6 +14,10 @@ from .descriptor_base import DescriptorBase
 
 
 class DescriptorNumber(DescriptorBase):
+    """
+    A `Descriptor` for Number values with units.  The internal representation is a scipp scalar.
+    """
+
     def __init__(
         self,
         name: str,
@@ -25,6 +29,19 @@ class DescriptorNumber(DescriptorBase):
         display_name: Optional[str] = None,
         parent: Optional[Any] = None,
     ):
+        """Constructor for the DescriptorNumber class
+
+        param name: Name of the descriptor
+        param value: Value of the descriptor
+        param unit: Unit of the descriptor
+        param variance: Variance of the descriptor
+        param description: Description of the descriptor
+        param url: URL of the descriptor
+        param display_name: Display name of the descriptor
+        param parent: Parent of the descriptor
+
+        .. note:: Undo/Redo functionality is implemented for the attributes `full_value`, `unit`, `variance` and `value`.
+        """
         if not isinstance(value, numbers.Number) or isinstance(value, bool):
             raise ValueError(f'{value=} must be type numeric')
         if variance is not None and variance < 0:

@@ -9,6 +9,10 @@ from .descriptor_base import DescriptorBase
 
 
 class DescriptorStr(DescriptorBase):
+    """
+    A `Descriptor` for string values.
+    """
+
     def __init__(
         self,
         name: str,

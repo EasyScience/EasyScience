@@ -9,6 +9,9 @@ from .descriptor_base import DescriptorBase
 
 
 class DescriptorBool(DescriptorBase):
+    """
+    A `Descriptor` for boolean values.
+    """
     def __init__(
         self,
         name: str,
