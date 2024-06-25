@@ -100,6 +100,7 @@ def test_Parameter_value_get(element, expected):
     d = Parameter("test", 1, unit=element)
     assert d.full_value == expected
 
+
 @pytest.mark.parametrize("debug", (True, False))
 @pytest.mark.parametrize("enabled", (None, True, False))
 def test_item_value_set(enabled, debug):

@@ -17,7 +17,6 @@ from easyscience.Objects.new_variable import DescriptorNumber
 from easyscience.Objects.new_variable import DescriptorStr
 
 
-
 @pytest.fixture
 def instance(request):
     def class_creation(*args, **kwargs):
@@ -211,9 +210,6 @@ def test_item_from_dict(reference, constructor):
 
 @pytest.mark.parametrize("value", ("This is ", "a fun ", "test"))
 def test_parameter_display_name(value):
-    # p = Parameter("test", 1, display_name=value)
-    # assert p.display_name == value
-
     p = DescriptorNumber("test", 1, display_name=value)
     assert p.display_name == value
 
