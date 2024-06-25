@@ -12,7 +12,8 @@ import pytest
 
 from easyscience.fitting.Constraints import NumericConstraint
 from easyscience.fitting.Constraints import ObjConstraint
-from easyscience.Objects.Variable import Parameter
+#from easyscience.Objects.Variable import Parameter
+from easyscience.Objects.new_variable.parameter import Parameter
 
 
 @pytest.fixture
@@ -35,12 +36,12 @@ def test_NumericConstraints_Equals(twoPars):
     # Should skip
     c = NumericConstraint(twoPars[0][0], "==", value)
     c()
-    assert twoPars[0][0].raw_value == twoPars[1][0]
+    assert twoPars[0][0].value == twoPars[1][0]
 
     # Should update to new value
     c = NumericConstraint(twoPars[0][1], "==", value)
     c()
-    assert twoPars[0][1].raw_value == value
+    assert twoPars[0][1].value == value
 
 
 def test_NumericConstraints_Greater(twoPars):
@@ -49,12 +50,12 @@ def test_NumericConstraints_Greater(twoPars):
     # Should update to new value
     c = NumericConstraint(twoPars[0][0], ">", value)
     c()
-    assert twoPars[0][0].raw_value == value
+    assert twoPars[0][0].value == value
 
     # Should skip
     c = NumericConstraint(twoPars[0][1], ">", value)
     c()
-    assert twoPars[0][1].raw_value == twoPars[1][1]
+    assert twoPars[0][1].value == twoPars[1][1]
 
 
 def test_NumericConstraints_Less(twoPars):
@@ -63,12 +64,12 @@ def test_NumericConstraints_Less(twoPars):
     # Should skip
     c = NumericConstraint(twoPars[0][0], "<", value)
     c()
-    assert twoPars[0][0].raw_value == twoPars[1][0]
+    assert twoPars[0][0].value == twoPars[1][0]
 
     # Should update to new value
     c = NumericConstraint(twoPars[0][1], "<", value)
     c()
-    assert twoPars[0][1].raw_value == value
+    assert twoPars[0][1].value == value
 
 
 @pytest.mark.parametrize("multiplication_factor", [None, 1, 2, 3, 4.5])
@@ -80,7 +81,7 @@ def test_ObjConstraintMultiply(twoPars, multiplication_factor):
         operator_str = f"{multiplication_factor}*"
     c = ObjConstraint(twoPars[0][0], operator_str, twoPars[0][1])
     c()
-    assert twoPars[0][0].raw_value == multiplication_factor * twoPars[1][1]
+    assert twoPars[0][0].value == multiplication_factor * twoPars[1][1]
 
 
 @pytest.mark.parametrize("division_factor", [1, 2, 3, 4.5])
@@ -88,7 +89,7 @@ def test_ObjConstraintDivide(twoPars, division_factor):
     operator_str = f"{division_factor}/"
     c = ObjConstraint(twoPars[0][0], operator_str, twoPars[0][1])
     c()
-    assert twoPars[0][0].raw_value == division_factor / twoPars[1][1]
+    assert twoPars[0][0].value == division_factor / twoPars[1][1]
 
 
 def test_ObjConstraint_Multiple(threePars):
@@ -103,9 +104,9 @@ def test_ObjConstraint_Multiple(threePars):
     p0.user_constraints["num_2"] = ObjConstraint(p2, "", p0)
 
     p0.value = value
-    assert p0.raw_value == value
-    assert p1.raw_value == value
-    assert p2.raw_value == value
+    assert p0.value == value
+    assert p1.value == value
+    assert p2.value == value
 
 
 def test_ConstraintEnable_Disable(twoPars):

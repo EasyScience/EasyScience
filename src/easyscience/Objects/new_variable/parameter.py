@@ -34,6 +34,7 @@ from typing import Union
 
 import numpy as np
 import scipp as sc
+
 from easyscience import borg
 
 # from easyscience import pint
@@ -300,6 +301,28 @@ class Parameter(DescriptorNumber):
             if borg.debug:
                 raise CoreSetException(f'{str(self)} is not enabled.')
             return
+
+        self._scalar.value = value
+        if 1:
+            # First run the built in constraints. i.e. min/max
+            #        constraint_type = self.builtin_constraints
+            #        constraint_type: MappingProxyType[str, C] = self.builtin_constraints
+            value = self._constraint_runner(self.builtin_constraints, value)
+            # Then run any user constraints.
+            #        constraint_type: dict = self.user_constraints
+
+            stack_state = self._borg.stack.enabled
+            if stack_state:
+                self._borg.stack.force_state(False)
+            try:
+                value = self._constraint_runner(self.user_constraints, value)
+            finally:
+                self._borg.stack.force_state(stack_state)
+
+            # And finally update any virtual constraints
+            #        constraint_type: dict = self._constraints['virtual']
+            value = self._constraint_runner(self._constraints['virtual'], value)
+
         self._scalar.value = value
         if self._callback.fset is not None:
             self._callback.fset(self._scalar)
@@ -515,7 +538,7 @@ class Parameter(DescriptorNumber):
         # First run the built-in constraints. i.e. min/max
         if run_builtin_constraints:
             constraint_type: MappingProxyType = self.builtin_constraints
-            set_value = self.__constraint_runner(constraint_type, set_value)
+            set_value = self._constraint_runner(constraint_type, set_value)
         # Then run any user constraints.
         if run_user_constraints:
             constraint_type: dict = self.user_constraints
@@ -523,13 +546,13 @@ class Parameter(DescriptorNumber):
             if state:
                 self._borg.stack.force_state(False)
             try:
-                set_value = self.__constraint_runner(constraint_type, set_value)
+                set_value = self._constraint_runner(constraint_type, set_value)
             finally:
                 self._borg.stack.force_state(state)
         if run_virtual_constraints:
             # And finally update any virtual constraints
             constraint_type: dict = self._constraints['virtual']
-            _ = self.__constraint_runner(constraint_type, set_value)
+            _ = self._constraint_runner(constraint_type, set_value)
 
         # Finally set the value
         self._property_value._magnitude._nominal_value = set_value
@@ -537,28 +560,29 @@ class Parameter(DescriptorNumber):
         if self._callback.fset is not None:
             self._callback.fset(set_value)
 
-    def __constraint_runner(
+    def _constraint_runner(
         self,
         this_constraint_type,
         #        this_constraint_type: Union[dict, MappingProxyType[str, C]],
-        new_value: numbers.Number,
+        value: numbers.Number,
     ) -> float:
         for constraint in this_constraint_type.values():
             if constraint.external:
                 constraint()
                 continue
-            constained_new_value = constraint(no_set=True)
-            if constained_new_value != new_value:
+
+            constained_value = constraint(no_set=True)
+            if constained_value != value:
                 if borg.debug:
                     print(f'Constraint `{constraint}` has been applied')
-                self._scalar.value = constained_new_value
+                self._scalar.value = constained_value
                 # self._value = self.__class__._constructor(
                 #     value=this_new_value,
                 #     units=self._args['units'],
                 #     error=self._args['error'],
                 # )
-            new_value = constained_new_value
-        return new_value
+            value = constained_value
+        return value
 
     @property
     def enabled(self) -> bool:

@@ -202,7 +202,12 @@ class NumericConstraint(ConstraintBase):
         super(NumericConstraint, self).__init__(dependent_obj, operator=operator, value=value)
 
     def _parse_operator(self, obj: V, *args, **kwargs) -> Number:
-        value = obj.raw_value
+        import easyscience.Objects.new_variable.parameter
+
+        if isinstance(obj, easyscience.Objects.new_variable.parameter.Parameter):
+            value = obj.value
+        else:
+            value = obj.raw_value
         if isinstance(value, list):
             value = np.array(value)
         self.aeval.symtable['value1'] = value
@@ -258,7 +263,12 @@ class SelfConstraint(ConstraintBase):
         super(SelfConstraint, self).__init__(dependent_obj, operator=operator, value=value)
 
     def _parse_operator(self, obj: V, *args, **kwargs) -> Number:
-        value = obj.raw_value
+        import easyscience.Objects.new_variable.parameter
+
+        if isinstance(obj, easyscience.Objects.new_variable.parameter.Parameter):
+            value = obj.value
+        else:
+            value = obj.raw_value
         self.aeval.symtable['value1'] = value
         self.aeval.symtable['value2'] = getattr(obj, self.value)
         try:
@@ -314,7 +324,12 @@ class ObjConstraint(ConstraintBase):
         self.external = True
 
     def _parse_operator(self, obj: V, *args, **kwargs) -> Number:
-        value = obj.raw_value
+        import easyscience.Objects.new_variable.parameter
+
+        if isinstance(obj, easyscience.Objects.new_variable.parameter.Parameter):
+            value = obj.value
+        else:
+            value = obj.raw_value
         self.aeval.symtable['value1'] = value
         try:
             self.aeval.eval(f'value2 = {self.operator} value1')
@@ -401,10 +416,15 @@ class MultiObjConstraint(ConstraintBase):
         self.external = True
 
     def _parse_operator(self, independent_objs: List[V], *args, **kwargs) -> Number:
+        import easyscience.Objects.new_variable.parameter
+
         in_str = ''
         value = None
         for idx, obj in enumerate(independent_objs):
-            self.aeval.symtable['p' + str(self.independent_obj_ids[idx])] = obj.raw_value
+            if isinstance(obj, easyscience.Objects.new_variable.parameter.Parameter):
+                self.aeval.symtable['p' + str(self.independent_obj_ids[idx])] = obj.value
+            else:
+                self.aeval.symtable['p' + str(self.independent_obj_ids[idx])] = obj.raw_value
             in_str += ' p' + str(self.independent_obj_ids[idx])
             if idx < len(self.operator):
                 in_str += ' ' + self.operator[idx]
