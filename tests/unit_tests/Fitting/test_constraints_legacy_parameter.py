@@ -12,8 +12,7 @@ import pytest
 
 from easyscience.fitting.Constraints import NumericConstraint
 from easyscience.fitting.Constraints import ObjConstraint
-#from easyscience.Objects.Variable import Parameter
-from easyscience.Objects.new_variable.parameter import Parameter
+from easyscience.Objects.Variable import Parameter
 
 
 @pytest.fixture
