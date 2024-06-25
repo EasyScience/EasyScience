@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import numbers
-
-# from copy import deepcopy
 from typing import Any
 from typing import Dict
 from typing import Optional
@@ -10,10 +8,6 @@ from typing import Union
 
 import scipp as sc
 
-# from easyscience import borg
-# from easyscience import pint
-# from easyscience import ureg
-# from easyscience.Utils.Exceptions import CoreSetException
 from easyscience.Utils.UndoRedo import property_stack_deco
 
 from .descriptor_base import DescriptorBase
@@ -29,8 +23,6 @@ class DescriptorNumber(DescriptorBase):
         description: Optional[str] = None,
         url: Optional[str] = None,
         display_name: Optional[str] = None,
-        #        callback: Optional[property] = None,
-        #        enabled: Optional[bool] = True,
         parent: Optional[Any] = None,
     ):
         if not isinstance(value, numbers.Number) or isinstance(value, bool):
@@ -42,8 +34,6 @@ class DescriptorNumber(DescriptorBase):
             description=description,
             url=url,
             display_name=display_name,
-            #            callback=callback,
-            #            enabled=enabled,
             parent=parent,
         )
         self._scalar = sc.scalar(float(value), unit=unit, variance=variance)
@@ -51,63 +41,39 @@ class DescriptorNumber(DescriptorBase):
     @property
     def full_value(self) -> sc.scalar:
         """
-        Get the value of self as a pint. This is should be usable for most cases. If a pint
-        is not acceptable then the raw value can be obtained through `obj.raw_value`.
+        Get the value of self as a scipp scalar. This is should be usable for most cases.
 
         :return: Value of self with unit.
         """
-        # Cached property? Should reference callback.
-        # Also should reference for undo/redo
-        # if self._callback.fget is not None:
-        #     value = self._callback.fget()
-        #     if value != self._value:
-        #         self._value = value
         return self._scalar
 
     @full_value.setter
     @property_stack_deco
     def full_value(self, full_value: sc.scalar) -> None:
         """
-        Set the value of self. This creates a pint with a unit.
+        Set the full value of self. This creates a scipp scalar with a unit.
 
         :param value: New value of self
         """
-        # if not self.enabled:
-        #     if borg.debug:
-        #         raise CoreSetException(f'{str(self)} is not enabled.')
-        #     return
         self._scalar = full_value
-        # if self._callback.fset is not None:
-        #     self._callback.fset(value)
 
     @property
     def value(self) -> numbers.Number:
         """
-        Get the value of self as a pint. This is should be usable for most cases. If a pint
-        is not acceptable then the raw value can be obtained through `obj.raw_value`.
+        Get the value. This should be usable for most cases. The full value can be obtained from `obj.full_value`.
 
         :return: Value of self with unit.
         """
-        # Cached property? Should reference callback.
-        # Also should reference for undo/redo
-        # if self._callback.fget is not None:
-        #     value = self._callback.fget()
-        #     if value != self._value:
-        #         self._value = value
         return self._scalar.value
 
     @value.setter
     @property_stack_deco
     def value(self, value: numbers.Number) -> None:
         """
-        Set the value of self. This creates a pint with a unit.
+        Set the value of self. This should be usable for most cases. The full value can be obtained from `obj.full_value`.
 
         :param value: New value of self
         """
-        # if not self.enabled:
-        #     if borg.debug:
-        #         raise CoreSetException(f'{str(self)} is not enabled.')
-        #     return
         self._scalar.value = value
 
     @property
@@ -123,7 +89,7 @@ class DescriptorNumber(DescriptorBase):
     @property_stack_deco
     def unit(self, unit_str: str) -> None:
         """
-        Set the unit to a new one.  Value remains the same.
+        Set the unit to a new one.  Value remains unchanged.
 
         :param unit_str: String representation of the unit required. i.e `m/s`
         """
@@ -131,15 +97,12 @@ class DescriptorNumber(DescriptorBase):
 
     def convert_unit(self, unit_str: str):
         """
-        Convert the value from one unit system to another. You will should use
-        `compatible_units` to see if your new unit is compatible.
+        Convert the value from one unit system to another.
 
         :param unit_str: New unit in string form
         """
         new_unit = sc.Unit(unit_str)
-        self._scalar = self._scalar.to(unit=new_unit)
-
-    #        self._value.unit = new_unit
+        self._scalar: sc.scalar = self._scalar.to(unit=new_unit)
 
     @property
     def variance(self) -> float:
@@ -159,16 +122,6 @@ class DescriptorNumber(DescriptorBase):
         :param variance_float: Variance as a float
         """
         self._scalar.variance = variance_float
-
-    # # @cached_property
-    # @property
-    # def compatible_units(self) -> List[str]:
-    #     """
-    #     Returns all possible units for which the current unit can be converted.
-
-    #     :return: Possible conversion units
-    #     """
-    #     return [str(u) for u in self._scalar.unit.compatible_units()]
 
     @property
     def value(self) -> numbers.Number:
