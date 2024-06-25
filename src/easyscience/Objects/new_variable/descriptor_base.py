@@ -113,10 +113,9 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def __repr__(self) -> str:
-        """Return printable representation of a Descriptor/Parameter object."""
+        """Return printable representation of the object."""
 
     def __copy__(self) -> DescriptorBase:
-        """Return a copy of the Descriptor/Parameter object."""
+        """Return a copy of the object."""
         new_obj = self.__class__.from_dict(self.as_dict())
-        #        new_obj._callback = self._callback
         return new_obj

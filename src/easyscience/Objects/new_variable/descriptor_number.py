@@ -91,6 +91,8 @@ class DescriptorNumber(DescriptorBase):
 
         :param value: New value of self
         """
+        if not isinstance(value, numbers.Number) or isinstance(value, bool):
+            raise ValueError(f'{value=} must be type numbers.Number')
         self._scalar.value = value
 
     @property
@@ -112,15 +114,6 @@ class DescriptorNumber(DescriptorBase):
         """
         self._scalar.unit = sc.Unit(unit_str)
 
-    def convert_unit(self, unit_str: str):
-        """
-        Convert the value from one unit system to another.
-
-        :param unit_str: New unit in string form
-        """
-        new_unit = sc.Unit(unit_str)
-        self._scalar: sc.scalar = self._scalar.to(unit=new_unit)
-
     @property
     def variance(self) -> float:
         """
@@ -140,26 +133,14 @@ class DescriptorNumber(DescriptorBase):
         """
         self._scalar.variance = variance_float
 
-    @property
-    def value(self) -> numbers.Number:
+    def convert_unit(self, unit_str: str):
         """
-        Return the raw value of self without a unit.
+        Convert the value from one unit system to another.
 
-        :return: The raw value of self
+        :param unit_str: New unit in string form
         """
-        return self._scalar.value
-
-    @value.setter
-    @property_stack_deco
-    def value(self, value: numbers.Number) -> None:
-        """
-        Set the raw value.
-
-        :param value: value to set
-        """
-        if not isinstance(value, numbers.Number) or isinstance(value, bool):
-            raise ValueError(f'{value=} must be type numbers.Number')
-        self._scalar.value = value
+        new_unit = sc.Unit(unit_str)
+        self._scalar: sc.scalar = self._scalar.to(unit=new_unit)
 
     # Just to get return type right
     def __copy__(self) -> DescriptorNumber:
