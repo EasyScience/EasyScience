@@ -254,13 +254,14 @@ class TestParameter:
 
     def test_set_value(self, parameter: Parameter):
         # When
-#        self.mock_callback.fget.return_value = sc.scalar(2, unit='m')
+        self.mock_callback.fget.side_effect = [sc.scalar(1, unit='m'), sc.scalar(2, unit='m'), sc.scalar(2, unit='m')]
 
         # Then
         parameter.value = 2
 
         # Expect
-        parameter._callback.fset.assert_called_once_with(sc.scalar(2, unit='m')) 
+        parameter._callback.fset.assert_called_with(sc.scalar(2, unit='m'))
+        assert parameter._callback.fset.call_count == 2
         assert parameter._scalar == sc.scalar(2, unit='m')
 
     def test_full_value_match_callback(self, parameter: Parameter):
@@ -297,6 +298,7 @@ class TestParameter:
         # Expect
         assert type(parameter_copy) == Parameter
         assert id(parameter_copy._scalar) != id(parameter._scalar)
+        assert isinstance(parameter_copy._callback, property)
 
         assert parameter_copy._name == parameter._name
         assert parameter_copy._scalar == parameter._scalar
@@ -306,5 +308,4 @@ class TestParameter:
         assert parameter_copy._description == parameter._description
         assert parameter_copy._url == parameter._url
         assert parameter_copy._display_name == parameter._display_name
-        assert parameter_copy._callback == parameter._callback
         assert parameter_copy._enabled == parameter._enabled

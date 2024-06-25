@@ -6,8 +6,7 @@ from __future__ import annotations
 
 import copy
 import numbers
-
-# import weakref
+import weakref
 from types import MappingProxyType
 from typing import Any
 from typing import Optional
@@ -42,7 +41,7 @@ class Parameter(DescriptorNumber):
         description: Optional[str] = None,
         url: Optional[str] = None,
         display_name: Optional[str] = None,
-        #        callback: Optional[property] = None,
+        callback: property = property(),
         enabled: Optional[bool] = True,
         parent: Optional[Any] = None,
     ):
@@ -84,11 +83,9 @@ class Parameter(DescriptorNumber):
             parent=parent,
         )
 
-        # if callback is None:
-        #     callback = property()
-        # self._callback = callback
-        # if self._callback.fdel is not None:
-        #     weakref.finalize(self, self._callback.fdel)
+        self._callback = callback  # Callback is used by interface to link to model
+        if self._callback.fdel is not None:
+            weakref.finalize(self, self._callback.fdel)
 
         # Create additional fitting elements
         self._min = sc.scalar(float(min), unit=unit)
@@ -114,11 +111,10 @@ class Parameter(DescriptorNumber):
 
         :return: Value of self with unit and variance.
         """
-        # Also should reference for undo/redo
-        # if self._callback.fget is not None:
-        #     scalar = self._callback.fget()
-        #     if scalar != self._scalar:
-        #         self._scalar: sc.scalar = scalar
+        if self._callback.fget is not None:
+            scalar = self._callback.fget()
+            if scalar != self._scalar:
+                self._scalar: sc.scalar = scalar
         return self._scalar
 
     @full_value.setter
@@ -134,8 +130,8 @@ class Parameter(DescriptorNumber):
                 raise CoreSetException(f'{str(self)} is not enabled.')
             return
         self._scalar = scalar
-        # if self._callback.fset is not None:
-        #     self._callback.fset(scalar)
+        if self._callback.fset is not None:
+            self._callback.fset(scalar)
 
     @property
     def value(self) -> numbers.Number:
@@ -144,11 +140,10 @@ class Parameter(DescriptorNumber):
 
         :return: Value of self without unit.
         """
-        # Also should reference for undo/redo
-        # if self._callback.fget is not None:
-        #     scalar = self._callback.fget()
-        #     if scalar.value != self._scalar.value:
-        #         self._scalar.value = scalar.value
+        if self._callback.fget is not None:
+            scalar = self._callback.fget()
+            if scalar.value != self._scalar.value:
+                self._scalar.value = scalar.value
         return self._scalar.value
 
     @value.setter
@@ -164,7 +159,10 @@ class Parameter(DescriptorNumber):
                 raise CoreSetException(f'{str(self)} is not enabled.')
             return
 
+        # Need to set the value for constraints to be functional
         self._scalar.value = value
+        if self._callback.fset is not None:
+            self._callback.fset(self._scalar)
 
         # Deals with min/max
         value = self._constraint_runner(self.builtin_constraints, self._scalar.value)
@@ -182,8 +180,8 @@ class Parameter(DescriptorNumber):
         value = self._constraint_runner(self._constraints['virtual'], value)
 
         self._scalar.value = value
-        # if self._callback.fset is not None:
-        #     self._callback.fset(self._scalar)
+        if self._callback.fset is not None:
+            self._callback.fset(self._scalar)
 
     def convert_unit(self, unit_str: str) -> None:
         """
@@ -389,11 +387,10 @@ class Parameter(DescriptorNumber):
         """
         self._enabled = value
 
-    #     # Just to get return type right
-    #     def __copy__(self) -> Parameter:
-    #         new_obj = super().__copy__()
-    # #        new_obj._callback = self._callback
-    #         return new_obj
+    def __copy__(self) -> Parameter:
+        new_obj = super().__copy__()
+        new_obj._callback = property()
+        return new_obj
 
     def __repr__(self) -> str:
         """
