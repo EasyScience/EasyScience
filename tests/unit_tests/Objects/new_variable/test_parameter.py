@@ -254,7 +254,7 @@ class TestParameter:
 
     def test_set_value(self, parameter: Parameter):
         # When
-        self.mock_callback.fget.return_value = sc.scalar(1, unit='m')
+#        self.mock_callback.fget.return_value = sc.scalar(2, unit='m')
 
         # Then
         parameter.value = 2

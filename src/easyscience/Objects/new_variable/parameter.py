@@ -147,8 +147,8 @@ class Parameter(DescriptorNumber):
         self._constraints = {
             'user': {},
             'builtin': {
-                'min': SelfConstraint(self, '>=', '_min'),
-                'max': SelfConstraint(self, '<=', '_max'),
+                'min': SelfConstraint(self, '>=', 'min'),
+                'max': SelfConstraint(self, '<=', 'max'),
             },
             'virtual': {},
         }
@@ -307,7 +307,7 @@ class Parameter(DescriptorNumber):
             # First run the built in constraints. i.e. min/max
             #        constraint_type = self.builtin_constraints
             #        constraint_type: MappingProxyType[str, C] = self.builtin_constraints
-            value = self._constraint_runner(self.builtin_constraints, value)
+            value = self._constraint_runner(self.builtin_constraints, self._scalar.value)
             # Then run any user constraints.
             #        constraint_type: dict = self.user_constraints
 
@@ -581,7 +581,7 @@ class Parameter(DescriptorNumber):
                 #     units=self._args['units'],
                 #     error=self._args['error'],
                 # )
-            value = constained_value
+                value = constained_value
         return value
 
     @property
