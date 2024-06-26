@@ -7,8 +7,10 @@ from __future__ import annotations
 import copy
 import numbers
 import weakref
+from collections import namedtuple
 from types import MappingProxyType
 from typing import Any
+from typing import Dict
 from typing import Optional
 from typing import Tuple
 from typing import Union
@@ -17,11 +19,14 @@ import numpy as np
 import scipp as sc
 
 from easyscience import borg
+from easyscience.fitting.Constraints import ConstraintBase
 from easyscience.fitting.Constraints import SelfConstraint
 from easyscience.Utils.Exceptions import CoreSetException
 from easyscience.Utils.UndoRedo import property_stack_deco
 
 from .descriptor_number import DescriptorNumber
+
+Constraints = namedtuple('Constraints', ['user', 'builtin', 'virtual'])
 
 
 class Parameter(DescriptorNumber):
@@ -93,15 +98,12 @@ class Parameter(DescriptorNumber):
         self._fixed = fixed
         self._enabled = enabled
         self._initial_scalar = copy.deepcopy(self._scalar)
-        self._constraints = {
-            'user': {},
-            'builtin': {
-                # Last argument in constructor is the name of the property holding the value of the constraint
-                'min': SelfConstraint(self, '>=', 'min'),
-                'max': SelfConstraint(self, '<=', 'max'),
-            },
-            'virtual': {},
+        builtin_constraint = {
+            # Last argument in constructor is the name of the property holding the value of the constraint
+            'min': SelfConstraint(self, '>=', 'min'),
+            'max': SelfConstraint(self, '<=', 'max'),
         }
+        self._constraints = Constraints(builtin=builtin_constraint, user={}, virtual={})
 
     @property
     def full_value(self) -> sc.scalar:
@@ -177,7 +179,7 @@ class Parameter(DescriptorNumber):
         finally:
             self._borg.stack.force_state(stack_state)
 
-        value = self._constraint_runner(self._constraints['virtual'], value)
+        value = self._constraint_runner(self._constraints.virtual, value)
 
         self._scalar.value = value
         if self._callback.fset is not None:
@@ -329,26 +331,26 @@ class Parameter(DescriptorNumber):
             self.fixed = False
 
     @property
-    def builtin_constraints(self):
+    def builtin_constraints(self) -> Dict[str, SelfConstraint]:
         """
         Get the built in constrains of the object. Typically these are the min/max
 
         :return: Dictionary of constraints which are built into the system
         """
-        return MappingProxyType(self._constraints['builtin'])
+        return MappingProxyType(self._constraints.builtin)
 
     @property
-    def user_constraints(self):
+    def user_constraints(self) -> Dict[str, ConstraintBase]:
         """
         Get the user specified constrains of the object.
 
         :return: Dictionary of constraints which are user supplied
         """
-        return self._constraints['user']
+        return self._constraints.user
 
     @user_constraints.setter
-    def user_constraints(self, constraints_dict) -> None:
-        self._constraints['user'] = constraints_dict
+    def user_constraints(self, constraints_dict: Dict[str, ConstraintBase]) -> None:
+        self._constraints.user = constraints_dict
 
     def _constraint_runner(
         self,
