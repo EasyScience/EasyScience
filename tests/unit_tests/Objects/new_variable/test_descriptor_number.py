@@ -64,7 +64,7 @@ class TestDescriptorNumber:
  #       mock_callback = MagicMock()
 
         # Then Expect
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             DescriptorNumber(
                 name="name",
                 value=value,

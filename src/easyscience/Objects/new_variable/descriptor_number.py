@@ -146,7 +146,7 @@ class DescriptorNumber(DescriptorBase):
 
         :param variance_float: Variance as a float
         """
-        if variance_float is not isinstance(variance_float, numbers.Number):
+        if not isinstance(variance_float, numbers.Number):
             raise TypeError(f'{variance_float=} must be a number')
         if variance_float < 0:
             raise ValueError(f'{variance_float=} must be positive')
