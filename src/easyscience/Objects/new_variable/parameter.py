@@ -72,11 +72,16 @@ class Parameter(DescriptorNumber):
         .. note::
             Undo/Redo functionality is implemented for the attributes `value`, `error`, `min`, `max`, `fixed`
         """
-
+        if not isinstance(min, numbers.Number):
+            raise TypeError('`min` must be a number')
+        if not isinstance(max, numbers.Number):
+            raise TypeError('`max` must be a number')
         if value < min:
             raise ValueError(f'{value=} can not be less than {min=}')
         if value > max:
             raise ValueError(f'{value=} can not be greater than {max=}')
+        if not isinstance(fixed, bool):
+            raise TypeError('`fixed` must be either True or False')
 
         super().__init__(
             name=name,
@@ -132,6 +137,8 @@ class Parameter(DescriptorNumber):
             if borg.debug:
                 raise CoreSetException(f'{str(self)} is not enabled.')
             return
+        if not isinstance(scalar, Variable) and scalar.dims == ():
+            raise TypeError(f'{scalar=} must be a Scipp scalar')
         self._scalar = scalar
         if self._callback.fset is not None:
             self._callback.fset(scalar)
@@ -161,6 +168,9 @@ class Parameter(DescriptorNumber):
             if borg.debug:
                 raise CoreSetException(f'{str(self)} is not enabled.')
             return
+
+        if not isinstance(value, numbers.Number) or isinstance(value, bool):
+            raise TypeError(f'{value=} must be a number')
 
         # Need to set the value for constraints to be functional
         self._scalar.value = float(value)
@@ -217,6 +227,8 @@ class Parameter(DescriptorNumber):
         :param min_value: new minimum value
         :return: None
         """
+        if not isinstance(min_value, numbers.Number):
+            raise TypeError('`min` must be a number')
         if min_value <= self.value:
             self._min.value = min_value
         else:
@@ -241,6 +253,8 @@ class Parameter(DescriptorNumber):
         :param max_value: new maximum value
         :return: None
         """
+        if not isinstance(max_value, numbers.Number):
+            raise TypeError('`max` must be a number')
         if max_value >= self.value:
             self._max.value = max_value
         else:

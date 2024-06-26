@@ -58,7 +58,10 @@ class DescriptorNumber(DescriptorBase):
             display_name=display_name,
             parent=parent,
         )
-        self._scalar = sc.scalar(float(value), unit=unit, variance=variance)
+        try:
+            self._scalar = sc.scalar(float(value), unit=unit, variance=variance)
+        except Exception as message:
+            raise ValueError(message)
 
     @property
     def full_value(self) -> Variable:
@@ -121,7 +124,10 @@ class DescriptorNumber(DescriptorBase):
         """
         if not isinstance(unit_str, str):
             raise TypeError(f'{unit_str=} must be a string representing a valid scipp unit')
-        self._scalar.unit = sc.Unit(unit_str)
+        try:
+            self._scalar.unit = sc.Unit(unit_str)
+        except Exception as message:
+            raise ValueError(message)
 
     @property
     def variance(self) -> float:
@@ -134,7 +140,7 @@ class DescriptorNumber(DescriptorBase):
 
     @variance.setter
     @property_stack_deco
-    def variance(self, variance_float: str) -> None:
+    def variance(self, variance_float: float) -> None:
         """
         Set the variance.
 
@@ -152,7 +158,12 @@ class DescriptorNumber(DescriptorBase):
 
         :param unit_str: New unit in string form
         """
-        new_unit = sc.Unit(unit_str)
+        if not isinstance(unit_str, str):
+            raise TypeError(f'{unit_str=} must be a string representing a valid scipp unit')
+        try:
+            new_unit = sc.Unit(unit_str)
+        except Exception as message:
+            raise ValueError(message)
         self._scalar = self._scalar.to(unit=new_unit)
 
     # Just to get return type right
