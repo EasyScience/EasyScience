@@ -47,7 +47,7 @@ class DescriptorNumber(DescriptorBase):
             raise TypeError(f'{value=} must be a number')
         if variance is not None and not isinstance(variance, numbers.Number):
             raise TypeError(f'{variance=} must be a number')
-        if variance < 0:
+        if variance is not None and variance < 0:
             raise ValueError(f'{variance=} must be positive')
         if not isinstance(unit, sc.Unit) and not isinstance(unit, str) and unit != '':
             raise TypeError(f'{unit=} must be a scipp unit or a string representing a valid scipp unit')
