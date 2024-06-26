@@ -49,13 +49,21 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
 
         .. note:: Undo/Redo functionality is implemented for the attributes `name` and `display name`.
         """
+        if name is not isinstance(name, str):
+            raise TypeError("Name must be a string")
         self._name: str = name
+        if display_name is not None and not isinstance(display_name, str):
+            raise TypeError("Display name must be a string")
         self._display_name: str = display_name
 
+        if description is not None and not isinstance(description, str):
+            raise TypeError("Description must be a string")
         if description is None:
             description = ''
         self._description: str = description
 
+        if url is not None and not isinstance(url, str):
+            raise TypeError("url must be a string")
         if url is None:
             url = ''
         self._url: str = url
@@ -79,6 +87,8 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
 
         :param new_name: name of the object.
         """
+        if not isinstance(new_name, str):
+            raise TypeError("Name must be a string")
         self._name = new_name
 
     @property
@@ -101,6 +111,8 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
 
         :param name: Pretty display name of the object.
         """
+        if not isinstance(name, str):
+            raise TypeError("Display name must be a string")
         self._display_name = name
 
     @property

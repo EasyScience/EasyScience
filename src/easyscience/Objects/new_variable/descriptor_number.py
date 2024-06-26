@@ -44,9 +44,13 @@ class DescriptorNumber(DescriptorBase):
         .. note:: Undo/Redo functionality is implemented for the attributes `full_value`, `unit`, `variance` and `value`.
         """
         if not isinstance(value, numbers.Number) or isinstance(value, bool):
-            raise ValueError(f'{value=} must be type numeric')
-        if variance is not None and variance < 0:
+            raise TypeError(f'{value=} must be a number')
+        if variance is not None and not isinstance(variance, numbers.Number):
+            raise TypeError(f'{variance=} must be a number')
+        if variance < 0:
             raise ValueError(f'{variance=} must be positive')
+        if not isinstance(unit, sc.Unit) and not isinstance(unit, str) and unit != '':
+            raise TypeError(f'{unit=} must be a scipp unit or a string representing a valid scipp unit')
         super().__init__(
             name=name,
             description=description,
@@ -54,7 +58,10 @@ class DescriptorNumber(DescriptorBase):
             display_name=display_name,
             parent=parent,
         )
-        self._scalar = sc.scalar(float(value), unit=unit, variance=variance)
+        try:
+            self._scalar = sc.scalar(float(value), unit=unit, variance=variance)
+        except Exception as message:
+            raise ValueError(message)
 
     @property
     def full_value(self) -> Variable:
@@ -74,7 +81,7 @@ class DescriptorNumber(DescriptorBase):
         :param value: New value of self
         """
         if not isinstance(full_value, Variable) and full_value.dims == ():
-            raise ValueError(f'{full_value=} must be a Scipp scalar')
+            raise TypeError(f'{full_value=} must be a Scipp scalar')
         self._scalar = full_value
 
     @property
@@ -95,7 +102,7 @@ class DescriptorNumber(DescriptorBase):
         :param value: New value of self
         """
         if not isinstance(value, numbers.Number) or isinstance(value, bool):
-            raise ValueError(f'{value=} must be type numbers.Number')
+            raise TypeError(f'{value=} must be a number')
         self._scalar.value = value
 
     @property
@@ -115,7 +122,12 @@ class DescriptorNumber(DescriptorBase):
 
         :param unit_str: String representation of the unit required. i.e `m/s`
         """
-        self._scalar.unit = sc.Unit(unit_str)
+        if not isinstance(unit_str, str):
+            raise TypeError(f'{unit_str=} must be a string representing a valid scipp unit')
+        try:
+            self._scalar.unit = sc.Unit(unit_str)
+        except Exception as message:
+            raise ValueError(message)
 
     @property
     def variance(self) -> float:
@@ -128,12 +140,16 @@ class DescriptorNumber(DescriptorBase):
 
     @variance.setter
     @property_stack_deco
-    def variance(self, variance_float: str) -> None:
+    def variance(self, variance_float: float) -> None:
         """
         Set the variance.
 
         :param variance_float: Variance as a float
         """
+        if variance_float is not isinstance(variance_float, numbers.Number):
+            raise TypeError(f'{variance_float=} must be a number')
+        if variance_float < 0:
+            raise ValueError(f'{variance_float=} must be positive')
         self._scalar.variance = variance_float
 
     def convert_unit(self, unit_str: str):
@@ -142,7 +158,12 @@ class DescriptorNumber(DescriptorBase):
 
         :param unit_str: New unit in string form
         """
-        new_unit = sc.Unit(unit_str)
+        if not isinstance(unit_str, str):
+            raise TypeError(f'{unit_str=} must be a string representing a valid scipp unit')
+        try:
+            new_unit = sc.Unit(unit_str)
+        except Exception as message:
+            raise ValueError(message)
         self._scalar = self._scalar.to(unit=new_unit)
 
     # Just to get return type right
