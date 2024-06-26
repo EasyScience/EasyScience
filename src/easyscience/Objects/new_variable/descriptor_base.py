@@ -49,7 +49,7 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
 
         .. note:: Undo/Redo functionality is implemented for the attributes `name` and `display name`.
         """
-        if name is not isinstance(name, str):
+        if not isinstance(name, str):
             raise TypeError("Name must be a string")
         self._name: str = name
         if display_name is not None and not isinstance(display_name, str):
