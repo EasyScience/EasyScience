@@ -7,6 +7,7 @@ from typing import Optional
 from typing import Union
 
 import scipp as sc
+from scipp import Variable
 
 from easyscience.Utils.UndoRedo import property_stack_deco
 
@@ -56,7 +57,7 @@ class DescriptorNumber(DescriptorBase):
         self._scalar = sc.scalar(float(value), unit=unit, variance=variance)
 
     @property
-    def full_value(self) -> sc.scalar:
+    def full_value(self) -> Variable:
         """
         Get the value of self as a scipp scalar. This is should be usable for most cases.
 
@@ -66,7 +67,7 @@ class DescriptorNumber(DescriptorBase):
 
     @full_value.setter
     @property_stack_deco
-    def full_value(self, full_value: sc.scalar) -> None:
+    def full_value(self, full_value: Variable) -> None:
         """
         Set the full value of self. This creates a scipp scalar with a unit.
 
@@ -140,7 +141,7 @@ class DescriptorNumber(DescriptorBase):
         :param unit_str: New unit in string form
         """
         new_unit = sc.Unit(unit_str)
-        self._scalar: sc.scalar = self._scalar.to(unit=new_unit)
+        self._scalar = self._scalar.to(unit=new_unit)
 
     # Just to get return type right
     def __copy__(self) -> DescriptorNumber:

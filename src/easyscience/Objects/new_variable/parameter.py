@@ -17,6 +17,7 @@ from typing import Union
 
 import numpy as np
 import scipp as sc
+from scipp import Variable
 
 from easyscience import borg
 from easyscience.fitting.Constraints import ConstraintBase
@@ -116,12 +117,12 @@ class Parameter(DescriptorNumber):
         if self._callback.fget is not None:
             scalar = self._callback.fget()
             if scalar != self._scalar:
-                self._scalar: sc.scalar = scalar
+                self._scalar = scalar
         return self._scalar
 
     @full_value.setter
     @property_stack_deco
-    def full_value(self, scalar: sc.scalar) -> None:
+    def full_value(self, scalar: Variable) -> None:
         """
         Set the value of self. This creates a scipp scalar with a unit.
 
