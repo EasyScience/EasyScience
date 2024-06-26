@@ -144,9 +144,9 @@ class Parameter(DescriptorNumber):
         :return: Value of self without unit.
         """
         if self._callback.fget is not None:
-            scalar = self._callback.fget()
-            if scalar.value != self._scalar.value:
-                self._scalar.value = scalar.value
+            existing_value = self._callback.fget()
+            if existing_value != self._scalar.value:
+                self._scalar.value = existing_value
         return self._scalar.value
 
     @value.setter
@@ -164,8 +164,8 @@ class Parameter(DescriptorNumber):
 
         # Need to set the value for constraints to be functional
         self._scalar.value = float(value)
-        if self._callback.fset is not None:
-            self._callback.fset(self._scalar)
+        #        if self._callback.fset is not None:
+        #            self._callback.fset(self._scalar.value)
 
         # Deals with min/max
         value = self._constraint_runner(self.builtin_constraints, self._scalar.value)
@@ -184,7 +184,7 @@ class Parameter(DescriptorNumber):
 
         self._scalar.value = value
         if self._callback.fset is not None:
-            self._callback.fset(self._scalar)
+            self._callback.fset(self._scalar.value)
 
     def convert_unit(self, unit_str: str) -> None:
         """

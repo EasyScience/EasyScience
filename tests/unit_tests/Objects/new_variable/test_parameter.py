@@ -238,30 +238,32 @@ class TestParameter:
 
     def test_value_match_callback(self, parameter: Parameter):
         # When
-        self.mock_callback.fget.return_value = sc.scalar(1, unit='m')
+        self.mock_callback.fget.return_value = 1.0
 
         # Then Expect
-        assert parameter.value == 1
+        assert parameter.value == 1.0
         assert parameter._callback.fget.call_count == 1
         
     def test_value_no_match_callback(self, parameter: Parameter):
         # When
-        self.mock_callback.fget.return_value = sc.scalar(2, unit='m')
+        self.mock_callback.fget.return_value = 2.0
 
         # Then Expect
-        assert parameter.value == 2
+        assert parameter.value == 2.0
         assert parameter._callback.fget.call_count == 1
 
     def test_set_value(self, parameter: Parameter):
         # When
-        self.mock_callback.fget.side_effect = [sc.scalar(1, unit='m'), sc.scalar(2, unit='m'), sc.scalar(2, unit='m')]
+        # First call returns 1.0 that is used to enforce the undo/redo functionality to register the value has changed
+        # Second and third call returns 2.0 is used in the constraint check
+        self.mock_callback.fget.side_effect = [1.0, 2.0, 2.0]
 
         # Then
         parameter.value = 2
 
         # Expect
-        parameter._callback.fset.assert_called_with(sc.scalar(2, unit='m'))
-        assert parameter._callback.fset.call_count == 2
+        parameter._callback.fset.assert_called_with(2)
+        assert parameter._callback.fset.call_count == 1
         assert parameter._scalar == sc.scalar(2, unit='m')
 
     def test_full_value_match_callback(self, parameter: Parameter):
