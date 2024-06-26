@@ -111,13 +111,13 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
     def url(self) -> str:
         return self._url
 
-    @abc.abstractmethod
     @property
+    @abc.abstractmethod
     def value(self) -> Any:
         """Get the value of the object."""
 
-    @abc.abstractmethod
     @value.setter
+    @abc.abstractmethod
     def value(self, value: Any) -> None:
         """Set the value of the object."""
 
