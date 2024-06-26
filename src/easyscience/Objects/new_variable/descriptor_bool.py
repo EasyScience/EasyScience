@@ -30,6 +30,8 @@ class DescriptorBool(DescriptorBase):
             display_name=display_name,
             parent=parent,
         )
+        if not isinstance(value, bool):
+            raise TypeError(f'{value=} must be type bool')
         self._bool_value = value
 
     @property
@@ -51,7 +53,7 @@ class DescriptorBool(DescriptorBase):
         :return: None
         """
         if not isinstance(value, bool):
-            raise ValueError(f'{value=} must be type bool')
+            raise TypeError(f'{value=} must be type bool')
         self._bool_value = value
 
     def __repr__(self) -> str:
