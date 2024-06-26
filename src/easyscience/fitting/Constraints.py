@@ -481,14 +481,22 @@ class FunctionalConstraint(ConstraintBase):
             self.external = True
 
     def _parse_operator(self, obj: V, *args, **kwargs) -> Number:
+        import easyscience.Objects.new_variable.parameter
+
         self.aeval.symtable[f'f{id(self.function)}'] = self.function
         value_str = f'r_value = f{id(self.function)}('
         if isinstance(obj, list):
             for o in obj:
-                value_str += f'{o.raw_value},'
+                if isinstance(o, easyscience.Objects.new_variable.parameter.Parameter):
+                    value_str += f'{o.value},'
+                else:
+                    value_str += f'{o.raw_value},'
             value_str = value_str[:-1]
         else:
-            value_str += f'{obj.raw_value}'
+            if isinstance(o, easyscience.Objects.new_variable.parameter.Parameter):
+                value_str += f'{obj.value}'
+            else:
+                value_str += f'{obj.raw_value}'
         value_str += ')'
         try:
             self.aeval.eval(value_str)
