@@ -160,7 +160,7 @@ class Parameter(DescriptorNumber):
             return
 
         # Need to set the value for constraints to be functional
-        self._scalar.value = value
+        self._scalar.value = float(value)
         if self._callback.fset is not None:
             self._callback.fset(self._scalar)
 

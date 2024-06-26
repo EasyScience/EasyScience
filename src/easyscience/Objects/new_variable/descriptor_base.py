@@ -112,6 +112,16 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
         return self._url
 
     @abc.abstractmethod
+    @property
+    def value(self) -> Any:
+        """Get the value of the object."""
+
+    @abc.abstractmethod
+    @value.setter
+    def value(self, value: Any) -> None:
+        """Set the value of the object."""
+
+    @abc.abstractmethod
     def __repr__(self) -> str:
         """Return printable representation of the object."""
 
