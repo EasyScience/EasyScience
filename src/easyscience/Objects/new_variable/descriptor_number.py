@@ -73,7 +73,7 @@ class DescriptorNumber(DescriptorBase):
 
         :param value: New value of self
         """
-        if not isinstance(full_value, Variable) and full_value.dims == ();
+        if not isinstance(full_value, Variable) and full_value.dims == ():
             raise ValueError(f'{full_value=} must be a Scipp scalar')
         self._scalar = full_value
 
