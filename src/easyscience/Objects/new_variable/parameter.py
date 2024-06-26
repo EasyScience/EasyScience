@@ -208,18 +208,18 @@ class Parameter(DescriptorNumber):
 
     @min.setter
     @property_stack_deco
-    def min(self, value: numbers.Number) -> None:
+    def min(self, min_value: numbers.Number) -> None:
         """
         Set the minimum value for fitting.
         - implements undo/redo functionality.
 
-        :param value: new minimum value
+        :param min_value: new minimum value
         :return: None
         """
-        if value <= self.value:
-            self._min.value = value
+        if min_value <= self.value:
+            self._min.value = min_value
         else:
-            raise ValueError(f'The current value ({self.value}) is less than the desired min value ({value}).')
+            raise ValueError(f'The current value ({self.value}) is less than the desired min value ({min_value}).')
 
     @property
     def max(self) -> numbers.Number:
@@ -232,18 +232,18 @@ class Parameter(DescriptorNumber):
 
     @max.setter
     @property_stack_deco
-    def max(self, value: numbers.Number) -> None:
+    def max(self, max_value: numbers.Number) -> None:
         """
         Get the maximum value for fitting.
         - implements undo/redo functionality.
 
-        :param value: new maximum value
+        :param max_value: new maximum value
         :return: None
         """
-        if value >= self.value:
-            self._max.value = value
+        if max_value >= self.value:
+            self._max.value = max_value
         else:
-            raise ValueError(f'The current value ({self.value}) is greater than the desired max value ({value}).')
+            raise ValueError(f'The current value ({self.value}) is greater than the desired max value ({max_value}).')
 
     @property
     def fixed(self) -> bool:
