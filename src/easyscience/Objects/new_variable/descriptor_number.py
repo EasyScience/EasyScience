@@ -24,7 +24,7 @@ class DescriptorNumber(DescriptorBase):
         name: str,
         value: numbers.Number,
         unit: Optional[Union[str, sc.Unit]] = '',
-        variance: Optional[float] = None,
+        variance: Optional[numbers.Number] = None,
         description: Optional[str] = None,
         url: Optional[str] = None,
         display_name: Optional[str] = None,
@@ -43,14 +43,18 @@ class DescriptorNumber(DescriptorBase):
 
         .. note:: Undo/Redo functionality is implemented for the attributes `full_value`, `unit`, `variance` and `value`.
         """
-        if not isinstance(value, numbers.Number) or isinstance(value, bool):
+        if not isinstance(value, numbers.Number):
             raise TypeError(f'{value=} must be a number')
         if variance is not None and not isinstance(variance, numbers.Number):
-            raise TypeError(f'{variance=} must be a number')
+            raise TypeError(f'{variance=} must be a number or None')
         if variance is not None and variance < 0:
             raise ValueError(f'{variance=} must be positive')
-        if not isinstance(unit, sc.Unit) and not isinstance(unit, str) and unit != '':
+        if not isinstance(unit, sc.Unit) and not isinstance(unit, str):
             raise TypeError(f'{unit=} must be a scipp unit or a string representing a valid scipp unit')
+        try:
+            self._scalar = sc.scalar(float(value), unit=unit, variance=float(variance))
+        except Exception as message:
+            raise ValueError(message)
         super().__init__(
             name=name,
             description=description,
@@ -58,10 +62,7 @@ class DescriptorNumber(DescriptorBase):
             display_name=display_name,
             parent=parent,
         )
-        try:
-            self._scalar = sc.scalar(float(value), unit=unit, variance=variance)
-        except Exception as message:
-            raise ValueError(message)
+
 
     @property
     def full_value(self) -> Variable:
@@ -101,7 +102,7 @@ class DescriptorNumber(DescriptorBase):
 
         :param value: New value of self
         """
-        if not isinstance(value, numbers.Number) or isinstance(value, bool):
+        if not isinstance(value, numbers.Number):
             raise TypeError(f'{value=} must be a number')
         self._scalar.value = value
 
@@ -146,9 +147,9 @@ class DescriptorNumber(DescriptorBase):
 
         :param variance_float: Variance as a float
         """
-        if not isinstance(variance_float, numbers.Number):
-            raise TypeError(f'{variance_float=} must be a number')
-        if variance_float < 0:
+        if variance_float is not None and not isinstance(variance_float, numbers.Number):
+            raise TypeError(f'{variance_float=} must be a number or None')
+        if variance_float is not None and variance_float < 0:
             raise ValueError(f'{variance_float=} must be positive')
         self._scalar.variance = variance_float
 

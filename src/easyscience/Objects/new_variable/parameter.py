@@ -169,7 +169,7 @@ class Parameter(DescriptorNumber):
                 raise CoreSetException(f'{str(self)} is not enabled.')
             return
 
-        if not isinstance(value, numbers.Number) or isinstance(value, bool):
+        if not isinstance(value, numbers.Number):
             raise TypeError(f'{value=} must be a number')
 
         # Need to set the value for constraints to be functional
@@ -204,7 +204,7 @@ class Parameter(DescriptorNumber):
         :return: None
         """
         super().convert_unit(unit_str)
-        new_unit = sc.Unit(unit_str)
+        new_unit = sc.Unit(unit_str) # unit_str is tested in super method
         self._min = self._min.to(unit=new_unit)
         self._max = self._max.to(unit=new_unit)
 
@@ -232,7 +232,7 @@ class Parameter(DescriptorNumber):
         if min_value <= self.value:
             self._min.value = min_value
         else:
-            raise ValueError(f'The current value ({self.value}) is less than the desired min value ({min_value}).')
+            raise ValueError(f'The current value ({self.value}) is smaller than the desired min value ({min_value}).')
 
     @property
     def max(self) -> numbers.Number:
@@ -306,8 +306,10 @@ class Parameter(DescriptorNumber):
 
         :param value: New error value
         """
-        if value < 0:
-            raise ValueError(f'{value} must be positive')
+        if value is not None and not isinstance(value, numbers.Number):
+            raise TypeError(f'{value=} must be a number or None')
+        if value is not None and value < 0:
+            raise ValueError(f'{value=} must be positive')
         self._scalar.variance = value**2
 
     @property
