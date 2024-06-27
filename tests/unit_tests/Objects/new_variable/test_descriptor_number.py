@@ -125,7 +125,7 @@ class TestDescriptorNumber:
         assert descriptor._scalar.unit == "m"
         assert descriptor._scalar.variance == 0
 
-    @pytest.mark.parametrize("full_value", [sc.Variable([1], unit='m'), sc.Variable([1, 2], unit='m'), object(), 1, "string"], ids=["1D", "2D", "object", "int", "string"])
+    @pytest.mark.parametrize("full_value", [sc.array(values=[1,2], dims=["x"]), sc.array(values=[[1], [2]], dims=["x","y"]), object(), 1, "string"], ids=["1D", "2D", "object", "int", "string"])
     def test_from_scipp_type_exception(self, full_value):
         # When Then Expect
         with pytest.raises(TypeError):
@@ -144,7 +144,7 @@ class TestDescriptorNumber:
         # Expect
         assert descriptor._scalar == sc.scalar(2, unit='m')
 
-    @pytest.mark.parametrize("full_value", [sc.Variable([1], unit='m'), sc.Variable([1, 2], unit='m'), object(), 1, "string"], ids=["1D", "2D", "object", "int", "string"])
+    @pytest.mark.parametrize("full_value", [sc.array(values=[1,2], dims=["x"]), sc.array(values=[[1], [2]], dims=["x","y"]), object(), 1, "string"], ids=["1D", "2D", "object", "int", "string"])
     def test_set_full_value_type_exception(self, descriptor: DescriptorNumber, full_value):
         # When Then Expect
         with pytest.raises(TypeError):

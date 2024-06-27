@@ -137,7 +137,7 @@ class Parameter(DescriptorNumber):
             if borg.debug:
                 raise CoreSetException(f'{str(self)} is not enabled.')
             return
-        if not isinstance(scalar, Variable) and scalar.dims == ():
+        if not isinstance(scalar, Variable) and len(scalar.dims) == 0:
             raise TypeError(f'{scalar=} must be a Scipp scalar')
         if not isinstance(scalar.value, numbers.Number) or isinstance(scalar.value, bool):
             raise TypeError('value of Scipp scalar must be a number')

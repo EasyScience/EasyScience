@@ -75,7 +75,7 @@ class DescriptorNumber(DescriptorBase):
         :param kwargs: Additional parameters for the descriptor
         :return: DescriptorNumber
         """
-        if not isinstance(full_value, Variable) and full_value.dims == ():
+        if not isinstance(full_value, Variable) and len(full_value.dims) == 0:
             raise TypeError(f'{full_value=} must be a scipp variable')
         return cls(name=name, value=full_value.value, unit=full_value.unit, variance=full_value.variance, **kwargs)
 
@@ -97,7 +97,7 @@ class DescriptorNumber(DescriptorBase):
 
         :param value: New value of self
         """
-        if not isinstance(full_value, Variable) and full_value.dims == ():
+        if not isinstance(full_value, Variable) and len(full_value.dims) == 0:
             raise TypeError(f'{full_value=} must be a Scipp scalar')
         if not isinstance(full_value.value, numbers.Number) or isinstance(full_value.value, bool):
             raise TypeError('value of Scipp scalar must be a number')
