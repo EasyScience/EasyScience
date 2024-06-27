@@ -51,7 +51,7 @@ class TestDescriptorBool:
         # Expect
         assert descriptor._bool_value == False
 
-    @pytest.mark.parametrize("bool_value", ["string", 0, 1.0])
+    @pytest.mark.parametrize("bool_value", ["string", 0, 0.0])
     def test_set_value_type_exception(self, descriptor: DescriptorBool, bool_value):
         # When Then Expect
         with pytest.raises(TypeError):
