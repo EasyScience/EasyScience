@@ -43,10 +43,10 @@ class DescriptorNumber(DescriptorBase):
 
         .. note:: Undo/Redo functionality is implemented for the attributes `full_value`, `unit`, `variance` and `value`.
         """
-        if not isinstance(value, numbers.Number):
+        if not isinstance(value, numbers.Number) or isinstance(value, bool):
             raise TypeError(f'{value=} must be a number')
         if variance is not None:
-            if not isinstance(variance, numbers.Number):
+            if not isinstance(variance, numbers.Number) or isinstance(variance, bool):
                 raise TypeError(f'{variance=} must be a number or None')
             if variance < 0:
                 raise ValueError(f'{variance=} must be positive')
@@ -99,6 +99,8 @@ class DescriptorNumber(DescriptorBase):
         """
         if not isinstance(full_value, Variable) and full_value.dims == ():
             raise TypeError(f'{full_value=} must be a Scipp scalar')
+        if not isinstance(full_value.value, numbers.Number) or isinstance(full_value.value, bool):
+            raise TypeError('value of Scipp scalar must be a number')
         self._scalar = full_value
 
     @property
@@ -118,7 +120,7 @@ class DescriptorNumber(DescriptorBase):
 
         :param value: New value of self
         """
-        if not isinstance(value, numbers.Number):
+        if not isinstance(value, numbers.Number) or isinstance(value, bool):
             raise TypeError(f'{value=} must be a number')
         self._scalar.value = value
 

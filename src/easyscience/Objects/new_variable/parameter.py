@@ -139,6 +139,8 @@ class Parameter(DescriptorNumber):
             return
         if not isinstance(scalar, Variable) and scalar.dims == ():
             raise TypeError(f'{scalar=} must be a Scipp scalar')
+        if not isinstance(scalar.value, numbers.Number) or isinstance(scalar.value, bool):
+            raise TypeError('value of Scipp scalar must be a number')
         self._scalar = scalar
         if self._callback.fset is not None:
             self._callback.fset(scalar)
@@ -169,7 +171,7 @@ class Parameter(DescriptorNumber):
                 raise CoreSetException(f'{str(self)} is not enabled.')
             return
 
-        if not isinstance(value, numbers.Number):
+        if not isinstance(value, numbers.Number) or isinstance(value, bool):
             raise TypeError(f'{value=} must be a number')
 
         # Need to set the value for constraints to be functional
