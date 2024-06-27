@@ -52,12 +52,13 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
         if not isinstance(name, str):
             raise TypeError("Name must be a string")
         self._name: str = name
+
         if display_name is not None and not isinstance(display_name, str):
-            raise TypeError("Display name must be a string")
+            raise TypeError("Display name must be a string or None")
         self._display_name: str = display_name
 
         if description is not None and not isinstance(description, str):
-            raise TypeError("Description must be a string")
+            raise TypeError("Description must be a string or None")
         if description is None:
             description = ''
         self._description: str = description
@@ -77,6 +78,11 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
 
     @property
     def name(self) -> str:
+        """ 
+        Get the name of the object.
+
+        :return: name of the object.
+        """
         return self._name
 
     @name.setter
@@ -111,17 +117,49 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
 
         :param name: Pretty display name of the object.
         """
-        if not isinstance(name, str):
-            raise TypeError("Display name must be a string")
+        if name is not None and not isinstance(name, str):
+            raise TypeError("Display name must be a string or None")
         self._display_name = name
 
     @property
     def description(self) -> str:
+        """ 
+        Get the description of the object.
+        
+        :return: description of the object.
+        """
         return self._description
+    
+    @description.setter
+    def description(self, description: str) -> None:
+        """
+        Set the description of the object.
+
+        :param description: description of the object.
+        """
+        if description is not None and not isinstance(description, str):
+            raise TypeError("Description must be a string or None")
+        self._description = description
 
     @property
     def url(self) -> str:
+        """
+        Get the url of the object.
+        
+        :return: url of the object.
+        """
         return self._url
+
+    @url.setter
+    def url(self, url: str) -> None:
+        """
+        Set the url of the object.
+
+        :param url: url of the object.
+        """
+        if url is not None and not isinstance(url, str):
+            raise TypeError("url must be a string")
+        self._url = url
 
     @property
     @abc.abstractmethod
