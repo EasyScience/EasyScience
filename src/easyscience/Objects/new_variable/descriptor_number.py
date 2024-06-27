@@ -63,6 +63,20 @@ class DescriptorNumber(DescriptorBase):
             parent=parent,
         )
 
+    @classmethod
+    def from_scipp(cls, name: str, full_value: Variable, **kwargs) -> DescriptorNumber:
+        """
+        Create a DescriptorNumber from a scipp constant.
+
+        :param name: Name of the descriptor
+        :param value: Value of the descriptor as a scipp scalar
+        :param kwargs: Additional parameters for the descriptor
+        :return: DescriptorNumber
+        """
+        if not isinstance(full_value, Variable) and full_value.dims == ():
+            raise TypeError(f'{full_value=} must be a scipp variable')
+        return cls(name=name, value=full_value.value, unit=full_value.unit, variance=full_value.variance, **kwargs)
+
 
     @property
     def full_value(self) -> Variable:
