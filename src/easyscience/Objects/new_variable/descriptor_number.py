@@ -45,14 +45,16 @@ class DescriptorNumber(DescriptorBase):
         """
         if not isinstance(value, numbers.Number):
             raise TypeError(f'{value=} must be a number')
-        if variance is not None and not isinstance(variance, numbers.Number):
-            raise TypeError(f'{variance=} must be a number or None')
-        if variance is not None and variance < 0:
-            raise ValueError(f'{variance=} must be positive')
+        if variance is not None:
+            if not isinstance(variance, numbers.Number):
+                raise TypeError(f'{variance=} must be a number or None')
+            if variance < 0:
+                raise ValueError(f'{variance=} must be positive')
+            variance = float(variance)
         if not isinstance(unit, sc.Unit) and not isinstance(unit, str):
             raise TypeError(f'{unit=} must be a scipp unit or a string representing a valid scipp unit')
         try:
-            self._scalar = sc.scalar(float(value), unit=unit, variance=float(variance))
+            self._scalar = sc.scalar(float(value), unit=unit, variance=variance)
         except Exception as message:
             raise ValueError(message)
         super().__init__(
@@ -161,10 +163,12 @@ class DescriptorNumber(DescriptorBase):
 
         :param variance_float: Variance as a float
         """
-        if variance_float is not None and not isinstance(variance_float, numbers.Number):
-            raise TypeError(f'{variance_float=} must be a number or None')
-        if variance_float is not None and variance_float < 0:
-            raise ValueError(f'{variance_float=} must be positive')
+        if variance_float is not None:
+            if not isinstance(variance_float, numbers.Number):
+                raise TypeError(f'{variance_float=} must be a number or None')
+            if variance_float < 0:
+                raise ValueError(f'{variance_float=} must be positive')
+            variance_float = float(variance_float)
         self._scalar.variance = variance_float
 
     def convert_unit(self, unit_str: str):

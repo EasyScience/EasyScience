@@ -306,10 +306,12 @@ class Parameter(DescriptorNumber):
 
         :param value: New error value
         """
-        if value is not None and not isinstance(value, numbers.Number):
-            raise TypeError(f'{value=} must be a number or None')
-        if value is not None and value < 0:
-            raise ValueError(f'{value=} must be positive')
+        if value is not None:
+            if not isinstance(value, numbers.Number):
+                raise TypeError(f'{value=} must be a number or None')
+            if value < 0:
+                raise ValueError(f'{value=} must be positive')
+            value = float(value)
         self._scalar.variance = value**2
 
     @property
