@@ -24,6 +24,9 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
     state of an object.
     """
 
+    # Used by serializer
+    _REDIRECT = {'parent': None}
+
     _borg = borg
 
     def __init__(
@@ -50,21 +53,21 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
         .. note:: Undo/Redo functionality is implemented for the attributes `name` and `display name`.
         """
         if not isinstance(name, str):
-            raise TypeError("Name must be a string")
+            raise TypeError('Name must be a string')
         self._name: str = name
 
         if display_name is not None and not isinstance(display_name, str):
-            raise TypeError("Display name must be a string or None")
+            raise TypeError('Display name must be a string or None')
         self._display_name: str = display_name
 
         if description is not None and not isinstance(description, str):
-            raise TypeError("Description must be a string or None")
+            raise TypeError('Description must be a string or None')
         if description is None:
             description = ''
         self._description: str = description
 
         if url is not None and not isinstance(url, str):
-            raise TypeError("url must be a string")
+            raise TypeError('url must be a string')
         if url is None:
             url = ''
         self._url: str = url
@@ -78,7 +81,7 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
 
     @property
     def name(self) -> str:
-        """ 
+        """
         Get the name of the object.
 
         :return: name of the object.
@@ -94,7 +97,7 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
         :param new_name: name of the object.
         """
         if not isinstance(new_name, str):
-            raise TypeError("Name must be a string")
+            raise TypeError('Name must be a string')
         self._name = new_name
 
     @property
@@ -118,18 +121,18 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
         :param name: Pretty display name of the object.
         """
         if name is not None and not isinstance(name, str):
-            raise TypeError("Display name must be a string or None")
+            raise TypeError('Display name must be a string or None')
         self._display_name = name
 
     @property
     def description(self) -> str:
-        """ 
+        """
         Get the description of the object.
-        
+
         :return: description of the object.
         """
         return self._description
-    
+
     @description.setter
     def description(self, description: str) -> None:
         """
@@ -138,14 +141,14 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
         :param description: description of the object.
         """
         if description is not None and not isinstance(description, str):
-            raise TypeError("Description must be a string or None")
+            raise TypeError('Description must be a string or None')
         self._description = description
 
     @property
     def url(self) -> str:
         """
         Get the url of the object.
-        
+
         :return: url of the object.
         """
         return self._url
@@ -158,7 +161,7 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
         :param url: url of the object.
         """
         if url is not None and not isinstance(url, str):
-            raise TypeError("url must be a string")
+            raise TypeError('url must be a string')
         self._url = url
 
     @property

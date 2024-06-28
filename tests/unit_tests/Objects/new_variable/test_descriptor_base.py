@@ -135,3 +135,15 @@ class TestDesciptorBase:
         assert descriptor_copy._description == descriptor._description
         assert descriptor_copy._url == descriptor._url
         assert descriptor_copy._display_name == descriptor._display_name
+
+    def test_as_data_dict(self, descriptor: DescriptorBase):
+        # When Then
+        descriptor_dict = descriptor.as_data_dict()
+
+        # Expect
+        assert descriptor_dict == {
+            "name": "name",
+            "description": "description",
+            "url": "url",
+            "display_name": "display_name",
+        }

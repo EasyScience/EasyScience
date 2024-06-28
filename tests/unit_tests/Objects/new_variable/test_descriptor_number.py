@@ -8,7 +8,6 @@ from easyscience.Objects.new_variable.descriptor_number import DescriptorNumber
 class TestDescriptorNumber:
     @pytest.fixture
     def descriptor(self):
-#        self.mock_callback = MagicMock()
         descriptor = DescriptorNumber(
             name="name",
             value=1,
@@ -17,8 +16,6 @@ class TestDescriptorNumber:
             description="description",
             url="url",
             display_name="display_name",
-#            callback=self.mock_callback,
-#            enabled="enabled",
             parent=None,
         )
         return descriptor
@@ -34,12 +31,9 @@ class TestDescriptorNumber:
         assert descriptor._description == "description"
         assert descriptor._url == "url"
         assert descriptor._display_name == "display_name"
-#        assert descriptor._callback == self.mock_callback
-#        assert descriptor._enabled == "enabled"
 
     def test_init_sc_unit(self):
         # When Then
-#        mock_callback = MagicMock()
         descriptor = DescriptorNumber(
             name="name",
             value=1,
@@ -48,8 +42,6 @@ class TestDescriptorNumber:
             description="description",
             url="url",
             display_name="display_name",
-#            callback=mock_callback,
-#            enabled="enabled",
             parent=None,
         )
 
@@ -75,7 +67,6 @@ class TestDescriptorNumber:
     @pytest.mark.parametrize("value", [True, "string"])
     def test_init_value_type_exception(self, value):
         # When 
- #       mock_callback = MagicMock()
 
         # Then Expect
         with pytest.raises(TypeError):
@@ -87,14 +78,11 @@ class TestDescriptorNumber:
                 description="description",
                 url="url",
                 display_name="display_name",
-  #              callback=mock_callback,
-#                enabled="enabled",
                 parent=None,
             )
 
     def test_init_variance_exception(self):
         # When 
-   #     mock_callback = MagicMock()
         variance = -1
 
         # Then Expect
@@ -107,8 +95,6 @@ class TestDescriptorNumber:
                 description="description",
                 url="url",
                 display_name="display_name",
-    #            callback=mock_callback,
-#                enabled="enabled",
                 parent=None,
             )
 
@@ -131,8 +117,6 @@ class TestDescriptorNumber:
         with pytest.raises(TypeError):
             DescriptorNumber.from_scipp(name="name", full_value=full_value)
 
-
-
     def test_full_value(self, descriptor: DescriptorNumber):
         # When Then Expect
         assert descriptor.full_value == sc.scalar(1, unit='m')
@@ -149,33 +133,6 @@ class TestDescriptorNumber:
         # When Then Expect
         with pytest.raises(TypeError):
             descriptor.full_value = full_value
-
-    # def test_value_match_callback(self, descriptor: DescriptorNumber):
-    #     # When
-    #     self.mock_callback.fget.return_value = sc.scalar(1, unit='m')
-
-    #     # Then Expect
-    #     assert descriptor.value == sc.scalar(1, unit='m')
-    #     assert descriptor._callback.fget.call_count == 1
-        
-    # def test_value_no_match_callback(self, descriptor: DescriptorNumber):
-    #     # When
-    #     self.mock_callback.fget.return_value = sc.scalar(2, unit='m')
-
-    #     # Then Expect
-    #     assert descriptor.value == sc.scalar(2, unit='m')
-    #     assert descriptor._callback.fget.call_count == 1
-
-    # def test_set_value(self, descriptor: DescriptorNumber):
-    #     # When
-    #     self.mock_callback.fget.return_value = sc.scalar(1, unit='m')
-
-    #     # Then
-    #     descriptor.value = sc.scalar(2, unit='m')
-
-    #     # Expect
-    #     descriptor._callback.fset.assert_called_once_with(sc.scalar(2, unit='m')) 
-    #     assert descriptor._value == sc.scalar(2, unit='m')
 
     def test_unit(self, descriptor: DescriptorNumber):
         # When Then Expect
@@ -234,13 +191,25 @@ class TestDescriptorNumber:
         assert repr_str == "<DescriptorNumber 'name': 1.0000 m>"
 
     def test_copy(self, descriptor: DescriptorNumber):
-        # When
-#        self.mock_callback.fget.return_value = sc.scalar(1, unit='m')
-
-        # Then
+        # When Then
         descriptor_copy = descriptor.__copy__()
 
         # Expect
         assert type(descriptor_copy) == DescriptorNumber
         assert descriptor_copy._scalar.value == descriptor._scalar.value
         assert descriptor_copy._scalar.unit == descriptor._scalar.unit
+
+    def test_as_data_dict(self, descriptor: DescriptorNumber):
+        # When Then
+        descriptor_dict = descriptor.as_data_dict()
+
+        # Expect
+        assert descriptor_dict == {
+            "name": "name",
+            "value": 1.0,
+            "unit": "m",
+            "variance": 0.1,
+            "description": "description",
+            "url": "url",
+            "display_name": "display_name",
+        }

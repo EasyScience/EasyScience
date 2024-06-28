@@ -35,6 +35,10 @@ class Parameter(DescriptorNumber):
     A Parameter is a DescriptorNumber which can be used in fitting. It has additional fields to facilitate this.
     """
 
+    # Used by serializer
+    _REDIRECT = DescriptorNumber._REDIRECT
+    _REDIRECT['callback'] = None
+
     def __init__(
         self,
         name: str,
@@ -206,7 +210,7 @@ class Parameter(DescriptorNumber):
         :return: None
         """
         super().convert_unit(unit_str)
-        new_unit = sc.Unit(unit_str) # unit_str is tested in super method
+        new_unit = sc.Unit(unit_str)  # unit_str is tested in super method
         self._min = self._min.to(unit=new_unit)
         self._max = self._max.to(unit=new_unit)
 

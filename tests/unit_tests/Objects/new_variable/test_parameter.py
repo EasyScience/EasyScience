@@ -311,3 +311,22 @@ class TestParameter:
         assert parameter_copy._url == parameter._url
         assert parameter_copy._display_name == parameter._display_name
         assert parameter_copy._enabled == parameter._enabled
+
+    def test_as_data_dict(self, parameter: Parameter):
+        # When Then
+        parameter_dict = parameter.as_data_dict()
+
+        # Expect
+        assert parameter_dict == {
+            "name": "name",
+            "value": 1.0,
+            "unit": "m",
+            "variance": 0.01,
+            "min": 0,
+            "max": 10,
+            "fixed": False,
+            "description": "description",
+            "url": "url",
+            "display_name": "display_name",
+            "enabled": "enabled",
+        }
