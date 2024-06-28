@@ -20,6 +20,30 @@ class TestDesciptorBase:
         )
         return descriptor
 
+    @pytest.mark.parametrize("name", [1, True, 1.0, [], {}, (), None, object()], ids=["int", "bool", "float", "list", "dict", "tuple", "None", "object"])
+    def test_init_name_type_error(self, name):
+        # When Then
+        with pytest.raises(TypeError):
+            DescriptorBase(name=name, description="description", url="url", display_name="display_name", parent=None)
+        
+    @pytest.mark.parametrize("display_name", [1, True, 1.0, [], {}, (), object()], ids=["int", "bool", "float", "list", "dict", "tuple", "object"])
+    def test_init_display_name_type_error(self, display_name):
+        # When Then
+        with pytest.raises(TypeError):
+            DescriptorBase(name="name", description="description", url="url", display_name=display_name, parent=None)
+
+    @pytest.mark.parametrize("description", [1, True, 1.0, [], {}, (), object()], ids=["int", "bool", "float", "list", "dict", "tuple", "object"])
+    def test_init_description_type_error(self, description):
+        # When Then
+        with pytest.raises(TypeError):
+            DescriptorBase(name="name", description=description, url="url", display_name="display_name", parent=None)
+
+    @pytest.mark.parametrize("url", [1, True, 1.0, [], {}, (), object()], ids=["int", "bool", "float", "list", "dict", "tuple", "object"])
+    def test_init_url_type_error(self, url):
+        # When Then
+        with pytest.raises(TypeError):
+            DescriptorBase(name="name", description="description", url=url, display_name="display_name", parent=None)
+
     def test_init(self, descriptor: DescriptorBase):
         assert descriptor._name == "name"
         assert descriptor._description == "description"
@@ -38,6 +62,54 @@ class TestDesciptorBase:
         # Then Expect
         assert descriptor.display_name == "name"
     
+    def test_display_name_setter(self, descriptor: DescriptorBase):
+        # When
+        descriptor.display_name = "new_display_name"
+        # Then Expect
+        assert descriptor.display_name == "new_display_name"
+
+    @pytest.mark.parametrize("display_name", [1, True, 1.0, [], {}, (), object()], ids=["int", "bool", "float", "list", "dict", "tuple", "object"])
+    def test_display_name_setter_type_error(self, descriptor: DescriptorBase, display_name):
+        # When Then
+        with pytest.raises(TypeError):
+            descriptor.display_name = display_name
+
+    def test_name_setter(self, descriptor: DescriptorBase):
+        # When
+        descriptor.name = "new_name"
+        # Then Expect
+        assert descriptor.name == "new_name"
+
+    @pytest.mark.parametrize("name", [1, True, 1.0, [], {}, (), object(), None], ids=["int", "bool", "float", "list", "dict", "tuple", "object", "None"])
+    def test_name_setter_type_error(self, descriptor: DescriptorBase, name):
+        # When Then
+        with pytest.raises(TypeError):
+            descriptor.name = name
+
+    def test_description_setter(self, descriptor: DescriptorBase):
+        # When
+        descriptor.description = "new_description"
+        # Then Expect
+        assert descriptor.description == "new_description"
+
+    @pytest.mark.parametrize("description", [1, True, 1.0, [], {}, (), object()], ids=["int", "bool", "float", "list", "dict", "tuple", "object"])
+    def test_description_setter_type_error(self, descriptor: DescriptorBase, description):
+        # When Then
+        with pytest.raises(TypeError):
+            descriptor.description = description
+
+    def test_url_setter(self, descriptor: DescriptorBase):
+        # When
+        descriptor.url = "new_url"
+        # Then Expect
+        assert descriptor.url == "new_url"
+
+    @pytest.mark.parametrize("url", [1, True, 1.0, [], {}, (), object()], ids=["int", "bool", "float", "list", "dict", "tuple", "object"])
+    def test_url_setter_type_error(self, descriptor: DescriptorBase, url):
+        # When Then
+        with pytest.raises(TypeError):
+            descriptor.url = url
+
 
     @pytest.mark.parametrize("stack_enabled,stack_elements", [(False, 0), (True, 1)])
     def test_set_display_name_without_borg_stack(self, descriptor: DescriptorBase, stack_enabled, stack_elements):

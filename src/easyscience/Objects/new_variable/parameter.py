@@ -137,8 +137,10 @@ class Parameter(DescriptorNumber):
             if borg.debug:
                 raise CoreSetException(f'{str(self)} is not enabled.')
             return
-        if not isinstance(scalar, Variable) and scalar.dims == ():
+        if not isinstance(scalar, Variable) and len(scalar.dims) == 0:
             raise TypeError(f'{scalar=} must be a Scipp scalar')
+        if not isinstance(scalar.value, numbers.Number) or isinstance(scalar.value, bool):
+            raise TypeError('value of Scipp scalar must be a number')
         self._scalar = scalar
         if self._callback.fset is not None:
             self._callback.fset(scalar)
@@ -204,7 +206,7 @@ class Parameter(DescriptorNumber):
         :return: None
         """
         super().convert_unit(unit_str)
-        new_unit = sc.Unit(unit_str)
+        new_unit = sc.Unit(unit_str) # unit_str is tested in super method
         self._min = self._min.to(unit=new_unit)
         self._max = self._max.to(unit=new_unit)
 
@@ -232,7 +234,7 @@ class Parameter(DescriptorNumber):
         if min_value <= self.value:
             self._min.value = min_value
         else:
-            raise ValueError(f'The current value ({self.value}) is less than the desired min value ({min_value}).')
+            raise ValueError(f'The current value ({self.value}) is smaller than the desired min value ({min_value}).')
 
     @property
     def max(self) -> numbers.Number:
@@ -306,8 +308,12 @@ class Parameter(DescriptorNumber):
 
         :param value: New error value
         """
-        if value < 0:
-            raise ValueError(f'{value} must be positive')
+        if value is not None:
+            if not isinstance(value, numbers.Number):
+                raise TypeError(f'{value=} must be a number or None')
+            if value < 0:
+                raise ValueError(f'{value=} must be positive')
+            value = float(value)
         self._scalar.variance = value**2
 
     @property

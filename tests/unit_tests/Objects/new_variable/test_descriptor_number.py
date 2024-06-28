@@ -58,6 +58,20 @@ class TestDescriptorNumber:
         assert descriptor._scalar.unit == "m"
         assert descriptor._scalar.variance == 0.1
 
+    def test_init_sc_unit_unknown(self):
+        # When Then Expect
+        with pytest.raises(ValueError):
+            DescriptorNumber(
+                name="name",
+                value=1,
+                unit=sc.units.Unit("unknown"),
+                variance=0.1,
+                description="description",
+                url="url",
+                display_name="display_name",
+                parent=None,
+            )
+
     @pytest.mark.parametrize("value", [True, "string"])
     def test_init_value_type_exception(self, value):
         # When 
@@ -98,6 +112,27 @@ class TestDescriptorNumber:
                 parent=None,
             )
 
+    # test from_scipp
+    def test_from_scipp(self):
+        # When
+        full_value = sc.scalar(1, unit='m')
+
+        # Then
+        descriptor = DescriptorNumber.from_scipp(name="name", full_value=full_value)
+
+        # Expect
+        assert descriptor._scalar.value == 1
+        assert descriptor._scalar.unit == "m"
+        assert descriptor._scalar.variance == 0
+
+    @pytest.mark.parametrize("full_value", [sc.array(values=[1,2], dims=["x"]), sc.array(values=[[1], [2]], dims=["x","y"]), object(), 1, "string"], ids=["1D", "2D", "object", "int", "string"])
+    def test_from_scipp_type_exception(self, full_value):
+        # When Then Expect
+        with pytest.raises(TypeError):
+            DescriptorNumber.from_scipp(name="name", full_value=full_value)
+
+
+
     def test_full_value(self, descriptor: DescriptorNumber):
         # When Then Expect
         assert descriptor.full_value == sc.scalar(1, unit='m')
@@ -108,6 +143,12 @@ class TestDescriptorNumber:
 
         # Expect
         assert descriptor._scalar == sc.scalar(2, unit='m')
+
+    @pytest.mark.parametrize("full_value", [sc.array(values=[1,2], dims=["x"]), sc.array(values=[[1], [2]], dims=["x","y"]), object(), 1, "string"], ids=["1D", "2D", "object", "int", "string"])
+    def test_set_full_value_type_exception(self, descriptor: DescriptorNumber, full_value):
+        # When Then Expect
+        with pytest.raises(TypeError):
+            descriptor.full_value = full_value
 
     # def test_value_match_callback(self, descriptor: DescriptorNumber):
     #     # When

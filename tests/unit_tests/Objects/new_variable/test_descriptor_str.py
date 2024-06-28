@@ -50,6 +50,12 @@ class TestDescriptorStr:
         # Expect
         assert descriptor._string == "new_string"
 
+    @pytest.mark.parametrize("string", [True, 0, 1.0])
+    def test_set_value_type_exception(self, descriptor: DescriptorStr, string):
+        # When Then Expect
+        with pytest.raises(ValueError):
+            descriptor.value = string
+
     def test_repr(self, descriptor: DescriptorStr):
         # When Then
         repr_str = str(descriptor)

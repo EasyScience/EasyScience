@@ -22,8 +22,6 @@ class DescriptorStr(DescriptorBase):
         display_name: Optional[str] = None,
         parent: Optional[Any] = None,
     ):
-        if not isinstance(value, str):
-            raise ValueError(f'{value=} must be type str')
         super().__init__(
             name=name,
             description=description,
@@ -31,6 +29,8 @@ class DescriptorStr(DescriptorBase):
             display_name=display_name,
             parent=parent,
         )
+        if not isinstance(value, str):
+            raise ValueError(f'{value=} must be type str')
         self._string = value
 
     @property
@@ -53,7 +53,6 @@ class DescriptorStr(DescriptorBase):
         """
         if not isinstance(value, str):
             raise ValueError(f'{value=} must be type str')
-
         self._string = value
 
     def __repr__(self) -> str:
