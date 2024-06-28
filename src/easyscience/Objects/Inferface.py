@@ -163,12 +163,12 @@ class InterfaceFactoryTemplate:
                     continue
                 idx = props_names.index(item_key)
                 prop = props[idx]
-                prop._callback = item.make_prop(item_key)
-
                 if isinstance(prop, easyscience.Objects.new_variable.parameter.Parameter):
-                    prop._callback.fset(prop.value)
+                    prop_value = prop.value
                 else:
-                    prop._callback.fset(prop.raw_value)
+                    prop_value = prop.raw_value
+                prop._callback = item.make_prop(item_key)
+                prop._callback.fset(prop_value)
 
     def __call__(self, *args, **kwargs) -> _M:
         return self.__interface_obj
