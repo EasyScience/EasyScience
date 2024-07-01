@@ -133,17 +133,6 @@ def test_item_value_set(enabled, debug):
             with pytest.raises(CoreSetException):
                 d.value = set_value
 
-
-def test_item_unit_set():
-    d = Parameter("test", 1)
-    d.unit = "kg"
-    assert str(d.unit) == "kg"
-
-    d = Parameter("test", 1, unit="kelvin")
-    d.unit = "cm"
-    assert str(d.unit) == "cm"
-
-
 def test_item_convert_unit():
     d = Parameter("test", 360, unit="km/h")
     d.convert_unit("m/s")

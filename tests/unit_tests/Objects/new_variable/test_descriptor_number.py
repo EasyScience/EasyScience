@@ -122,35 +122,16 @@ class TestDescriptorNumber:
         assert descriptor.full_value == sc.scalar(1, unit='m')
         
     def test_set_full_value(self, descriptor: DescriptorNumber):
-        # When Then
-        descriptor.full_value = sc.scalar(2, unit='s')
-
-        # Expect
-        assert descriptor._scalar == sc.scalar(2, unit='m')
-
-    @pytest.mark.parametrize("full_value", [sc.array(values=[1,2], dims=["x"]), sc.array(values=[[1], [2]], dims=["x","y"]), object(), 1, "string"], ids=["1D", "2D", "object", "int", "string"])
-    def test_set_full_value_type_exception(self, descriptor: DescriptorNumber, full_value):
-        # When Then Expect
-        with pytest.raises(TypeError):
-            descriptor.full_value = full_value
+        with pytest.raises(AttributeError):
+            descriptor.full_value = sc.scalar(2, unit='s')
 
     def test_unit(self, descriptor: DescriptorNumber):
         # When Then Expect
         assert descriptor.unit == 'm'
         
     def test_set_unit(self, descriptor: DescriptorNumber):
-        # When  Then
-        descriptor.unit = 's'
-
-        # Expect
-        assert descriptor._scalar.unit == 's'
-
-    def test_set_unit_none(self, descriptor: DescriptorNumber):
-        # When  Then
-        descriptor.unit = ''
-
-        # Expect
-        assert descriptor._scalar.unit == 'dimensionless'
+        with pytest.raises(AttributeError):
+            descriptor.unit = 's'
 
     def test_convert_unit(self, descriptor: DescriptorNumber):
         # When  Then

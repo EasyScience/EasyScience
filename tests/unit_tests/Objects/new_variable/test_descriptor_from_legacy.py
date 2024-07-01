@@ -107,17 +107,6 @@ def test_descriptor_number_value_get(element, expected):
     d = DescriptorNumber("test", 1, unit=element)
     assert d.full_value == expected
 
-
-def test_item_unit_set():
-    d = DescriptorNumber("test", 1)
-    d.unit = "kg"
-    assert str(d.unit) == "kg"
-
-    d = DescriptorNumber("test", 1, unit="kelvin")
-    d.unit = "cm"
-    assert str(d.unit) == "cm"
-
-
 def test_item_convert_unit():
     d = DescriptorNumber("test", 360, unit="km/h")
     d.convert_unit("m/s")
