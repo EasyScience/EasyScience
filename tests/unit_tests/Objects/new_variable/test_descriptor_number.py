@@ -56,7 +56,7 @@ class TestDescriptorNumber:
             DescriptorNumber(
                 name="name",
                 value=1,
-                unit=sc.units.Unit("unknown"),
+                unit="unknown",
                 variance=0.1,
                 description="description",
                 url="url",
@@ -109,7 +109,7 @@ class TestDescriptorNumber:
         # Expect
         assert descriptor._scalar.value == 1
         assert descriptor._scalar.unit == "m"
-        assert descriptor._scalar.variance == 0
+        assert descriptor._scalar.variance == None
 
     @pytest.mark.parametrize("full_value", [sc.array(values=[1,2], dims=["x"]), sc.array(values=[[1], [2]], dims=["x","y"]), object(), 1, "string"], ids=["1D", "2D", "object", "int", "string"])
     def test_from_scipp_type_exception(self, full_value):
@@ -123,7 +123,7 @@ class TestDescriptorNumber:
         
     def test_set_full_value(self, descriptor: DescriptorNumber):
         # When Then
-        descriptor.full_value = sc.scalar(2, unit='m')
+        descriptor.full_value = sc.scalar(2, unit='s')
 
         # Expect
         assert descriptor._scalar == sc.scalar(2, unit='m')

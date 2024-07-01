@@ -41,7 +41,7 @@ class DescriptorNumber(DescriptorBase):
         param display_name: Display name of the descriptor
         param parent: Parent of the descriptor
 
-        .. note:: Undo/Redo functionality is implemented for the attributes `full_value`, `unit`, `variance` and `value`.
+        .. note:: Undo/Redo functionality is implemented for the attributes `variance` and `value`.
         """
         if not isinstance(value, numbers.Number) or isinstance(value, bool):
             raise TypeError(f'{value=} must be a number')
@@ -92,21 +92,9 @@ class DescriptorNumber(DescriptorBase):
         return self._scalar
 
     @full_value.setter
-    @property_stack_deco
     def full_value(self, full_value: Variable) -> None:
-        """
-        Set the full value of self. This creates a scipp scalar with a unit.
-
-        :param value: New value of self
-        """
-        if not isinstance(full_value, Variable):
-            raise TypeError(f'{full_value=} must be a Scipp scalar')
-        if len(full_value.dims) != 0:
-            raise TypeError(f'{full_value=} must be a scipp scalar')
-        if not isinstance(full_value.value, numbers.Number) or isinstance(full_value.value, bool):
-            raise TypeError('value of Scipp scalar must be a number')
-        self._scalar = full_value
-
+        raise AttributeError(f'Full_value is read-only. Change the value and variance seperately. or create a new {self.__class__.__name__}.')
+    
     @property
     def value(self) -> numbers.Number:
         """
@@ -138,19 +126,8 @@ class DescriptorNumber(DescriptorBase):
         return str(self._scalar.unit)
 
     @unit.setter
-    @property_stack_deco
     def unit(self, unit_str: str) -> None:
-        """
-        Set the unit to a new one.  Value remains unchanged.
-
-        :param unit_str: String representation of the unit required. i.e `m/s`
-        """
-        if not isinstance(unit_str, str):
-            raise TypeError(f'{unit_str=} must be a string representing a valid scipp unit')
-        try:
-            self._scalar.unit = sc.Unit(unit_str)
-        except Exception as message:
-            raise ValueError(message)
+        raise AttributeError(f'Unit is read-only. Use convert_unit to change the unit between allowed types or create a new {self.__class__.__name__} with the desired unit.')
 
     @property
     def variance(self) -> float:
