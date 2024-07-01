@@ -40,7 +40,7 @@ class BasedBase(ComponentSerializer):
     def __init__(self, name: str, interface: Optional[iF] = None, unique_name: Optional[str] = None):
         self._borg = borg
         if unique_name is None:
-            unique_name = self.__class__.__name__ + "_" + str(self._borg.map._get_name_iterator(self.__class__.__name__))
+            unique_name = self._unique_name_generator()
         self._unique_name = unique_name
         self._name = name
         self._borg = borg
@@ -74,8 +74,13 @@ class BasedBase(ComponentSerializer):
 
     @unique_name.setter
     def unique_name(self, new_unique_name: str):
-        """ Set a new unique name for the object. The old name is still kept in the map. """
+        """ Set a new unique name for the object. The old name is still kept in the map. 
+        
+        :param new_unique_name: New unique name for the object"""
+        if not isinstance(new_unique_name, str):
+            raise TypeError("Unique name has to be a string.")
         self._unique_name = new_unique_name
+        self._borg.map.add_vertex(self)
 
     @property
     def name(self) -> str:
@@ -198,6 +203,14 @@ class BasedBase(ComponentSerializer):
                 if item.enabled and not item.fixed:
                     fit_list.append(item)
         return fit_list
+
+    def _unique_name_generator(self) -> str:
+        """
+        Generate a generic unique name for the object using the class name and a global iterator.
+        """
+        class_name = self.__class__.__name__
+        iterator_string = str(self._borg.map._get_name_iterator(class_name))
+        return class_name + "_" + iterator_string
 
     def __dir__(self) -> Iterable[str]:
         """

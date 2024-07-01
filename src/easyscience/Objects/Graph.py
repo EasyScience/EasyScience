@@ -111,12 +111,11 @@ class Graph:
 
     def _get_name_iterator(self, class_name: str) -> int:
         """Get the iterator for the name generator for a class"""
-        if class_name in self._name_iterator_dict.keys():
-            self._name_iterator_dict[class_name] += 1
-            return self._name_iterator_dict[class_name] - 1
+        if class_name not in self._name_iterator_dict.keys():
+            self._name_iterator_dict[class_name] = 0
         else:
-            self._name_iterator_dict[class_name] = 1
-            return 0
+            self._name_iterator_dict[class_name] += 1
+        return self._name_iterator_dict[class_name]
 
     def get_item_by_key(self, item_id: str) -> object:
         if item_id in self._store.keys():

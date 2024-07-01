@@ -109,7 +109,7 @@ class Descriptor(ComponentSerializer):
         if not hasattr(self, '_args'):
             self._args = {'value': None, 'units': ''}
         if unique_name is None:
-            unique_name = self.__class__.__name__ + "_" + str(self._borg.map._get_name_iterator(self.__class__.__name__))
+            unique_name = self._unique_name_generator()
         self._unique_name = unique_name
         self.name = name
         # Let the collective know we've been assimilated
@@ -192,13 +192,14 @@ class Descriptor(ComponentSerializer):
         return self._unique_name
     
     @unique_name.setter
-    def unique_name(self, name: str):
-        """
-        Set the unique name of this object.
-
-        :param name: Unique name of this object
-        """
-        self._unique_name = name
+    def unique_name(self, new_unique_name: str):
+        """ Set a new unique name for the object. The old name is still kept in the map. 
+        
+        :param new_unique_name: New unique name for the object"""
+        if not isinstance(new_unique_name, str):
+            raise TypeError("Unique name has to be a string.")
+        self._unique_name = new_unique_name
+        self._borg.map.add_vertex(self)
 
     @property
     def display_name(self) -> str:
@@ -361,6 +362,15 @@ class Descriptor(ComponentSerializer):
         self._units = new_unit
         self._args['value'] = self.raw_value
         self._args['units'] = str(self.unit)
+
+    def _unique_name_generator(self) -> str:
+        """
+        Generate a generic unique name for the object using the class name and a global iterator.
+        """
+        class_name = self.__class__.__name__
+        iterator_string = str(self._borg.map._get_name_iterator(class_name))
+        return class_name + "_" + iterator_string
+
 
     # @cached_property
     @property
