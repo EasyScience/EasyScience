@@ -295,8 +295,10 @@ class Graph:
         return False
 
     def _clear(self):
+        """ Reset the graph to an empty state. """
         self._store = weakref.WeakValueDictionary()
         self.__graph_dict = {}
+        self._name_iterator_dict = {}
 
     def __repr__(self) -> str:
         return f"Graph object of {len(self._store)} vertices."
