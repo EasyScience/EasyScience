@@ -93,7 +93,7 @@ class DescriptorNumber(DescriptorBase):
 
     @full_value.setter
     def full_value(self, full_value: Variable) -> None:
-        raise AttributeError(f'Full_value is read-only. Change the value and variance seperately. or create a new {self.__class__.__name__}.')
+        raise AttributeError(f'Full_value is read-only. Change the value and variance seperately. or create a new {self.__class__.__name__}.')  # noqa: E501
     
     @property
     def value(self) -> numbers.Number:
@@ -127,7 +127,7 @@ class DescriptorNumber(DescriptorBase):
 
     @unit.setter
     def unit(self, unit_str: str) -> None:
-        raise AttributeError(f'Unit is read-only. Use convert_unit to change the unit between allowed types or create a new {self.__class__.__name__} with the desired unit.')
+        raise AttributeError(f'Unit is read-only. Use convert_unit to change the unit between allowed types or create a new {self.__class__.__name__} with the desired unit.')  # noqa: E501
 
     @property
     def variance(self) -> float:
