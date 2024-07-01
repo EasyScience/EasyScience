@@ -21,6 +21,7 @@ from easyscience import borg
 from easyscience.Utils.classTools import addLoggedProp
 
 from .core import ComponentSerializer
+from .new_variable.descriptor_base import DescriptorBase
 from .Variable import Descriptor
 from .Variable import Parameter
 
@@ -167,7 +168,7 @@ class BasedBase(ComponentSerializer):
         for key, item in self._kwargs.items():
             if hasattr(item, "_get_linkable_attributes"):
                 item_list = [*item_list, *item._get_linkable_attributes()]
-            elif issubclass(type(item), Descriptor):
+            elif issubclass(type(item), Descriptor) or issubclass(type(item), DescriptorBase):
                 item_list.append(item)
         return item_list
 
@@ -224,7 +225,7 @@ class BaseObj(BasedBase):
         super(BaseObj, self).__init__(name)
         # If Parameter or Descriptor is given as arguments...
         for arg in args:
-            if issubclass(type(arg), (BaseObj, Descriptor)):
+            if issubclass(type(arg), (BaseObj, Descriptor, DescriptorBase)):
                 kwargs[getattr(arg, "name")] = arg
         # Set kwargs, also useful for serialization
         known_keys = self.__dict__.keys()
@@ -233,7 +234,7 @@ class BaseObj(BasedBase):
             if key in known_keys:
                 raise AttributeError
             if issubclass(
-                type(kwargs[key]), (BasedBase, Descriptor)
+                type(kwargs[key]), (BasedBase, Descriptor, DescriptorBase)
             ) or "BaseCollection" in [c.__name__ for c in type(kwargs[key]).__bases__]:
                 self._borg.map.add_edge(self, kwargs[key])
                 self._borg.map.reset_type(kwargs[key], "created_internal")
@@ -293,12 +294,12 @@ class BaseObj(BasedBase):
                 self.__class__.__annotations__[key].__args__,
             )
         ):
-            if issubclass(type(getattr(self, key, None)), (BasedBase, Descriptor)):
+            if issubclass(type(getattr(self, key, None)), (BasedBase, Descriptor, DescriptorBase)):
                 old_obj = self.__getattribute__(key)
                 self._borg.map.prune_vertex_from_edge(self, old_obj)
             self._add_component(key, value)
         else:
-            if hasattr(self, key) and issubclass(type(value), (BasedBase, Descriptor)):
+            if hasattr(self, key) and issubclass(type(value), (BasedBase, Descriptor, DescriptorBase)):
                 old_obj = self.__getattribute__(key)
                 self._borg.map.prune_vertex_from_edge(self, old_obj)
                 self._borg.map.add_edge(self, value)

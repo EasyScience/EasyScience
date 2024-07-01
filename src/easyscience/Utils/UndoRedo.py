@@ -218,7 +218,7 @@ class UndoStack:
             self.history.appendleft(pop_it)
         return popped
 
-    def clear(self) -> NoReturn:
+    def clear(self) -> None:  # NoReturn:
         """
         Remove any commands on the stack and reset the state
         """

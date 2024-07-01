@@ -38,7 +38,8 @@ dependencies = [
     "pint",
     "uncertainties",
     "xarray",
-    "pint==0.23"  # Only to ensure that unit is reported as dimensionless rather than empty string
+    "pint==0.23",  # Only to ensure that unit is reported as dimensionless rather than empty string
+    "scipp"
 ]
 
 [project.optional-dependencies]
