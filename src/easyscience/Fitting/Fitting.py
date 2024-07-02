@@ -19,8 +19,8 @@ from typing import TypeVar
 import numpy as np
 
 import easyscience.Fitting as Fitting
-from easyscience import global_object
 from easyscience import default_fitting_engine
+from easyscience import global_object
 from easyscience.Objects.Groups import BaseCollection
 
 _C = TypeVar('_C', bound=ABCMeta)

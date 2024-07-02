@@ -5,10 +5,11 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
-from easyscience.Objects.Graph import Graph
 from easyscience.Utils.classUtils import singleton
-from easyscience.Utils.Hugger.Hugger import ScriptManager
-from easyscience.Utils.Logging import Logger
+
+from .hugger.hugger import ScriptManager
+from .logger import Logger
+from .map import Map
 
 
 @singleton
@@ -19,7 +20,7 @@ class GlobalObject:
     """
 
     __log = Logger()
-    __map = Graph()
+    __map = Map()
     __stack = None
     __debug = False
 
@@ -33,7 +34,7 @@ class GlobalObject:
         #
         self.script: ScriptManager = ScriptManager()
         # Map. This is the conduit database between all borg species
-        self.map: Graph = self.__map
+        self.map: Map = self.__map
 
     def instantiate_stack(self):
         """
@@ -43,6 +44,6 @@ class GlobalObject:
         :return: None
         :rtype: noneType
         """
-        from easyscience.Utils.UndoRedo import UndoStack
+        from easyscience.global_object.undo_redo import UndoStack
 
         self.stack = UndoStack()

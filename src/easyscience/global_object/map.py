@@ -20,7 +20,7 @@ class _EntryList(list):
             self._type.append(my_type)
 
     def __repr__(self) -> str:
-        s = "Graph entry of type: "
+        s = "Map entry of type: "
         if self._type:
             s += ", ".join(self._type)
         else:
@@ -68,21 +68,21 @@ class _EntryList(list):
         return "returned" in self._type
 
 
-class Graph:
+class Map:
     def __init__(self):
         # A dictionary of object names and their corresponding objects
         self._store = weakref.WeakValueDictionary()
         # A dict with object names as keys and a list of their object types as values, with weak references
-        self.__graph_dict = {}
+        self.__type_dict = {}
         # A dictionary of class names and their corresponding default name_generator iterators
         self._name_iterator_dict = {}
 
     def vertices(self) -> List[str]:
-        """returns the vertices of a graph"""
+        """returns the vertices of a map"""
         return list(self._store.keys())
 
     def edges(self):
-        """returns the edges of a graph"""
+        """returns the edges of a map"""
         return self.__generate_edges()
 
     @property
@@ -104,7 +104,7 @@ class Graph:
     def _nested_get(self, obj_type: str) -> List[str]:
         """Access a nested object in root by key sequence."""
         extracted_list = []
-        for key, item in self.__graph_dict.items():
+        for key, item in self.__type_dict.items():
             if obj_type in item.type:
                 extracted_list.append(key)
         return extracted_list
@@ -120,7 +120,7 @@ class Graph:
     def get_item_by_key(self, item_id: str) -> object:
         if item_id in self._store.keys():
             return self._store[item_id]
-        raise ValueError("Item not in graph.")
+        raise ValueError("Item not in map.")
 
     def is_known(self, vertex: object) -> bool:
         # All objects should have a 'unique_name' attribute
@@ -128,48 +128,48 @@ class Graph:
 
     def find_type(self, vertex: object) -> List[str]:
         if self.is_known(vertex):
-            return self.__graph_dict[vertex.unique_name].type
+            return self.__type_dict[vertex.unique_name].type
 
     def reset_type(self, obj, default_type: str):
-        if obj.unique_name in self.__graph_dict.keys():
-            self.__graph_dict[obj.unique_name].reset_type(default_type)
+        if obj.unique_name in self.__type_dict.keys():
+            self.__type_dict[obj.unique_name].reset_type(default_type)
 
     def change_type(self, obj, new_type: str):
-        if obj.unique_name in self.__graph_dict.keys():
-            self.__graph_dict[obj.unique_name].type = new_type
+        if obj.unique_name in self.__type_dict.keys():
+            self.__type_dict[obj.unique_name].type = new_type
 
     def add_vertex(self, obj: object, obj_type: str = None):
         name = obj.unique_name
         if name in self._store.keys():
             raise ValueError(f"Object name {name} already exists in the graph.")
         self._store[name] = obj
-        self.__graph_dict[name] = _EntryList()  # Add objects type to the list of types
-        self.__graph_dict[name].finalizer = weakref.finalize(
+        self.__type_dict[name] = _EntryList()  # Add objects type to the list of types
+        self.__type_dict[name].finalizer = weakref.finalize(
             self._store[name], self.prune, name
         )
-        self.__graph_dict[name].type = obj_type
+        self.__type_dict[name].type = obj_type
 
     def add_edge(self, start_obj: object, end_obj: object):
-        if start_obj.unique_name in self.__graph_dict.keys():
-            self.__graph_dict[start_obj.unique_name].append(end_obj.unique_name)
+        if start_obj.unique_name in self.__type_dict.keys():
+            self.__type_dict[start_obj.unique_name].append(end_obj.unique_name)
         else:
-            raise AttributeError("Start object not in graph.")
+            raise AttributeError("Start object not in map.")
 
     def get_edges(self, start_obj) -> List[str]:
-        if start_obj.unique_name in self.__graph_dict.keys():
-            return list(self.__graph_dict[start_obj.unique_name])
+        if start_obj.unique_name in self.__type_dict.keys():
+            return list(self.__type_dict[start_obj.unique_name])
         else:
             raise AttributeError
 
     def __generate_edges(self) -> list:
         """A static method generating the edges of the
-        graph "graph". Edges are represented as sets
+        map. Edges are represented as sets
         with one (a loop back to the vertex) or two
         vertices
         """
         edges = []
-        for vertex in self.__graph_dict:
-            for neighbour in self.__graph_dict[vertex]:
+        for vertex in self.__type_dict:
+            for neighbour in self.__type_dict[vertex]:
                 if {neighbour, vertex} not in edges:
                     edges.append({vertex, neighbour})
         return edges
@@ -181,19 +181,19 @@ class Graph:
         vertex2 = child_obj.unique_name
 
         if (
-            vertex1 in self.__graph_dict.keys()
-            and vertex2 in self.__graph_dict[vertex1]
+            vertex1 in self.__type_dict.keys()
+            and vertex2 in self.__type_dict[vertex1]
         ):
-            del self.__graph_dict[vertex1][self.__graph_dict[vertex1].index(vertex2)]
+            del self.__type_dict[vertex1][self.__type_dict[vertex1].index(vertex2)]
 
     def prune(self, key: str):
-        if key in self.__graph_dict.keys():
-            del self.__graph_dict[key]
+        if key in self.__type_dict.keys():
+            del self.__type_dict[key]
             del self._store[key]
 
     def find_isolated_vertices(self) -> list:
         """returns a list of isolated vertices."""
-        graph = self.__graph_dict
+        graph = self.__type_dict
         isolated = []
         for vertex in graph:
             print(isolated, vertex)
@@ -203,7 +203,7 @@ class Graph:
 
     def find_path(self, start_obj, end_obj, path=[]) -> list:
         """find a path from start_vertex to end_vertex
-        in graph"""
+        in map"""
 
         try:
             start_vertex = start_obj.unique_name
@@ -212,7 +212,7 @@ class Graph:
             start_vertex = start_obj
             end_vertex = end_obj
 
-        graph = self.__graph_dict
+        graph = self.__type_dict
         path = path + [start_vertex]
         if start_vertex == end_vertex:
             return path
@@ -227,12 +227,12 @@ class Graph:
 
     def find_all_paths(self, start_obj, end_obj, path=[]) -> list:
         """find all paths from start_vertex to
-        end_vertex in graph"""
+        end_vertex in map"""
 
         start_vertex = start_obj.unique_name
         end_vertex = end_obj.unique_name
 
-        graph = self.__graph_dict
+        graph = self.__type_dict
         path = path + [start_vertex]
         if start_vertex == end_vertex:
             return [path]
@@ -263,7 +263,7 @@ class Graph:
         optimum_path = []
         if start_obj is None:
             # We now have to find where to begin.....
-            for possible_start, vertices in self.__graph_dict.items():
+            for possible_start, vertices in self.__type_dict.items():
                 if end_vertex in vertices:
                     temp_path = self.find_path(possible_start, end_vertex)
                     if len(temp_path) < path_length:
@@ -275,10 +275,10 @@ class Graph:
         return optimum_path
 
     def is_connected(self, vertices_encountered=None, start_vertex=None) -> bool:
-        """determines if the graph is connected"""
+        """determines if the map is connected"""
         if vertices_encountered is None:
             vertices_encountered = set()
-        graph = self.__graph_dict
+        graph = self.__type_dict
         vertices = list(graph.keys())
         if not start_vertex:
             # chose a vertex from graph as a starting point
@@ -295,11 +295,11 @@ class Graph:
         return False
 
     def _clear(self):
-        """ Reset the graph to an empty state. """
+        """ Reset the map to an empty state. """
         self._store = weakref.WeakValueDictionary()
-        self.__graph_dict = {}
+        self.__type_dict = {}
         self._name_iterator_dict = {}
 
     def __repr__(self) -> str:
-        return f"Graph object of {len(self._store)} vertices."
+        return f"Map object of {len(self._store)} vertices."
 

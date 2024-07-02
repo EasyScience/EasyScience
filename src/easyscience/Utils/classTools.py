@@ -12,7 +12,7 @@ from typing import List
 from typing import Tuple
 
 from easyscience import global_object
-from easyscience.Utils.Hugger.Property import LoggedProperty
+from easyscience.global_object.hugger.property import LoggedProperty
 
 if TYPE_CHECKING:
     from easyscience.Utils.typing import BV

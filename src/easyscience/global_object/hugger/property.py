@@ -12,8 +12,9 @@ from typing import Callable
 from typing import List
 
 from easyscience import global_object
-from easyscience.Utils.Hugger.Hugger import PatcherFactory
-from easyscience.Utils.Hugger.Hugger import Store
+
+from .hugger import PatcherFactory
+from .hugger import Store
 
 
 class LoggedProperty(property):
