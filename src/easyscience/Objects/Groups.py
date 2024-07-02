@@ -17,9 +17,9 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
+from easyscience.global_object.undo_redo import NotarizedDict
 from easyscience.Objects.ObjectClasses import BasedBase
 from easyscience.Objects.ObjectClasses import Descriptor
-from easyscience.Utils.UndoRedo import NotarizedDict
 
 if TYPE_CHECKING:
     from easyscience.Utils.typing import B

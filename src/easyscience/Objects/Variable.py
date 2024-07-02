@@ -31,10 +31,10 @@ from easyscience import global_object
 from easyscience import pint
 from easyscience import ureg
 from easyscience.fitting.Constraints import SelfConstraint
+from easyscience.global_object.undo_redo import property_stack_deco
 from easyscience.Objects.core import ComponentSerializer
 from easyscience.Utils.classTools import addProp
 from easyscience.Utils.Exceptions import CoreSetException
-from easyscience.Utils.UndoRedo import property_stack_deco
 
 if TYPE_CHECKING:
     from easyscience.Utils.typing import C

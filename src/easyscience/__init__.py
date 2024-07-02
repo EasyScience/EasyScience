@@ -8,7 +8,7 @@ import numpy as np  # noqa: F401  This is used in the other codebases that uses 
 import pint
 
 from easyscience.__version__ import __version__ as __version__
-from easyscience.Objects.global_object import GlobalObject
+from easyscience.global_object import GlobalObject
 
 ureg = pint.UnitRegistry()
 global_object = GlobalObject()
