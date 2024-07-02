@@ -14,7 +14,7 @@ from easyscience.Objects.Groups import BaseCollection
 from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.ObjectClasses import Descriptor
 from easyscience.Objects.ObjectClasses import Parameter
-from easyscience import borg
+from easyscience import global_object
 
 test_dict = {
     "@module": "easyscience.Objects.Groups",
@@ -449,7 +449,7 @@ def test_baseCollection_iterator_dict(cls):
 
     obj = cls(name, *l_object)
     d = obj.as_dict()
-    borg.map._clear()
+    global_object.map._clear()
     obj2 = cls.from_dict(d)
 
     for index, item in enumerate(obj2):
@@ -491,7 +491,7 @@ def test_baseCollection_set_index(cls):
     assert obj[idx] == p2
     obj[idx] = p4
     assert obj[idx] == p4
-    edges = obj._borg.map.get_edges(obj)
+    edges = obj._global_object.map.get_edges(obj)
     assert len(edges) == len(obj)
     for item in obj:
         assert item.unique_name in edges
@@ -515,7 +515,7 @@ def test_baseCollection_set_index_based(cls):
     assert obj[idx] == p4
     obj[idx] = d
     assert obj[idx] == d
-    edges = obj._borg.map.get_edges(obj)
+    edges = obj._global_object.map.get_edges(obj)
     assert len(edges) == len(obj)
     for item in obj:
         assert item.unique_name in edges
@@ -551,9 +551,9 @@ class Beta(BaseObj):
 
 @pytest.mark.parametrize("cls", class_constructors)
 def test_basecollectionGraph(cls):
-    from easyscience import borg
+    from easyscience import global_object
 
-    G = borg.map
+    G = global_object.map
     name = "test"
     v = [1, 2]
     p = [Parameter(f"p{i}", v[i]) for i in range(len(v))]

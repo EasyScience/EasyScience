@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 from typing import List
 from typing import Tuple
 
-from easyscience import borg
+from easyscience import global_object
 from easyscience.Utils.Hugger.Property import LoggedProperty
 
 if TYPE_CHECKING:
@@ -64,8 +64,8 @@ def generatePath(model_obj: B, skip_first: bool = False) -> Tuple[List[int], Lis
     model_id = model_obj.unique_name
     for par in pars:
         elem = par.unique_name
-        route = borg.map.reverse_route(elem, model_id)
-        objs = [getattr(borg.map.get_item_by_key(r), "name") for r in route]
+        route = global_object.map.reverse_route(elem, model_id)
+        objs = [getattr(global_object.map.get_item_by_key(r), "name") for r in route]
         objs.reverse()
         names.append(".".join(objs[start_idx:]))
         ids.append(elem.int)

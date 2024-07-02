@@ -18,7 +18,7 @@ from typing import Union
 
 import numpy as np
 
-from easyscience import borg
+from easyscience import global_object
 
 
 class UndoCommand(metaclass=abc.ABCMeta):
@@ -59,9 +59,9 @@ def dict_stack_deco(func: Callable) -> Callable:
         # Only do the work to a NotarizedDict.
         if hasattr(obj, '_stack_enabled') and obj._stack_enabled:
             if not kwargs:
-                borg.stack.push(DictStack(obj, *args))
+                global_object.stack.push(DictStack(obj, *args))
             else:
-                borg.stack.push(DictStackReCreate(obj, **kwargs))
+                global_object.stack.push(DictStackReCreate(obj, **kwargs))
         else:
             func(obj, *args, **kwargs)
 
@@ -75,7 +75,7 @@ class NotarizedDict(UserDict):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._borg = borg
+        self._global_object = global_object
         self._stack_enabled = False
 
     @classmethod
@@ -467,10 +467,10 @@ def property_stack_deco(arg: Union[str, Callable], begin_macro: bool = False) ->
             if ret:
                 return
 
-            if borg.debug:
+            if global_object.debug:
                 print(f"I'm {obj} and have been set from {old_value} to {new_value}!")
 
-            borg.stack.push(PropertyStack(obj, func, old_value, new_value, **kwargs))
+            global_object.stack.push(PropertyStack(obj, func, old_value, new_value, **kwargs))
 
         return functools.update_wrapper(wrapper, func)
 

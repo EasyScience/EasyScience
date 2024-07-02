@@ -20,7 +20,7 @@ from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.ObjectClasses import Descriptor
 from easyscience.Objects.ObjectClasses import Parameter
 from easyscience.Utils.io.dict import DictSerializer
-from easyscience import borg
+from easyscience import global_object
 
 
 @pytest.fixture
@@ -195,7 +195,7 @@ def test_baseobj_as_dict(setup_pars: dict):
         if isinstance(check, dict) and isinstance(item, dict):
             if "@module" in item.keys():
                 with not_raises([ValueError, AttributeError]):
-                    borg.map._clear()
+                    global_object.map._clear()
                     this_obj = DictSerializer().decode(item)
 
             for key in check.keys():
@@ -363,7 +363,7 @@ def test_Base_GETSET():
     a_start = 5
     a_end = 10
     a = A.from_pars(a_start)
-    graph = a._borg.map
+    graph = a._global_object.map
 
     assert a.a.raw_value == a_start
     assert len(graph.get_edges(a)) == 1
@@ -404,7 +404,7 @@ def test_Base_GETSET_v2():
     a_start = 5
     a_end = 10
     a = A.from_pars(a_start)
-    graph = a._borg.map
+    graph = a._global_object.map
 
     assert a.a.raw_value == a_start
     assert len(graph.get_edges(a)) == 1
@@ -429,7 +429,7 @@ def test_Base_GETSET_v3():
     a_start = 5
     a_end = 10
     a = A.from_pars(a_start)
-    graph = a._borg.map
+    graph = a._global_object.map
 
     assert a.a.raw_value == a_start
     assert len(graph.get_edges(a)) == 1

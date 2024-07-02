@@ -8,9 +8,9 @@ import numpy as np  # noqa: F401  This is used in the other codebases that uses 
 import pint
 
 from easyscience.__version__ import __version__ as __version__
-from easyscience.Objects.Borg import Borg
+from easyscience.Objects.global_object import GlobalObject
 
 ureg = pint.UnitRegistry()
-borg = Borg()
-borg.instantiate_stack()
-borg.stack.enabled = False
+global_object = GlobalObject()
+global_object.instantiate_stack()
+global_object.stack.enabled = False

@@ -21,7 +21,7 @@ from typing import Union
 import numpy as np
 from asteval import Interpreter
 
-from easyscience import borg
+from easyscience import global_object
 from easyscience.Objects.core import ComponentSerializer
 
 if TYPE_CHECKING:
@@ -33,7 +33,7 @@ class ConstraintBase(ComponentSerializer, metaclass=ABCMeta):
     A base class used to describe a constraint to be applied to EasyScience base objects.
     """
 
-    _borg = borg
+    _global_object = global_object
 
     def __init__(
         self,
@@ -62,7 +62,7 @@ class ConstraintBase(ComponentSerializer, metaclass=ABCMeta):
             if dependent_obj.__class__.__name__ == 'Parameter':
                 if not dependent_obj.enabled:
                     raise AssertionError('A dependent object needs to be initially enabled.')
-                if borg.debug:
+                if global_object.debug:
                     print(f'Dependent variable {dependent_obj}. It should be a `Descriptor`.' f'Setting to fixed')
                 dependent_obj.enabled = False
                 self._finalizer = weakref.finalize(self, cleanup_constraint, self.dependent_obj_ids, True)
@@ -154,7 +154,7 @@ class ConstraintBase(ComponentSerializer, metaclass=ABCMeta):
         :param key: an EasyScience objects unique key
         :return: EasyScience object
         """
-        return self._borg.map.get_item_by_key(key)
+        return self._global_object.map.get_item_by_key(key)
 
 
 C = TypeVar('C', bound=ConstraintBase)
@@ -516,8 +516,8 @@ class FunctionalConstraint(ConstraintBase):
 
 def cleanup_constraint(obj_id: str, enabled: bool):
     try:
-        obj = borg.map.get_item_by_key(obj_id)
+        obj = global_object.map.get_item_by_key(obj_id)
         obj.enabled = enabled
     except ValueError:
-        if borg.debug:
+        if global_object.debug:
             print(f'Object with ID {obj_id} has already been deleted')

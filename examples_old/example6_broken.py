@@ -8,7 +8,7 @@ from typing import Callable
 
 import numpy as np
 
-from easyscience import borg
+from easyscience import global_object
 from easyscience.Fitting import Fitter
 from easyscience.Objects.Base import BaseObj
 from easyscience.Objects.Base import Parameter
@@ -92,7 +92,7 @@ class InterfaceTemplate(ComponentSerializer, metaclass=ABCMeta):
     """
 
     _interfaces = []
-    _borg = borg
+    _global_object = global_object
 
     def __init_subclass__(cls, is_abstract: bool = False, **kwargs):
         """
@@ -183,7 +183,7 @@ class Interface1(InterfaceTemplate):
         :return: None
         :rtype: noneType
         """
-        if self._borg.debug:
+        if self._global_object.debug:
             print(f"Interface1: Value of {value_label} set to {value}")
         setattr(self.calculator, value_label, value)
 
@@ -264,7 +264,7 @@ class Interface2(InterfaceTemplate):
         :return: None
         :rtype: noneType
         """
-        if self._borg.debug:
+        if self._global_object.debug:
             print(f"Interface2: Value of {value_label} set to {value}")
         self._data = json.loads(self.calculator.export_data())
         if value_label in self._data.keys():

@@ -12,9 +12,9 @@ from easyscience.Utils.Logging import Logger
 
 
 @singleton
-class Borg:
+class GlobalObject:
     """
-    Borg is the assimilated knowledge of `EasyScience`. Every class based on `EasyScience` gets brought
+    GlobalObject is the assimilated knowledge of `EasyScience`. Every class based on `EasyScience` gets brought
     into the collective.
     """
 

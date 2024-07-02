@@ -18,7 +18,7 @@ from .test_core import Descriptor
 from .test_core import check_dict
 from .test_core import dp_param_dict
 from .test_core import skip_dict
-from easyscience import borg
+from easyscience import global_object
 
 
 def recursive_remove(d, remove_keys: list) -> dict:
@@ -249,7 +249,7 @@ def test_custom_class_full_decode_with_numpy():
 
     obj = B(Descriptor("a", 1.0), np.array([1.0, 2.0, 3.0]))
     full_enc = obj.encode(encoder=DictSerializer, full_encode=True)
-    borg.map._clear()
+    global_object.map._clear()
     obj2 = B.decode(full_enc, decoder=DictSerializer)
     assert obj.name == obj2.name
     assert obj.a.raw_value == obj2.a.raw_value
@@ -270,7 +270,7 @@ def test_variable_DictSerializer_decode(dp_kwargs: dict, dp_cls: Type[Descriptor
         data_dict["raw_value"] = data_dict.pop("value")
 
     enc = obj.encode(encoder=DictSerializer)
-    borg.map._clear()
+    global_object.map._clear()
     dec = dp_cls.decode(enc, decoder=DictSerializer)
 
     for k in data_dict.keys():
@@ -291,7 +291,7 @@ def test_variable_DictSerializer_from_dict(dp_kwargs: dict, dp_cls: Type[Descrip
         data_dict["raw_value"] = data_dict.pop("value")
 
     enc = obj.encode(encoder=DictSerializer)
-    borg.map._clear()
+    global_object.map._clear()
     dec = dp_cls.from_dict(enc)
 
     for k in data_dict.keys():
