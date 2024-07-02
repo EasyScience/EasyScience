@@ -49,7 +49,14 @@ class LMFit(MinimizerBase):  # noqa: S101
             if isinstance(item, LMParameter):
                 value = item.value
             else:
-                value = item.raw_value
+                ## TODO clean when full move to new_variable
+                from easyscience.Objects.new_variable import Parameter
+
+                if isinstance(item, Parameter):
+                    value = item.value
+                else:
+                    value = item.raw_value
+
             model.set_param_hint('p' + str(name), value=value, min=item.min, max=item.max)
 
         # Cache the model for later reference
@@ -91,8 +98,17 @@ class LMFit(MinimizerBase):  # noqa: S101
                 par_name = int(name[1:])
                 if par_name in self._cached_pars.keys():
                     # This will take into account constraints
-                    if self._cached_pars[par_name].raw_value != value:
-                        self._cached_pars[par_name].value = value
+
+                    ## TODO clean when full move to new_variable
+                    from easyscience.Objects.new_variable import Parameter
+
+                    if isinstance(self._cached_pars[par_name], Parameter):
+                        if self._cached_pars[par_name].value != value:
+                            self._cached_pars[par_name].value = value
+                    else:
+                        if self._cached_pars[par_name].raw_value != value:
+                            self._cached_pars[par_name].value = value
+
                     # Since we are calling the parameter fset will be called.
             # TODO Pre processing here
             for constraint in self.fit_constraints():
@@ -105,6 +121,15 @@ class LMFit(MinimizerBase):  # noqa: S101
         # This is done as lmfit wants the function to be in the form:
         # f = (x, a=1, b=2)...
         # Where we need to be generic. Note that this won't hold for much outside of this scope.
+
+        ## TODO clean when full move to new_variable
+        from easyscience.Objects.new_variable import Parameter
+
+        if isinstance(parameter, Parameter):
+            default_value = parameter.value
+        else:
+            default_value = parameter.raw_value
+
         params = [
             inspect.Parameter('x', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=inspect._empty),
             *[
@@ -112,7 +137,7 @@ class LMFit(MinimizerBase):  # noqa: S101
                     'p' + str(name),
                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
                     annotation=inspect._empty,
-                    default=parameter.raw_value,
+                    default=default_value,
                 )
                 for name, parameter in self._cached_pars.items()
             ],

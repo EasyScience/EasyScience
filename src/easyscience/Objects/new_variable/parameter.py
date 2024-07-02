@@ -116,7 +116,16 @@ class Parameter(DescriptorNumber):
         self._constraints = Constraints(builtin=builtin_constraint, user={}, virtual={})
 
     @property
-    def full_value(self) -> sc.scalar:
+    def value_no_call_back(self) -> numbers.Number:
+        """
+        Get the currently hold value of self surpassing call back.
+
+        :return: Value of self without unit.
+        """
+        return self._scalar.value
+
+    @property
+    def full_value(self) -> Variable:
         """
         Get the value of self as a scipp scalar. This is should be usable for most cases.
         If a scipp scalar is not acceptable then the raw value can be obtained through `obj.value`.

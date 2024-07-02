@@ -100,8 +100,17 @@ class Bumps(MinimizerBase):  # noqa: S101
             for name, value in kwargs.items():
                 par_name = int(name[1:])
                 if par_name in self._cached_pars.keys():
-                    if self._cached_pars[par_name].raw_value != value:
-                        self._cached_pars[par_name].value = value
+
+                    ## TODO clean when full move to new_variable 
+                    from easyscience.Objects.new_variable import Parameter
+
+                    if isinstance(self._cached_pars[par_name], Parameter):
+                        if self._cached_pars[par_name].value != value:
+                            self._cached_pars[par_name].value = value
+                    else:
+                        if self._cached_pars[par_name].raw_value != value:
+                            self._cached_pars[par_name].value = value
+    
                     # update_fun = self._cached_pars[par_name]._callback.fset
                     # if update_fun:
                     #     update_fun(value)
@@ -117,6 +126,13 @@ class Bumps(MinimizerBase):  # noqa: S101
         # f = (x, a=1, b=2)...
         # Where we need to be generic. Note that this won't hold for much outside of this scope.
 
+        ## TODO clean when full move to new_variable 
+        from easyscience.Objects.new_variable import Parameter
+        if isinstance(parameter, Parameter):
+            default_value = parameter.value
+        else:
+            default_value = parameter.raw_value
+
         self._cached_pars_order = tuple(self._cached_pars.keys())
         params = [
             inspect.Parameter('x', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=inspect._empty),
@@ -125,7 +141,7 @@ class Bumps(MinimizerBase):  # noqa: S101
                     'p' + str(name),
                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
                     annotation=inspect._empty,
-                    default=self._cached_pars[name].raw_value,
+                    default=default_value,
                 )
                 for name in self._cached_pars_order
             ],
@@ -188,7 +204,14 @@ class Bumps(MinimizerBase):  # noqa: S101
             model = self.make_model(pars=parameters)
             model = model(x, y, weights)
         self._cached_model = model
-        self._p_0 = {f'p{key}': self._cached_pars[key].raw_value for key in self._cached_pars.keys()}
+
+        ## TODO clean when full move to new_variable 
+        from easyscience.Objects.new_variable import Parameter
+        if isinstance(self._cached_pars[list(self._cached_pars.keys())[0]], Parameter):
+            self._p_0 = {f'p{key}': self._cached_pars[key].value for key in self._cached_pars.keys()}
+        else:
+            self._p_0 = {f'p{key}': self._cached_pars[key].raw_value for key in self._cached_pars.keys()}
+
         problem = FitProblem(model)
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyscience import borg
@@ -230,9 +253,17 @@ class Bumps(MinimizerBase):  # noqa: S101
         :return: bumps Parameter compatible object.
         :rtype: BumpsParameter
         """
+        
+        ## TODO clean when full move to new_variable 
+        from easyscience.Objects.new_variable import Parameter
+        if isinstance(obj, Parameter):
+            value = obj.value
+        else:
+            value = obj.raw_value
+        
         return BumpsParameter(
             name='p' + str(NameConverter().get_key(obj)),
-            value=obj.raw_value,
+            value=value,
             bounds=[obj.min, obj.max],
             fixed=obj.fixed,
         )
@@ -281,7 +312,14 @@ class Bumps(MinimizerBase):  # noqa: S101
         item = {}
         for index, name in enumerate(self._cached_model._pnames):
             dict_name = int(name[1:])
-            item[name] = pars[dict_name].raw_value
+ 
+            ## TODO clean when full move to new_variable 
+            from easyscience.Objects.new_variable import Parameter
+            if isinstance(pars[dict_name], Parameter):
+                item[name] = pars[dict_name].value            
+            else:
+                item[name] = pars[dict_name].raw_value
+
         results.p0 = self._p_0
         results.p = item
         results.x = self._cached_model.x
