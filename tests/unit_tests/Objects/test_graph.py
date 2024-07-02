@@ -6,30 +6,30 @@ from easyscience.Objects.Graph import Graph
 from easyscience.Objects.Variable import Parameter
 from easyscience.Objects.ObjectClasses import BaseObj
 import pytest
-from easyscience import borg
+from easyscience import global_object
 
 class TestGraph:
     @pytest.fixture
     def clear(self):
-        borg.map._clear()
+        global_object.map._clear()
 
     def test_clear(self, clear):
         test_obj = BaseObj("test")
-        assert len(borg.map._store) == 1
-        assert len(borg.map._Graph__graph_dict) == 1
-        assert borg.map._name_iterator_dict == {"BaseObj": 0}
-        borg.map._clear()
-        assert len(borg.map._store) == 0
-        assert borg.map._Graph__graph_dict == {}
-        assert borg.map._name_iterator_dict == {}
+        assert len(global_object.map._store) == 1
+        assert len(global_object.map._Graph__graph_dict) == 1
+        assert global_object.map._name_iterator_dict == {"BaseObj": 0}
+        global_object.map._clear()
+        assert len(global_object.map._store) == 0
+        assert global_object.map._Graph__graph_dict == {}
+        assert global_object.map._name_iterator_dict == {}
 
     def test_add_vertex(self, clear):
         test_obj = BaseObj("test")
-        assert len(borg.map._store) == 1
-        assert len(borg.map._Graph__graph_dict) == 1
-        assert borg.map._name_iterator_dict == {"BaseObj": 0}
+        assert len(global_object.map._store) == 1
+        assert len(global_object.map._Graph__graph_dict) == 1
+        assert global_object.map._name_iterator_dict == {"BaseObj": 0}
 
     @pytest.mark.parametrize("name", ["test", "test2", "test3"])
     def test_clear_fixture(self, name, clear):
         test_obj= BaseObj(name, unique_name=name)
-        assert len(borg.map._store) == 1
+        assert len(global_object.map._store) == 1

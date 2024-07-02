@@ -31,9 +31,9 @@ def createParam(option):
 
 
 def doUndoRedo(obj, attr, future, additional=""):
-    from easyscience import borg
+    from easyscience import global_object
 
-    borg.stack.enabled = True
+    global_object.stack.enabled = True
     e = False
 
     def getter(_obj, _attr):
@@ -46,16 +46,16 @@ def doUndoRedo(obj, attr, future, additional=""):
         previous = getter(obj, attr)
         setattr(obj, attr, future)
         assert getter(obj, attr) == future
-        assert borg.stack.canUndo()
-        borg.stack.undo()
+        assert global_object.stack.canUndo()
+        global_object.stack.undo()
         assert getter(obj, attr) == previous
-        assert borg.stack.canRedo()
-        borg.stack.redo()
+        assert global_object.stack.canRedo()
+        global_object.stack.redo()
         assert getter(obj, attr) == future
     except Exception as err:
         e = err
     finally:
-        borg.stack.enabled = False
+        global_object.stack.enabled = False
     return e
 
 
@@ -92,9 +92,9 @@ def test_SinglesUndoRedo(idx, test):
 
 @pytest.mark.parametrize("value", (True, False))
 def test_Parameter_Bounds_UndoRedo(value):
-    from easyscience import borg
+    from easyscience import global_object
 
-    borg.stack.enabled = True
+    global_object.stack.enabled = True
     p = Parameter("test", 1, enabled=value)
     assert p.min == -np.inf
     assert p.max == np.inf
@@ -106,7 +106,7 @@ def test_Parameter_Bounds_UndoRedo(value):
     assert p.bounds == (0, 2)
     assert p.enabled is True
 
-    borg.stack.undo()
+    global_object.stack.undo()
     assert p.min == -np.inf
     assert p.max == np.inf
     assert p.bounds == (-np.inf, np.inf)
@@ -137,9 +137,9 @@ def test_BaseCollectionUndoRedo():
 
     # assert not doUndoRedo(obj, 'name', name2)
 
-    from easyscience import borg
+    from easyscience import global_object
 
-    borg.stack.enabled = True
+    global_object.stack.enabled = True
 
     original_length = len(obj)
     p = Parameter("slip_in", 50)
@@ -151,12 +151,12 @@ def test_BaseCollectionUndoRedo():
         assert item == obj_r
 
     # Test inserting items
-    borg.stack.undo()
+    global_object.stack.undo()
     assert len(obj) == original_length
     _ = objs.pop(idx)
     for item, obj_r in zip(obj, objs):
         assert item == obj_r
-    borg.stack.redo()
+    global_object.stack.redo()
     assert len(obj) == original_length + 1
     objs.insert(idx, p)
     for item, obj_r in zip(obj, objs):
@@ -168,13 +168,13 @@ def test_BaseCollectionUndoRedo():
     assert len(obj) == original_length
     for item, obj_r in zip(obj, objs):
         assert item == obj_r
-    borg.stack.undo()
+    global_object.stack.undo()
     assert len(obj) == original_length + 1
     objs.insert(idx, p)
     for item, obj_r in zip(obj, objs):
         assert item == obj_r
     del objs[idx]
-    borg.stack.redo()
+    global_object.stack.redo()
     assert len(obj) == original_length
     for item, obj_r in zip(obj, objs):
         assert item == obj_r
@@ -186,45 +186,45 @@ def test_BaseCollectionUndoRedo():
     assert len(obj) == original_length
     for item, obj_r in zip(obj, objs):
         assert item == obj_r
-    borg.stack.undo()
+    global_object.stack.undo()
     for i in range(len(obj)):
         if i == idx:
             item = old_item
         else:
             item = objs[i]
         assert obj[i] == item
-    borg.stack.redo()
+    global_object.stack.redo()
     for item, obj_r in zip(obj, objs):
         assert item == obj_r
 
-    borg.stack.enabled = False
+    global_object.stack.enabled = False
 
 
 def test_UndoRedoMacros():
     items = [createSingleObjs(idx) for idx in range(5)]
     offset = 5
     undo_text = "test_macro"
-    from easyscience import borg
+    from easyscience import global_object
 
-    borg.stack.enabled = True
-    borg.stack.beginMacro(undo_text)
+    global_object.stack.enabled = True
+    global_object.stack.beginMacro(undo_text)
     values = [item.raw_value for item in items]
 
     for item, value in zip(items, values):
         item.value = value + offset
-    borg.stack.endMacro()
+    global_object.stack.endMacro()
 
     for item, old_value in zip(items, values):
         assert item.raw_value == old_value + offset
-    assert borg.stack.undoText() == undo_text
+    assert global_object.stack.undoText() == undo_text
 
-    borg.stack.undo()
+    global_object.stack.undo()
 
     for item, old_value in zip(items, values):
         assert item.raw_value == old_value
-    assert borg.stack.redoText() == undo_text
+    assert global_object.stack.redoText() == undo_text
 
-    borg.stack.redo()
+    global_object.stack.redo()
     for item, old_value in zip(items, values):
         assert item.raw_value == old_value + offset
 
@@ -273,21 +273,21 @@ def test_fittingUndoRedo(fit_engine):
     except AttributeError:
         pytest.skip(msg=f"{fit_engine} is not installed")
 
-    from easyscience import borg
+    from easyscience import global_object
 
-    borg.stack.enabled = True
+    global_object.stack.enabled = True
     res = f.fit(x, y)
 
     # assert l1.c.raw_value == pytest.approx(l2.c.raw_value, rel=l2.c.error * 3)
     # assert l1.m.raw_value == pytest.approx(l2.m.raw_value, rel=l2.m.error * 3)
-    assert borg.stack.undoText() == "Fitting routine"
+    assert global_object.stack.undoText() == "Fitting routine"
 
-    borg.stack.undo()
+    global_object.stack.undo()
     assert l2.m.raw_value == m_sp
     assert l2.c.raw_value == c_sp
-    assert borg.stack.redoText() == "Fitting routine"
+    assert global_object.stack.redoText() == "Fitting routine"
 
-    borg.stack.redo()
+    global_object.stack.redo()
     assert l2.m.raw_value == res.p[f"p{l2.m.unique_name}"]
     assert l2.c.raw_value == res.p[f"p{l2.c.unique_name}"]
 
@@ -306,8 +306,8 @@ def test_fittingUndoRedo(fit_engine):
 #     result_value = f_fun(a, b)
 #     result_error = (sa ** 2 + sb ** 2) ** 0.5
 #
-#     from easyscience import borg
-#     borg.stack.enabled = True
+#     from easyscience import global_object
+#     global_object.stack.enabled = True
 #
 #     # Perform basic test
 #     p1 = Parameter('a', a)
@@ -315,9 +315,9 @@ def test_fittingUndoRedo(fit_engine):
 #
 #     p1 = p_fun(p1, p2)
 #     assert float(p1) == result_value
-#     borg.stack.undo()
+#     global_object.stack.undo()
 #     assert float(p1) == a
-#     borg.stack.redo()
+#     global_object.stack.redo()
 #     assert float(p1) == result_value
 #
 #     # Perform basic + error
@@ -326,10 +326,10 @@ def test_fittingUndoRedo(fit_engine):
 #     p1 = p_fun(p1, p2)
 #     assert float(p1) == result_value
 #     assert p1.error == result_error
-#     borg.stack.undo()
+#     global_object.stack.undo()
 #     assert float(p1) == a
 #     assert p1.error == sa
-#     borg.stack.redo()
+#     global_object.stack.redo()
 #     assert float(p1) == result_value
 #     assert p1.error == result_error
 #
@@ -340,11 +340,11 @@ def test_fittingUndoRedo(fit_engine):
 #     assert float(p1) == result_value
 #     assert p1.error == result_error
 #     assert str(p1.unit) == 'meter / second'
-#     borg.stack.undo()
+#     global_object.stack.undo()
 #     assert float(p1) == a
 #     assert p1.error == sa
 #     assert str(p1.unit) == 'meter / second'
-#     borg.stack.redo()
+#     global_object.stack.redo()
 #     assert float(p1) == result_value
 #     assert p1.error == result_error
 #     assert str(p1.unit) == 'meter / second'
@@ -368,8 +368,8 @@ def test_fittingUndoRedo(fit_engine):
 #     result_value = f_fun(a, b)
 #     result_error = ((sa / a) ** 2 + (sb / b) ** 2) ** 0.5 * result_value
 #
-#     from easyscience import borg
-#     borg.stack.enabled = True
+#     from easyscience import global_object
+#     global_object.stack.enabled = True
 #
 #     # Perform basic test
 #     p1 = Parameter('a', a)
@@ -377,9 +377,9 @@ def test_fittingUndoRedo(fit_engine):
 #
 #     p1 = p_fun(p1, p2)
 #     assert float(p1) == result_value
-#     borg.stack.undo()
+#     global_object.stack.undo()
 #     assert float(p1) == a
-#     borg.stack.redo()
+#     global_object.stack.redo()
 #     assert float(p1) == result_value
 #
 #     # Perform basic + error
@@ -388,10 +388,10 @@ def test_fittingUndoRedo(fit_engine):
 #     p1 = p_fun(p1, p2)
 #     assert float(p1) == result_value
 #     assert p1.error == result_error
-#     borg.stack.undo()
+#     global_object.stack.undo()
 #     assert float(p1) == a
 #     assert p1.error == sa
-#     borg.stack.redo()
+#     global_object.stack.redo()
 #     assert float(p1) == result_value
 #     assert p1.error == result_error
 #
@@ -402,11 +402,11 @@ def test_fittingUndoRedo(fit_engine):
 #     assert float(p1) == result_value
 #     assert p1.error == result_error
 #     assert str(p1.unit) == u_str
-#     borg.stack.undo()
+#     global_object.stack.undo()
 #     assert float(p1) == a
 #     assert p1.error == sa
 #     assert str(p1.unit) == unit
-#     borg.stack.redo()
+#     global_object.stack.redo()
 #     assert float(p1) == result_value
 #     assert p1.error == result_error
 #     assert str(p1.unit) == u_str

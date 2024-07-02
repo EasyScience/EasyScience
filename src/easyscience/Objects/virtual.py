@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 from typing import Iterable
 from typing import MutableSequence
 
-from easyscience import borg
+from easyscience import global_object
 from easyscience.Fitting.Constraints import ObjConstraint
 
 if TYPE_CHECKING:
@@ -28,7 +28,7 @@ def raise_(ex):
 def _remover(a_obj_id: str, v_obj_id: str):
     try:
         # Try to get parent object (might be deleted)
-        a_obj = borg.map.get_item_by_key(a_obj_id)
+        a_obj = global_object.map.get_item_by_key(a_obj_id)
     except ValueError:
         return
     if a_obj._constraints["virtual"].get(v_obj_id, False):
@@ -100,15 +100,15 @@ def component_realizer(obj: BV, component: str, recursive: bool = True):
                 in ec_var.__dict__.values()
             ):
                 continue
-            component._borg.map.prune_vertex_from_edge(
+            component._global_object.map.prune_vertex_from_edge(
                 component, component._kwargs[key]
             )
-            component._borg.map.add_edge(component, old_component._kwargs[key])
+            component._global_object.map.add_edge(component, old_component._kwargs[key])
             component._kwargs[key] = old_component._kwargs[key]
             done_mapping = False
     if done_mapping:
-        obj._borg.map.prune_vertex_from_edge(obj, old_component)
-        obj._borg.map.add_edge(obj, new_components)
+        obj._global_object.map.prune_vertex_from_edge(obj, old_component)
+        obj._global_object.map.add_edge(obj, new_components)
         obj._kwargs[component] = new_components
 
 
@@ -128,7 +128,7 @@ def virtualizer(obj: BV) -> BV:
     # First  check if we're already a virtual object
     if getattr(obj, "_is_virtual", False):
         new_obj = deepcopy(obj)
-        old_obj = obj._borg.map.get_item_by_key(obj._derived_from)
+        old_obj = obj._global_object.map.get_item_by_key(obj._derived_from)
         constraint = ObjConstraint(new_obj, "", old_obj)
         constraint.external = True
         old_obj._constraints["virtual"][

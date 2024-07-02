@@ -17,7 +17,7 @@ from typing import Optional
 from typing import Set
 from typing import TypeVar
 
-from easyscience import borg
+from easyscience import global_object
 from easyscience.Utils.classTools import addLoggedProp
 
 from .core import ComponentSerializer
@@ -31,17 +31,17 @@ if TYPE_CHECKING:
 
 
 class BasedBase(ComponentSerializer):
-    __slots__ = ["_name", "_borg", "user_data", "_kwargs"]
+    __slots__ = ["_name", "_global_object", "user_data", "_kwargs"]
 
     _REDIRECT = {}
 
     def __init__(self, name: str, interface: Optional[iF] = None, unique_name: Optional[str] = None):
-        self._borg = borg
+        self._global_object = global_object
         if unique_name is None:
             unique_name = self._unique_name_generator()
         self._unique_name = unique_name
         self._name = name
-        self._borg.map.add_vertex(self, obj_type="created")
+        self._global_object.map.add_vertex(self, obj_type="created")
         self.interface = interface
         self.user_data: dict = {}
 
@@ -77,7 +77,7 @@ class BasedBase(ComponentSerializer):
         if not isinstance(new_unique_name, str):
             raise TypeError("Unique name has to be a string.")
         self._unique_name = new_unique_name
-        self._borg.map.add_vertex(self)
+        self._global_object.map.add_vertex(self)
 
     @property
     def name(self) -> str:
@@ -132,11 +132,11 @@ class BasedBase(ComponentSerializer):
             )
         interfaceable_children = [
             key
-            for key in self._borg.map.get_edges(self)
-            if issubclass(type(self._borg.map.get_item_by_key(key)), BasedBase)
+            for key in self._global_object.map.get_edges(self)
+            if issubclass(type(self._global_object.map.get_item_by_key(key)), BasedBase)
         ]
         for child_key in interfaceable_children:
-            child = self._borg.map.get_item_by_key(child_key)
+            child = self._global_object.map.get_item_by_key(child_key)
             child.interface = self.interface
         self.interface.generate_bindings(self)
 
@@ -208,7 +208,7 @@ class BasedBase(ComponentSerializer):
         Generate a generic unique name for the object using the class name and a global iterator.
         """
         class_name = self.__class__.__name__
-        iterator_string = str(self._borg.map._get_name_iterator(class_name))
+        iterator_string = str(self._global_object.map._get_name_iterator(class_name))
         return class_name + "_" + iterator_string
 
     def __dir__(self) -> Iterable[str]:
@@ -262,8 +262,8 @@ class BaseObj(BasedBase):
             if issubclass(
                 type(kwargs[key]), (BasedBase, Descriptor)
             ) or "BaseCollection" in [c.__name__ for c in type(kwargs[key]).__bases__]:
-                self._borg.map.add_edge(self, kwargs[key])
-                self._borg.map.reset_type(kwargs[key], "created_internal")
+                self._global_object.map.add_edge(self, kwargs[key])
+                self._global_object.map.reset_type(kwargs[key], "created_internal")
             addLoggedProp(
                 self,
                 key,
@@ -296,8 +296,8 @@ class BaseObj(BasedBase):
         :return: None
         """
         self._kwargs[key] = component
-        self._borg.map.add_edge(self, component)
-        self._borg.map.reset_type(component, "created_internal")
+        self._global_object.map.add_edge(self, component)
+        self._global_object.map.reset_type(component, "created_internal")
         addLoggedProp(
             self,
             key,
@@ -322,13 +322,13 @@ class BaseObj(BasedBase):
         ):
             if issubclass(type(getattr(self, key, None)), (BasedBase, Descriptor)):
                 old_obj = self.__getattribute__(key)
-                self._borg.map.prune_vertex_from_edge(self, old_obj)
+                self._global_object.map.prune_vertex_from_edge(self, old_obj)
             self._add_component(key, value)
         else:
             if hasattr(self, key) and issubclass(type(value), (BasedBase, Descriptor)):
                 old_obj = self.__getattribute__(key)
-                self._borg.map.prune_vertex_from_edge(self, old_obj)
-                self._borg.map.add_edge(self, value)
+                self._global_object.map.prune_vertex_from_edge(self, old_obj)
+                self._global_object.map.add_edge(self, value)
         super(BaseObj, self).__setattr__(key, value)
         # Update the interface bindings if something changed (BasedBase and Descriptor)
         if old_obj is not None:

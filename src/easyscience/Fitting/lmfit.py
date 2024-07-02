@@ -193,11 +193,11 @@ class lmfit(FittingTemplate):  # noqa: S101
             minimizer_kwargs = {"fit_kws": minimizer_kwargs}
         minimizer_kwargs.update(engine_kwargs)
 
-        # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
-        from easyscience import borg
+        # Why do we do this? Because a fitting template has to have global_object instantiated outside pre-runtime
+        from easyscience import global_object
 
-        stack_status = borg.stack.enabled
-        borg.stack.enabled = False
+        stack_status = global_object.stack.enabled
+        global_object.stack.enabled = False
 
         try:
             if model is None:
@@ -257,15 +257,15 @@ class lmfit(FittingTemplate):  # noqa: S101
         :return: None
         :rtype: noneType
         """
-        from easyscience import borg
+        from easyscience import global_object
 
         pars = self._cached_pars
         if stack_status:
             for name in pars.keys():
                 pars[name].value = self._cached_pars_vals[name][0]
                 pars[name].error = self._cached_pars_vals[name][1]
-            borg.stack.enabled = True
-            borg.stack.beginMacro("Fitting routine")
+            global_object.stack.enabled = True
+            global_object.stack.beginMacro("Fitting routine")
         for name in pars.keys():
             pars[name].value = fit_result.params["p" + str(name)].value
             if fit_result.errorbars:
@@ -273,7 +273,7 @@ class lmfit(FittingTemplate):  # noqa: S101
             else:
                 pars[name].error = 0.0
         if stack_status:
-            borg.stack.endMacro()
+            global_object.stack.endMacro()
 
     def _gen_fit_results(self, fit_results: ModelResult, **kwargs) -> FitResults:
         """

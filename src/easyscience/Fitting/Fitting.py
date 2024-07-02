@@ -19,7 +19,7 @@ from typing import TypeVar
 import numpy as np
 
 import easyscience.Fitting as Fitting
-from easyscience import borg
+from easyscience import global_object
 from easyscience import default_fitting_engine
 from easyscience.Objects.Groups import BaseCollection
 
@@ -36,7 +36,7 @@ class Fitter:
     Wrapper to the fitting engines
     """
 
-    _borg = borg
+    _global_object = global_object
 
     def __init__(self, fit_object: Optional[B] = None, fit_function: Optional[Callable] = None):
         self._fit_object = fit_object
