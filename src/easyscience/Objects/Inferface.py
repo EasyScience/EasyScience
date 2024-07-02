@@ -163,11 +163,14 @@ class InterfaceFactoryTemplate:
                     continue
                 idx = props_names.index(item_key)
                 prop = props[idx]
+
+                ## TODO clean when full move to new_variable
                 if isinstance(prop, easyscience.Objects.new_variable.parameter.Parameter):
                     # Should be fetched this way to ensure we don't get value from callback
                     prop_value = prop.value_no_call_back
                 else:
                     prop_value = prop.raw_value
+
                 prop._callback = item.make_prop(item_key)
                 prop._callback.fset(prop_value)
 
