@@ -13,8 +13,7 @@ class TestGraph:
     def clear(self):
         borg.map._clear()
 
-    def test_clear(self):
-        borg.map._clear()
+    def test_clear(self, clear):
         test_obj = BaseObj("test")
         assert len(borg.map._store) == 1
         assert len(borg.map._Graph__graph_dict) == 1
@@ -24,3 +23,13 @@ class TestGraph:
         assert borg.map._Graph__graph_dict == {}
         assert borg.map._name_iterator_dict == {}
 
+    def test_add_vertex(self, clear):
+        test_obj = BaseObj("test")
+        assert len(borg.map._store) == 1
+        assert len(borg.map._Graph__graph_dict) == 1
+        assert borg.map._name_iterator_dict == {"BaseObj": 0}
+
+    @pytest.mark.parametrize("name", ["test", "test2", "test3"])
+    def test_clear_fixture(self, name, clear):
+        test_obj= BaseObj(name, unique_name=name)
+        assert len(borg.map._store) == 1
