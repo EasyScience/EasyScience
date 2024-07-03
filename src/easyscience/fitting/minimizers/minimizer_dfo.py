@@ -295,14 +295,14 @@ class DFO(MinimizerBase):  # noqa: S101
 
     def dfols_fit(self, model: Callable, **kwargs):
         """
-                Method to convert EasyScience styling to DFO-LS styling (yes, again)
+        Method to convert EasyScience styling to DFO-LS styling (yes, again)
 
-                :param model: Model which accepts f(x[0])
-                :type model: Callable
-                :param kwargs: Any additional arguments for dfols.solver
-                :type kwargs: dict
-                :return: dfols fit results container
-        ="""
+        :param model: Model which accepts f(x[0])
+        :type model: Callable
+        :param kwargs: Any additional arguments for dfols.solver
+        :type kwargs: dict
+        :return: dfols fit results container
+        """
 
         ## TODO clean when full move to new_variable
         from easyscience.Objects.new_variable import Parameter
@@ -316,5 +316,10 @@ class DFO(MinimizerBase):  # noqa: S101
             np.array([par.min for par in iter(self._cached_pars.values())]),
             np.array([par.max for par in iter(self._cached_pars.values())]),
         )
-        results = dfols.solve(model, x0, bounds=bounds, **kwargs)
+        # https://numericalalgorithmsgroup.github.io/dfols/build/html/userguide.html
+        if np.isinf(bounds).any():
+            results = dfols.solve(model, x0, bounds=bounds, **kwargs)
+        else:
+            # It is only possible to scale (normalize) variables if they are bound (different from inf)
+            results = dfols.solve(model, x0, bounds=bounds, scaling_within_bounds=True, **kwargs)
         return results
