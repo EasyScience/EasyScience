@@ -35,7 +35,6 @@ dependencies = [
     "DFO-LS",
     "lmfit",
     "numpy==1.26",  # Should be updated to numpy 2.0
-    "pint",
     "uncertainties",
     "xarray",
     "pint==0.23",  # Only to ensure that unit is reported as dimensionless rather than empty string
