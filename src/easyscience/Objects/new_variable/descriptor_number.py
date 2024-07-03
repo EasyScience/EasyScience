@@ -6,6 +6,7 @@ from typing import Dict
 from typing import Optional
 from typing import Union
 
+import numpy as np
 import scipp as sc
 from scipp import Variable
 
@@ -154,6 +155,32 @@ class DescriptorNumber(DescriptorBase):
             variance_float = float(variance_float)
         self._scalar.variance = variance_float
 
+
+    @property
+    def error(self) -> float:
+        """
+        The standard deviation for the parameter.
+
+        :return: Error associated with parameter
+        """
+        return float(np.sqrt(self._scalar.variance))
+
+    @error.setter
+    @property_stack_deco
+    def error(self, value: float) -> None:
+        """
+        Set the standard deviation for the parameter.
+
+        :param value: New error value
+        """
+        if value is not None:
+            if not isinstance(value, numbers.Number):
+                raise TypeError(f'{value=} must be a number or None')
+            if value < 0:
+                raise ValueError(f'{value=} must be positive')
+            value = float(value)
+        self._scalar.variance = value**2
+
     def convert_unit(self, unit_str: str):
         """
         Convert the value from one unit system to another.
@@ -171,18 +198,24 @@ class DescriptorNumber(DescriptorBase):
     # Just to get return type right
     def __copy__(self) -> DescriptorNumber:
         return super().__copy__()
-
+   
     def __repr__(self) -> str:
         """Return printable representation."""
-        class_name = self.__class__.__name__
-        obj_name = self._name
-        obj_value = self._scalar.value
+        string='<'
+        string+= self.__class__.__name__+' '
+        string+=f"'{self._name}': "
+        string+= f'{self._scalar.value:.4f}'
+        if self.variance:
+            string += f' \u00B1 {self.error:.4f}'
         obj_unit = self._scalar.unit
         if obj_unit == 'dimensionless':
             obj_unit = ''
         else:
             obj_unit = f' {obj_unit}'
-        return f"<{class_name} '{obj_name}': {obj_value:0.04f}{obj_unit}>"
+        string+= obj_unit
+        string+='>'
+        return string
+        # return f"<{class_name} '{obj_name}': {obj_value:0.04f}{obj_unit}>"
 
     def as_dict(self) -> Dict[str, Any]:
         raw_dict = super().as_dict()

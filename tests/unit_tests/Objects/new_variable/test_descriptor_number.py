@@ -169,7 +169,7 @@ class TestDescriptorNumber:
         repr_str = str(descriptor)
 
         # Expect
-        assert repr_str == "<DescriptorNumber 'name': 1.0000 m>"
+        assert repr_str ==  "<DescriptorNumber 'name': 1.0000 ± 0.3162 m>"
 
     def test_copy(self, descriptor: DescriptorNumber):
         # When Then
