@@ -12,7 +12,7 @@ from easyscience.fitting.Constraints import ObjConstraint
 from easyscience.fitting.fitter import Fitter
 from easyscience.fitting.minimizers import FitError
 from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.new_variable import Parameter
+from easyscience.Objects.ObjectClasses import Parameter
 
 
 class AbsSin(BaseObj):
@@ -25,7 +25,7 @@ class AbsSin(BaseObj):
         super().__init__("sin", offset=offset, phase=phase)
 
     def __call__(self, x):
-        return np.abs(np.sin(self.phase.value * x + self.offset.value))
+        return np.abs(np.sin(self.phase.raw_value * x + self.offset.raw_value))
 
 
 class AbsSin2D(BaseObj):
@@ -41,8 +41,8 @@ class AbsSin2D(BaseObj):
         X = x[:, :, 0]   # x is a 2D array
         Y = x[:, :, 1]
         return np.abs(
-            np.sin(self.phase.value * X + self.offset.value)
-        ) * np.abs(np.sin(self.phase.value * Y + self.offset.value))
+            np.sin(self.phase.raw_value * X + self.offset.raw_value)
+        ) * np.abs(np.sin(self.phase.raw_value * Y + self.offset.raw_value))
 
 
 class AbsSin2DL(AbsSin2D):
@@ -50,8 +50,8 @@ class AbsSin2DL(AbsSin2D):
         X = x[:, 0]   # x is a 1D array
         Y = x[:, 1]
         return np.abs(
-            np.sin(self.phase.value * X + self.offset.value)
-        ) * np.abs(np.sin(self.phase.value * Y + self.offset.value))
+            np.sin(self.phase.raw_value * X + self.offset.raw_value)
+        ) * np.abs(np.sin(self.phase.raw_value * Y + self.offset.raw_value))
 
 
 def check_fit_results(result, sp_sin, ref_sin, x, **kwargs):
@@ -71,7 +71,7 @@ def check_fit_results(result, sp_sin, ref_sin, x, **kwargs):
     for item1, item2 in zip(sp_sin._kwargs.values(), ref_sin._kwargs.values()):
         # assert item.error > 0 % This does not work as some methods don't calculate error
         assert item1.error == pytest.approx(0, abs=1e-1)
-        assert item1.value == pytest.approx(item2.value, abs=5e-3)
+        assert item1.raw_value == pytest.approx(item2.raw_value, abs=5e-3)
     y_calc_ref = ref_sin(x)
     assert result.y_calc == pytest.approx(y_calc_ref, abs=1e-2)
     assert result.residual == pytest.approx(sp_sin(x) - y_calc_ref, abs=1e-2)
@@ -103,8 +103,8 @@ def test_basic_fit(fit_engine, with_errors):
 
     if fit_engine is not None:
         assert result.minimizer_engine.wrapping == fit_engine
-    assert sp_sin.phase.value == pytest.approx(ref_sin.phase.value, rel=1e-3)
-    assert sp_sin.offset.value == pytest.approx(ref_sin.offset.value, rel=1e-3)
+    assert sp_sin.phase.raw_value == pytest.approx(ref_sin.phase.raw_value, rel=1e-3)
+    assert sp_sin.offset.raw_value == pytest.approx(ref_sin.offset.raw_value, rel=1e-3)
 
 
 @pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo"])
@@ -119,11 +119,11 @@ def test_fit_result(fit_engine):
     sp_sin.phase.fixed = False
 
     sp_ref1 = {
-        f"p{sp_sin._borg.map.convert_id_to_key(item1)}": item1.value
+        f"p{sp_sin._borg.map.convert_id_to_key(item1)}": item1.raw_value
         for item1, item2 in zip(sp_sin._kwargs.values(), ref_sin._kwargs.values())
     }
     sp_ref2 = {
-        f"p{sp_sin._borg.map.convert_id_to_key(item1)}": item2.value
+        f"p{sp_sin._borg.map.convert_id_to_key(item1)}": item2.raw_value
         for item1, item2 in zip(sp_sin._kwargs.values(), ref_sin._kwargs.values())
     }
 
