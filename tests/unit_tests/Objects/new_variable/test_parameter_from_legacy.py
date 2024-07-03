@@ -183,7 +183,7 @@ def test_parameter_repr():
     d = Parameter("test", 1, unit="cm")
     assert repr(d) == f"<{d.__class__.__name__} 'test': 1.0000 cm, bounds=[-inf:inf]>"
     d = Parameter("test", 1, variance=0.1)
-    assert repr(d) == f"<{d.__class__.__name__} 'test': 1.0000 +/-0.1, bounds=[-inf:inf]>"
+    assert repr(d) == f"<{d.__class__.__name__} 'test': 1.0000 ± 0.3162, bounds=[-inf:inf]>"
 
     d = Parameter("test", 1, fixed=True)
     assert (
@@ -193,7 +193,7 @@ def test_parameter_repr():
     d = Parameter("test", 1, unit="cm", variance=0.1, fixed=True)
     assert (
         repr(d)
-        == f"<{d.__class__.__name__} 'test': 1.0000 cm +/-0.1 (fixed), bounds=[-inf:inf]>"
+        == f"<{d.__class__.__name__} 'test': 1.0000 ± 0.3162 cm (fixed), bounds=[-inf:inf]>"
     )
 
 

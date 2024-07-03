@@ -305,31 +305,6 @@ class Parameter(DescriptorNumber):
         self._fixed = fixed
 
     @property
-    def error(self) -> float:
-        """
-        The standard deviation for the parameter.
-
-        :return: Error associated with parameter
-        """
-        return float(np.sqrt(self._scalar.variance))
-
-    @error.setter
-    @property_stack_deco
-    def error(self, value: float) -> None:
-        """
-        Set the standard deviation for the parameter.
-
-        :param value: New error value
-        """
-        if value is not None:
-            if not isinstance(value, numbers.Number):
-                raise TypeError(f'{value=} must be a number or None')
-            if value < 0:
-                raise ValueError(f'{value=} must be positive')
-            value = float(value)
-        self._scalar.variance = value**2
-
-    @property
     def bounds(self) -> Tuple[numbers.Number, numbers.Number]:
         """
         Get the bounds of the parameter.
@@ -435,8 +410,6 @@ class Parameter(DescriptorNumber):
         super_str = super().__repr__()
         super_str = super_str[:-1]
         s = []
-        if self.variance:
-            super_str += f' +/-{self.variance}'
         if self.fixed:
             super_str += ' (fixed)'
         s.append(super_str)

@@ -165,14 +165,14 @@ class TestParameter:
 
     def test_repr(self, parameter: Parameter):
         # When Then Expect
-        assert repr(parameter) == "<Parameter 'name': 1.0000 m +/-0.01, bounds=[0.0:10.0]>"
+        assert repr(parameter) == "<Parameter 'name': 1.0000 ± 0.1000 m, bounds=[0.0:10.0]>"
 
     def test_repr_fixed(self, parameter: Parameter):
         # When 
         parameter.fixed = True
 
         # Then Expect
-        assert repr(parameter) == "<Parameter 'name': 1.0000 m +/-0.01 (fixed), bounds=[0.0:10.0]>"
+        assert repr(parameter) == "<Parameter 'name': 1.0000 ± 0.1000 m (fixed), bounds=[0.0:10.0]>"
 
     def test_bounds(self, parameter: Parameter):
         # When Then Expect
