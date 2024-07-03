@@ -6,6 +6,7 @@ from easyscience.global_object.map import Map
 from easyscience.Objects.Variable import Parameter
 from easyscience.Objects.ObjectClasses import BaseObj
 import pytest
+import gc
 from easyscience import global_object
 
 class TestMap:
@@ -14,7 +15,7 @@ class TestMap:
         global_object.map._clear()
 
     def test_clear(self, clear):
-        test_obj = BaseObj("test")
+        test_obj = BaseObj(name="test")
         assert len(global_object.map._store) == 1
         assert len(global_object.map._Map__type_dict) == 1
         assert global_object.map._name_iterator_dict == {"BaseObj": 0}
@@ -24,12 +25,35 @@ class TestMap:
         assert global_object.map._name_iterator_dict == {}
 
     def test_add_vertex(self, clear):
-        test_obj = BaseObj("test")
+        test_obj = BaseObj(name="test")
         assert len(global_object.map._store) == 1
         assert len(global_object.map._Map__type_dict) == 1
         assert global_object.map._name_iterator_dict == {"BaseObj": 0}
 
-    @pytest.mark.parametrize("name", ["test", "test2", "test3"])
-    def test_clear_fixture(self, name, clear):
-        test_obj= BaseObj(name, unique_name=name)
+    def test_weakref(self, clear):
+        test_obj = BaseObj(name="test")
         assert len(global_object.map._store) == 1
+        assert len(global_object.map._Map__type_dict) == 1
+        del test_obj
+        gc.collect()
+        assert len(global_object.map._store) == 0
+        assert len(global_object.map._Map__type_dict) == 0
+
+    def test_vertices(self, clear):
+        test_obj = BaseObj(name="test")
+        test_obj2 = Parameter(value=2.0, name="test2")
+        assert global_object.map.vertices() == ["BaseObj_0", "Parameter_0"]
+
+    def test_get_item_by_key(self, clear):
+        test_obj = BaseObj(name="test")
+        test_obj2 = Parameter(value=2.0, name="test2")
+        assert global_object.map.get_item_by_key(test_obj.unique_name) == test_obj
+        assert global_object.map.get_item_by_key(test_obj2.unique_name) == test_obj2
+
+    def test_get_name_iterator(self, clear):
+        assert global_object.map._get_name_iterator("BaseObj") == 0
+        assert global_object.map._get_name_iterator("Parameter") == 0
+        test_obj = BaseObj(name="test")
+        test_obj2 = Parameter(value=2.0, name="test2")
+        assert global_object.map._get_name_iterator("BaseObj") == 2
+        assert global_object.map._get_name_iterator("Parameter") == 2
