@@ -12,7 +12,7 @@ from easyscience.fitting.Constraints import ObjConstraint
 from easyscience.fitting.multi_fitter import MultiFitter
 from easyscience.fitting.minimizers import FitError
 from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.new_variable import Parameter
+from easyscience.Objects.ObjectClasses import Parameter
 
 
 class Line(BaseObj):
@@ -25,7 +25,7 @@ class Line(BaseObj):
         super(Line, self).__init__("line", m=m, c=c)
 
     def __call__(self, x):
-        return self.m.value * x + self.c.value
+        return self.m.raw_value * x + self.c.raw_value
     
 
 class AbsSin(BaseObj):
@@ -38,7 +38,7 @@ class AbsSin(BaseObj):
         super().__init__("sin", offset=offset, phase=phase)
 
     def __call__(self, x):
-        return np.abs(np.sin(self.phase.value * x + self.offset.value))
+        return np.abs(np.sin(self.phase.raw_value * x + self.offset.raw_value))
 
 
 class AbsSin2D(BaseObj):
@@ -54,8 +54,8 @@ class AbsSin2D(BaseObj):
         X = x[:, :, 0]   # x is a 2D array
         Y = x[:, :, 1]
         return np.abs(
-            np.sin(self.phase.value * X + self.offset.value)
-        ) * np.abs(np.sin(self.phase.value * Y + self.offset.value))
+            np.sin(self.phase.raw_value * X + self.offset.raw_value)
+        ) * np.abs(np.sin(self.phase.raw_value * Y + self.offset.raw_value))
 
 
 @pytest.mark.parametrize("with_errors", [False, True])
