@@ -322,4 +322,8 @@ class DFO(MinimizerBase):  # noqa: S101
         else:
             # It is only possible to scale (normalize) variables if they are bound (different from inf)
             results = dfols.solve(model, x0, bounds=bounds, scaling_within_bounds=True, **kwargs)
+
+        if 'Success' not in dfols.solve(model, x0, bounds=bounds, **kwargs).msg:
+            raise FitError(f'Fit failed with message: {results.msg}')
+
         return results
