@@ -52,10 +52,23 @@ class DFO(MinimizerBase):  # noqa: S101
                 par = {}
                 if not pars:
                     for name, item in obj._cached_pars.items():
-                        par['p' + str(name)] = item.raw_value
+
+                        ## TODO clean when full move to new_variable 
+                        from easyscience.Objects.new_variable import Parameter
+                        if isinstance(item, Parameter):
+                            par['p' + str(name)] = item.value
+                        else:
+                            par['p' + str(name)] = item.raw_value
+
                 else:
                     for item in pars:
-                        par['p' + str(NameConverter().get_key(item))] = item.raw_value
+
+                        ## TODO clean when full move to new_variable 
+                        from easyscience.Objects.new_variable import Parameter
+                        if isinstance(item, Parameter):
+                            par['p' + str(NameConverter().get_key(item))] = item.value
+                        else:
+                            par['p' + str(NameConverter().get_key(item))] = item.raw_value
 
                 def residuals(x0) -> np.ndarray:
                     for idx, par_name in enumerate(par.keys()):
@@ -104,9 +117,18 @@ class DFO(MinimizerBase):  # noqa: S101
             for name, value in kwargs.items():
                 par_name = int(name[1:])
                 if par_name in self._cached_pars.keys():
-                    # This will take into account constraints
-                    if self._cached_pars[par_name].raw_value != value:
-                        self._cached_pars[par_name].value = value
+
+                    ## TODO clean when full move to new_variable 
+                    from easyscience.Objects.new_variable import Parameter
+                    if isinstance(self._cached_pars[par_name], Parameter):
+                        # This will take into account constraints
+                        if self._cached_pars[par_name].value != value:
+                            self._cached_pars[par_name].value = value
+                    else:
+                        # This will take into account constraints
+                        if self._cached_pars[par_name].raw_value != value:
+                            self._cached_pars[par_name].value = value
+
                     # Since we are calling the parameter fset will be called.
             # TODO Pre processing here
             for constraint in self.fit_constraints():
@@ -162,7 +184,13 @@ class DFO(MinimizerBase):  # noqa: S101
             model = self.make_model(pars=parameters)
             model = model(x, y, weights)
         self._cached_model = model
-        self._p_0 = {f'p{key}': self._cached_pars[key].raw_value for key in self._cached_pars.keys()}
+        
+        ## TODO clean when full move to new_variable 
+        from easyscience.Objects.new_variable import Parameter
+        if isinstance(self._cached_pars[list(self._cached_pars.keys())[0]], Parameter):
+            self._p_0 = {f'p{key}': self._cached_pars[key].value for key in self._cached_pars.keys()}
+        else:
+            self._p_0 = {f'p{key}': self._cached_pars[key].raw_value for key in self._cached_pars.keys()}
 
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyscience import borg
@@ -239,7 +267,14 @@ class DFO(MinimizerBase):  # noqa: S101
         pars = self._cached_pars
         item = {}
         for p_name, par in pars.items():
-            item[f'p{p_name}'] = par.raw_value
+
+            ## TODO clean when full move to new_variable 
+            from easyscience.Objects.new_variable import Parameter
+            if isinstance(par, Parameter):
+                item[f'p{p_name}'] = par.value
+            else:
+                item[f'p{p_name}'] = par.raw_value
+
         results.p0 = self._p_0
         results.p = item
         results.x = self._cached_model.x
@@ -268,7 +303,14 @@ class DFO(MinimizerBase):  # noqa: S101
                 :type kwargs: dict
                 :return: dfols fit results container
         ="""
-        x0 = np.array([par.raw_value for par in iter(self._cached_pars.values())])
+
+        ## TODO clean when full move to new_variable 
+        from easyscience.Objects.new_variable import Parameter
+        if isinstance(self._cached_pars[list(self._cached_pars.values())[0]], Parameter):
+            x0 = np.array([par.value for par in iter(self._cached_pars.values())])
+        else:
+            x0 = np.array([par.raw_value for par in iter(self._cached_pars.values())])
+            
         bounds = (
             np.array([par.min for par in iter(self._cached_pars.values())]),
             np.array([par.max for par in iter(self._cached_pars.values())]),
