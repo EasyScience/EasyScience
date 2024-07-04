@@ -241,6 +241,7 @@ class BaseObj(BasedBase):
     def __init__(
         self,
         name: str,
+        unique_name: Optional[str] = None,
         *args: Optional[BV],
         **kwargs: Optional[BV],
     ):
@@ -251,7 +252,7 @@ class BaseObj(BasedBase):
         :param args: Any arguments?
         :param kwargs: Fields which this class should contain
         """
-        super(BaseObj, self).__init__(name)
+        super(BaseObj, self).__init__(name=name, unique_name=unique_name)
         # If Parameter or Descriptor is given as arguments...
         for arg in args:
             if issubclass(type(arg), (BaseObj, Descriptor, DescriptorBase)):
