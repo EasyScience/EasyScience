@@ -13,6 +13,7 @@ from lmfit import Parameter as LMParameter
 from lmfit import Parameters as LMParameters
 from lmfit.model import ModelResult
 
+from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
 from .minimizer_base import MinimizerBase
 from .utils import FitError
 from .utils import FitResults
@@ -41,7 +42,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         model = LMModel(
             fit_func,
             independent_vars=['x'],
-            param_names=['p' + str(key) for key in pars.keys()],
+            param_names=[MINIMIZER_PARAMETER_PREFIX + str(key) for key in pars.keys()],
         )
         # Assign values from the `Parameter` to the model
         for name, item in pars.items():
@@ -56,7 +57,7 @@ class LMFit(MinimizerBase):  # noqa: S101
                 else:
                     value = item.raw_value
 
-            model.set_param_hint('p' + str(name), value=value, min=item.min, max=item.max)
+            model.set_param_hint(MINIMIZER_PARAMETER_PREFIX + str(name), value=value, min=item.min, max=item.max)
 
         # Cache the model for later reference
         self._cached_model = model
@@ -133,7 +134,7 @@ class LMFit(MinimizerBase):  # noqa: S101
             inspect.Parameter('x', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=inspect._empty),
             *[
                 inspect.Parameter(
-                    'p' + str(name),
+                    MINIMIZER_PARAMETER_PREFIX + str(name),
                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
                     annotation=inspect._empty,
                     default=default_value,
@@ -240,7 +241,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         :rtype: LMParameter
         """
         return LMParameter(
-            'p' + obj.unique_name,
+            MINIMIZER_PARAMETER_PREFIX + obj.unique_name,
             value=obj.raw_value,
             vary=not obj.fixed,
             min=obj.min,
@@ -267,9 +268,9 @@ class LMFit(MinimizerBase):  # noqa: S101
             global_object.stack.enabled = True
             global_object.stack.beginMacro('Fitting routine')
         for name in pars.keys():
-            pars[name].value = fit_result.params['p' + str(name)].value
+            pars[name].value = fit_result.params[MINIMIZER_PARAMETER_PREFIX + str(name)].value
             if fit_result.errorbars:
-                pars[name].error = fit_result.params['p' + str(name)].stderr
+                pars[name].error = fit_result.params[MINIMIZER_PARAMETER_PREFIX + str(name)].stderr
             else:
                 pars[name].error = 0.0
         if stack_status:

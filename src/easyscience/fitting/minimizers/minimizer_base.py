@@ -5,12 +5,20 @@
 from abc import ABCMeta
 from abc import abstractmethod
 from typing import Callable
+from typing import Dict
+from typing import List
 from typing import Optional
+from typing import Tuple
 from typing import Union
 
 import numpy as np
 
+from easyscience.Objects.Variable import Parameter
+
+from ..Constraints import ObjConstraint
 from .utils import FitResults
+
+MINIMIZER_PARAMETER_PREFIX = 'p'
 
 
 class MinimizerBase(metaclass=ABCMeta):
@@ -24,30 +32,30 @@ class MinimizerBase(metaclass=ABCMeta):
         self._object = obj
         self._original_fit_function = fit_function
         self._method = method
-        self._cached_pars = {}
-        self._cached_pars_vals = {}
+        self._cached_pars: Dict[str, Parameter] = {}
+        self._cached_pars_vals: Dict[str, Tuple[float]] = {}
         self._cached_model = None
         self._fit_function = None
         self._constraints = []
 
     @property
-    def all_constraints(self) -> list:
+    def all_constraints(self) -> List[ObjConstraint]:
         return [*self._constraints, *self._object._constraints]
 
-    def fit_constraints(self) -> list:
+    def fit_constraints(self) -> List:
         return self._constraints
 
-    def set_fit_constraint(self, constraints):
+    def set_fit_constraint(self, constraints: List[ObjConstraint]):
         self._constraints = constraints
 
-    def add_fit_constraint(self, constraint):
+    def add_fit_constraint(self, constraint: ObjConstraint):
         self._constraints.append(constraint)
 
-    def remove_fit_constraint(self, index: int):
+    def remove_fit_constraint(self, index: int) -> None:
         del self._constraints[index]
 
     @abstractmethod
-    def make_model(self, pars=None):
+    def make_model(self, pars: List[Parameter] = None):
         """
         Generate an engine model from the supplied `fit_function` and parameters in the base object.
 
@@ -66,7 +74,7 @@ class MinimizerBase(metaclass=ABCMeta):
         self,
         x: np.ndarray,
         y: np.ndarray,
-        weights: Optional[Union[np.ndarray]] = None,
+        weights: Optional[np.ndarray] = None,
         model=None,
         parameters=None,
         method=None,
@@ -89,7 +97,7 @@ class MinimizerBase(metaclass=ABCMeta):
         :return: Fit results
         """
 
-    def evaluate(self, x: np.ndarray, parameters: dict = None, **kwargs) -> np.ndarray:
+    def evaluate(self, x: np.ndarray, minimizer_parameters: dict[str, float] = None, **kwargs) -> np.ndarray:
         """
         Evaluate the fit function for values of x. Parameters used are either the latest or user supplied.
         If the parameters are user supplied, it must be in a dictionary of {'parameter_name': parameter_value,...}.
@@ -103,23 +111,38 @@ class MinimizerBase(metaclass=ABCMeta):
         :return: y values calculated at points x for a set of parameters.
         :rtype: np.ndarray
         """
+        if minimizer_parameters is None:
+            minimizer_parameters = {}
+        if not isinstance(minimizer_parameters, dict):
+            raise AttributeError
+
         if self._fit_function is None:
             # This will also generate self._cached_pars
             self._fit_function = self._generate_fit_function()
 
-        if not isinstance(parameters, (dict, type(None))):
-            raise AttributeError
+        minimizer_parameters = self._prepare_parameters(minimizer_parameters)
 
+        return self._fit_function(x, **minimizer_parameters, **kwargs)
+
+    def _prepare_parameters(self, parameters: dict[str, float]) -> dict[str, float]:
+        """
+        Prepare the parameters for the minimizer.
+
+        :param parameters: Dict of parameters for the minimizer with names as keys.
+        """
         pars = self._cached_pars
-        new_parameters = parameters
-        if new_parameters is None:
-            new_parameters = {}
-        for name, item in pars.items():
-            fit_name = 'p' + str(name)
-            if fit_name not in new_parameters.keys():
-                new_parameters[fit_name] = item.raw_value
 
-        return self._fit_function(x, **new_parameters, **kwargs)
+        for name, item in pars.items():
+            paramter_name = MINIMIZER_PARAMETER_PREFIX + str(name)
+            if paramter_name not in parameters.keys():
+                ## TODO clean when full move to new_variable
+                from easyscience.Objects.new_variable import Parameter as new_Parameter
+
+                if isinstance(item, new_Parameter):
+                    parameters[paramter_name] = item.value
+                else:
+                    parameters[paramter_name] = item.raw_value
+        return parameters
 
     @abstractmethod
     def convert_to_pars_obj(self, par_list: Optional[Union[list]] = None):
@@ -149,7 +172,7 @@ class MinimizerBase(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def _gen_fit_results(self, fit_results, **kwargs) -> 'FitResults':
+    def _gen_fit_results(self, fit_results, **kwargs) -> FitResults:
         """
         Convert fit results into the unified `FitResults` format.
 

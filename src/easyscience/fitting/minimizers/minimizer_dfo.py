@@ -10,6 +10,7 @@ from typing import Optional
 import dfols
 import numpy as np
 
+from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
 from .minimizer_base import MinimizerBase
 from .utils import FitError
 from .utils import FitResults
@@ -55,9 +56,9 @@ class DFO(MinimizerBase):  # noqa: S101
                         from easyscience.Objects.new_variable import Parameter
 
                         if isinstance(item, Parameter):
-                            par['p' + str(name)] = item.value
+                            par[MINIMIZER_PARAMETER_PREFIX + str(name)] = item.value
                         else:
-                            par['p' + str(name)] = item.raw_value
+                            par[MINIMIZER_PARAMETER_PREFIX + str(name)] = item.raw_value
 
                 else:
                     for item in pars:
@@ -65,9 +66,9 @@ class DFO(MinimizerBase):  # noqa: S101
                         from easyscience.Objects.new_variable import Parameter
 
                         if isinstance(item, Parameter):
-                            par['p' + item.unique_name] = item.value
+                            par[MINIMIZER_PARAMETER_PREFIX + item.unique_name] = item.value
                         else:
-                            par['p' + item.unique_name] = item.raw_value
+                            par[MINIMIZER_PARAMETER_PREFIX + item.unique_name] = item.raw_value
 
                 def residuals(x0) -> np.ndarray:
                     for idx, par_name in enumerate(par.keys()):
@@ -279,7 +280,7 @@ class DFO(MinimizerBase):  # noqa: S101
         results.p = item
         results.x = self._cached_model.x
         results.y_obs = self._cached_model.y
-        results.y_calc = self.evaluate(results.x, parameters=results.p)
+        results.y_calc = self.evaluate(results.x, minimizer_parameters=results.p)
         results.y_err = weights
         # results.residual = results.y_obs - results.y_calc
         # results.goodness_of_fit = fit_results.f
