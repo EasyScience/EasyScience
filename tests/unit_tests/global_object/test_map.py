@@ -57,3 +57,12 @@ class TestMap:
         test_obj2 = Parameter(value=2.0, name="test2")
         assert global_object.map._get_name_iterator("BaseObj") == 2
         assert global_object.map._get_name_iterator("Parameter") == 2
+
+    @pytest.mark.parametrize("cls, kwargs", [(BaseObj, {}), (Parameter, {"value": 2.0})])
+    def test_identical_unique_names_exception(self, clear, cls, kwargs):
+        test_obj = cls(name="test", unique_name="test", **kwargs)
+        with pytest.raises(ValueError):
+            test_obj2 = cls(name="test2", unique_name="test", **kwargs)
+
+    # test unique_name change
+
