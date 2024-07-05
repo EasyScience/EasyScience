@@ -66,9 +66,9 @@ class DFO(MinimizerBase):  # noqa: S101
                         from easyscience.Objects.new_variable import Parameter
 
                         if isinstance(item, Parameter):
-                            par['p' + str(NameConverter().get_key(item))] = item.value
+                            par['p' + item.unique_name] = item.value
                         else:
-                            par['p' + str(NameConverter().get_key(item))] = item.raw_value
+                            par['p' + item.unique_name] = item.raw_value
 
                 def residuals(x0) -> np.ndarray:
                     for idx, par_name in enumerate(par.keys()):

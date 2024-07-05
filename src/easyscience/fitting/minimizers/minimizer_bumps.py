@@ -61,7 +61,7 @@ class Bumps(MinimizerBase):  # noqa: S101
                         par['p' + str(name)] = obj.convert_to_par_object(item)
                 else:
                     for item in pars:
-                        par['p' + str(NameConverter().get_key(item))] = obj.convert_to_par_object(item)
+                        par['p' + item.unique_name] = obj.convert_to_par_object(item)
                 return Curve(fit_func, x, y, dy=weights, **par)
 
             return make_func
@@ -262,7 +262,7 @@ class Bumps(MinimizerBase):  # noqa: S101
             value = obj.raw_value
         
         return BumpsParameter(
-            name='p' + str(NameConverter().get_key(obj)),
+            name='p' + obj.unique_name,
             value=value,
             bounds=[obj.min, obj.max],
             fixed=obj.fixed,

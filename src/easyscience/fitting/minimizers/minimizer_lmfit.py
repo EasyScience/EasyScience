@@ -241,7 +241,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         :rtype: LMParameter
         """
         return LMParameter(
-            'p' + str(NameConverter().get_key(obj)),
+            'p' + obj.unique_name,
             value=obj.raw_value,
             vary=not obj.fixed,
             min=obj.min,
