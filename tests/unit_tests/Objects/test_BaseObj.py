@@ -58,7 +58,7 @@ def not_raises(
         ([], ["par1"]),
         (["par1"], []),
         (["par1"], ["par2"]),
-        (["par1", "des1"], ["par2", "des2"]),
+        (["par1", "des1"], ["par2", "des2"]), 
     ],
 )
 def test_baseobj_create(setup_pars: dict, a: List[str], kw: List[str]):
@@ -69,7 +69,7 @@ def test_baseobj_create(setup_pars: dict, a: List[str], kw: List[str]):
     kwargs = {}
     for key in kw:
         kwargs[key] = setup_pars[key]
-    base = BaseObj(name, *args, **kwargs)
+    base = BaseObj(name, None, *args, **kwargs)
     assert base.name == name
     for key in a:
         item = getattr(base, setup_pars[key].name)

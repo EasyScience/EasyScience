@@ -14,21 +14,27 @@ class TestMap:
     def clear(self):
         global_object.map._clear()
 
-    def test_clear(self, clear):
-        test_obj = BaseObj(name="test")
+    @pytest.fixture
+    def base_object(self):
+        return BaseObj(name="test")
+
+    @pytest.fixture
+    def parameter_object(self):
+        return Parameter(value=2.0, name="test2")
+
+    def test_add_vertex(self, clear, base_object, parameter_object):
+        assert len(global_object.map._store) == 2
+        assert len(global_object.map._Map__type_dict) == 2
+        assert len(global_object.map._name_iterator_dict) == 2
+
+    def test_clear(self, clear, base_object):
         assert len(global_object.map._store) == 1
         assert len(global_object.map._Map__type_dict) == 1
-        assert global_object.map._name_iterator_dict == {"BaseObj": 0}
+        assert len(global_object.map._name_iterator_dict) == 1
         global_object.map._clear()
         assert len(global_object.map._store) == 0
         assert global_object.map._Map__type_dict == {}
         assert global_object.map._name_iterator_dict == {}
-
-    def test_add_vertex(self, clear):
-        test_obj = BaseObj(name="test")
-        assert len(global_object.map._store) == 1
-        assert len(global_object.map._Map__type_dict) == 1
-        assert global_object.map._name_iterator_dict == {"BaseObj": 0}
 
     def test_weakref(self, clear):
         test_obj = BaseObj(name="test")
@@ -39,16 +45,12 @@ class TestMap:
         assert len(global_object.map._store) == 0
         assert len(global_object.map._Map__type_dict) == 0
 
-    def test_vertices(self, clear):
-        test_obj = BaseObj(name="test")
-        test_obj2 = Parameter(value=2.0, name="test2")
-        assert global_object.map.vertices() == ["BaseObj_0", "Parameter_0"]
+    def test_vertices(self, clear, base_object, parameter_object):
+        assert global_object.map.vertices() == [base_object.unique_name, parameter_object.unique_name]
 
-    def test_get_item_by_key(self, clear):
-        test_obj = BaseObj(name="test")
-        test_obj2 = Parameter(value=2.0, name="test2")
-        assert global_object.map.get_item_by_key(test_obj.unique_name) == test_obj
-        assert global_object.map.get_item_by_key(test_obj2.unique_name) == test_obj2
+    def test_get_item_by_key(self, clear, base_object, parameter_object):
+        assert global_object.map.get_item_by_key(base_object.unique_name) == base_object
+        assert global_object.map.get_item_by_key(parameter_object.unique_name) == parameter_object
 
     def test_get_name_iterator(self, clear):
         assert global_object.map._get_name_iterator("BaseObj") == 0
@@ -64,5 +66,13 @@ class TestMap:
         with pytest.raises(ValueError):
             test_obj2 = cls(name="test2", unique_name="test", **kwargs)
 
-    # test unique_name change
+    def test_unique_name_change_still_in_map(self, clear, base_object, parameter_object):
+        assert global_object.map.get_item_by_key("BaseObj_0") == base_object
+        assert global_object.map.get_item_by_key("Parameter_0") == parameter_object
+        base_object.unique_name = "test3"
+        parameter_object.unique_name = "test4"
+        assert global_object.map.get_item_by_key("BaseObj_0") == base_object
+        assert global_object.map.get_item_by_key("Parameter_0") == parameter_object
+        assert global_object.map.get_item_by_key("test3") == base_object
+        assert global_object.map.get_item_by_key("test4") == parameter_object
 
