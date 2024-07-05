@@ -34,6 +34,22 @@ class LMFit(MinimizerBase):  # noqa: S101
 
     wrapping = 'lmfit'
 
+    def __init__(self, obj: NewParameter, fit_function: Callable, method: Optional[str] = None):
+        """
+        Initialize the minimizer with the `BaseObj` and the `fit_function` to be used.
+
+        :param obj: Base object which contains the parameters to be fitted
+        :type obj: BaseObj
+        :param fit_function: Function which will be fitted to the data
+        :type fit_function: Callable
+        :param method: Method to be used by the minimizer
+        :type method: str
+        """
+        if method not in self.available_methods():
+            raise FitError(f'Method {method} not available in {self.__class__}')
+
+        super().__init__(obj=obj, fit_function=fit_function, method=method)
+
     def make_model(self, pars: Optional[LMParameters] = None) -> LMModel:
         """
         Generate a lmfit model from the supplied `fit_function` and parameters in the base object.
@@ -163,8 +179,11 @@ class LMFit(MinimizerBase):  # noqa: S101
         default_method = {}
         if self._method is not None:
             default_method = {'method': self._method}
-        if method is not None and method in self.available_methods():
-            default_method['method'] = method
+        if method is not None:
+            if method in self.available_methods():
+                default_method['method'] = method
+            else:
+                raise FitError(f'Method {method} not available in {self.__class__}')
 
         if weights is None:
             weights = 1 / np.sqrt(np.abs(y))

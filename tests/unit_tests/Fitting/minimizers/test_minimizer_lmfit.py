@@ -12,6 +12,8 @@ from easyscience.fitting.minimizers.minimizer_lmfit import _wrap_to_lm_signature
 from easyscience.Objects.new_variable import Parameter
 from lmfit import Parameter as LMParameter
 from easyscience.Objects.ObjectClasses import BaseObj
+from easyscience.fitting.minimizers.utils import FitError
+
 
 class TestLMFit():
     @pytest.fixture
@@ -19,10 +21,18 @@ class TestLMFit():
         minimizer = LMFit(
             obj='obj',
             fit_function='fit_function', 
-            method='method'
+            method='least_squares'
         )
         return minimizer
-    
+
+    def test_init_exception(self):
+        with pytest.raises(FitError):
+            LMFit(
+                obj='obj',
+                fit_function='fit_function', 
+                method='method'
+            )
+
     def test_make_model(self, minimizer: LMFit, monkeypatch):
         # When
         mock_lm_model = MagicMock()
@@ -137,6 +147,79 @@ class TestLMFit():
         result == 'fit_function_return'
         mock_constraint.assert_called_once_with()
 
+    def test_fit(self, minimizer: LMFit):
+        # When
+        mock_model = MagicMock()
+        mock_model.fit = MagicMock(return_value='fit')
+        minimizer.make_model = MagicMock(return_value=mock_model)
+        minimizer._set_parameter_fit_result = MagicMock()
+        minimizer._gen_fit_results = MagicMock(return_value='gen_fit_results')
+
+        # Then
+        result = minimizer.fit(x=1.0, y=2.0)
+
+        # Expect
+        assert result == 'gen_fit_results'
+        mock_model.fit.assert_called_once_with(2.0, x=1.0, weights=0.7071067811865475, method='least_squares')
+        minimizer.make_model.assert_called_once_with()
+        minimizer._set_parameter_fit_result.assert_called_once_with('fit', False)
+        minimizer._gen_fit_results.assert_called_once_with('fit')
+
+    def test_fit_model(self, minimizer: LMFit):
+        # When
+        mock_model = MagicMock()
+        mock_model.fit = MagicMock(return_value='fit')
+        minimizer.make_model = MagicMock(return_value=mock_model)
+        minimizer._set_parameter_fit_result = MagicMock()
+        minimizer._gen_fit_results = MagicMock(return_value='gen_fit_results')
+
+        # Then
+        minimizer.fit(x=1.0, y=2.0, model=mock_model)
+
+        # Expect
+        mock_model.fit.assert_called_once_with(2.0, x=1.0, weights=0.7071067811865475, method='least_squares')
+        minimizer.make_model.assert_not_called()
+
+    def test_fit_method(self, minimizer: LMFit):
+        # When
+        mock_model = MagicMock()
+        mock_model.fit = MagicMock(return_value='fit')
+        minimizer.make_model = MagicMock(return_value=mock_model)
+        minimizer._set_parameter_fit_result = MagicMock()
+        minimizer._gen_fit_results = MagicMock(return_value='gen_fit_results')
+        minimizer.available_methods = MagicMock(return_value=['method_passed'])
+
+        # Then
+        minimizer.fit(x=1.0, y=2.0, method='method_passed')
+
+        # Expect
+        mock_model.fit.assert_called_once_with(2.0, x=1.0, weights=0.7071067811865475, method='method_passed')
+        minimizer.available_methods.assert_called_once_with()
+
+    def test_fit_kwargs(self, minimizer: LMFit):
+        # When
+        mock_model = MagicMock()
+        mock_model.fit = MagicMock(return_value='fit')
+        minimizer.make_model = MagicMock(return_value=mock_model)
+        minimizer._set_parameter_fit_result = MagicMock()
+        minimizer._gen_fit_results = MagicMock(return_value='gen_fit_results')
+
+        # Then
+        minimizer.fit(x=1.0, y=2.0, minimizer_kwargs={'minimizer_key': 'minimizer_val'}, engine_kwargs={'engine_key': 'engine_val'})
+
+        # Expect
+        mock_model.fit.assert_called_once_with(2.0, x=1.0, weights=0.7071067811865475, method='least_squares', fit_kws={'minimizer_key': 'minimizer_val'}, engine_key='engine_val')
+
+    def test_fit_exception(self, minimizer: LMFit):
+        # When
+        minimizer.make_model = MagicMock(side_effect=Exception('Exception'))
+        minimizer._set_parameter_fit_result = MagicMock()
+        minimizer._gen_fit_results = MagicMock(return_value='gen_fit_results')
+
+        # Then Expect
+        with pytest.raises(FitError):
+            minimizer.fit(x=1.0, y=2.0)
+        
 def test_wrap_fit_function():
     # When
     mock_parm_1 = MagicMock(Parameter)
