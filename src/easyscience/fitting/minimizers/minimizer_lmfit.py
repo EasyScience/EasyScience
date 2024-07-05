@@ -2,16 +2,23 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
 
-import inspect
+from inspect import Parameter as InspectParameter
+from inspect import Signature
+from inspect import _empty
 from typing import Callable
+from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Union
 
 import numpy as np
 from lmfit import Model as LMModel
 from lmfit import Parameter as LMParameter
 from lmfit import Parameters as LMParameters
 from lmfit.model import ModelResult
+
+from easyscience.Objects.new_variable import Parameter as NewParameter
+from easyscience.Objects.Variable import Parameter
 
 from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
 from .minimizer_base import MinimizerBase
@@ -36,6 +43,8 @@ class LMFit(MinimizerBase):  # noqa: S101
         """
         # Generate the fitting function
         fit_func = self._generate_fit_function()
+        self._fit_function = fit_func
+
         if pars is None:
             pars = self._cached_pars
         # Create the model
@@ -71,8 +80,6 @@ class LMFit(MinimizerBase):  # noqa: S101
         :return: a fit function which is compatible with lmfit models
         :rtype: Callable
         """
-        # Original fit function
-        func = self._original_fit_function
         # Get a list of `Parameters`
         self._cached_pars = {}
         self._cached_pars_vals = {}
@@ -81,15 +88,15 @@ class LMFit(MinimizerBase):  # noqa: S101
             self._cached_pars[key] = parameter
             self._cached_pars_vals[key] = (parameter.value, parameter.error)
 
-        # Make a new fit function
-        def fit_function(x: np.ndarray, **kwargs):
+        # Make a lm fit function
+        def lm_fit_function(x: np.ndarray, **kwargs):
             """
-            Wrapped fit function which now has a lmfit compatible form.
+            Fit function with a lmfit compatible signature.
 
             :param x: array of data points to be calculated
             :type x: np.ndarray
             :param kwargs: key word arguments
-            :return: points calculated at `x`
+            :return: points, `f(x)`, calculated at `x`
             :rtype: np.ndarray
             """
             # Update the `Parameter` values and the callback if needed
@@ -113,39 +120,12 @@ class LMFit(MinimizerBase):  # noqa: S101
             # TODO Pre processing here
             for constraint in self.fit_constraints():
                 constraint()
-            return_data = func(x)
+            return_data = self._original_fit_function(x)
             # TODO Loading or manipulating data here
             return return_data
 
-        # Fake the function signature.
-        # This is done as lmfit wants the function to be in the form:
-        # f = (x, a=1, b=2)...
-        # Where we need to be generic. Note that this won't hold for much outside of this scope.
-
-        ## TODO clean when full move to new_variable
-        from easyscience.Objects.new_variable import Parameter
-
-        if isinstance(parameter, Parameter):
-            default_value = parameter.value
-        else:
-            default_value = parameter.raw_value
-
-        params = [
-            inspect.Parameter('x', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=inspect._empty),
-            *[
-                inspect.Parameter(
-                    MINIMIZER_PARAMETER_PREFIX + str(name),
-                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                    annotation=inspect._empty,
-                    default=default_value,
-                )
-                for name, parameter in self._cached_pars.items()
-            ],
-        ]
-        # Sign the function
-        fit_function.__signature__ = inspect.Signature(params)
-        self._fit_function = fit_function
-        return fit_function
+        lm_fit_function.__signature__ = _wrap_to_lm_signature(self._cached_pars)
+        return lm_fit_function
 
     def fit(
         self,
@@ -322,3 +302,30 @@ class LMFit(MinimizerBase):  # noqa: S101
             'cobyla',
             'bfgs',
         ]
+
+
+def _wrap_to_lm_signature(parameters: Dict[int, Union[Parameter, NewParameter]]) -> Signature:
+    """
+    Wrap the function signature.
+    This is done as lmfit wants the function to be in the form:
+    f = (x, a=1, b=2)...
+    Where we need to be generic. Note that this won't hold for much outside of this scope.
+    """
+    wrapped_parameters = []
+    wrapped_parameters.append(InspectParameter('x', InspectParameter.POSITIONAL_OR_KEYWORD, annotation=_empty))
+    for name, parameter in parameters.items():
+        ## TODO clean when full move to new_variable
+        if isinstance(parameter, NewParameter):
+            default_value = parameter.value
+        else:
+            default_value = parameter.raw_value
+
+        wrapped_parameters.append(
+            InspectParameter(
+                MINIMIZER_PARAMETER_PREFIX + str(name),
+                InspectParameter.POSITIONAL_OR_KEYWORD,
+                annotation=_empty,
+                default=default_value,
+            )
+        )
+    return Signature(wrapped_parameters)

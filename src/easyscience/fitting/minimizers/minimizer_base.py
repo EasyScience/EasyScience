@@ -13,6 +13,7 @@ from typing import Union
 
 import numpy as np
 
+from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.Variable import Parameter
 
 from ..Constraints import ObjConstraint
@@ -23,12 +24,12 @@ MINIMIZER_PARAMETER_PREFIX = 'p'
 
 class MinimizerBase(metaclass=ABCMeta):
     """
-    This template class is the basis for all fitting engines in `EasyScience`.
+    This template class is the basis for all minimizer engines in `EasyScience`.
     """
 
     wrapping: str = None
 
-    def __init__(self, obj, fit_function: Callable, method: Optional[str] = None):
+    def __init__(self, obj: BaseObj, fit_function: Callable, method: Optional[str] = None):
         self._object = obj
         self._original_fit_function = fit_function
         self._method = method
@@ -42,7 +43,7 @@ class MinimizerBase(metaclass=ABCMeta):
     def all_constraints(self) -> List[ObjConstraint]:
         return [*self._constraints, *self._object._constraints]
 
-    def fit_constraints(self) -> List:
+    def fit_constraints(self) -> List[ObjConstraint]:
         return self._constraints
 
     def set_fit_constraint(self, constraints: List[ObjConstraint]):
@@ -136,9 +137,9 @@ class MinimizerBase(metaclass=ABCMeta):
             paramter_name = MINIMIZER_PARAMETER_PREFIX + str(name)
             if paramter_name not in parameters.keys():
                 ## TODO clean when full move to new_variable
-                from easyscience.Objects.new_variable import Parameter as new_Parameter
+                from easyscience.Objects.new_variable import Parameter as NewParameter
 
-                if isinstance(item, new_Parameter):
+                if isinstance(item, NewParameter):
                     parameters[paramter_name] = item.value
                 else:
                     parameters[paramter_name] = item.raw_value
@@ -156,7 +157,7 @@ class MinimizerBase(metaclass=ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def convert_to_par_object(obj):
+    def convert_to_par_object(obj: BaseObj):
         """
         Convert an `EasyScience.Objects.Base.Parameter` object to an engine Parameter object.
         """
