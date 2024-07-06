@@ -216,35 +216,39 @@ class LMFit(MinimizerBase):  # noqa: S101
             raise FitError(e)
         return results
 
-    def convert_to_pars_obj(self, par_list: Optional[List] = None) -> LMParameters:
+    def convert_to_pars_obj(self, parameters: Optional[List[Union[Parameter, NewParameter]]] = None) -> LMParameters:
         """
         Create an lmfit compatible container with the `Parameters` converted from the base object.
 
-        :param par_list: If only a single/selection of parameter is required. Specify as a list
-        :type par_list: List[str]
+        :param parameters: If only a single/selection of parameter is required. Specify as a list
         :return: lmfit Parameters compatible object
-        :rtype: LMParameters
         """
-        if par_list is None:
+        if parameters is None:
             # Assume that we have a BaseObj for which we can obtain a list
-            par_list = self._object.get_fit_parameters()
-        pars_obj = LMParameters().add_many([self.__class__.convert_to_par_object(obj) for obj in par_list])
-        return pars_obj
+            parameters = self._object.get_fit_parameters()
+        lm_parameters = LMParameters().add_many([self.convert_to_par_object(parameter) for parameter in parameters])
+        return lm_parameters
 
     @staticmethod
-    def convert_to_par_object(obj) -> LMParameter:
+    def convert_to_par_object(parameter: Union[Parameter, NewParameter]) -> LMParameter:
         """
         Convert an `EasyScience.Objects.Base.Parameter` object to a lmfit Parameter object.
 
         :return: lmfit Parameter compatible object.
         :rtype: LMParameter
         """
+        ## TODO clean when full move to new_variable
+        if isinstance(parameter, NewParameter):
+            value = parameter.value
+        else:
+            value = parameter.raw_value
+
         return LMParameter(
-            MINIMIZER_PARAMETER_PREFIX + obj.unique_name,
-            value=obj.raw_value,
-            vary=not obj.fixed,
-            min=obj.min,
-            max=obj.max,
+            MINIMIZER_PARAMETER_PREFIX + parameter.unique_name,
+            value=value,
+            vary=not parameter.fixed,
+            min=parameter.min,
+            max=parameter.max,
             expr=None,
             brute_step=None,
         )

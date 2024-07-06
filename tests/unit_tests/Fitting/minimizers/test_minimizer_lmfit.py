@@ -219,7 +219,158 @@ class TestLMFit():
         # Then Expect
         with pytest.raises(FitError):
             minimizer.fit(x=1.0, y=2.0)
-        
+
+    def test_convert_to_pars_obj(self, minimizer: LMFit, monkeypatch):
+        # When
+        minimizer._object = MagicMock()
+        minimizer._object.get_fit_parameters = MagicMock(return_value = ['parm_1', 'parm_2'])
+
+        minimizer.convert_to_par_object = MagicMock(return_value='convert_to_par_object')
+
+        mock_lm_parameter = MagicMock()
+        mock_lm_parameter.add_many = MagicMock(return_value='add_many')
+        mock_LMParameters = MagicMock(return_value=mock_lm_parameter)
+        monkeypatch.setattr(easyscience.fitting.minimizers.minimizer_lmfit, "LMParameters", mock_LMParameters)
+
+        # Then
+        pars = minimizer.convert_to_pars_obj()
+
+        # Expect
+        assert pars == 'add_many'
+        assert minimizer.convert_to_par_object.call_count == 2
+        minimizer._object.get_fit_parameters.assert_called_once_with()
+        minimizer.convert_to_par_object.assert_called_with('parm_2')
+        mock_lm_parameter.add_many.assert_called_once_with(['convert_to_par_object', 'convert_to_par_object'])
+
+    def test_convert_to_pars_obj_with_paramters(self, minimizer: LMFit, monkeypatch):
+        # When
+        minimizer.convert_to_par_object = MagicMock(return_value='convert_to_par_object')
+
+        mock_lm_parameter = MagicMock()
+        mock_lm_parameter.add_many = MagicMock(return_value='add_many')
+        mock_LMParameters = MagicMock(return_value=mock_lm_parameter)
+        monkeypatch.setattr(easyscience.fitting.minimizers.minimizer_lmfit, "LMParameters", mock_LMParameters)
+
+        # Then
+        pars = minimizer.convert_to_pars_obj(['parm_1', 'parm_2'])
+
+        # Expect
+        assert pars == 'add_many'
+        assert minimizer.convert_to_par_object.call_count == 2
+        minimizer.convert_to_par_object.assert_called_with('parm_2')
+        mock_lm_parameter.add_many.assert_called_once_with(['convert_to_par_object', 'convert_to_par_object'])
+
+    def test_convert_to_par_object(self, minimizer: LMFit, monkeypatch):
+        # When
+        mock_name_converter = MagicMock()
+        mock_name_converter.get_key = MagicMock(return_value='key_converted')
+        mock_NameConverter = MagicMock(return_value=mock_name_converter)
+        monkeypatch.setattr(easyscience.fitting.minimizers.minimizer_lmfit, "NameConverter", mock_NameConverter)
+
+        mock_lm_parameter = MagicMock()
+        mock_LMParameter = MagicMock(return_value=mock_lm_parameter)
+        monkeypatch.setattr(easyscience.fitting.minimizers.minimizer_lmfit, "LMParameter", mock_LMParameter)
+
+        mock_parm = MagicMock(Parameter)
+        mock_parm.value = 1.0
+        mock_parm.fixed = True
+        mock_parm.min = -10.0
+        mock_parm.max = 10.0
+
+        # Then
+        par = minimizer.convert_to_par_object(mock_parm)
+
+        # Expect
+        assert par == mock_lm_parameter
+        mock_LMParameter.assert_called_once_with('pkey_converted', value=1.0, vary=False, min=-10.0, max=10.0, expr=None, brute_step=None)
+
+    def test_set_parameter_fit_result_no_stack_status(self, minimizer: LMFit):
+        # When
+        minimizer._cached_pars = {
+            'a': MagicMock(),
+            'b': MagicMock(),
+        }
+        minimizer._cached_pars['a'].value = 'a'
+        minimizer._cached_pars['b'].value = 'b'
+
+        mock_param_a = MagicMock()
+        mock_param_a.value = 1.0
+        mock_param_a.stderr = 0.1
+        mock_param_b = MagicMock
+        mock_param_b.value = 2.0
+        mock_param_b.stderr = 0.2
+        mock_fit_result = MagicMock()
+        mock_fit_result.params = {'pa': mock_param_a, 'pb': mock_param_b}
+        mock_fit_result.errorbars = True
+
+        # Then
+        minimizer._set_parameter_fit_result(mock_fit_result, False)
+
+        # Expect
+        assert minimizer._cached_pars['a'].value == 1.0
+        assert minimizer._cached_pars['a'].error == 0.1
+        assert minimizer._cached_pars['b'].value == 2.0
+        assert minimizer._cached_pars['b'].error == 0.2
+
+    def test_set_parameter_fit_result_no_stack_status_no_error(self, minimizer: LMFit):
+        # When
+        minimizer._cached_pars = {
+            'a': MagicMock(),
+            'b': MagicMock(),
+        }
+        minimizer._cached_pars['a'].value = 'a'
+        minimizer._cached_pars['b'].value = 'b'
+
+        mock_param_a = MagicMock()
+        mock_param_a.value = 1.0
+        mock_param_a.stderr = 0.1
+        mock_param_b = MagicMock
+        mock_param_b.value = 2.0
+        mock_param_b.stderr = 0.2
+        mock_fit_result = MagicMock()
+        mock_fit_result.params = {'pa': mock_param_a, 'pb': mock_param_b}
+        mock_fit_result.errorbars = False
+
+        # Then
+        minimizer._set_parameter_fit_result(mock_fit_result, False)
+
+        # Expect
+        assert minimizer._cached_pars['a'].value == 1.0
+        assert minimizer._cached_pars['a'].error == 0.0
+        assert minimizer._cached_pars['b'].value == 2.0
+        assert minimizer._cached_pars['b'].error == 0.0
+
+    def test_gen_fit_results(self, minimizer: LMFit, monkeypatch):
+        # When
+        mock_domain_fit_results = MagicMock()
+        mock_FitResults = MagicMock(return_value=mock_domain_fit_results)
+        monkeypatch.setattr(easyscience.fitting.minimizers.minimizer_lmfit, "FitResults", mock_FitResults)
+
+        mock_fit_result = MagicMock()
+        mock_fit_result.success ='success'
+        mock_fit_result.data = 'data'
+        mock_fit_result.userkws = {'x': 'x_val'}
+        mock_fit_result.values = 'values'
+        mock_fit_result.init_values = 'init_values'
+        mock_fit_result.best_fit = 'best_fit'
+        mock_fit_result.weights = 10
+
+        # Then
+        domain_fit_results = minimizer._gen_fit_results(mock_fit_result, **{'kwargs_set_key': 'kwargs_set_val'})
+
+        # Expect
+        assert domain_fit_results == mock_domain_fit_results
+        assert domain_fit_results.kwargs_set_key == 'kwargs_set_val'
+        assert domain_fit_results.success == 'success' 
+        assert domain_fit_results.y_obs == 'data'
+        assert domain_fit_results.x == 'x_val'
+        assert domain_fit_results.p == 'values'
+        assert domain_fit_results.p0 == 'init_values'
+        assert domain_fit_results.y_calc == 'best_fit'
+        assert domain_fit_results.y_err == 0.1
+        assert str(domain_fit_results.minimizer_engine) == "<class 'easyscience.fitting.minimizers.minimizer_lmfit.LMFit'>"
+        assert domain_fit_results.fit_args is None
+
 def test_wrap_fit_function():
     # When
     mock_parm_1 = MagicMock(Parameter)
