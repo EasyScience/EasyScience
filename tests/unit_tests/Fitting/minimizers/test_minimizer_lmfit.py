@@ -149,6 +149,9 @@ class TestLMFit():
 
     def test_fit(self, minimizer: LMFit):
         # When
+        from easyscience import borg
+        borg.stack.enabled = False
+
         mock_model = MagicMock()
         mock_model.fit = MagicMock(return_value='fit')
         minimizer.make_model = MagicMock(return_value=mock_model)
