@@ -152,3 +152,19 @@ class TestDesciptorBase:
             "display_name": "display_name",
             "unique_name": "DescriptorBase_0",
         }
+
+    def test_unique_name_generator(self, clear, descriptor: DescriptorBase):
+        # When Then Expect
+        assert descriptor.unique_name == "DescriptorBase_0"
+
+    def test_unique_name_change(self, clear, descriptor: DescriptorBase):
+        # When Then
+        descriptor.unique_name = "test"
+        # Expect
+        assert descriptor.unique_name == "test"
+
+    @pytest.mark.parametrize("input", [2, 2.0, [2], {2}, None])
+    def test_unique_name_change_exception(self, input, descriptor: DescriptorBase):
+        # When Then Expect
+        with pytest.raises(TypeError):
+            descriptor.unique_name = input

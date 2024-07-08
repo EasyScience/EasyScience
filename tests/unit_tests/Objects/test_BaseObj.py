@@ -22,6 +22,9 @@ from easyscience.Objects.ObjectClasses import Parameter
 from easyscience.Utils.io.dict import DictSerializer
 from easyscience import global_object
 
+@pytest.fixture
+def clear():
+    global_object.map._clear()
 
 @pytest.fixture
 def setup_pars():
@@ -476,3 +479,25 @@ def test_BaseCreation():
     assert b.b.a.raw_value == 3.0
     b.b.a = 4.0
     assert b.b.a.raw_value == 4.0
+
+def test_unique_name_generator(clear):
+    # When Then
+    test_obj = BaseObj(name="test")
+    # Expect
+    assert test_obj.unique_name == "BaseObj_0"
+
+def test_unique_name_change(clear):
+    # When
+    test_obj = BaseObj(name="test")
+    # Then
+    test_obj.unique_name = "test"
+    # Expect
+    assert test_obj.unique_name == "test"
+
+@pytest.mark.parametrize("input", [2, 2.0, [2], {2}, None])
+def test_unique_name_change_exception(input):
+    # When
+    test_obj = BaseObj(name="test")
+    # Then Expect
+    with pytest.raises(TypeError):
+        test_obj.unique_name = input
