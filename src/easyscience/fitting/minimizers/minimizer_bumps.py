@@ -17,7 +17,6 @@ from bumps.parameter import Parameter as BumpsParameter
 from .minimizer_base import MinimizerBase
 from .utils import FitError
 from .utils import FitResults
-from .utils import NameConverter
 
 
 class Bumps(MinimizerBase):  # noqa: S101

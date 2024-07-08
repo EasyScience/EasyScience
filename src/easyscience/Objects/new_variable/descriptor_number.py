@@ -10,7 +10,7 @@ import numpy as np
 import scipp as sc
 from scipp import Variable
 
-from easyscience.Utils.UndoRedo import property_stack_deco
+from easyscience.global_object.undo_redo import property_stack_deco
 
 from .descriptor_base import DescriptorBase
 
@@ -26,6 +26,7 @@ class DescriptorNumber(DescriptorBase):
         value: numbers.Number,
         unit: Optional[Union[str, sc.Unit]] = '',
         variance: Optional[numbers.Number] = None,
+        unique_name: Optional[str] = None,
         description: Optional[str] = None,
         url: Optional[str] = None,
         display_name: Optional[str] = None,
@@ -60,6 +61,7 @@ class DescriptorNumber(DescriptorBase):
             raise ValueError(message)
         super().__init__(
             name=name,
+            unique_name=unique_name,
             description=description,
             url=url,
             display_name=display_name,

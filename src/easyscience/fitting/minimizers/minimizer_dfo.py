@@ -13,7 +13,6 @@ import numpy as np
 from .minimizer_base import MinimizerBase
 from .utils import FitError
 from .utils import FitResults
-from .utils import NameConverter
 
 
 class DFO(MinimizerBase):  # noqa: S101

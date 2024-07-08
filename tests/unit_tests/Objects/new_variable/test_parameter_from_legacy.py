@@ -16,7 +16,7 @@ import easyscience
 from easyscience.Objects.Variable import CoreSetException
 
 from easyscience.Objects.new_variable import Parameter
-from easyscience.Objects.Variable import borg
+from easyscience.Objects.Variable import global_object
 
 
 def _generate_inputs():
@@ -104,7 +104,7 @@ def test_Parameter_value_get(element, expected):
 @pytest.mark.parametrize("debug", (True, False))
 @pytest.mark.parametrize("enabled", (None, True, False))
 def test_item_value_set(enabled, debug):
-    borg.debug = debug
+    global_object.debug = debug
     set_value = 2
     d = Parameter("test", 1)
     if enabled is not None:

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 from typing import Optional
 
-from easyscience.Utils.UndoRedo import property_stack_deco
+from easyscience.global_object.undo_redo import property_stack_deco
 
 from .descriptor_base import DescriptorBase
 
@@ -17,6 +17,7 @@ class DescriptorStr(DescriptorBase):
         self,
         name: str,
         value: str,
+        unique_name: Optional[str] = None,
         description: Optional[str] = None,
         url: Optional[str] = None,
         display_name: Optional[str] = None,
@@ -24,6 +25,7 @@ class DescriptorStr(DescriptorBase):
     ):
         super().__init__(
             name=name,
+            unique_name=unique_name,
             description=description,
             url=url,
             display_name=display_name,

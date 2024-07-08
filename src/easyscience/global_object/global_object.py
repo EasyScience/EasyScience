@@ -33,7 +33,7 @@ class GlobalObject:
         self.stack = self.__stack
         #
         self.script: ScriptManager = ScriptManager()
-        # Map. This is the conduit database between all borg species
+        # Map. This is the conduit database between all global object species
         self.map: Map = self.__map
 
     def instantiate_stack(self):

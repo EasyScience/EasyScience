@@ -15,7 +15,7 @@ from typing import Iterable
 from typing import MutableSequence
 
 from easyscience import global_object
-from easyscience.Fitting.Constraints import ObjConstraint
+from easyscience.fitting.Constraints import ObjConstraint
 
 if TYPE_CHECKING:
     from easyscience.Utils.typing import BV

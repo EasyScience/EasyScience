@@ -16,7 +16,6 @@ from lmfit.model import ModelResult
 from .minimizer_base import MinimizerBase
 from .utils import FitError
 from .utils import FitResults
-from .utils import NameConverter
 
 
 class LMFit(MinimizerBase):  # noqa: S101

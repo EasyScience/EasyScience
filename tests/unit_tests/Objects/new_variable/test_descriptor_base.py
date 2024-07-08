@@ -1,6 +1,6 @@
 import pytest
 
-from easyscience import borg
+from easyscience import global_object
 from easyscience.Objects.new_variable.descriptor_base import DescriptorBase
 
 
@@ -10,7 +10,7 @@ class TestDesciptorBase:
         # This avoids the error: TypeError: Can't instantiate abstract class DescriptorBase with abstract methods __init__
         DescriptorBase.__abstractmethods__ = set()
         DescriptorBase.__repr__ = lambda x: "DescriptorBase"
-        self.objs_before_new_descriptor = len(borg.map.created_objs)
+        self.objs_before_new_descriptor = len(global_object.map.created_objs)
         descriptor = DescriptorBase(
             name="name",
             description="description",
@@ -49,7 +49,7 @@ class TestDesciptorBase:
         assert descriptor._description == "description"
         assert descriptor._url == "url"
         assert descriptor._display_name == "display_name"
-        assert len(descriptor._borg.map.created_objs) - self.objs_before_new_descriptor == 1
+        assert len(descriptor._global_object.map.created_objs) - self.objs_before_new_descriptor == 1
 
 
     def test_display_name(self, descriptor: DescriptorBase):
@@ -112,18 +112,18 @@ class TestDesciptorBase:
 
 
     @pytest.mark.parametrize("stack_enabled,stack_elements", [(False, 0), (True, 1)])
-    def test_set_display_name_without_borg_stack(self, descriptor: DescriptorBase, stack_enabled, stack_elements):
+    def test_set_display_name_without_global_object_stack(self, descriptor: DescriptorBase, stack_enabled, stack_elements):
         # When
         descriptor.__repr__ = lambda x: "DescriptorBase"
-        descriptor._borg.stack.clear()
-        descriptor._borg.stack._enabled = stack_enabled
+        descriptor._global_object.stack.clear()
+        descriptor._global_object.stack._enabled = stack_enabled
 
         # Then 
         descriptor.display_name = "new_display_name" 
 
         # Expect
         assert descriptor.display_name == "new_display_name"
-        assert len(descriptor._borg.stack.history)  == stack_elements
+        assert len(descriptor._global_object.stack.history)  == stack_elements
 
     def test_copy(self, descriptor: DescriptorBase):
         # When Then
