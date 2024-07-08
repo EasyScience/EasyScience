@@ -329,4 +329,5 @@ class TestParameter:
             "url": "url",
             "display_name": "display_name",
             "enabled": "enabled",
+            "unique_name": "Parameter_0",
         }

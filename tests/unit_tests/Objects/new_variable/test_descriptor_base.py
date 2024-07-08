@@ -146,4 +146,5 @@ class TestDesciptorBase:
             "description": "description",
             "url": "url",
             "display_name": "display_name",
+            "unique_name": "DescriptorBase_0",
         }

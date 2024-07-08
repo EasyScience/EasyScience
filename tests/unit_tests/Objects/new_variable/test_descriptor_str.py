@@ -82,4 +82,5 @@ class TestDescriptorStr:
             "description": "description",
             "url": "url",
             "display_name": "display_name",
+            "unique_name": "DescriptorStr_0"
         }

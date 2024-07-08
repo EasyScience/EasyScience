@@ -193,4 +193,5 @@ class TestDescriptorNumber:
             "description": "description",
             "url": "url",
             "display_name": "display_name",
+            "unique_name": "DescriptorNumber_0",
         }
