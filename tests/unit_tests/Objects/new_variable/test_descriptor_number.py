@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import scipp as sc
 
 from easyscience.Objects.new_variable.descriptor_number import DescriptorNumber
-
+from easyscience import global_object
 
 class TestDescriptorNumber:
     @pytest.fixture
@@ -19,6 +19,10 @@ class TestDescriptorNumber:
             parent=None,
         )
         return descriptor
+
+    @pytest.fixture
+    def clear(self):
+        global_object.map._clear()
 
     def test_init(self, descriptor: DescriptorNumber):
         # When Then Expect
@@ -180,7 +184,7 @@ class TestDescriptorNumber:
         assert descriptor_copy._scalar.value == descriptor._scalar.value
         assert descriptor_copy._scalar.unit == descriptor._scalar.unit
 
-    def test_as_data_dict(self, descriptor: DescriptorNumber):
+    def test_as_data_dict(self, clear, descriptor: DescriptorNumber):
         # When Then
         descriptor_dict = descriptor.as_data_dict()
 
