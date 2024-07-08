@@ -20,6 +20,10 @@ class TestDesciptorBase:
         )
         return descriptor
 
+    @pytest.fixture
+    def clear(self):
+        global_object.map._clear()
+
     @pytest.mark.parametrize("name", [1, True, 1.0, [], {}, (), None, object()], ids=["int", "bool", "float", "list", "dict", "tuple", "None", "object"])
     def test_init_name_type_error(self, name):
         # When Then
@@ -136,7 +140,7 @@ class TestDesciptorBase:
         assert descriptor_copy._url == descriptor._url
         assert descriptor_copy._display_name == descriptor._display_name
 
-    def test_as_data_dict(self, descriptor: DescriptorBase):
+    def test_as_data_dict(self, clear, descriptor: DescriptorBase):
         # When Then
         descriptor_dict = descriptor.as_data_dict()
 
