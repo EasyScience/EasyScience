@@ -14,3 +14,4 @@ ureg = pint.UnitRegistry()
 global_object = GlobalObject()
 global_object.instantiate_stack()
 global_object.stack.enabled = False
+borg = global_object # alias for global_object, remove later
