@@ -16,6 +16,7 @@ from typing import List
 from typing import Optional
 from typing import Set
 from typing import TypeVar
+from typing import Union
 
 from easyscience import global_object
 from easyscience.Utils.classTools import addLoggedProp
