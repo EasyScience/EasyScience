@@ -108,9 +108,10 @@ class Map:
 
     def _get_name_iterator(self, class_name: str) -> int:
         """Get the iterator for the name generator for a class"""
-        self._name_iterator_dict.setdefault(class_name, 0)
+        iterator = self._name_iterator_dict.setdefault(class_name, 0)
         self._name_iterator_dict[class_name] += 1
-        return self._name_iterator_dict[class_name]
+        return iterator
+
 
     def get_item_by_key(self, item_id: str) -> object:
         if item_id in self._store.keys():
