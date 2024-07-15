@@ -103,18 +103,13 @@ class Map:
 
     def _nested_get(self, obj_type: str) -> List[str]:
         """Access a nested object in root by key sequence."""
-        extracted_list = []
-        for key, item in self.__type_dict.items():
-            if obj_type in item.type:
-                extracted_list.append(key)
-        return extracted_list
+        return [key for key, item in self.__type_dict.items() if obj_type in item.type]
+
 
     def _get_name_iterator(self, class_name: str) -> int:
         """Get the iterator for the name generator for a class"""
-        if class_name not in self._name_iterator_dict.keys():
-            self._name_iterator_dict[class_name] = 0
-        else:
-            self._name_iterator_dict[class_name] += 1
+        self._name_iterator_dict.setdefault(class_name, 0)
+        self._name_iterator_dict[class_name] += 1
         return self._name_iterator_dict[class_name]
 
     def get_item_by_key(self, item_id: str) -> object:
