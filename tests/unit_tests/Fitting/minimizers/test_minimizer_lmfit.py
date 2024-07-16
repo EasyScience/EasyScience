@@ -97,11 +97,6 @@ class TestLMFit():
         mock_obj.get_fit_parameters = MagicMock(return_value=[mock_parm_1, mock_parm_2])
         minimizer._object = mock_obj
 
-        mock_name_converter = MagicMock()
-        mock_name_converter.get_key = MagicMock(side_effect=['key_1_converted', 'key_2_converted'])
-        mock_NameConverter = MagicMock(return_value=mock_name_converter)
-        monkeypatch.setattr(easyscience.fitting.minimizers.minimizer_lmfit, "NameConverter", mock_NameConverter)
-
         mock_wrap_to_lm_signature = MagicMock(return_value='signature')
         monkeypatch.setattr(easyscience.fitting.minimizers.minimizer_lmfit, "_wrap_to_lm_signature", mock_wrap_to_lm_signature)
 
@@ -125,11 +120,6 @@ class TestLMFit():
         mock_obj.get_fit_parameters = MagicMock(return_value=[mock_parm_1, mock_parm_2])
         minimizer._object = mock_obj
 
-        mock_name_converter = MagicMock()
-        mock_name_converter.get_key = MagicMock(side_effect=['key_1_converted', 'key_2_converted'])
-        mock_NameConverter = MagicMock(return_value=mock_name_converter)
-        monkeypatch.setattr(easyscience.fitting.minimizers.minimizer_lmfit, "NameConverter", mock_NameConverter)
-
         mock_wrap_to_lm_signature = MagicMock(return_value='signature')
         monkeypatch.setattr(easyscience.fitting.minimizers.minimizer_lmfit, "_wrap_to_lm_signature", mock_wrap_to_lm_signature)
 
@@ -149,8 +139,8 @@ class TestLMFit():
 
     def test_fit(self, minimizer: LMFit):
         # When
-        from easyscience import borg
-        borg.stack.enabled = False
+        from easyscience import global_object
+        global_object.stack.enabled = False
 
         mock_model = MagicMock()
         mock_model.fit = MagicMock(return_value='fit')
@@ -265,11 +255,6 @@ class TestLMFit():
 
     def test_convert_to_par_object(self, minimizer: LMFit, monkeypatch):
         # When
-        mock_name_converter = MagicMock()
-        mock_name_converter.get_key = MagicMock(return_value='key_converted')
-        mock_NameConverter = MagicMock(return_value=mock_name_converter)
-        monkeypatch.setattr(easyscience.fitting.minimizers.minimizer_lmfit, "NameConverter", mock_NameConverter)
-
         mock_lm_parameter = MagicMock()
         mock_LMParameter = MagicMock(return_value=mock_lm_parameter)
         monkeypatch.setattr(easyscience.fitting.minimizers.minimizer_lmfit, "LMParameter", mock_LMParameter)
@@ -279,6 +264,7 @@ class TestLMFit():
         mock_parm.fixed = True
         mock_parm.min = -10.0
         mock_parm.max = 10.0
+        mock_parm.unique_name = 'key_converted'
 
         # Then
         par = minimizer.convert_to_par_object(mock_parm)
