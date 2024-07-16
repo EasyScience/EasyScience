@@ -52,6 +52,7 @@ jobs:
         tox
 
     - name: Upload coverage
+      if: false
       uses: codecov/codecov-action@v4
       with:
         name: Pytest coverage
