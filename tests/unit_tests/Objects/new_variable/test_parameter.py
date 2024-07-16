@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import scipp as sc
 
 from easyscience.Objects.new_variable.parameter import Parameter
-
+from easyscience import global_object
 
 class TestParameter:
     @pytest.fixture
@@ -24,6 +24,10 @@ class TestParameter:
             parent=None,
         )
         return parameter
+
+    @pytest.fixture
+    def clear(self):
+        global_object.map._clear()
 
     def test_init(self, parameter: Parameter):
         # When Then Expect
@@ -312,7 +316,7 @@ class TestParameter:
         assert parameter_copy._display_name == parameter._display_name
         assert parameter_copy._enabled == parameter._enabled
 
-    def test_as_data_dict(self, parameter: Parameter):
+    def test_as_data_dict(self, clear, parameter: Parameter):
         # When Then
         parameter_dict = parameter.as_data_dict()
 
@@ -329,4 +333,5 @@ class TestParameter:
             "url": "url",
             "display_name": "display_name",
             "enabled": "enabled",
+            "unique_name": "Parameter_0",
         }

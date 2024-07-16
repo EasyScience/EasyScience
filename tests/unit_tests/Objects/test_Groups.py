@@ -14,6 +14,7 @@ from easyscience.Objects.Groups import BaseCollection
 from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.ObjectClasses import Descriptor
 from easyscience.Objects.ObjectClasses import Parameter
+from easyscience import global_object
 
 test_dict = {
     "@module": "easyscience.Objects.Groups",
@@ -28,6 +29,7 @@ test_dict = {
             "name": "par1",
             "value": 1,
             "units": "dimensionless",
+            "unique_name": "BaseCollection_0",
             "description": "",
             "url": "",
             "display_name": "par1",
@@ -307,6 +309,7 @@ def test_baseCollection_dir(cls):
         "constraints",
         "get_fit_parameters",
         "append",
+        "unique_name",
         "index",
         "as_dict",
         "clear",
@@ -346,6 +349,10 @@ def test_baseCollection_as_dict(cls):
             del keys_1[keys_1.index("@id")]
         if "@id" in keys_2:
             del keys_2[keys_2.index("@id")]
+        if "unique_name" in keys_1:
+            del keys_1[keys_1.index("unique_name")]
+        if "unique_name" in keys_2:
+            del keys_2[keys_2.index("unique_name")]
 
         assert not set(keys_1).difference(set(keys_2))
 
@@ -442,6 +449,7 @@ def test_baseCollection_iterator_dict(cls):
 
     obj = cls(name, *l_object)
     d = obj.as_dict()
+    global_object.map._clear()
     obj2 = cls.from_dict(d)
 
     for index, item in enumerate(obj2):
@@ -483,18 +491,18 @@ def test_baseCollection_set_index(cls):
     assert obj[idx] == p2
     obj[idx] = p4
     assert obj[idx] == p4
-    edges = obj._borg.map.get_edges(obj)
+    edges = obj._global_object.map.get_edges(obj)
     assert len(edges) == len(obj)
     for item in obj:
-        assert obj._borg.map.convert_id_to_key(item) in edges
-    assert obj._borg.map.convert_id_to_key(p2) not in edges
+        assert item.unique_name in edges
+    assert p2.unique_name not in edges
 
 
 @pytest.mark.parametrize("cls", class_constructors)
 def test_baseCollection_set_index_based(cls):
     name = "test"
     p1 = Parameter("p1", 1)
-    p2 = Parameter("p1", 2)
+    p2 = Parameter("p2", 2)
     p3 = Parameter("p3", 3)
     p4 = Parameter("p4", 4)
     p5 = Parameter("p5", 5)
@@ -507,11 +515,11 @@ def test_baseCollection_set_index_based(cls):
     assert obj[idx] == p4
     obj[idx] = d
     assert obj[idx] == d
-    edges = obj._borg.map.get_edges(obj)
+    edges = obj._global_object.map.get_edges(obj)
     assert len(edges) == len(obj)
     for item in obj:
-        assert obj._borg.map.convert_id_to_key(item) in edges
-    assert obj._borg.map.convert_id_to_key(p4) not in edges
+        assert item.unique_name in edges
+    assert p4.unique_name not in edges
 
 
 @pytest.mark.parametrize("cls", class_constructors)
@@ -543,17 +551,17 @@ class Beta(BaseObj):
 
 @pytest.mark.parametrize("cls", class_constructors)
 def test_basecollectionGraph(cls):
-    from easyscience import borg
+    from easyscience import global_object
 
-    G = borg.map
+    G = global_object.map
     name = "test"
     v = [1, 2]
     p = [Parameter(f"p{i}", v[i]) for i in range(len(v))]
-    p_id = [G.convert_id_to_key(_p) for _p in p]
+    p_id = [_p.unique_name for _p in p]
     bb = cls(name, *p)
-    bb_id = G.convert_id_to_key(bb)
+    bb_id = bb.unique_name
     b = Beta("b", bb=bb)
-    b_id = G.convert_id_to_key(b)
+    b_id = b.unique_name
     for _id in p_id:
         assert _id in G.get_edges(bb)
     assert len(p) == len(G.get_edges(bb))

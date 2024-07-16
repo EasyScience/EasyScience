@@ -21,7 +21,7 @@ from typing import Union
 import numpy as np
 from asteval import Interpreter
 
-from easyscience import borg
+from easyscience import global_object
 from easyscience.Objects.core import ComponentSerializer
 
 if TYPE_CHECKING:
@@ -33,7 +33,7 @@ class ConstraintBase(ComponentSerializer, metaclass=ABCMeta):
     A base class used to describe a constraint to be applied to EasyScience base objects.
     """
 
-    _borg = borg
+    _global_object = global_object
 
     def __init__(
         self,
@@ -43,18 +43,18 @@ class ConstraintBase(ComponentSerializer, metaclass=ABCMeta):
         value: Optional[Number] = None,
     ):
         self.aeval = Interpreter()
-        self.dependent_obj_ids = self.get_key(dependent_obj)
+        self.dependent_obj_ids = dependent_obj.unique_name
         self.independent_obj_ids = None
         self._enabled = True
         self.external = False
         self._finalizer = None
         if independent_obj is not None:
             if isinstance(independent_obj, list):
-                self.independent_obj_ids = [self.get_key(obj) for obj in independent_obj]
+                self.independent_obj_ids = [obj.unique_name for obj in independent_obj]
                 if self.dependent_obj_ids in self.independent_obj_ids:
                     raise AttributeError('A dependent object can not be an independent object')
             else:
-                self.independent_obj_ids = self.get_key(independent_obj)
+                self.independent_obj_ids = independent_obj.unique_name
                 if self.dependent_obj_ids == self.independent_obj_ids:
                     raise AttributeError('A dependent object can not be an independent object')
             # Test if dependent is a parameter or a descriptor.
@@ -62,7 +62,7 @@ class ConstraintBase(ComponentSerializer, metaclass=ABCMeta):
             if dependent_obj.__class__.__name__ == 'Parameter':
                 if not dependent_obj.enabled:
                     raise AssertionError('A dependent object needs to be initially enabled.')
-                if borg.debug:
+                if global_object.debug:
                     print(f'Dependent variable {dependent_obj}. It should be a `Descriptor`.' f'Setting to fixed')
                 dependent_obj.enabled = False
                 self._finalizer = weakref.finalize(self, cleanup_constraint, self.dependent_obj_ids, True)
@@ -111,11 +111,11 @@ class ConstraintBase(ComponentSerializer, metaclass=ABCMeta):
                 return None
             return
         independent_objs = None
-        if isinstance(self.dependent_obj_ids, int):
+        if isinstance(self.dependent_obj_ids, str):
             dependent_obj = self.get_obj(self.dependent_obj_ids)
         else:
             raise AttributeError
-        if isinstance(self.independent_obj_ids, int):
+        if isinstance(self.independent_obj_ids, str):
             independent_objs = self.get_obj(self.independent_obj_ids)
         elif isinstance(self.independent_obj_ids, list):
             independent_objs = [self.get_obj(obj_id) for obj_id in self.independent_obj_ids]
@@ -147,15 +147,6 @@ class ConstraintBase(ComponentSerializer, metaclass=ABCMeta):
     def __repr__(self):
         pass
 
-    def get_key(self, obj) -> int:
-        """
-        Get the unique key of a EasyScience object
-
-        :param obj: EasyScience object
-        :return: key for EasyScience object
-        """
-        return self._borg.map.convert_id_to_key(obj)
-
     def get_obj(self, key: int) -> V:
         """
         Get an EasyScience object from its unique key
@@ -163,7 +154,7 @@ class ConstraintBase(ComponentSerializer, metaclass=ABCMeta):
         :param key: an EasyScience objects unique key
         :return: EasyScience object
         """
-        return self._borg.map.get_item_by_key(key)
+        return self._global_object.map.get_item_by_key(key)
 
 
 C = TypeVar('C', bound=ConstraintBase)
@@ -525,8 +516,8 @@ class FunctionalConstraint(ConstraintBase):
 
 def cleanup_constraint(obj_id: str, enabled: bool):
     try:
-        obj = borg.map.get_item_by_key(obj_id)
+        obj = global_object.map.get_item_by_key(obj_id)
         obj.enabled = enabled
     except ValueError:
-        if borg.debug:
+        if global_object.debug:
             print(f'Object with ID {obj_id} has already been deleted')

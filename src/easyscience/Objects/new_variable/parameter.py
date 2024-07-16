@@ -19,11 +19,11 @@ import numpy as np
 import scipp as sc
 from scipp import Variable
 
-from easyscience import borg
+from easyscience import global_object
 from easyscience.fitting.Constraints import ConstraintBase
 from easyscience.fitting.Constraints import SelfConstraint
+from easyscience.global_object.undo_redo import property_stack_deco
 from easyscience.Utils.Exceptions import CoreSetException
-from easyscience.Utils.UndoRedo import property_stack_deco
 
 from .descriptor_number import DescriptorNumber
 
@@ -48,6 +48,7 @@ class Parameter(DescriptorNumber):
         min: Optional[numbers.Number] = -np.Inf,
         max: Optional[numbers.Number] = np.Inf,
         fixed: Optional[bool] = False,
+        unique_name: Optional[str] = None,
         description: Optional[str] = None,
         url: Optional[str] = None,
         display_name: Optional[str] = None,
@@ -92,6 +93,7 @@ class Parameter(DescriptorNumber):
             value=value,
             unit=unit,
             variance=variance,
+            unique_name=unique_name,
             description=description,
             url=url,
             display_name=display_name,
@@ -147,7 +149,7 @@ class Parameter(DescriptorNumber):
         :param full_value: New value of self
         """
         if not self.enabled:
-            if borg.debug:
+            if global_object.debug:
                 raise CoreSetException(f'{str(self)} is not enabled.')
             return
         if not isinstance(scalar, Variable) and len(scalar.dims) == 0:
@@ -180,7 +182,7 @@ class Parameter(DescriptorNumber):
         :param value: New value of self
         """
         if not self.enabled:
-            if borg.debug:
+            if global_object.debug:
                 raise CoreSetException(f'{str(self)} is not enabled.')
             return
 
@@ -197,13 +199,13 @@ class Parameter(DescriptorNumber):
 
         # Deals with user constraints
         # Changes should not be registrered in the undo/redo stack
-        stack_state = self._borg.stack.enabled
+        stack_state = self._global_object.stack.enabled
         if stack_state:
-            self._borg.stack.force_state(False)
+            self._global_object.stack.force_state(False)
         try:
             value = self._constraint_runner(self.user_constraints, value)
         finally:
-            self._borg.stack.force_state(stack_state)
+            self._global_object.stack.force_state(stack_state)
 
         value = self._constraint_runner(self._constraints.virtual, value)
 
@@ -294,10 +296,10 @@ class Parameter(DescriptorNumber):
         :param fixed: True = fixed, False = can vary
         """
         if not self.enabled:
-            if self._borg.stack.enabled:
+            if self._global_object.stack.enabled:
                 # Remove the recorded change from the stack
-                self._borg.stack.pop()
-            if borg.debug:
+                self._global_object.stack.pop()
+            if global_object.debug:
                 raise CoreSetException(f'{str(self)} is not enabled.')
             return
         if not isinstance(fixed, bool):
@@ -373,7 +375,7 @@ class Parameter(DescriptorNumber):
 
             constained_value = constraint(no_set=True)
             if constained_value != value:
-                if borg.debug:
+                if global_object.debug:
                     print(f'Constraint `{constraint}` has been applied')
                 self._scalar.value = constained_value
                 value = constained_value

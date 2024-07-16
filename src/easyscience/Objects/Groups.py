@@ -17,10 +17,9 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
-from easyscience import borg
+from easyscience.global_object.undo_redo import NotarizedDict
 from easyscience.Objects.ObjectClasses import BasedBase
 from easyscience.Objects.ObjectClasses import Descriptor
-from easyscience.Utils.UndoRedo import NotarizedDict
 
 if TYPE_CHECKING:
     from easyscience.Utils.typing import B
@@ -75,8 +74,8 @@ class BaseCollection(BasedBase, MutableSequence):
         for key, item in kwargs.items():
             _kwargs[key] = item
         for arg in args:
-            kwargs[str(borg.map.convert_id_to_key(arg))] = arg
-            _kwargs[str(borg.map.convert_id_to_key(arg))] = arg
+            kwargs[arg.unique_name] = arg
+            _kwargs[arg.unique_name] = arg
 
         # Set kwargs, also useful for serialization
         self._kwargs = NotarizedDict(**_kwargs)
@@ -84,8 +83,8 @@ class BaseCollection(BasedBase, MutableSequence):
         for key in kwargs.keys():
             if key in self.__dict__.keys() or key in self.__slots__:
                 raise AttributeError(f'Given kwarg: `{key}`, is an internal attribute. Please rename.')
-            self._borg.map.add_edge(self, kwargs[key])
-            self._borg.map.reset_type(kwargs[key], 'created_internal')
+            self._global_object.map.add_edge(self, kwargs[key])
+            self._global_object.map.reset_type(kwargs[key], 'created_internal')
             if interface is not None:
                 kwargs[key].interface = interface
             # TODO wrap getter and setter in Logger
@@ -109,13 +108,13 @@ class BaseCollection(BasedBase, MutableSequence):
             update_key = list(self._kwargs.keys())
             values = list(self._kwargs.values())
             # Update the internal dict
-            new_key = str(borg.map.convert_id_to_key(value))
+            new_key = value.unique_name
             update_key.insert(index, new_key)
             values.insert(index, value)
             self._kwargs.reorder(**{k: v for k, v in zip(update_key, values)})
             # ADD EDGE
-            self._borg.map.add_edge(self, value)
-            self._borg.map.reset_type(value, 'created_internal')
+            self._global_object.map.add_edge(self, value)
+            self._global_object.map.reset_type(value, 'created_internal')
             value.interface = self.interface
         else:
             raise AttributeError('Only EasyScience objects can be put into an EasyScience group')
@@ -174,11 +173,11 @@ class BaseCollection(BasedBase, MutableSequence):
             update_dict = {update_key[key]: value}
             self._kwargs.update(update_dict)
             # ADD EDGE
-            self._borg.map.add_edge(self, value)
-            self._borg.map.reset_type(value, 'created_internal')
+            self._global_object.map.add_edge(self, value)
+            self._global_object.map.reset_type(value, 'created_internal')
             value.interface = self.interface
             # REMOVE EDGE
-            self._borg.map.prune_vertex_from_edge(self, old_item)
+            self._global_object.map.prune_vertex_from_edge(self, old_item)
         else:
             raise NotImplementedError('At the moment only numerical values or EasyScience objects can be set.')
 
@@ -193,7 +192,7 @@ class BaseCollection(BasedBase, MutableSequence):
         """
         keys = list(self._kwargs.keys())
         item = self._kwargs[keys[key]]
-        self._borg.map.prune_vertex_from_edge(self, item)
+        self._global_object.map.prune_vertex_from_edge(self, item)
         del self._kwargs[keys[key]]
 
     def __len__(self) -> int:

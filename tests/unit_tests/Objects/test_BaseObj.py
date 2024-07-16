@@ -20,7 +20,11 @@ from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.ObjectClasses import Descriptor
 from easyscience.Objects.ObjectClasses import Parameter
 from easyscience.Utils.io.dict import DictSerializer
+from easyscience import global_object
 
+@pytest.fixture
+def clear():
+    global_object.map._clear()
 
 @pytest.fixture
 def setup_pars():
@@ -57,7 +61,7 @@ def not_raises(
         ([], ["par1"]),
         (["par1"], []),
         (["par1"], ["par2"]),
-        (["par1", "des1"], ["par2", "des2"]),
+        (["par1", "des1"], ["par2", "des2"]), 
     ],
 )
 def test_baseobj_create(setup_pars: dict, a: List[str], kw: List[str]):
@@ -68,7 +72,7 @@ def test_baseobj_create(setup_pars: dict, a: List[str], kw: List[str]):
     kwargs = {}
     for key in kw:
         kwargs[key] = setup_pars[key]
-    base = BaseObj(name, *args, **kwargs)
+    base = BaseObj(name, None, *args, **kwargs)
     assert base.name == name
     for key in a:
         item = getattr(base, setup_pars[key].name)
@@ -194,6 +198,7 @@ def test_baseobj_as_dict(setup_pars: dict):
         if isinstance(check, dict) and isinstance(item, dict):
             if "@module" in item.keys():
                 with not_raises([ValueError, AttributeError]):
+                    global_object.map._clear()
                     this_obj = DictSerializer().decode(item)
 
             for key in check.keys():
@@ -222,6 +227,7 @@ def test_baseobj_dir(setup_pars):
         "get_fit_parameters",
         "get_parameters",
         "interface",
+        "unique_name",
         "name",
         "par1",
         "par2",
@@ -360,7 +366,7 @@ def test_Base_GETSET():
     a_start = 5
     a_end = 10
     a = A.from_pars(a_start)
-    graph = a._borg.map
+    graph = a._global_object.map
 
     assert a.a.raw_value == a_start
     assert len(graph.get_edges(a)) == 1
@@ -401,7 +407,7 @@ def test_Base_GETSET_v2():
     a_start = 5
     a_end = 10
     a = A.from_pars(a_start)
-    graph = a._borg.map
+    graph = a._global_object.map
 
     assert a.a.raw_value == a_start
     assert len(graph.get_edges(a)) == 1
@@ -426,22 +432,19 @@ def test_Base_GETSET_v3():
     a_start = 5
     a_end = 10
     a = A.from_pars(a_start)
-    graph = a._borg.map
-
-    def get_key(obj):
-        return graph.convert_id_to_key(obj)
+    graph = a._global_object.map
 
     assert a.a.raw_value == a_start
     assert len(graph.get_edges(a)) == 1
     a_ = Parameter("a", a_end)
-    assert get_key(a.a) in graph.get_edges(a)
+    assert a.a.unique_name in graph.get_edges(a)
     a__ = a.a
 
     setattr(a, "a", a_)
     assert a.a.raw_value == a_end
     assert len(graph.get_edges(a)) == 1
-    assert get_key(a_) in graph.get_edges(a)
-    assert get_key(a__) not in graph.get_edges(a)
+    assert a_.unique_name in graph.get_edges(a)
+    assert a__.unique_name not in graph.get_edges(a)
 
 
 def test_BaseCreation():
@@ -476,3 +479,25 @@ def test_BaseCreation():
     assert b.b.a.raw_value == 3.0
     b.b.a = 4.0
     assert b.b.a.raw_value == 4.0
+
+def test_unique_name_generator(clear):
+    # When Then
+    test_obj = BaseObj(name="test")
+    # Expect
+    assert test_obj.unique_name == "BaseObj_0"
+
+def test_unique_name_change(clear):
+    # When
+    test_obj = BaseObj(name="test")
+    # Then
+    test_obj.unique_name = "test"
+    # Expect
+    assert test_obj.unique_name == "test"
+
+@pytest.mark.parametrize("input", [2, 2.0, [2], {2}, None])
+def test_unique_name_change_exception(input):
+    # When
+    test_obj = BaseObj(name="test")
+    # Then Expect
+    with pytest.raises(TypeError):
+        test_obj.unique_name = input

@@ -16,7 +16,7 @@ from easyscience.Objects.Variable import Q_
 from easyscience.Objects.Variable import CoreSetException
 from easyscience.Objects.Variable import Descriptor
 from easyscience.Objects.Variable import Parameter
-from easyscience.Objects.Variable import borg
+from easyscience.Objects.Variable import global_object
 from easyscience.Objects.Variable import ureg
 
 
@@ -132,7 +132,7 @@ def test_Parameter_value_get(element, expected):
 @pytest.mark.parametrize("enabled", (None, True, False))
 @pytest.mark.parametrize("instance", (Descriptor, Parameter), indirect=True)
 def test_item_value_set(instance, enabled, debug):
-    borg.debug = debug
+    global_object.debug = debug
     set_value = 2
     d = instance("test", 1)
     if enabled is not None:

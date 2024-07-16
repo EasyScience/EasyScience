@@ -1,7 +1,7 @@
 import pytest
 
 from easyscience.Objects.new_variable.descriptor_bool import DescriptorBool
-
+from easyscience import global_object
 
 class TestDescriptorBool:
     @pytest.fixture
@@ -16,6 +16,10 @@ class TestDescriptorBool:
         )
         return descriptor
     
+    @pytest.fixture
+    def clear(self):
+        global_object.map._clear()
+
     def test_init(self, descriptor: DescriptorBool):
         # When Then Expect
         assert descriptor._bool_value == True
@@ -72,7 +76,7 @@ class TestDescriptorBool:
         assert type(descriptor_copy) == DescriptorBool
         assert descriptor_copy._bool_value == descriptor._bool_value
 
-    def test_as_data_dict(self, descriptor: DescriptorBool):
+    def test_as_data_dict(self, clear, descriptor: DescriptorBool):
         # When Then
         descriptor_dict = descriptor.as_data_dict()
 
@@ -83,4 +87,5 @@ class TestDescriptorBool:
             "description": "description",
             "url": "url",
             "display_name": "display_name",
+            "unique_name": "DescriptorBool_0"
         }

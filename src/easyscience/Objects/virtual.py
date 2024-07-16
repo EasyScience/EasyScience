@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 from typing import Iterable
 from typing import MutableSequence
 
-from easyscience import borg
+from easyscience import global_object
 from easyscience.fitting.Constraints import ObjConstraint
 
 if TYPE_CHECKING:
@@ -28,7 +28,7 @@ def raise_(ex):
 def _remover(a_obj_id: str, v_obj_id: str):
     try:
         # Try to get parent object (might be deleted)
-        a_obj = borg.map.get_item_by_key(int(a_obj_id))
+        a_obj = global_object.map.get_item_by_key(a_obj_id)
     except ValueError:
         return
     if a_obj._constraints['virtual'].get(v_obj_id, False):
@@ -48,6 +48,7 @@ def realizer(obj: BV):
         args = []
         if klass in ec_var.__dict__.values():  # is_variable check
             kwargs = obj.encode_data()
+            kwargs["unique_name"] = None
             return klass(**kwargs)
         else:
             kwargs = {name: realizer(item) for name, item in obj._kwargs.items()}
@@ -93,16 +94,18 @@ def component_realizer(obj: BV, component: str, recursive: bool = True):
                 value = component._kwargs[key]
             else:
                 value = key
-                key = value._borg.map.convert_id_to_key(value)
+                key = value.unique_name
             if getattr(value, '__old_class__', value.__class__) in ec_var.__dict__.values():
                 continue
-            component._borg.map.prune_vertex_from_edge(component, component._kwargs[key])
-            component._borg.map.add_edge(component, old_component._kwargs[key])
+            component._global_object.map.prune_vertex_from_edge(
+                component, component._kwargs[key]
+            )
+            component._global_object.map.add_edge(component, old_component._kwargs[key])
             component._kwargs[key] = old_component._kwargs[key]
             done_mapping = False
     if done_mapping:
-        obj._borg.map.prune_vertex_from_edge(obj, old_component)
-        obj._borg.map.add_edge(obj, new_components)
+        obj._global_object.map.prune_vertex_from_edge(obj, old_component)
+        obj._global_object.map.add_edge(obj, new_components)
         obj._kwargs[component] = new_components
 
 
@@ -122,29 +125,29 @@ def virtualizer(obj: BV) -> BV:
     # First  check if we're already a virtual object
     if getattr(obj, '_is_virtual', False):
         new_obj = deepcopy(obj)
-        old_obj = obj._borg.map.get_item_by_key(obj._derived_from)
+        old_obj = obj._global_object.map.get_item_by_key(obj._derived_from)
         constraint = ObjConstraint(new_obj, '', old_obj)
         constraint.external = True
-        old_obj._constraints['virtual'][str(obj._borg.map.convert_id(new_obj).int)] = constraint
+        old_obj._constraints['virtual'][str(obj.unique_name)] = constraint
         new_obj._constraints['builtin'] = dict()
         # setattr(new_obj, "__previous_set", getattr(olobj, "__previous_set", None))
         weakref.finalize(
             new_obj,
             _remover,
-            str(borg.map.convert_id(old_obj).int),
-            str(borg.map.convert_id(new_obj).int),
+            old_obj.unique_name,
+            new_obj.unique_name,
         )
         return new_obj
 
     # The supplied class
     klass = getattr(obj, '__old_class__', obj.__class__)
     virtual_options = {
-        '_is_virtual': True,
-        'is_virtual': property(fget=lambda self: self._is_virtual),
-        '_derived_from': property(fget=lambda self: self._borg.map.convert_id(obj).int),
-        '__non_virtual_class__': klass,
-        'realize': realizer,
-        'relalize_component': component_realizer,
+        "_is_virtual": True,
+        "is_virtual": property(fget=lambda self: self._is_virtual),
+        "_derived_from": property(fget=lambda self: obj.unique_name),
+        "__non_virtual_class__": klass,
+        "realize": realizer,
+        "relalize_component": component_realizer,
     }
 
     import easyscience.Objects.Variable as ec_var
@@ -164,18 +167,19 @@ def virtualizer(obj: BV) -> BV:
         d = obj.encode_data()
         if hasattr(d, 'fixed'):
             d['fixed'] = True
+        d['unique_name'] = None
         v_p = cls(**d)
         v_p._enabled = False
         constraint = ObjConstraint(v_p, '', obj)
         constraint.external = True
-        obj._constraints['virtual'][str(cls._borg.map.convert_id(v_p).int)] = constraint
+        obj._constraints['virtual'][v_p.unique_name] = constraint
         v_p._constraints['builtin'] = dict()
         setattr(v_p, '__previous_set', getattr(obj, '__previous_set', None))
         weakref.finalize(
             v_p,
             _remover,
-            str(borg.map.convert_id(obj).int),
-            str(borg.map.convert_id(v_p).int),
+            obj.unique_name,
+            v_p.unique_name,
         )
     else:
         # In this case, we need to be recursive.

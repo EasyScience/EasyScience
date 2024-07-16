@@ -173,3 +173,4 @@ class MinimizerBase(metaclass=ABCMeta):
         z = stats.norm.pdf(z)
         error_matrix = z * np.sqrt(error_matrix)
         return error_matrix
+

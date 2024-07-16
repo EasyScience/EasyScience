@@ -17,7 +17,6 @@ from bumps.parameter import Parameter as BumpsParameter
 from .minimizer_base import MinimizerBase
 from .utils import FitError
 from .utils import FitResults
-from .utils import NameConverter
 
 
 class Bumps(MinimizerBase):  # noqa: S101
@@ -61,7 +60,7 @@ class Bumps(MinimizerBase):  # noqa: S101
                         par['p' + str(name)] = obj.convert_to_par_object(item)
                 else:
                     for item in pars:
-                        par['p' + str(NameConverter().get_key(item))] = obj.convert_to_par_object(item)
+                        par['p' + item.unique_name] = obj.convert_to_par_object(item)
                 return Curve(fit_func, x, y, dy=weights, **par)
 
             return make_func
@@ -81,7 +80,7 @@ class Bumps(MinimizerBase):  # noqa: S101
         # Get a list of `Parameters`
         self._cached_pars_vals = {}
         for parameter in self._object.get_fit_parameters():
-            key = NameConverter().get_key(parameter)
+            key = parameter.unique_name
             self._cached_pars[key] = parameter
             self._cached_pars_vals[key] = (parameter.value, parameter.error)
 
@@ -98,7 +97,7 @@ class Bumps(MinimizerBase):  # noqa: S101
             """
             # Update the `Parameter` values and the callback if needed
             for name, value in kwargs.items():
-                par_name = int(name[1:])
+                par_name = name[1:]
                 if par_name in self._cached_pars.keys():
 
                     ## TODO clean when full move to new_variable 
@@ -213,11 +212,11 @@ class Bumps(MinimizerBase):  # noqa: S101
             self._p_0 = {f'p{key}': self._cached_pars[key].raw_value for key in self._cached_pars.keys()}
 
         problem = FitProblem(model)
-        # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
-        from easyscience import borg
+        # Why do we do this? Because a fitting template has to have global_object instantiated outside pre-runtime
+        from easyscience import global_object
 
-        stack_status = borg.stack.enabled
-        borg.stack.enabled = False
+        stack_status = global_object.stack.enabled
+        global_object.stack.enabled = False
 
         try:
             model_results = bumps_fit(problem, **default_method, **minimizer_kwargs, **kwargs)
@@ -262,7 +261,7 @@ class Bumps(MinimizerBase):  # noqa: S101
             value = obj.raw_value
         
         return BumpsParameter(
-            name='p' + str(NameConverter().get_key(obj)),
+            name='p' + obj.unique_name,
             value=value,
             bounds=[obj.min, obj.max],
             fixed=obj.fixed,
@@ -276,7 +275,7 @@ class Bumps(MinimizerBase):  # noqa: S101
         :return: None
         :rtype: noneType
         """
-        from easyscience import borg
+        from easyscience import global_object
 
         pars = self._cached_pars
 
@@ -284,15 +283,15 @@ class Bumps(MinimizerBase):  # noqa: S101
             for name in pars.keys():
                 pars[name].value = self._cached_pars_vals[name][0]
                 pars[name].error = self._cached_pars_vals[name][1]
-            borg.stack.enabled = True
-            borg.stack.beginMacro('Fitting routine')
+            global_object.stack.enabled = True
+            global_object.stack.beginMacro('Fitting routine')
 
         for index, name in enumerate(self._cached_model._pnames):
-            dict_name = int(name[1:])
+            dict_name = name[1:]
             pars[dict_name].value = fit_result.x[index]
             pars[dict_name].error = fit_result.dx[index]
         if stack_status:
-            borg.stack.endMacro()
+            global_object.stack.endMacro()
 
     def _gen_fit_results(self, fit_results, **kwargs) -> FitResults:
         """
@@ -311,7 +310,7 @@ class Bumps(MinimizerBase):  # noqa: S101
         pars = self._cached_pars
         item = {}
         for index, name in enumerate(self._cached_model._pnames):
-            dict_name = int(name[1:])
+            dict_name = name[1:]
  
             ## TODO clean when full move to new_variable 
             from easyscience.Objects.new_variable import Parameter

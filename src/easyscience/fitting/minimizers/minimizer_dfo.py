@@ -13,7 +13,6 @@ import numpy as np
 from .minimizer_base import MinimizerBase
 from .utils import FitError
 from .utils import FitResults
-from .utils import NameConverter
 
 
 class DFO(MinimizerBase):  # noqa: S101
@@ -66,9 +65,9 @@ class DFO(MinimizerBase):  # noqa: S101
                         from easyscience.Objects.new_variable import Parameter
 
                         if isinstance(item, Parameter):
-                            par['p' + str(NameConverter().get_key(item))] = item.value
+                            par['p' + item.unique_name] = item.value
                         else:
-                            par['p' + str(NameConverter().get_key(item))] = item.raw_value
+                            par['p' + item.unique_name] = item.raw_value
 
                 def residuals(x0) -> np.ndarray:
                     for idx, par_name in enumerate(par.keys()):
@@ -97,7 +96,7 @@ class DFO(MinimizerBase):  # noqa: S101
         self._cached_pars = {}
         self._cached_pars_vals = {}
         for parameter in self._object.get_fit_parameters():
-            key = NameConverter().get_key(parameter)
+            key = parameter.unique_name
             self._cached_pars[key] = parameter
             self._cached_pars_vals[key] = (parameter.value, parameter.error)
 
@@ -115,7 +114,7 @@ class DFO(MinimizerBase):  # noqa: S101
             # Update the `Parameter` values and the callback if needed
             # TODO THIS IS NOT THREAD SAFE :-(
             for name, value in kwargs.items():
-                par_name = int(name[1:])
+                par_name = name[1:]
                 if par_name in self._cached_pars.keys():
                     ## TODO clean when full move to new_variable
                     from easyscience.Objects.new_variable import Parameter
@@ -193,11 +192,11 @@ class DFO(MinimizerBase):  # noqa: S101
         else:
             self._p_0 = {f'p{key}': self._cached_pars[key].raw_value for key in self._cached_pars.keys()}
 
-        # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
-        from easyscience import borg
+        # Why do we do this? Because a fitting template has to have global_object instantiated outside pre-runtime
+        from easyscience import global_object
 
-        stack_status = borg.stack.enabled
-        borg.stack.enabled = False
+        stack_status = global_object.stack.enabled
+        global_object.stack.enabled = False
 
         try:
             model_results = self.dfols_fit(model, **kwargs)
@@ -233,15 +232,15 @@ class DFO(MinimizerBase):  # noqa: S101
         :return: None
         :rtype: noneType
         """
-        from easyscience import borg
+        from easyscience import global_object
 
         pars = self._cached_pars
         if stack_status:
             for name in pars.keys():
                 pars[name].value = self._cached_pars_vals[name][0]
                 pars[name].error = self._cached_pars_vals[name][1]
-            borg.stack.enabled = True
-            borg.stack.beginMacro('Fitting routine')
+            global_object.stack.enabled = True
+            global_object.stack.beginMacro('Fitting routine')
 
         error_matrix = self._error_from_jacobian(fit_result.jacobian, fit_result.resid, ci)
         for idx, par in enumerate(pars.values()):
@@ -249,7 +248,7 @@ class DFO(MinimizerBase):  # noqa: S101
             par.error = error_matrix[idx, idx]
 
         if stack_status:
-            borg.stack.endMacro()
+            global_object.stack.endMacro()
 
     def _gen_fit_results(self, fit_results, weights, **kwargs) -> FitResults:
         """

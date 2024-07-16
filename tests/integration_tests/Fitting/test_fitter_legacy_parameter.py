@@ -119,11 +119,11 @@ def test_fit_result(fit_engine):
     sp_sin.phase.fixed = False
 
     sp_ref1 = {
-        f"p{sp_sin._borg.map.convert_id_to_key(item1)}": item1.raw_value
+        f"p{item1.unique_name}": item1.raw_value
         for item1, item2 in zip(sp_sin._kwargs.values(), ref_sin._kwargs.values())
     }
     sp_ref2 = {
-        f"p{sp_sin._borg.map.convert_id_to_key(item1)}": item2.raw_value
+        f"p{item1.unique_name}": item2.raw_value
         for item1, item2 in zip(sp_sin._kwargs.values(), ref_sin._kwargs.values())
     }
 

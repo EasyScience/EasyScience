@@ -1,7 +1,7 @@
 import pytest
 
 from easyscience.Objects.new_variable.descriptor_str import DescriptorStr
-
+from easyscience import global_object
 
 class TestDescriptorStr:
     @pytest.fixture
@@ -16,6 +16,10 @@ class TestDescriptorStr:
         )
         return descriptor
     
+    @pytest.fixture
+    def clear(self):
+        global_object.map._clear()
+
     def test_init(self, descriptor: DescriptorStr):
         # When Then Expect
         assert descriptor._string == "string"
@@ -71,7 +75,7 @@ class TestDescriptorStr:
         assert type(descriptor_copy) == DescriptorStr
         assert descriptor_copy._string == descriptor._string
 
-    def test_as_data_dict(self, descriptor: DescriptorStr):
+    def test_as_data_dict(self, clear, descriptor: DescriptorStr):
         # When Then
         descriptor_dict = descriptor.as_data_dict()
 
@@ -82,4 +86,5 @@ class TestDescriptorStr:
             "description": "description",
             "url": "url",
             "display_name": "display_name",
+            "unique_name": "DescriptorStr_0"
         }

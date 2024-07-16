@@ -14,6 +14,7 @@ from easyscience.Objects.Variable import Parameter
 from easyscience.Utils.io.star import ItemHolder
 from easyscience.Utils.io.star import StarLoop
 from easyscience.Utils.io.star import StarSection
+import gc
 
 
 @pytest.mark.parametrize(
@@ -82,6 +83,7 @@ def test_StarSection():
 
 
 def test_StarLoop():
+    gc.collect()
     l1 = Line(2, 3)
     l2 = Line(4, 5)
 
