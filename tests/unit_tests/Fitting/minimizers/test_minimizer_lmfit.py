@@ -235,7 +235,7 @@ class TestLMFit():
         minimizer.convert_to_par_object.assert_called_with('parm_2')
         mock_lm_parameter.add_many.assert_called_once_with(['convert_to_par_object', 'convert_to_par_object'])
 
-    def test_convert_to_pars_obj_with_paramters(self, minimizer: LMFit, monkeypatch):
+    def test_convert_to_pars_obj_with_parameters(self, minimizer: LMFit, monkeypatch):
         # When
         minimizer.convert_to_par_object = MagicMock(return_value='convert_to_par_object')
 
@@ -360,7 +360,7 @@ class TestLMFit():
         assert str(domain_fit_results.minimizer_engine) == "<class 'easyscience.fitting.minimizers.minimizer_lmfit.LMFit'>"
         assert domain_fit_results.fit_args is None
 
-def test_wrap_fit_function():
+def test_wrap_to_lm_signature():
     # When
     mock_parm_1 = MagicMock(Parameter)
     mock_parm_1.value = 1.0

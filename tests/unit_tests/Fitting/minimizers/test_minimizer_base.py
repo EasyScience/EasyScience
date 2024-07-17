@@ -56,19 +56,19 @@ class TestMinimizerBase():
 
     def test_evaluate_no_fit_function(self, minimizer: MinimizerBase):
         # When
-        mock_fit_fucntion = MagicMock()
+        mock_fit_function = MagicMock()
         minimizer._fit_function = None
         minimizer._prepare_parameters = MagicMock(return_value={'prepared_parms_key': 'prepared_parms_val'})
-        minimizer._generate_fit_function = MagicMock(return_value=mock_fit_fucntion)
+        minimizer._generate_fit_function = MagicMock(return_value=mock_fit_function)
 
         # Then
         minimizer.evaluate('x', minimizer_parameters={'parms_key': 'parms_val'}, kwargs={'kwargs_key': 'kwargs_val'})
 
         # Expect
-        mock_fit_fucntion.assert_called_once_with('x', prepared_parms_key='prepared_parms_val', kwargs={'kwargs_key': 'kwargs_val'})
+        mock_fit_function.assert_called_once_with('x', prepared_parms_key='prepared_parms_val', kwargs={'kwargs_key': 'kwargs_val'})
         minimizer._prepare_parameters.assert_called_once_with({'parms_key': 'parms_val'})
 
-    def test_evaluate_no_paramters(self, minimizer: MinimizerBase):
+    def test_evaluate_no_parameters(self, minimizer: MinimizerBase):
         # When
         minimizer._fit_function = MagicMock(return_value='fit_function_return')
         minimizer._prepare_parameters = MagicMock(return_value={'parms_key': 'parms_val'})
