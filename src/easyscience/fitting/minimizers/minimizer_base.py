@@ -114,7 +114,7 @@ class MinimizerBase(metaclass=ABCMeta):
         :param kwargs: additional arguments
         :return: y values calculated at points x for a set of parameters.
         :rtype: np.ndarray
-        """
+        """  # noqa: E501
         if minimizer_parameters is None:
             minimizer_parameters = {}
         if not isinstance(minimizer_parameters, dict):
