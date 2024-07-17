@@ -3,13 +3,14 @@ import pytest
 from unittest.mock import MagicMock
 
 from easyscience.fitting.minimizers.minimizer_base import MinimizerBase
-
+from easyscience.fitting.minimizers.utils import FitError
 
 class TestMinimizerBase():
     @pytest.fixture
     def minimizer(self):
         # This avoids the error: TypeError: Can't instantiate abstract class with abstract methods __init__
         MinimizerBase.__abstractmethods__ = set()
+        MinimizerBase.available_methods = MagicMock(return_value=['method'])
 
         minimizer = MinimizerBase(
             obj='obj',
@@ -18,6 +19,18 @@ class TestMinimizerBase():
         )
         return minimizer
     
+    def test_init_exception(self):
+        # When Then
+        MinimizerBase.__abstractmethods__ = set()
+        MinimizerBase.available_methods = MagicMock(return_value=['method'])
+        # Expect
+        with pytest.raises(FitError):
+            MinimizerBase(
+                obj='obj',
+                fit_function='fit_function', 
+                method='not_a_method'
+            )
+
     def test_init(self, minimizer: MinimizerBase):
         assert minimizer._object == 'obj'
         assert minimizer._original_fit_function == 'fit_function'
@@ -72,7 +85,7 @@ class TestMinimizerBase():
         minimizer_parameters = 'not dict type'
 
         # Then Expect
-        with pytest.raises(AttributeError):
+        with pytest.raises(TypeError):
             minimizer.evaluate('x', minimizer_parameters=minimizer_parameters)
 
     def test_prepare_parameters(self, minimizer: MinimizerBase):

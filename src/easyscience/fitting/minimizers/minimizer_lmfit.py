@@ -18,6 +18,7 @@ from lmfit import Parameters as LMParameters
 from lmfit.model import ModelResult
 
 from easyscience.Objects.new_variable import Parameter as NewParameter
+from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.Variable import Parameter
 
 from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
@@ -34,7 +35,7 @@ class LMFit(MinimizerBase):  # noqa: S101
 
     wrapping = 'lmfit'
 
-    def __init__(self, obj: NewParameter, fit_function: Callable, method: Optional[str] = None):
+    def __init__(self, obj: BaseObj, fit_function: Callable, method: Optional[str] = None):
         """
         Initialize the minimizer with the `BaseObj` and the `fit_function` to be used.
 
@@ -45,9 +46,6 @@ class LMFit(MinimizerBase):  # noqa: S101
         :param method: Method to be used by the minimizer
         :type method: str
         """
-        if method not in self.available_methods():
-            raise FitError(f'Method {method} not available in {self.__class__}')
-
         super().__init__(obj=obj, fit_function=fit_function, method=method)
 
     def make_model(self, pars: Optional[LMParameters] = None) -> LMModel:

@@ -17,6 +17,7 @@ from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.Variable import Parameter
 
 from ..Constraints import ObjConstraint
+from .utils import FitError
 from .utils import FitResults
 
 MINIMIZER_PARAMETER_PREFIX = 'p'
@@ -30,6 +31,8 @@ class MinimizerBase(metaclass=ABCMeta):
     wrapping: str = None
 
     def __init__(self, obj: BaseObj, fit_function: Callable, method: Optional[str] = None):
+        if method not in self.available_methods():
+            raise FitError(f'Method {method} not available in {self.__class__}')
         self._object = obj
         self._original_fit_function = fit_function
         self._method = method
@@ -153,6 +156,15 @@ class MinimizerBase(metaclass=ABCMeta):
         :param par_list: If only a single/selection of parameter is required. Specify as a list
         :type par_list: List[str]
         :return: engine Parameters compatible object
+        """
+
+    @abstractmethod
+    def available_methods(self) -> List[str]:
+        """
+        Return a list of available methods for the engine.
+
+        :return: List of available methods
+        :rtype: List[str]
         """
 
     @staticmethod
