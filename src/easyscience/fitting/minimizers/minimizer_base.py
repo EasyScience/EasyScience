@@ -105,9 +105,9 @@ class MinimizerBase(metaclass=ABCMeta):
 
         :param x: x values for which the fit function will be evaluated
         :type x:  np.ndarray
-        :param parameters: Dictionary of parameters which will be used in the fit function. They must be in a dictionary
+        :param minimizer_parameters: Dictionary of parameters which will be used in the fit function. They must be in a dictionary
          of {'parameter_name': parameter_value,...}
-        :type parameters: dict
+        :type minimizer_parameters: dict
         :param kwargs: additional arguments
         :return: y values calculated at points x for a set of parameters.
         :rtype: np.ndarray
@@ -115,7 +115,7 @@ class MinimizerBase(metaclass=ABCMeta):
         if minimizer_parameters is None:
             minimizer_parameters = {}
         if not isinstance(minimizer_parameters, dict):
-            raise AttributeError
+            raise TypeError("minimizer_parameters must be a dictionary")
 
         if self._fit_function is None:
             # This will also generate self._cached_pars
