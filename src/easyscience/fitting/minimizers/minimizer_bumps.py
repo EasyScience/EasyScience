@@ -14,6 +14,7 @@ from bumps.names import Curve
 from bumps.names import FitProblem
 from bumps.parameter import Parameter as BumpsParameter
 
+from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
 from .minimizer_base import MinimizerBase
 from .utils import FitError
 from .utils import FitResults
@@ -57,10 +58,10 @@ class Bumps(MinimizerBase):  # noqa: S101
                 par = {}
                 if not pars:
                     for name, item in obj._cached_pars.items():
-                        par['p' + str(name)] = obj.convert_to_par_object(item)
+                        par[MINIMIZER_PARAMETER_PREFIX + str(name)] = obj.convert_to_par_object(item)
                 else:
                     for item in pars:
-                        par['p' + item.unique_name] = obj.convert_to_par_object(item)
+                        par[MINIMIZER_PARAMETER_PREFIX + item.unique_name] = obj.convert_to_par_object(item)
                 return Curve(fit_func, x, y, dy=weights, **par)
 
             return make_func
@@ -99,8 +100,7 @@ class Bumps(MinimizerBase):  # noqa: S101
             for name, value in kwargs.items():
                 par_name = name[1:]
                 if par_name in self._cached_pars.keys():
-
-                    ## TODO clean when full move to new_variable 
+                    ## TODO clean when full move to new_variable
                     from easyscience.Objects.new_variable import Parameter
 
                     if isinstance(self._cached_pars[par_name], Parameter):
@@ -109,7 +109,7 @@ class Bumps(MinimizerBase):  # noqa: S101
                     else:
                         if self._cached_pars[par_name].raw_value != value:
                             self._cached_pars[par_name].value = value
-    
+
                     # update_fun = self._cached_pars[par_name]._callback.fset
                     # if update_fun:
                     #     update_fun(value)
@@ -125,8 +125,9 @@ class Bumps(MinimizerBase):  # noqa: S101
         # f = (x, a=1, b=2)...
         # Where we need to be generic. Note that this won't hold for much outside of this scope.
 
-        ## TODO clean when full move to new_variable 
+        ## TODO clean when full move to new_variable
         from easyscience.Objects.new_variable import Parameter
+
         if isinstance(parameter, Parameter):
             default_value = parameter.value
         else:
@@ -137,7 +138,7 @@ class Bumps(MinimizerBase):  # noqa: S101
             inspect.Parameter('x', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=inspect._empty),
             *[
                 inspect.Parameter(
-                    'p' + str(name),
+                    MINIMIZER_PARAMETER_PREFIX + str(name),
                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
                     annotation=inspect._empty,
                     default=default_value,
@@ -204,8 +205,9 @@ class Bumps(MinimizerBase):  # noqa: S101
             model = model(x, y, weights)
         self._cached_model = model
 
-        ## TODO clean when full move to new_variable 
+        ## TODO clean when full move to new_variable
         from easyscience.Objects.new_variable import Parameter
+
         if isinstance(self._cached_pars[list(self._cached_pars.keys())[0]], Parameter):
             self._p_0 = {f'p{key}': self._cached_pars[key].value for key in self._cached_pars.keys()}
         else:
@@ -252,16 +254,17 @@ class Bumps(MinimizerBase):  # noqa: S101
         :return: bumps Parameter compatible object.
         :rtype: BumpsParameter
         """
-        
-        ## TODO clean when full move to new_variable 
+
+        ## TODO clean when full move to new_variable
         from easyscience.Objects.new_variable import Parameter
+
         if isinstance(obj, Parameter):
             value = obj.value
         else:
             value = obj.raw_value
-        
+
         return BumpsParameter(
-            name='p' + obj.unique_name,
+            name=MINIMIZER_PARAMETER_PREFIX + obj.unique_name,
             value=value,
             bounds=[obj.min, obj.max],
             fixed=obj.fixed,
@@ -314,8 +317,9 @@ class Bumps(MinimizerBase):  # noqa: S101
  
             ## TODO clean when full move to new_variable 
             from easyscience.Objects.new_variable import Parameter
+
             if isinstance(pars[dict_name], Parameter):
-                item[name] = pars[dict_name].value            
+                item[name] = pars[dict_name].value
             else:
                 item[name] = pars[dict_name].raw_value
 
@@ -323,7 +327,7 @@ class Bumps(MinimizerBase):  # noqa: S101
         results.p = item
         results.x = self._cached_model.x
         results.y_obs = self._cached_model.y
-        results.y_calc = self.evaluate(results.x, parameters=results.p)
+        results.y_calc = self.evaluate(results.x, minimizer_parameters=results.p)
         results.y_err = self._cached_model.dy
         # results.residual = results.y_obs - results.y_calc
         # results.goodness_of_fit = np.sum(results.residual**2)

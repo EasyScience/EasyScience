@@ -22,7 +22,7 @@ from easyscience import global_object
 from easyscience.Utils.classTools import addLoggedProp
 
 from .core import ComponentSerializer
-from .new_variable import Parameter as new_Parameter
+from .new_variable import Parameter as NewParameter
 from .new_variable.descriptor_base import DescriptorBase
 from .Variable import Descriptor
 from .Variable import Parameter
@@ -161,7 +161,7 @@ class BasedBase(ComponentSerializer):
         return constraints
 
     ## TODO clean when full move to new_variable
-    def get_parameters(self) -> Union[List[Parameter], List[new_Parameter]]:
+    def get_parameters(self) -> Union[List[Parameter], List[NewParameter]]:
         """
         Get all parameter objects as a list.
 
@@ -171,7 +171,7 @@ class BasedBase(ComponentSerializer):
         for key, item in self._kwargs.items():
             if hasattr(item, 'get_parameters'):
                 par_list = [*par_list, *item.get_parameters()]
-            elif isinstance(item, Parameter) or isinstance(item, new_Parameter):
+            elif isinstance(item, Parameter) or isinstance(item, NewParameter):
                 par_list.append(item)
         return par_list
 
@@ -191,7 +191,7 @@ class BasedBase(ComponentSerializer):
         return item_list
 
     ## TODO clean when full move to new_variable
-    def get_fit_parameters(self) -> Union[List[Parameter], List[new_Parameter]]:
+    def get_fit_parameters(self) -> Union[List[Parameter], List[NewParameter]]:
         """
         Get all objects which can be fitted (and are not fixed) as a list.
 
@@ -201,7 +201,7 @@ class BasedBase(ComponentSerializer):
         for key, item in self._kwargs.items():
             if hasattr(item, 'get_fit_parameters'):
                 fit_list = [*fit_list, *item.get_fit_parameters()]
-            elif isinstance(item, Parameter) or isinstance(item, new_Parameter):
+            elif isinstance(item, Parameter) or isinstance(item, NewParameter):
                 if item.enabled and not item.fixed:
                     fit_list.append(item)
         return fit_list

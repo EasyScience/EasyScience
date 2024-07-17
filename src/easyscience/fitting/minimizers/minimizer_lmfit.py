@@ -2,10 +2,14 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
 
-import inspect
+from inspect import Parameter as InspectParameter
+from inspect import Signature
+from inspect import _empty
 from typing import Callable
+from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Union
 
 import numpy as np
 from lmfit import Model as LMModel
@@ -13,6 +17,11 @@ from lmfit import Parameter as LMParameter
 from lmfit import Parameters as LMParameters
 from lmfit.model import ModelResult
 
+from easyscience.Objects.new_variable import Parameter as NewParameter
+from easyscience.Objects.ObjectClasses import BaseObj
+from easyscience.Objects.Variable import Parameter
+
+from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
 from .minimizer_base import MinimizerBase
 from .utils import FitError
 from .utils import FitResults
@@ -26,6 +35,19 @@ class LMFit(MinimizerBase):  # noqa: S101
 
     wrapping = 'lmfit'
 
+    def __init__(self, obj: BaseObj, fit_function: Callable, method: Optional[str] = None):
+        """
+        Initialize the minimizer with the `BaseObj` and the `fit_function` to be used.
+
+        :param obj: Base object which contains the parameters to be fitted
+        :type obj: BaseObj
+        :param fit_function: Function which will be fitted to the data
+        :type fit_function: Callable
+        :param method: Method to be used by the minimizer
+        :type method: str
+        """
+        super().__init__(obj=obj, fit_function=fit_function, method=method)
+
     def make_model(self, pars: Optional[LMParameters] = None) -> LMModel:
         """
         Generate a lmfit model from the supplied `fit_function` and parameters in the base object.
@@ -35,13 +57,15 @@ class LMFit(MinimizerBase):  # noqa: S101
         """
         # Generate the fitting function
         fit_func = self._generate_fit_function()
+        self._fit_function = fit_func
+
         if pars is None:
             pars = self._cached_pars
         # Create the model
         model = LMModel(
             fit_func,
             independent_vars=['x'],
-            param_names=['p' + str(key) for key in pars.keys()],
+            param_names=[MINIMIZER_PARAMETER_PREFIX + str(key) for key in pars.keys()],
         )
         # Assign values from the `Parameter` to the model
         for name, item in pars.items():
@@ -56,7 +80,7 @@ class LMFit(MinimizerBase):  # noqa: S101
                 else:
                     value = item.raw_value
 
-            model.set_param_hint('p' + str(name), value=value, min=item.min, max=item.max)
+            model.set_param_hint(MINIMIZER_PARAMETER_PREFIX + str(name), value=value, min=item.min, max=item.max)
 
         # Cache the model for later reference
         self._cached_model = model
@@ -70,8 +94,6 @@ class LMFit(MinimizerBase):  # noqa: S101
         :return: a fit function which is compatible with lmfit models
         :rtype: Callable
         """
-        # Original fit function
-        func = self._original_fit_function
         # Get a list of `Parameters`
         self._cached_pars = {}
         self._cached_pars_vals = {}
@@ -80,15 +102,15 @@ class LMFit(MinimizerBase):  # noqa: S101
             self._cached_pars[key] = parameter
             self._cached_pars_vals[key] = (parameter.value, parameter.error)
 
-        # Make a new fit function
-        def fit_function(x: np.ndarray, **kwargs):
+        # Make a lm fit function
+        def lm_fit_function(x: np.ndarray, **kwargs):
             """
-            Wrapped fit function which now has a lmfit compatible form.
+            Fit function with a lmfit compatible signature.
 
             :param x: array of data points to be calculated
             :type x: np.ndarray
             :param kwargs: key word arguments
-            :return: points calculated at `x`
+            :return: points, `f(x)`, calculated at `x`
             :rtype: np.ndarray
             """
             # Update the `Parameter` values and the callback if needed
@@ -112,39 +134,12 @@ class LMFit(MinimizerBase):  # noqa: S101
             # TODO Pre processing here
             for constraint in self.fit_constraints():
                 constraint()
-            return_data = func(x)
+            return_data = self._original_fit_function(x)
             # TODO Loading or manipulating data here
             return return_data
 
-        # Fake the function signature.
-        # This is done as lmfit wants the function to be in the form:
-        # f = (x, a=1, b=2)...
-        # Where we need to be generic. Note that this won't hold for much outside of this scope.
-
-        ## TODO clean when full move to new_variable
-        from easyscience.Objects.new_variable import Parameter
-
-        if isinstance(parameter, Parameter):
-            default_value = parameter.value
-        else:
-            default_value = parameter.raw_value
-
-        params = [
-            inspect.Parameter('x', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=inspect._empty),
-            *[
-                inspect.Parameter(
-                    'p' + str(name),
-                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                    annotation=inspect._empty,
-                    default=default_value,
-                )
-                for name, parameter in self._cached_pars.items()
-            ],
-        ]
-        # Sign the function
-        fit_function.__signature__ = inspect.Signature(params)
-        self._fit_function = fit_function
-        return fit_function
+        lm_fit_function.__signature__ = _wrap_to_lm_signature(self._cached_pars)
+        return lm_fit_function
 
     def fit(
         self,
@@ -182,8 +177,11 @@ class LMFit(MinimizerBase):  # noqa: S101
         default_method = {}
         if self._method is not None:
             default_method = {'method': self._method}
-        if method is not None and method in self.available_methods():
-            default_method['method'] = method
+        if method is not None:
+            if method in self.available_methods():
+                default_method['method'] = method
+            else:
+                raise FitError(f'Method {method} not available in {self.__class__}')
 
         if weights is None:
             weights = 1 / np.sqrt(np.abs(y))
@@ -216,35 +214,39 @@ class LMFit(MinimizerBase):  # noqa: S101
             raise FitError(e)
         return results
 
-    def convert_to_pars_obj(self, par_list: Optional[List] = None) -> LMParameters:
+    def convert_to_pars_obj(self, parameters: Optional[List[Union[Parameter, NewParameter]]] = None) -> LMParameters:
         """
         Create an lmfit compatible container with the `Parameters` converted from the base object.
 
-        :param par_list: If only a single/selection of parameter is required. Specify as a list
-        :type par_list: List[str]
+        :param parameters: If only a single/selection of parameter is required. Specify as a list
         :return: lmfit Parameters compatible object
-        :rtype: LMParameters
         """
-        if par_list is None:
+        if parameters is None:
             # Assume that we have a BaseObj for which we can obtain a list
-            par_list = self._object.get_fit_parameters()
-        pars_obj = LMParameters().add_many([self.__class__.convert_to_par_object(obj) for obj in par_list])
-        return pars_obj
+            parameters = self._object.get_fit_parameters()
+        lm_parameters = LMParameters().add_many([self.convert_to_par_object(parameter) for parameter in parameters])
+        return lm_parameters
 
     @staticmethod
-    def convert_to_par_object(obj) -> LMParameter:
+    def convert_to_par_object(parameter: Union[Parameter, NewParameter]) -> LMParameter:
         """
         Convert an `EasyScience.Objects.Base.Parameter` object to a lmfit Parameter object.
 
         :return: lmfit Parameter compatible object.
         :rtype: LMParameter
         """
+        ## TODO clean when full move to new_variable
+        if isinstance(parameter, NewParameter):
+            value = parameter.value
+        else:
+            value = parameter.raw_value
+
         return LMParameter(
-            'p' + obj.unique_name,
-            value=obj.raw_value,
-            vary=not obj.fixed,
-            min=obj.min,
-            max=obj.max,
+            MINIMIZER_PARAMETER_PREFIX + parameter.unique_name,
+            value=value,
+            vary=not parameter.fixed,
+            min=parameter.min,
+            max=parameter.max,
             expr=None,
             brute_step=None,
         )
@@ -267,9 +269,9 @@ class LMFit(MinimizerBase):  # noqa: S101
             global_object.stack.enabled = True
             global_object.stack.beginMacro('Fitting routine')
         for name in pars.keys():
-            pars[name].value = fit_result.params['p' + str(name)].value
+            pars[name].value = fit_result.params[MINIMIZER_PARAMETER_PREFIX + str(name)].value
             if fit_result.errorbars:
-                pars[name].error = fit_result.params['p' + str(name)].stderr
+                pars[name].error = fit_result.params[MINIMIZER_PARAMETER_PREFIX + str(name)].stderr
             else:
                 pars[name].error = 0.0
         if stack_status:
@@ -321,3 +323,30 @@ class LMFit(MinimizerBase):  # noqa: S101
             'cobyla',
             'bfgs',
         ]
+
+
+def _wrap_to_lm_signature(parameters: Dict[int, Union[Parameter, NewParameter]]) -> Signature:
+    """
+    Wrap the function signature.
+    This is done as lmfit wants the function to be in the form:
+    f = (x, a=1, b=2)...
+    Where we need to be generic. Note that this won't hold for much outside of this scope.
+    """
+    wrapped_parameters = []
+    wrapped_parameters.append(InspectParameter('x', InspectParameter.POSITIONAL_OR_KEYWORD, annotation=_empty))
+    for name, parameter in parameters.items():
+        ## TODO clean when full move to new_variable
+        if isinstance(parameter, NewParameter):
+            default_value = parameter.value
+        else:
+            default_value = parameter.raw_value
+
+        wrapped_parameters.append(
+            InspectParameter(
+                MINIMIZER_PARAMETER_PREFIX + str(name),
+                InspectParameter.POSITIONAL_OR_KEYWORD,
+                annotation=_empty,
+                default=default_value,
+            )
+        )
+    return Signature(wrapped_parameters)
