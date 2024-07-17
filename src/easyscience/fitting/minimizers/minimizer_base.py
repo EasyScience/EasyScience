@@ -134,15 +134,15 @@ class MinimizerBase(metaclass=ABCMeta):
         pars = self._cached_pars
 
         for name, item in pars.items():
-            paramter_name = MINIMIZER_PARAMETER_PREFIX + str(name)
-            if paramter_name not in parameters.keys():
+            parameter_name = MINIMIZER_PARAMETER_PREFIX + str(name)
+            if parameter_name not in parameters.keys():
                 ## TODO clean when full move to new_variable
                 from easyscience.Objects.new_variable import Parameter as NewParameter
 
                 if isinstance(item, NewParameter):
-                    parameters[paramter_name] = item.value
+                    parameters[parameter_name] = item.value
                 else:
-                    parameters[paramter_name] = item.raw_value
+                    parameters[parameter_name] = item.raw_value
         return parameters
 
     @abstractmethod
