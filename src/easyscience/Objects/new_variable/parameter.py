@@ -420,3 +420,18 @@ class Parameter(DescriptorNumber):
 
     def __float__(self) -> float:
         return float(self._scalar.value)
+    
+    def __add__(self, other: Union[DescriptorNumber, Parameter], radd: bool = False) -> Parameter:
+        if not issubclass(other.__class__, DescriptorNumber):
+            raise TypeError(f'{other=} must be a DescriptorNumber or Parameter')  
+        try:
+            new_value = self.full_value + other.full_value
+        except Exception as message:
+            raise ValueError(message)
+        min_value = self.min + other.min if isinstance(other, Parameter) else -np.Inf
+        max_value = self.max + other.max if isinstance(other, Parameter) else np.Inf
+        name = self.name+" + "+other.name if not radd else other.name+" + "+self.name
+        return Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)
+    
+    def __radd__(self, other: Union[DescriptorNumber, Parameter]) -> Parameter:
+        return self.__add__(other, radd=True)
