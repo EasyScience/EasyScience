@@ -235,3 +235,13 @@ class DescriptorNumber(DescriptorBase):
             raise ValueError(message)
         name = self._name + ' + ' + other._name
         return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+
+    def __sub__(self, other: DescriptorNumber) -> DescriptorNumber:
+        if not isinstance(other, DescriptorNumber):
+            raise TypeError(f'{other=} must be a DescriptorNumber')
+        try:
+            new_value = self.full_value - other.full_value
+        except Exception as message:
+            raise ValueError(message)
+        name = self._name + ' - ' + other._name
+        return DescriptorNumber.from_scipp(name=name, full_value=new_value)
