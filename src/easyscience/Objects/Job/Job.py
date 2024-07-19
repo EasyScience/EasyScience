@@ -7,7 +7,7 @@ from abc import abstractmethod
 
 from easyscience.Objects.Job.Analysis import AnalysisBase
 from easyscience.Objects.Job.Experiment import ExperimentBase
-from easyscience.Objects.Job.Theory import TheoryBase
+from easyscience.Objects.Job.TheoreticalModel import TheoreticalModelBase
 from easyscience.Objects.ObjectClasses import BaseObj
 
 
@@ -29,12 +29,12 @@ class JobBase(BaseObj, metaclass=ABCMeta):
     Summary and Info classes are included to store additional information.
     """
     @property
-    def theory(self):
+    def theorerical_model(self):
         return self._theory
 
-    @theory.setter
+    @theorerical_model.setter
     @abstractmethod
-    def theory(self, theory: TheoryBase):
+    def theoretical_model(self, theory: TheoreticalModelBase):
         raise NotImplementedError("theory setter not implemented")
    
     @property
