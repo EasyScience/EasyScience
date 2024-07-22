@@ -228,26 +228,35 @@ class DescriptorNumber(DescriptorBase):
         return raw_dict
     
     def __add__(self, other: DescriptorNumber) -> DescriptorNumber:
+        if isinstance(other, numbers.Number):
+            if self.unit != 'dimensionless':
+                raise UnitError("Numbers can only be added to dimensionless values")
+            self.value  += other
+            return self
+        elif type(other) == DescriptorNumber:
+            original_unit = other.unit
+            try:
+                other.convert_unit(self.unit)
+            except UnitError:
+                raise UnitError(f"Values with units {self.unit} and {other.unit} cannot be added") from None
+            new_value = self.full_value + other.full_value
+            name = self._name + ' + ' + other._name
+            other.convert_unit(original_unit)
+            return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+        else:
+            return NotImplemented
+
+    def __sub__(self, other: DescriptorNumber) -> DescriptorNumber:
         if not type(other) == DescriptorNumber:
             return NotImplemented
         original_unit = other.unit
         try:
             other.convert_unit(self.unit)
         except UnitError:
-            raise UnitError(f"Values with units {self.unit} and {other.unit} cannot be added") from None
-        new_value = self.full_value + other.full_value
-        name = self._name + ' + ' + other._name
-        other.convert_unit(original_unit)
-        return DescriptorNumber.from_scipp(name=name, full_value=new_value)
-
-    def __sub__(self, other: DescriptorNumber) -> DescriptorNumber:
-        if not type(other) == DescriptorNumber:
-            return NotImplemented
-        try:
-            new_value = self.full_value - other.full_value
-        except Exception as message:
-            raise ValueError(message)
+            raise UnitError(f"Values with units {self.unit} and {other.unit} cannot be subtracted") from None
+        new_value = self.full_value - other.full_value
         name = self._name + ' - ' + other._name
+        other.convert_unit(original_unit)
         return DescriptorNumber.from_scipp(name=name, full_value=new_value)
     
     def __mul__(self, other: DescriptorNumber) -> DescriptorNumber:
