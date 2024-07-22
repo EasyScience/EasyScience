@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 import scipp as sc
+import numpy as np
 
 from easyscience.Objects.new_variable.parameter import Parameter
 from easyscience import global_object
@@ -335,3 +336,30 @@ class TestParameter:
             "enabled": "enabled",
             "unique_name": "Parameter_0",
         }
+
+    @pytest.mark.parametrize("test, expected, expected_reverse", [
+            (Parameter("test", 2, "m", 0.01, -10, 20),  Parameter("name + test", 3, "m", 0.02, -10, 30),                Parameter("test + name", 3, "m", 0.02, -10, 30)),
+            (Parameter("test", 2, "m", 0.01),           Parameter("name + test", 3, "m", 0.02, min=-np.Inf, max=np.Inf),Parameter("test + name", 3, "m", 0.02, min=-np.Inf, max=np.Inf)),
+            (Parameter("test", 2, "cm", 0.01, -10, 10), Parameter("name + test", 1.02, "m", 0.010001, -0.1, 10.1),      Parameter("test + name", 102, "cm", 100.01, -10, 1010))])
+    def test_parameter_parameter_addition(self, parameter : Parameter, test : Parameter, expected : Parameter, expected_reverse : Parameter):
+        # When 
+        parameter._callback = property()
+
+        # Then
+        result = parameter + test
+        result_reverse = test + parameter
+
+        # Expect
+        assert result.name == expected.name
+        assert result.value == expected.value
+        assert result.unit == expected.unit
+        assert result.variance == expected.variance
+        assert result.min == expected.min
+        assert result.max == expected.max
+
+        assert result_reverse.name == expected_reverse.name
+        assert result_reverse.value == expected_reverse.value
+        assert result_reverse.unit == expected_reverse.unit
+        assert result_reverse.variance == expected_reverse.variance
+        assert result_reverse.min == expected_reverse.min
+        assert result_reverse.max == expected_reverse.max

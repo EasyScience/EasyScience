@@ -422,58 +422,77 @@ class Parameter(DescriptorNumber):
     def __float__(self) -> float:
         return float(self._scalar.value)
     
-    def __add__(self, other: Union[DescriptorNumber, Parameter]) -> Parameter:
+    def __add__(self, other: Union[DescriptorNumber, Parameter, numbers.Number]) -> Parameter:
+        if isinstance(other, numbers.Number):
+            if self.unit != 'dimensionless':
+                raise UnitError("Numbers can only be added to dimensionless values")
+            self.value  += other
+            return self
+        elif isinstance(other, DescriptorNumber):
+            original_unit = other.unit
+            try:
+                other.convert_unit(self.unit)
+            except UnitError:
+                raise UnitError(f"Values with units {self.unit} and {other.unit} cannot be added") from None
+            new_value = self.full_value + other.full_value
+            min_value = self.min + other.min if isinstance(other, Parameter) else -np.Inf
+            max_value = self.max + other.max if isinstance(other, Parameter) else np.Inf
+            name = self.name+" + "+other.name
+            other.convert_unit(original_unit)
+            return Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)
+        else: 
+            return NotImplemented
+
+    def __radd__(self, other: Union[DescriptorNumber, Parameter]) -> Parameter:
+        if isinstance(other, numbers.Number):
+            if self.unit != 'dimensionless':
+                raise UnitError("Numbers can only be added to dimensionless values")
+            self.value  += other
+            return self
+        elif isinstance(other, DescriptorNumber):
+            original_unit = self.unit
+            try:
+                self.convert_unit(other.unit)
+            except UnitError:
+                raise UnitError(f"Values with units {other.unit} and {self.unit} cannot be added") from None
+            new_value = self.full_value + other.full_value
+            min_value = self.min + other.min if isinstance(other, Parameter) else -np.Inf
+            max_value = self.max + other.max if isinstance(other, Parameter) else np.Inf
+            name = other.name+" + "+self.name
+            self.convert_unit(original_unit)
+            return Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)
+        else:
+            return NotImplemented
+
+    def __sub__(self, other: Union[DescriptorNumber, Parameter]) -> Parameter:
         if not isinstance(other, DescriptorNumber):
             return NotImplemented
         original_unit = other.unit
         try:
             other.convert_unit(self.unit)
         except UnitError:
-            raise UnitError(f"Values with units {self.unit} and {other.unit} cannot be added") from None
-        new_value = self.full_value + other.full_value
-        min_value = self.min + other.min if isinstance(other, Parameter) else -np.Inf
-        max_value = self.max + other.max if isinstance(other, Parameter) else np.Inf
-        name = self.name+" + "+other.name
+            raise UnitError(f"Values with units {self.unit} and {other.unit} cannot be subtracted") from None
+        new_value = self.full_value - other.full_value
+        min_value = self.min - other.max if isinstance(other, Parameter) else -np.Inf
+        max_value = self.max - other.min if isinstance(other, Parameter) else np.Inf
+        name = self.name+" - "+other.name
         other.convert_unit(original_unit)
         return Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)
-
-    def __radd__(self, other: Union[DescriptorNumber, Parameter]) -> Parameter:
+    
+    def __rsub__(self, other: Union[DescriptorNumber, Parameter]) -> Parameter:
         if not isinstance(other, DescriptorNumber):
             return NotImplemented
         original_unit = self.unit
         try:
             self.convert_unit(other.unit)
         except UnitError:
-            raise UnitError(f"Values with units {other.unit} and {self.unit} cannot be added") from None
-        new_value = self.full_value + other.full_value
-        min_value = self.min + other.min if isinstance(other, Parameter) else -np.Inf
-        max_value = self.max + other.max if isinstance(other, Parameter) else np.Inf
-        name = other.name+" + "+self.name
+            raise UnitError(f"Values with units {other.unit} and {self.unit} cannot be subtracted") from None
+        new_value = other.full_value - self.full_value
+        min_value = other.min - self.max if isinstance(other, Parameter) else -np.Inf
+        max_value = other.max - self.min if isinstance(other, Parameter) else np.Inf
+        name = other.name+" - "+self.name
         self.convert_unit(original_unit)
         return Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)
-
-    def __sub__(self, other: Union[DescriptorNumber, Parameter], inverse: bool = False) -> Parameter:
-        if not issubclass(other.__class__, DescriptorNumber):
-            raise TypeError(f'{other=} must be a DescriptorNumber or Parameter')  
-        try:
-            new_value = self.full_value - other.full_value if not inverse else other.full_value - self.full_value
-        except Exception as message:
-            raise ValueError(message)
-        if isinstance(other, Parameter):
-            if not inverse:
-                min_value = self.min - other.max
-                max_value = self.max - other.min
-            else:
-                min_value = other.min - self.max
-                max_value = other.max - self.min
-        else:
-            min_value = -np.Inf
-            max_value = np.Inf
-        name = self.name+" - "+other.name if not inverse else other.name+" - "+self.name
-        return Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)
-    
-    def __rsub__(self, other: Union[DescriptorNumber, Parameter]) -> Parameter:
-        return self.__sub__(other, inverse=True)
     
     def __mul__(self, other: Union[DescriptorNumber, Parameter], inverse: bool = False) -> Parameter:
         if not issubclass(other.__class__, DescriptorNumber):
