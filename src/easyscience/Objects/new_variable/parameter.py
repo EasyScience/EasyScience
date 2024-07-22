@@ -17,6 +17,7 @@ from typing import Union
 
 import numpy as np
 import scipp as sc
+from scipp import UnitError
 from scipp import Variable
 
 from easyscience import global_object
@@ -421,20 +422,35 @@ class Parameter(DescriptorNumber):
     def __float__(self) -> float:
         return float(self._scalar.value)
     
-    def __add__(self, other: Union[DescriptorNumber, Parameter], inverse: bool = False) -> Parameter:
-        if not issubclass(other.__class__, DescriptorNumber):
-            raise TypeError(f'{other=} must be a DescriptorNumber or Parameter')  
+    def __add__(self, other: Union[DescriptorNumber, Parameter]) -> Parameter:
+        if not isinstance(other, DescriptorNumber):
+            return NotImplemented
+        original_unit = other.unit
         try:
-            new_value = self.full_value + other.full_value
-        except Exception as message:
-            raise ValueError(message)
+            other.convert_unit(self.unit)
+        except UnitError:
+            raise UnitError(f"Values with units {self.unit} and {other.unit} cannot be added") from None
+        new_value = self.full_value + other.full_value
         min_value = self.min + other.min if isinstance(other, Parameter) else -np.Inf
         max_value = self.max + other.max if isinstance(other, Parameter) else np.Inf
-        name = self.name+" + "+other.name if not inverse else other.name+" + "+self.name
+        name = self.name+" + "+other.name
+        other.convert_unit(original_unit)
         return Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)
-    
+
     def __radd__(self, other: Union[DescriptorNumber, Parameter]) -> Parameter:
-        return self.__add__(other, inverse=True)
+        if not isinstance(other, DescriptorNumber):
+            return NotImplemented
+        original_unit = self.unit
+        try:
+            self.convert_unit(other.unit)
+        except UnitError:
+            raise UnitError(f"Values with units {other.unit} and {self.unit} cannot be added") from None
+        new_value = self.full_value + other.full_value
+        min_value = self.min + other.min if isinstance(other, Parameter) else -np.Inf
+        max_value = self.max + other.max if isinstance(other, Parameter) else np.Inf
+        name = other.name+" + "+self.name
+        self.convert_unit(original_unit)
+        return Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)
 
     def __sub__(self, other: Union[DescriptorNumber, Parameter], inverse: bool = False) -> Parameter:
         if not issubclass(other.__class__, DescriptorNumber):
@@ -463,13 +479,35 @@ class Parameter(DescriptorNumber):
         if not issubclass(other.__class__, DescriptorNumber):
             raise TypeError(f'{other=} must be a DescriptorNumber or Parameter')  
         try:
+            other.convert_unit(self.unit)
             new_value = self.full_value * other.full_value
         except Exception as message:
             raise ValueError(message)
-        min_value = min(self.min * other.min, self.min * other.max, self.max * other.min) if isinstance(other, Parameter) else -np.Inf  # noqa: E501
-        max_value = max(self.max * other.max, self.min * other.min) if isinstance(other, Parameter) else np.Inf
+        combinations = [self.min * other.max, self.max * other.min, self.min * other.min, self.max * other.max]
+        min_value = min(combinations) if isinstance(other, Parameter) else -np.Inf
+        max_value = max(combinations) if isinstance(other, Parameter) else np.Inf
         name = self.name+" * "+other.name if not inverse else other.name+" * "+self.name
         return Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)
     
     def __rmul__(self, other: Union[DescriptorNumber, Parameter]) -> Parameter:
         return self.__mul__(other, inverse=True)
+    
+    def __truediv__(self, other: Union[DescriptorNumber, Parameter], inverse: bool = False) -> Parameter:
+        if not issubclass(other.__class__, DescriptorNumber):
+            raise TypeError(f'{other=} must be a DescriptorNumber or Parameter')  
+        try:
+            new_value = self.full_value / other.full_value if not inverse else other.full_value / self.full_value
+        except Exception as message:
+            raise ValueError(message)
+        if isinstance(other, Parameter):
+            if not inverse:
+                combinations = [self.min / other.max, self.max / other.min, self.min / other.min, self.max / other.max]
+            else:
+                combinations = [other.min / self.max, other.max / self.min, other.min / self.min, other.max / self.max]
+            min_value = min(combinations)
+            max_value = max(combinations)
+        else:
+            min_value = -np.Inf
+            max_value = np.Inf
+        name = self.name+" / "+other.name if not inverse else other.name+" / "+self.name
+        return Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)

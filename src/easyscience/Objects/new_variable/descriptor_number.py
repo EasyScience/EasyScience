@@ -8,6 +8,7 @@ from typing import Union
 
 import numpy as np
 import scipp as sc
+from scipp import UnitError
 from scipp import Variable
 
 from easyscience.global_object.undo_redo import property_stack_deco
@@ -58,7 +59,7 @@ class DescriptorNumber(DescriptorBase):
         try:
             self._scalar = sc.scalar(float(value), unit=unit, variance=variance)
         except Exception as message:
-            raise ValueError(message)
+            raise UnitError(message)
         super().__init__(
             name=name,
             unique_name=unique_name,
@@ -193,8 +194,8 @@ class DescriptorNumber(DescriptorBase):
             raise TypeError(f'{unit_str=} must be a string representing a valid scipp unit')
         try:
             new_unit = sc.Unit(unit_str)
-        except Exception as message:
-            raise ValueError(message)
+        except UnitError as message:
+            raise UnitError(message) from None
         self._scalar = self._scalar.to(unit=new_unit)
 
     # Just to get return type right
@@ -227,18 +228,21 @@ class DescriptorNumber(DescriptorBase):
         return raw_dict
     
     def __add__(self, other: DescriptorNumber) -> DescriptorNumber:
-        if not isinstance(other, DescriptorNumber):
-            raise TypeError(f'{other=} must be a DescriptorNumber')
+        if not type(other) == DescriptorNumber:
+            return NotImplemented
+        original_unit = other.unit
         try:
-            new_value = self.full_value + other.full_value
-        except Exception as message:
-            raise ValueError(message)
+            other.convert_unit(self.unit)
+        except UnitError:
+            raise UnitError(f"Values with units {self.unit} and {other.unit} cannot be added") from None
+        new_value = self.full_value + other.full_value
         name = self._name + ' + ' + other._name
+        other.convert_unit(original_unit)
         return DescriptorNumber.from_scipp(name=name, full_value=new_value)
 
     def __sub__(self, other: DescriptorNumber) -> DescriptorNumber:
-        if not isinstance(other, DescriptorNumber):
-            raise TypeError(f'{other=} must be a DescriptorNumber')
+        if not type(other) == DescriptorNumber:
+            return NotImplemented
         try:
             new_value = self.full_value - other.full_value
         except Exception as message:
@@ -247,9 +251,10 @@ class DescriptorNumber(DescriptorBase):
         return DescriptorNumber.from_scipp(name=name, full_value=new_value)
     
     def __mul__(self, other: DescriptorNumber) -> DescriptorNumber:
-        if not isinstance(other, DescriptorNumber):
-            raise TypeError(f'{other=} must be a DescriptorNumber')
+        if not type(other) == DescriptorNumber:
+            return NotImplemented
         try:
+            other.convert_unit(self.unit)
             new_value = self.full_value * other.full_value
         except Exception as message:
             raise ValueError(message)
