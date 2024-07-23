@@ -231,8 +231,9 @@ class DescriptorNumber(DescriptorBase):
         if isinstance(other, numbers.Number):
             if self.unit != 'dimensionless':
                 raise UnitError("Numbers can only be added to dimensionless values")
-            self.value  += other
-            return self
+            new_value = self.value  + other
+            name = self.name + ' + ' + str(other)
+            return DescriptorNumber(name=name, value=new_value, variance=self.variance)
         elif type(other) == DescriptorNumber:
             original_unit = other.unit
             try:
@@ -243,6 +244,16 @@ class DescriptorNumber(DescriptorBase):
             name = self._name + ' + ' + other._name
             other.convert_unit(original_unit)
             return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+        else:
+            return NotImplemented
+
+    def __radd__(self, other: numbers.Number) -> DescriptorNumber:
+        if isinstance(other, numbers.Number):
+            if self.unit != 'dimensionless':
+                raise UnitError("Numbers can only be added to dimensionless values")
+            new_value = other + self.value
+            name = str(other) + ' + ' + self.name
+            return DescriptorNumber(name=name, value=new_value, variance=self.variance)
         else:
             return NotImplemented
 

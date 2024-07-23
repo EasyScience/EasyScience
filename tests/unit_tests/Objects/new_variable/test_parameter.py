@@ -3,7 +3,11 @@ from unittest.mock import MagicMock
 import scipp as sc
 import numpy as np
 
+from scipp import UnitError
+
 from easyscience.Objects.new_variable.parameter import Parameter
+from easyscience.Objects.new_variable.descriptor_number import DescriptorNumber
+from easyscience.Objects.new_variable.descriptor_str import DescriptorStr
 from easyscience import global_object
 
 class TestParameter:
@@ -340,8 +344,9 @@ class TestParameter:
     @pytest.mark.parametrize("test, expected, expected_reverse", [
             (Parameter("test", 2, "m", 0.01, -10, 20),  Parameter("name + test", 3, "m", 0.02, -10, 30),                Parameter("test + name", 3, "m", 0.02, -10, 30)),
             (Parameter("test", 2, "m", 0.01),           Parameter("name + test", 3, "m", 0.02, min=-np.Inf, max=np.Inf),Parameter("test + name", 3, "m", 0.02, min=-np.Inf, max=np.Inf)),
-            (Parameter("test", 2, "cm", 0.01, -10, 10), Parameter("name + test", 1.02, "m", 0.010001, -0.1, 10.1),      Parameter("test + name", 102, "cm", 100.01, -10, 1010))])
-    def test_parameter_parameter_addition(self, parameter : Parameter, test : Parameter, expected : Parameter, expected_reverse : Parameter):
+            (Parameter("test", 2, "cm", 0.01, -10, 10), Parameter("name + test", 1.02, "m", 0.010001, -0.1, 10.1),      Parameter("test + name", 102, "cm", 100.01, -10, 1010))],
+            ids=["regular", "no_bounds", "unit_conversion"])
+    def test_addition_with_parameter(self, parameter : Parameter, test : Parameter, expected : Parameter, expected_reverse : Parameter):
         # When 
         parameter._callback = property()
 
@@ -363,3 +368,67 @@ class TestParameter:
         assert result_reverse.variance == expected_reverse.variance
         assert result_reverse.min == expected_reverse.min
         assert result_reverse.max == expected_reverse.max
+
+        assert parameter.unit == "m"
+
+    @pytest.mark.parametrize("scalar", [1, 1.0], ids=["int", "float"])
+    def test_addition_with_scalar(self, scalar):
+        # When
+        parameter = Parameter(name="name", value=1, variance=0.01, min=0, max=10)
+
+        # Then
+        result = parameter + scalar
+        result_reverse = scalar + parameter
+
+        # Expect
+        assert result.name == "name + " + str(scalar)
+        assert result.value == 2.0
+        assert result.unit == "dimensionless"
+        assert result.variance == 0.01
+        assert result.min == 1.0
+        assert result.max == 11.0
+
+        assert result_reverse.name == str(scalar) + " + name"
+        assert result_reverse.value == 2.0
+        assert result_reverse.unit == "dimensionless"
+        assert result_reverse.variance == 0.01
+        assert result_reverse.min == 1.0
+        assert result_reverse.max == 11.0
+
+    def test_addition_with_descriptor_number(self, parameter : Parameter):
+        # When 
+        parameter._callback = property()
+        descriptor_number = DescriptorNumber(name="test", value=1, variance=0.1, unit="cm")
+
+        # Then
+        result = parameter + descriptor_number
+        result_reverse = descriptor_number + parameter
+
+        # Expect
+        assert type(result) == Parameter
+        assert result.name == "name + test"
+        assert result.value == 1.01
+        assert result.unit == "m"
+        assert result.variance == 0.01001
+        assert result.min == -np.Inf
+        assert result.max == np.Inf
+
+        assert type(result_reverse) == Parameter
+        assert result_reverse.name == "test + name"
+        assert result_reverse.value == 101.0
+        assert result_reverse.unit == "cm"
+        assert result_reverse.variance == 100.1
+        assert result_reverse.min == -np.Inf
+        assert result_reverse.max == np.Inf
+
+        assert parameter.unit == "m"
+        assert descriptor_number.unit == "cm"
+
+    @pytest.mark.parametrize("test", [1.0, Parameter("test", 2, "s",)], ids=["add_scalar_to_unit", "incompatible_units"])
+    def test_addition_exception(self, parameter : Parameter, test):
+        # When Then Expect
+        with pytest.raises(UnitError):
+            result = parameter + test
+        with pytest.raises(UnitError):
+            result_reverse = test + parameter
+        
