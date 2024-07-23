@@ -426,8 +426,11 @@ class Parameter(DescriptorNumber):
         if isinstance(other, numbers.Number):
             if self.unit != 'dimensionless':
                 raise UnitError("Numbers can only be added to dimensionless values")
-            self.value  += other
-            return self
+            new_value = self.value + other
+            min_value = self.min + other
+            max_value = self.max + other
+            name = f"{self.name} + {other}"
+            return Parameter(name=name, value=new_value, variance=self.variance, min=min_value, max=max_value)
         elif isinstance(other, DescriptorNumber):
             original_unit = other.unit
             try:
@@ -447,8 +450,11 @@ class Parameter(DescriptorNumber):
         if isinstance(other, numbers.Number):
             if self.unit != 'dimensionless':
                 raise UnitError("Numbers can only be added to dimensionless values")
-            self.value  += other
-            return self
+            new_value = self.value + other
+            min_value = self.min + other
+            max_value = self.max + other
+            name = f"{other} + {self.name}"
+            return Parameter(name=name, value=new_value, variance=self.variance, min=min_value, max=max_value)
         elif isinstance(other, DescriptorNumber):
             original_unit = self.unit
             try:

@@ -2,6 +2,8 @@ import pytest
 from unittest.mock import MagicMock
 import scipp as sc
 
+from scipp import UnitError
+
 from easyscience.Objects.new_variable.descriptor_number import DescriptorNumber
 from easyscience import global_object
 
@@ -199,3 +201,51 @@ class TestDescriptorNumber:
             "display_name": "display_name",
             "unique_name": "DescriptorNumber_0",
         }
+
+    @pytest.mark.parametrize("test, expected", [
+        (DescriptorNumber("test", 2, "m", 0.01,),   DescriptorNumber("test + name", 3, "m", 0.11)),
+        (DescriptorNumber("test", 2, "cm", 0.01),   DescriptorNumber("test + name", 102, "cm", 1000.01))],
+        ids=["regular", "unit_conversion"])
+    def test_addition(self, descriptor: DescriptorNumber, test, expected):
+        # When Then
+        result = test + descriptor
+
+        # Expect
+        assert type(result) == DescriptorNumber
+        assert result.name == expected.name
+        assert result.value == expected.value
+        assert result.unit == expected.unit
+        assert result.variance == expected.variance
+        
+        assert descriptor.unit == 'm'
+
+    @pytest.mark.parametrize("scalar", [1, 1.0], ids=["int", "float"])
+    def test_addition_with_scalar(self, scalar):
+        # When 
+        descriptor = DescriptorNumber(name="name", value=1, variance=0.1)
+
+        # Then
+        result = descriptor + scalar
+        result_reverse = scalar + descriptor
+
+        # Expect
+        assert type(result) == DescriptorNumber
+        assert result.name == "name + " + str(scalar)
+        assert result.value == 2.0
+        assert result.unit == "dimensionless"
+        assert result.variance == 0.1
+
+        assert type(result_reverse) == DescriptorNumber
+        assert result_reverse.name == str(scalar) + " + name"
+        assert result_reverse.value == 2.0
+        assert result_reverse.unit == "dimensionless"
+        assert result_reverse.variance == 0.1
+
+    @pytest.mark.parametrize("test", [1.0, DescriptorNumber("test", 2, "s",)], ids=["add_scalar_to_unit", "incompatible_units"])
+    def test_addition_exception(self, descriptor: DescriptorNumber, test):
+        # When Then Expect
+        with pytest.raises(UnitError):
+            result = descriptor + test
+        with pytest.raises(UnitError):
+            result_reverse = test + descriptor
+        
