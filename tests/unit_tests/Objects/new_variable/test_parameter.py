@@ -432,3 +432,93 @@ class TestParameter:
         with pytest.raises(UnitError):
             result_reverse = test + parameter
         
+    @pytest.mark.parametrize("test, expected, expected_reverse", [
+            (Parameter("test", 2, "m", 0.01, -20, 20),  Parameter("name - test", -1, "m", 0.02, -20, 30),                Parameter("test - name", 1, "m", 0.02, -30, 20)),
+            (Parameter("test", 2, "m", 0.01),           Parameter("name - test", -1, "m", 0.02, min=-np.Inf, max=np.Inf),Parameter("test - name", 1, "m", 0.02, min=-np.Inf, max=np.Inf)),
+            (Parameter("test", 2, "cm", 0.01, -10, 10), Parameter("name - test", 0.98, "m", 0.010001, -0.1, 10.1),       Parameter("test - name", -98, "cm", 100.01, -1010, 10))],
+            ids=["regular", "no_bounds", "unit_conversion"])
+    def test_subtraction_with_parameter(self, parameter : Parameter, test : Parameter, expected : Parameter, expected_reverse : Parameter):
+        # When 
+        parameter._callback = property()
+
+        # Then
+        result = parameter - test
+        result_reverse = test - parameter
+
+        # Expect
+        assert result.name == expected.name
+        assert result.value == expected.value
+        assert result.unit == expected.unit
+        assert result.variance == expected.variance
+        assert result.min == expected.min
+        assert result.max == expected.max
+
+        assert result_reverse.name == expected_reverse.name
+        assert result_reverse.value == expected_reverse.value
+        assert result_reverse.unit == expected_reverse.unit
+        assert result_reverse.variance == expected_reverse.variance
+        assert result_reverse.min == expected_reverse.min
+        assert result_reverse.max == expected_reverse.max
+
+        assert parameter.unit == "m"
+
+    @pytest.mark.parametrize("scalar", [1, 1.0], ids=["int", "float"])
+    def test_subtraction_with_scalar(self, scalar):
+        # When
+        parameter = Parameter(name="name", value=2, variance=0.01, min=0, max=10)
+
+        # Then
+        result = parameter - scalar
+        result_reverse = scalar - parameter
+
+        # Expect
+        assert result.name == "name - " + str(scalar)
+        assert result.value == 1.0
+        assert result.unit == "dimensionless"
+        assert result.variance == 0.01
+        assert result.min == -1.0
+        assert result.max == 9.0
+
+        assert result_reverse.name == str(scalar) + " - name"
+        assert result_reverse.value == -1.0
+        assert result_reverse.unit == "dimensionless"
+        assert result_reverse.variance == 0.01
+        assert result_reverse.min == -9.0
+        assert result_reverse.max == 1.0
+
+    def test_subtraction_with_descriptor_number(self, parameter : Parameter):
+        # When 
+        parameter._callback = property()
+        descriptor_number = DescriptorNumber(name="test", value=1, variance=0.1, unit="cm")
+
+        # Then
+        result = parameter - descriptor_number
+        result_reverse = descriptor_number - parameter
+
+        # Expect
+        assert type(result) == Parameter
+        assert result.name == "name - test"
+        assert result.value == 0.99
+        assert result.unit == "m"
+        assert result.variance == 0.01001
+        assert result.min == -np.Inf
+        assert result.max == np.Inf
+
+        assert type(result_reverse) == Parameter
+        assert result_reverse.name == "test - name"
+        assert result_reverse.value == -99.0
+        assert result_reverse.unit == "cm"
+        assert result_reverse.variance == 100.1
+        assert result_reverse.min == -np.Inf
+        assert result_reverse.max == np.Inf
+
+        assert parameter.unit == "m"
+        assert descriptor_number.unit == "cm"
+
+    @pytest.mark.parametrize("test", [1.0, Parameter("test", 2, "s",)], ids=["sub_scalar_to_unit", "incompatible_units"])
+    def test_subtraction_exception(self, parameter : Parameter, test):
+        # When Then Expect
+        with pytest.raises(UnitError):
+            result = parameter - test
+        with pytest.raises(UnitError):
+            result_reverse = test - parameter

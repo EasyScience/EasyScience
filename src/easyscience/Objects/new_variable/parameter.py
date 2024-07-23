@@ -499,8 +499,8 @@ class Parameter(DescriptorNumber):
             if self.unit != 'dimensionless':
                 raise UnitError("Numbers can only be subtracted from dimensionless values")
             new_value = other - self.value
-            min_value = other - self.min
-            max_value = other - self.max
+            min_value = other - self.max
+            max_value = other - self.min
             name = f"{other} - {self.name}"
             return Parameter(name=name, value=new_value, variance=self.variance, min=min_value, max=max_value)
         elif isinstance(other, DescriptorNumber):
