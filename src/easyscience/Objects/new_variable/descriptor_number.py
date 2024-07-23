@@ -258,17 +258,34 @@ class DescriptorNumber(DescriptorBase):
             return NotImplemented
 
     def __sub__(self, other: DescriptorNumber) -> DescriptorNumber:
-        if not type(other) == DescriptorNumber:
+        if isinstance(other, numbers.Number):
+            if self.unit != 'dimensionless':
+                raise UnitError("Numbers can only be subtracted from dimensionless values")
+            new_value = self.value - other
+            name = self.name + ' - ' + str(other)
+            return DescriptorNumber(name=name, value=new_value, variance=self.variance)
+        elif type(other) == DescriptorNumber:
+            original_unit = other.unit
+            try:
+                other.convert_unit(self.unit)
+            except UnitError:
+                raise UnitError(f"Values with units {self.unit} and {other.unit} cannot be subtracted") from None
+            new_value = self.full_value - other.full_value
+            name = self._name + ' - ' + other._name
+            other.convert_unit(original_unit)
+            return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+        else:
             return NotImplemented
-        original_unit = other.unit
-        try:
-            other.convert_unit(self.unit)
-        except UnitError:
-            raise UnitError(f"Values with units {self.unit} and {other.unit} cannot be subtracted") from None
-        new_value = self.full_value - other.full_value
-        name = self._name + ' - ' + other._name
-        other.convert_unit(original_unit)
-        return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+        
+    def __rsub__(self, other: numbers.Number) -> DescriptorNumber:
+        if isinstance(other, numbers.Number):
+            if self.unit != 'dimensionless':
+                raise UnitError("Numbers can only be subtracted from dimensionless values")
+            new_value = other - self.value
+            name = str(other) + ' - ' + self.name
+            return DescriptorNumber(name=name, value=new_value, variance=self.variance)
+        else:
+            return NotImplemented
     
     def __mul__(self, other: DescriptorNumber) -> DescriptorNumber:
         if not type(other) == DescriptorNumber:
