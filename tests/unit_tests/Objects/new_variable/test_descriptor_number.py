@@ -249,3 +249,49 @@ class TestDescriptorNumber:
         with pytest.raises(UnitError):
             result_reverse = test + descriptor
         
+    @pytest.mark.parametrize("test, expected", [
+        (DescriptorNumber("test", 2, "m", 0.01,),   DescriptorNumber("test - name", 1, "m", 0.11)),
+        (DescriptorNumber("test", 2, "cm", 0.01),   DescriptorNumber("test - name", -98, "cm", 1000.01))],
+        ids=["regular", "unit_conversion"])
+    def test_subtraction(self, descriptor: DescriptorNumber, test, expected):
+        # When Then
+        result = test - descriptor
+
+        # Expect
+        assert type(result) == DescriptorNumber
+        assert result.name == expected.name
+        assert result.value == expected.value
+        assert result.unit == expected.unit
+        assert result.variance == expected.variance
+
+        assert descriptor.unit == 'm'
+
+    @pytest.mark.parametrize("scalar", [1, 1.0], ids=["int", "float"])
+    def test_subtraction_with_scalar(self, scalar):
+        # When 
+        descriptor = DescriptorNumber(name="name", value=2, variance=0.1)
+
+        # Then
+        result = descriptor - scalar
+        result_reverse = scalar - descriptor
+
+        # Expect
+        assert type(result) == DescriptorNumber
+        assert result.name == "name - " + str(scalar)
+        assert result.value == 1.0
+        assert result.unit == "dimensionless"
+        assert result.variance == 0.1
+
+        assert type(result_reverse) == DescriptorNumber
+        assert result_reverse.name == str(scalar) + " - name"
+        assert result_reverse.value == -1.0
+        assert result_reverse.unit == "dimensionless"
+        assert result_reverse.variance == 0.1
+
+    @pytest.mark.parametrize("test", [1.0, DescriptorNumber("test", 2, "s",)], ids=["sub_scalar_to_unit", "incompatible_units"])
+    def test_subtraction_exception(self, descriptor: DescriptorNumber, test):
+        # When Then Expect
+        with pytest.raises(UnitError):
+            result = test - descriptor
+        with pytest.raises(UnitError):
+            result_reverse = descriptor - test
