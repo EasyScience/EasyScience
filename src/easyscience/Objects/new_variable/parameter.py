@@ -518,22 +518,53 @@ class Parameter(DescriptorNumber):
         else:
             return NotImplemented
     
-    def __mul__(self, other: Union[DescriptorNumber, Parameter], inverse: bool = False) -> Parameter:
-        if not issubclass(other.__class__, DescriptorNumber):
-            raise TypeError(f'{other=} must be a DescriptorNumber or Parameter')  
-        try:
-            other.convert_unit(self.unit)
+    def __mul__(self, other: Union[DescriptorNumber, Parameter]) -> Parameter:
+        if isinstance(other, numbers.Number):
+            new_value = self.full_value * other
+            combinations = [self.min * other, self.max * other]
+            min_value = min(combinations)
+            max_value = max(combinations)
+            name = f"{self.name} * {other}"
+            return Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)
+        elif isinstance(other, DescriptorNumber):
             new_value = self.full_value * other.full_value
-        except Exception as message:
-            raise ValueError(message)
-        combinations = [self.min * other.max, self.max * other.min, self.min * other.min, self.max * other.max]
-        min_value = min(combinations) if isinstance(other, Parameter) else -np.Inf
-        max_value = max(combinations) if isinstance(other, Parameter) else np.Inf
-        name = self.name+" * "+other.name if not inverse else other.name+" * "+self.name
-        return Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)
-    
+            if isinstance(other, Parameter):
+                combinations = [self.min * other.max, self.max * other.min, self.min * other.min, self.max * other.max]
+                min_value = min(combinations)
+                max_value = max(combinations)
+            else:
+                min_value = -np.Inf
+                max_value = np.Inf
+            name = self.name+" * "+other.name
+            parameter = Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)
+            parameter.convert_unit(self._base_unit())
+            return parameter
+        else: 
+            return NotImplemented
+            
     def __rmul__(self, other: Union[DescriptorNumber, Parameter]) -> Parameter:
-        return self.__mul__(other, inverse=True)
+        if isinstance(other, numbers.Number):
+            new_value = other * self.full_value
+            combinations = [other * self.min, other * self.max]
+            min_value = min(combinations)
+            max_value = max(combinations)
+            name = f"{other} * {self.name}"
+            return Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)
+        elif isinstance(other, DescriptorNumber):
+            new_value = other.full_value * self.full_value
+            if isinstance(other, Parameter):
+                combinations = [other.min * self.max, other.max * self.min, other.min * self.min, other.max * self.max]
+                min_value = min(combinations)
+                max_value = max(combinations)
+            else:
+                min_value = -np.Inf
+                max_value = np.Inf
+            name = other.name+" * "+self.name
+            parameter = Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)
+            parameter.convert_unit(self._base_unit())
+            return parameter
+        else:
+            return NotImplemented
     
     def __truediv__(self, other: Union[DescriptorNumber, Parameter], inverse: bool = False) -> Parameter:
         if not issubclass(other.__class__, DescriptorNumber):

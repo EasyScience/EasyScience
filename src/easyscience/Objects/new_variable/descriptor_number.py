@@ -288,12 +288,30 @@ class DescriptorNumber(DescriptorBase):
             return NotImplemented
     
     def __mul__(self, other: DescriptorNumber) -> DescriptorNumber:
-        if not type(other) == DescriptorNumber:
-            return NotImplemented
-        try:
-            other.convert_unit(self.unit)
+        if isinstance(other, numbers.Number):
+            new_value = self.full_value * other
+            name = self.name + ' * ' + str(other)
+            return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+        elif type(other) == DescriptorNumber:
             new_value = self.full_value * other.full_value
-        except Exception as message:
-            raise ValueError(message)
-        name = self._name + ' * ' + other._name
-        return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+            name = self._name + ' * ' + other._name
+            descriptor_number = DescriptorNumber.from_scipp(name=name, full_value=new_value)
+            descriptor_number.convert_unit(self._base_unit())
+            return descriptor_number
+        else:
+            return NotImplemented
+        
+    def __rmul__(self, other: numbers.Number) -> DescriptorNumber:
+        if isinstance(other, numbers.Number):
+            new_value = other * self.full_value
+            name = str(other) + ' * ' + self.name
+            return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+        else:
+            return NotImplemented
+    
+    def _base_unit(self) -> str:
+        string = str(self._scalar.unit)
+        for i in range(len(string)):
+            if string[i] not in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."]:
+                return string[i+1:-1]
+        raise ValueError(f"Could not find base unit for {string}")
