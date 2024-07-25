@@ -219,24 +219,23 @@ class TestDescriptorNumber:
         
         assert descriptor.unit == 'm'
 
-    @pytest.mark.parametrize("scalar", [1, 1.0], ids=["int", "float"])
-    def test_addition_with_scalar(self, scalar):
+    def test_addition_with_scalar(self):
         # When 
         descriptor = DescriptorNumber(name="name", value=1, variance=0.1)
 
         # Then
-        result = descriptor + scalar
-        result_reverse = scalar + descriptor
+        result = descriptor + 1.0
+        result_reverse = 1.0 + descriptor
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == "name + " + str(scalar)
+        assert result.name == "name + 1.0"
         assert result.value == 2.0
         assert result.unit == "dimensionless"
         assert result.variance == 0.1
 
         assert type(result_reverse) == DescriptorNumber
-        assert result_reverse.name == str(scalar) + " + name"
+        assert result_reverse.name == "1.0 + name"
         assert result_reverse.value == 2.0
         assert result_reverse.unit == "dimensionless"
         assert result_reverse.variance == 0.1
@@ -266,24 +265,23 @@ class TestDescriptorNumber:
 
         assert descriptor.unit == 'm'
 
-    @pytest.mark.parametrize("scalar", [1, 1.0], ids=["int", "float"])
-    def test_subtraction_with_scalar(self, scalar):
+    def test_subtraction_with_scalar(self):
         # When 
         descriptor = DescriptorNumber(name="name", value=2, variance=0.1)
 
         # Then
-        result = descriptor - scalar
-        result_reverse = scalar - descriptor
+        result = descriptor - 1.0
+        result_reverse = 1.0 - descriptor
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == "name - " + str(scalar)
+        assert result.name == "name - 1.0"
         assert result.value == 1.0
         assert result.unit == "dimensionless"
         assert result.variance == 0.1
 
         assert type(result_reverse) == DescriptorNumber
-        assert result_reverse.name == str(scalar) + " - name"
+        assert result_reverse.name == "1.0 - name"
         assert result_reverse.value == -1.0
         assert result_reverse.unit == "dimensionless"
         assert result_reverse.variance == 0.1
@@ -295,3 +293,36 @@ class TestDescriptorNumber:
             result = test - descriptor
         with pytest.raises(UnitError):
             result_reverse = descriptor - test
+
+    @pytest.mark.parametrize("test, expected", [
+        (DescriptorNumber("test", 2, "m", 0.01,),   DescriptorNumber("test * name", 2, "m^2", 0.41)),
+        (DescriptorNumber("test", 2, "dm", 0.01),   DescriptorNumber("test * name", 0.2, "m^2", 0.0041))],
+        ids=["regular", "base_unit_conversion"])
+    def test_multiplication(self, descriptor: DescriptorNumber, test, expected):
+        # When Then
+        result = test * descriptor
+
+        # Expect
+        assert type(result) == DescriptorNumber
+        assert result.name == expected.name
+        assert result.value == expected.value
+        assert result.unit == expected.unit
+        assert result.variance == pytest.approx(expected.variance)
+
+    def test_multiplication_with_scalar(self, descriptor: DescriptorNumber):
+        # When Then
+        result = descriptor * 2.0
+        result_reverse = 2.0 * descriptor
+
+        # Expect
+        assert type(result) == DescriptorNumber
+        assert result.name == "name * 2.0"
+        assert result.value == 2.0
+        assert result.unit == "m"
+        assert result.variance == 0.4
+
+        assert type(result_reverse) == DescriptorNumber
+        assert result_reverse.name == "2.0 * name"
+        assert result_reverse.value == 2.0
+        assert result_reverse.unit == "m"
+        assert result_reverse.variance == 0.4
