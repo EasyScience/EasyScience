@@ -560,10 +560,11 @@ class TestParameter:
         #     parent=None,
 
     @pytest.mark.parametrize("test, expected, expected_reverse", [
-            (Parameter("test", 2, "m", 0.01, -10, 20),  Parameter("name * test", 2, "m^2", 0.05, -100, 200),               Parameter("test * name", 2, "m^2", 0.05, -100, 200)),
-            (Parameter("test", 2, "m", 0.01),           Parameter("name * test", 2, "m^2", 0.05, min=-np.Inf, max=np.Inf), Parameter("test * name", 2, "m^2", 0.05, min=-np.Inf, max=np.Inf)),
-            (Parameter("test", 2, "dm", 0.01, -10, 20), Parameter("name * test", 0.2, "m^2", 0.0005, -10, 20),             Parameter("test * name", 0.2, "m^2", 0.0005, -10, 20))],
-            ids=["regular", "no_bounds", "base_unit_conversion"])
+            (Parameter("test", 2, "m", 0.01, -10, 20),    Parameter("name * test", 2, "m^2", 0.05, -100, 200),               Parameter("test * name", 2, "m^2", 0.05, -100, 200)),
+            (Parameter("test", 2, "m", 0.01),             Parameter("name * test", 2, "m^2", 0.05, min=-np.Inf, max=np.Inf), Parameter("test * name", 2, "m^2", 0.05, min=-np.Inf, max=np.Inf)),
+            (Parameter("test", 2, "dm", 0.01, -10, 20),   Parameter("name * test", 0.2, "m^2", 0.0005, -10, 20),             Parameter("test * name", 0.2, "m^2", 0.0005, -10, 20)),
+            (Parameter("test", 2, "1/dm", 0.01, -10, 20), Parameter("name * test", 20.0, "dimensionless", 5, -1000, 2000),   Parameter("test * name", 20.0, "dimensionless", 5, -1000, 2000))],
+            ids=["regular", "no_bounds", "base_unit_conversion", "base_unit_conversion_dimensionless"])
     def test_multiplication_with_parameter(self, parameter : Parameter, test : Parameter, expected : Parameter, expected_reverse : Parameter):
         # When 
         parameter._callback = property()

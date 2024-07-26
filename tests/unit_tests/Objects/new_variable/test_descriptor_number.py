@@ -296,8 +296,9 @@ class TestDescriptorNumber:
 
     @pytest.mark.parametrize("test, expected", [
         (DescriptorNumber("test", 2, "m", 0.01,),   DescriptorNumber("test * name", 2, "m^2", 0.41)),
-        (DescriptorNumber("test", 2, "dm", 0.01),   DescriptorNumber("test * name", 0.2, "m^2", 0.0041))],
-        ids=["regular", "base_unit_conversion"])
+        (DescriptorNumber("test", 2, "dm", 0.01),   DescriptorNumber("test * name", 0.2, "m^2", 0.0041)),
+        (DescriptorNumber("test", 2, "1/dm", 0.01), DescriptorNumber("test * name", 20.0, "dimensionless", 41))],
+        ids=["regular", "base_unit_conversion", "base_unit_conversion_dimensionless"])
     def test_multiplication(self, descriptor: DescriptorNumber, test, expected):
         # When Then
         result = test * descriptor
