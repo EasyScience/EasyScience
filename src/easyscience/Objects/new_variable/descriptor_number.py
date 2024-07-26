@@ -342,4 +342,4 @@ class DescriptorNumber(DescriptorBase):
         for i in range(len(string)):
             if string[i] not in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."]:
                 return string[i:]
-        raise ValueError(f"Could not find base unit for {string}")
+        return ""
