@@ -15,6 +15,7 @@ from easyscience.global_object.undo_redo import property_stack_deco
 
 from .descriptor_base import DescriptorBase
 
+INFINITESIMAL = 1e-9
 
 class DescriptorNumber(DescriptorBase):
     """
@@ -306,6 +307,36 @@ class DescriptorNumber(DescriptorBase):
             return NotImplemented
         return DescriptorNumber.from_scipp(name=name, full_value=new_value)
     
+    def __truediv__(self, other: Union[DescriptorNumber, numbers.Number]) -> DescriptorNumber:
+        if isinstance(other, numbers.Number):
+            original_other = other
+            if other == 0:
+                other = INFINITESIMAL
+            new_value = self.full_value / other
+            name = self.name + ' / ' + str(original_other)
+        elif type(other) == DescriptorNumber:
+            original_other = other.value
+            if original_other == 0:
+                other.value = INFINITESIMAL
+            new_value = self.full_value / other.full_value
+            other.value = original_other
+            name = self._name + ' / ' + other._name
+        else:
+            return NotImplemented
+        descriptor_number = DescriptorNumber.from_scipp(name=name, full_value=new_value)
+        descriptor_number.convert_unit(descriptor_number._base_unit())
+        return descriptor_number
+    
+    def __rtruediv__(self, other: numbers.Number) -> DescriptorNumber:
+        if isinstance(other, numbers.Number):
+            if self.value == 0:
+                self.value = INFINITESIMAL
+            new_value = other / self.full_value
+            name = str(other) + ' / ' + self.name
+        else:
+            return NotImplemented
+        return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+
     def _base_unit(self) -> str:
         string = str(self._scalar.unit)
         for i in range(len(string)):

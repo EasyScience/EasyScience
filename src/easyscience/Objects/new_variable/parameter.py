@@ -26,6 +26,7 @@ from easyscience.fitting.Constraints import SelfConstraint
 from easyscience.global_object.undo_redo import property_stack_deco
 from easyscience.Utils.Exceptions import CoreSetException
 
+from .descriptor_number import INFINITESIMAL
 from .descriptor_number import DescriptorNumber
 
 Constraints = namedtuple('Constraints', ['user', 'builtin', 'virtual'])
@@ -86,6 +87,8 @@ class Parameter(DescriptorNumber):
             raise ValueError(f'{value=} can not be less than {min=}')
         if value > max:
             raise ValueError(f'{value=} can not be greater than {max=}')
+        if min == max:
+            raise ValueError('The min and max bounds cannot be identical. Please use fixed=True instead to fix the value.')
         if not isinstance(fixed, bool):
             raise TypeError('`fixed` must be either True or False')
 
@@ -247,6 +250,8 @@ class Parameter(DescriptorNumber):
         """
         if not isinstance(min_value, numbers.Number):
             raise TypeError('`min` must be a number')
+        if min_value == self._max.value:
+            raise ValueError('The min and max bounds cannot be identical. Please use fixed=True instead to fix the value.')
         if min_value <= self.value:
             self._min.value = min_value
         else:
@@ -273,6 +278,8 @@ class Parameter(DescriptorNumber):
         """
         if not isinstance(max_value, numbers.Number):
             raise TypeError('`max` must be a number')
+        if max_value == self._min.value:
+            raise ValueError('The min and max bounds cannot be identical. Please use fixed=True instead to fix the value.')
         if max_value >= self.value:
             self._max.value = max_value
         else:
@@ -562,22 +569,85 @@ class Parameter(DescriptorNumber):
         parameter.convert_unit(parameter._base_unit())
         return parameter
     
-    def __truediv__(self, other: Union[DescriptorNumber, Parameter], inverse: bool = False) -> Parameter:
-        if not issubclass(other.__class__, DescriptorNumber):
-            raise TypeError(f'{other=} must be a DescriptorNumber or Parameter')  
-        try:
-            new_value = self.full_value / other.full_value if not inverse else other.full_value / self.full_value
-        except Exception as message:
-            raise ValueError(message)
-        if isinstance(other, Parameter):
-            if not inverse:
-                combinations = [self.min / other.max, self.max / other.min, self.min / other.min, self.max / other.max]
+    def __truediv__(self, other: Union[DescriptorNumber, Parameter, numbers.Number]) -> Parameter:
+        if isinstance(other, numbers.Number):
+            original_other = other
+            if other == 0:
+                other = INFINITESIMAL
+            new_value = self.full_value / other
+            combinations = [self.min / other, self.max / other]
+            name = f"{self.name} / {original_other}"
+        elif isinstance(other, DescriptorNumber):
+            original_value = other.value
+            if original_value == 0:
+                other.value = INFINITESIMAL
+            new_value = self.full_value / other.full_value
+            if isinstance(other, Parameter):
+                if (other.min <= 0 and other.max >= 0):
+                    combinations = [-np.Inf, np.Inf]
+                elif other.min == 0:
+                    if (self.min < 0 and self.max > 0):
+                        combinations = [-np.Inf, np.Inf]
+                    elif self.min >= 0:
+                        combinations = [self.min/other.max, np.Inf]
+                    elif self.max <= 0:
+                        combinations = [-np.Inf, self.max/other.max]
+                elif other.max == 0:
+                    if (self.min < 0 and self.max > 0):
+                        combinations = [-np.Inf, np.Inf]
+                    elif self.min >= 0:
+                        combinations = [-np.Inf, self.min/other.min]
+                    elif self.max <= 0:
+                        combinations = [self.max/other.min, np.Inf]
+                else:
+                    combinations = [self.min/other.min, self.max/other.max, self.min/other.max, self.max/other.min]
             else:
-                combinations = [other.min / self.max, other.max / self.min, other.min / self.min, other.max / self.max]
-            min_value = min(combinations)
-            max_value = max(combinations)
+                combinations = [self.min / other.value, self.max / other.value]
+            name = self.name+" / "+other.name
+            other.value = original_value
         else:
-            min_value = -np.Inf
-            max_value = np.Inf
-        name = self.name+" / "+other.name if not inverse else other.name+" / "+self.name
-        return Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)
+            return NotImplemented
+        min_value = min(combinations)
+        max_value = max(combinations)
+        parameter = Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)
+        parameter.convert_unit(parameter._base_unit())
+        return parameter
+    
+    def __rtruediv__(self, other: Union[DescriptorNumber, numbers.Number]) -> Parameter:
+        original_self = self.value
+        if original_self == 0:
+            self.value = INFINITESIMAL
+        if isinstance(other, numbers.Number):
+            new_value = other / self.full_value
+            other_value = other
+            name = f"{other} / {self.name}"
+            if other_value == 0:
+                return DescriptorNumber.from_scipp(name=name, value=new_value)
+        elif isinstance(other, DescriptorNumber):
+            new_value = other.full_value / self.full_value
+            other_value = other.value
+            name = other.name+" / "+self.name
+            if other_value == 0:
+                return DescriptorNumber.from_scipp(name=name, value=new_value)
+        else:
+            return NotImplemented
+        if (self.min <= 0 and self.max >= 0):
+            combinations = [-np.Inf, np.Inf]
+        elif self.min == 0:
+            if other_value > 0:
+                combinations = [other_value/self.max, np.Inf]
+            elif other_value < 0:
+                combinations = [-np.Inf, other_value/self.max]
+        elif self.max == 0:
+            if other_value > 0:
+                combinations = [-np.Inf, other_value/self.min]
+            elif other_value < 0:
+                combinations = [other_value/self.min, np.Inf]
+        else:
+            combinations = [other_value / self.min, other_value / self.max]
+        min_value = min(combinations)
+        max_value = max(combinations)
+        parameter = Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)
+        parameter.convert_unit(parameter._base_unit())
+        self.value = original_self
+        return parameter
