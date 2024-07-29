@@ -560,10 +560,10 @@ class TestParameter:
         #     parent=None,
 
     @pytest.mark.parametrize("test, expected, expected_reverse", [
-            (Parameter("test", 2, "m", 0.01, -10, 20),    Parameter("name * test", 2, "m^2", 0.05, -100, 200),               Parameter("test * name", 2, "m^2", 0.05, -100, 200)),
-            (Parameter("test", 2, "m", 0.01),             Parameter("name * test", 2, "m^2", 0.05, min=-np.Inf, max=np.Inf), Parameter("test * name", 2, "m^2", 0.05, min=-np.Inf, max=np.Inf)),
-            (Parameter("test", 2, "dm", 0.01, -10, 20),   Parameter("name * test", 0.2, "m^2", 0.0005, -10, 20),             Parameter("test * name", 0.2, "m^2", 0.0005, -10, 20)),
-            (Parameter("test", 2, "1/dm", 0.01, -10, 20), Parameter("name * test", 20.0, "dimensionless", 5, -1000, 2000),   Parameter("test * name", 20.0, "dimensionless", 5, -1000, 2000))],
+            (Parameter("test", 2, "m", 0.01, -10, 20),     Parameter("name * test", 2, "m^2", 0.05, -100, 200),               Parameter("test * name", 2, "m^2", 0.05, -100, 200)),
+            (Parameter("test", 2, "m", 0.01),              Parameter("name * test", 2, "m^2", 0.05, min=-np.Inf, max=np.Inf), Parameter("test * name", 2, "m^2", 0.05, min=-np.Inf, max=np.Inf)),
+            (Parameter("test", 2, "dm", 0.01, -10, 20),    Parameter("name * test", 0.2, "m^2", 0.0005, -10, 20),             Parameter("test * name", 0.2, "m^2", 0.0005, -10, 20)),
+            (Parameter("test", 2, "1/dm", 0.01, -10, 20),  Parameter("name * test", 20.0, "dimensionless", 5, -1000, 2000),   Parameter("test * name", 20.0, "dimensionless", 5, -1000, 2000))],
             ids=["regular", "no_bounds", "base_unit_conversion", "base_unit_conversion_dimensionless"])
     def test_multiplication_with_parameter(self, parameter : Parameter, test : Parameter, expected : Parameter, expected_reverse : Parameter):
         # When 
@@ -588,75 +588,90 @@ class TestParameter:
         assert result_reverse.min == expected_reverse.min
         assert result_reverse.max == expected_reverse.max
 
-    def test_multiplication_with_parameter_nan_cases(self):
+    @pytest.mark.parametrize("test, expected, expected_reverse", [
+            (Parameter("test", 0, "", 0.01, -10, 0),    Parameter("name * test", 0.0, "dimensionless", 0.01, -np.Inf, 0), Parameter("test * name", 0, "dimensionless", 0.01, -np.Inf, 0)),
+            (Parameter("test", 0, "", 0.01, 0, 10),     Parameter("name * test", 0.0, "dimensionless", 0.01, 0, np.Inf),  Parameter("test * name", 0, "dimensionless", 0.01, 0, np.Inf))],
+            ids=["zero_min", "zero_max"])
+    def test_multiplication_with_parameter_nan_cases(self, test, expected, expected_reverse):
         # When
-        parameter = Parameter(name="name", value=1, variance=0.01, min=-np.Inf, max=np.Inf)
-        test = Parameter(name="test", value=0, variance=0.01, min=0, max=0)
+        parameter = Parameter(name="name", value=1, variance=0.01, min=1, max=np.Inf)
 
         # Then
         result = parameter * test
         result_reverse = test * parameter
 
         # Expect
-        assert result.name == "name * test"
-        assert result.value == 0
-        assert result.unit == "dimensionless"
-        assert result.variance == 0.01
-        assert result.min == -np.Inf
-        assert result.max == np.Inf
+        assert result.name == expected.name
+        assert result.value == expected.value
+        assert result.unit == expected.unit
+        assert result.variance == expected.variance
+        assert result.min == expected.min
+        assert result.max == expected.max
 
-        assert result_reverse.name == "test * name"
-        assert result_reverse.value == 0
-        assert result_reverse.unit == "dimensionless"
-        assert result_reverse.variance == 0.01
-        assert result_reverse.min == -np.Inf
-        assert result_reverse.max == np.Inf
+        assert result_reverse.name == expected_reverse.name
+        assert result_reverse.value == expected_reverse.value
+        assert result_reverse.unit == expected_reverse.unit
+        assert result_reverse.variance == expected_reverse.variance
+        assert result_reverse.min == expected_reverse.min
+        assert result_reverse.max == expected_reverse.max
 
-    def test_multiplication_with_descriptor_number(self, parameter : Parameter):
-        # When 
-        parameter._callback = property()
-        descriptor_number = DescriptorNumber(name="test", value=2, variance=0.1, unit="cm")
-
-        # Then
-        result = parameter * descriptor_number
-        result_reverse = descriptor_number * parameter
-
-        # Expect
-        assert type(result) == Parameter
-        assert result.name == "name * test"
-        assert result.value == 2
-        assert result.unit == "dm^2"
-        assert result.variance == 0.14
-        assert result.min == 0
-        assert result.max == 20
-
-        assert type(result_reverse) == Parameter
-        assert result_reverse.name == "test * name"
-        assert result_reverse.value == 2
-        assert result_reverse.unit == "dm^2"
-        assert result_reverse.variance == 0.14
-        assert result_reverse.min == 0
-        assert result_reverse.max == 20
-
-    def test_multiplication_with_scalar(self, parameter : Parameter):
+    @pytest.mark.parametrize("test, expected, expected_reverse", [
+        (DescriptorNumber(name="test", value=2, variance=0.1, unit="cm"), Parameter("name * test", 2, "dm^2", 0.14, 0, 20), Parameter("test * name", 2, "dm^2", 0.14, 0, 20)),
+        (DescriptorNumber(name="test", value=0, variance=0.1, unit="cm"), DescriptorNumber("name * test", 0, "dm^2", 0.1), DescriptorNumber("test * name", 0, "dm^2", 0.1))],
+        ids=["regular", "zero_value"])
+    def test_multiplication_with_descriptor_number(self, parameter : Parameter, test, expected, expected_reverse):
         # When 
         parameter._callback = property()
 
         # Then
-        result = parameter * 2
-        result_reverse = 2 * parameter
+        result = parameter * test
+        result_reverse = test * parameter
 
         # Expect
-        assert result.name == "name * 2"
-        assert result.value == 2.0
-        assert result.unit == "m"
-        assert result.variance == 0.04
-        assert result.min == 0.0
-        assert result.max == 20.0
+        assert type(result) == type(expected)
+        assert result.name == expected.name
+        assert result.value == expected.value
+        assert result.unit == expected.unit
+        assert result.variance == expected.variance
+        if isinstance(result, Parameter):
+            assert result.min == expected.min
+            assert result.max == expected.max
 
-        assert result_reverse.name == "2 * name"
-        assert result_reverse.value == 2.0
-        assert result_reverse.unit == "m"
-        assert result_reverse.variance == 0.04
-        assert result_reverse.min == 0.0
-        assert result_reverse.max == 20.0
+        assert type(result_reverse) == type(expected_reverse)
+        assert result_reverse.name == expected_reverse.name
+        assert result_reverse.value == expected_reverse.value
+        assert result_reverse.unit == expected_reverse.unit
+        assert result_reverse.variance == expected_reverse.variance
+        if isinstance(result_reverse, Parameter):
+            assert result_reverse.min == expected_reverse.min
+            assert result_reverse.max == expected_reverse.max
+
+    @pytest.mark.parametrize("test, expected, expected_reverse", [
+        (2, Parameter("name * 2", 2, "m", 0.04, 0, 20), Parameter("2 * name", 2, "m", 0.04, 0, 20)),
+        (0, DescriptorNumber("name * 0", 0, "m", 0), DescriptorNumber("0 * name", 0, "m", 0))],
+        ids=["regular", "zero_value"])
+    def test_multiplication_with_scalar(self, parameter : Parameter, test, expected, expected_reverse):
+        # When 
+        parameter._callback = property()
+
+        # Then
+        result = parameter * test
+        result_reverse = test * parameter
+
+        # Expect
+        assert type(result) == type(expected)
+        assert result.name == expected.name
+        assert result.value == expected.value
+        assert result.unit == expected.unit
+        assert result.variance == expected.variance
+        if isinstance(result, Parameter):
+            assert result.min == expected.min
+            assert result.max == expected.max
+
+        assert result_reverse.name == expected_reverse.name
+        assert result_reverse.value == expected_reverse.value
+        assert result_reverse.unit == expected_reverse.unit
+        assert result_reverse.variance == expected_reverse.variance
+        if isinstance(result_reverse, Parameter):
+            assert result_reverse.min == expected_reverse.min
+            assert result_reverse.max == expected_reverse.max

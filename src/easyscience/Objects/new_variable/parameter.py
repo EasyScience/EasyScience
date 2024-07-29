@@ -528,22 +528,26 @@ class Parameter(DescriptorNumber):
     def __mul__(self, other: Union[DescriptorNumber, Parameter, numbers.Number]) -> Parameter:
         if isinstance(other, numbers.Number):
             new_value = self.full_value * other
-            combinations = [self.min * other, self.max * other]
             name = f"{self.name} * {other}"
+            if other == 0:
+                return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+            combinations = [self.min * other, self.max * other]
         elif isinstance(other, DescriptorNumber):
             new_value = self.full_value * other.full_value
+            name = self.name+" * "+other.name
+            if other.value == 0 and type(other) == DescriptorNumber:
+                return DescriptorNumber.from_scipp(name=name, full_value=new_value)
             if isinstance(other, Parameter):
                 combinations = []
                 for first, second in [(self.min, other.min), (self.min, other.max), (self.max, other.min), (self.max, other.max)]:  # noqa: E501
-                    if (first == np.Inf and second == 0) or (first == 0 and second == np.Inf):
-                        combinations.append(np.Inf)
-                    elif (first == -np.Inf and second == 0) or (first == 0 and second == -np.Inf):
-                        combinations.append(-np.Inf)
+                    if first == 0 and np.isinf(second):
+                        combinations.append(0)
+                    elif second == 0 and np.isinf(first):
+                        combinations.append(0)
                     else:
                         combinations.append(first * second)
             else:
                 combinations = [self.min * other.value, self.max * other.value]
-            name = self.name+" * "+other.name
         else: 
             return NotImplemented
         min_value = min(combinations)
@@ -555,12 +559,16 @@ class Parameter(DescriptorNumber):
     def __rmul__(self, other: Union[DescriptorNumber, numbers.Number]) -> Parameter:
         if isinstance(other, numbers.Number):
             new_value = other * self.full_value
-            combinations = [other * self.min, other * self.max]
             name = f"{other} * {self.name}"
+            if other == 0:
+                return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+            combinations = [other * self.min, other * self.max]
         elif isinstance(other, DescriptorNumber):
             new_value = other.full_value * self.full_value
-            combinations = [self.min * other.value, self.max * other.value]
             name = other.name+" * "+self.name
+            if other.value == 0:
+                return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+            combinations = [self.min * other.value, self.max * other.value]
         else:
             return NotImplemented
         min_value = min(combinations)
