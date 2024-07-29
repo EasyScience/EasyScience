@@ -59,21 +59,6 @@ class MinimizerBase(metaclass=ABCMeta):
         del self._constraints[index]
 
     @abstractmethod
-    def make_model(self, pars: List[Parameter] = None):
-        """
-        Generate an engine model from the supplied `fit_function` and parameters in the base object.
-
-        :return: Callable model
-        """
-
-    @abstractmethod
-    def _generate_fit_function(self) -> Callable:
-        """
-        Using the user supplied `fit_function`, wrap it in such a way we can update `Parameter` on
-        iterations.
-        """
-
-    @abstractmethod
     def fit(
         self,
         x: np.ndarray,
@@ -172,26 +157,6 @@ class MinimizerBase(metaclass=ABCMeta):
     def convert_to_par_object(obj):  # todo after constraint changes, add type hint: obj: BaseObj
         """
         Convert an `EasyScience.Objects.Base.Parameter` object to an engine Parameter object.
-        """
-
-    @abstractmethod
-    def _set_parameter_fit_result(self, fit_result):
-        """
-        Update parameters to their final values and assign a std error to them.
-
-        :param fit_result: Fit object which contains info on the fit
-        :return: None
-        :rtype: noneType
-        """
-
-    @abstractmethod
-    def _gen_fit_results(self, fit_results, **kwargs) -> FitResults:
-        """
-        Convert fit results into the unified `FitResults` format.
-
-        :param fit_result: Fit object which contains info on the fit
-        :return: fit results container
-        :rtype: FitResults
         """
 
     @staticmethod

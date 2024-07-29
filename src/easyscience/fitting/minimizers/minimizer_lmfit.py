@@ -48,7 +48,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         """
         super().__init__(obj=obj, fit_function=fit_function, method=method)
 
-    def make_model(self, pars: Optional[LMParameters] = None) -> LMModel:
+    def _make_model(self, pars: Optional[LMParameters] = None) -> LMModel:
         """
         Generate a lmfit model from the supplied `fit_function` and parameters in the base object.
 
@@ -203,7 +203,7 @@ class LMFit(MinimizerBase):  # noqa: S101
 
         try:
             if model is None:
-                model = self.make_model()
+                model = self._make_model()
 
             model_results = model.fit(y, x=x, weights=weights, **default_method, **minimizer_kwargs, **kwargs)
             self._set_parameter_fit_result(model_results, stack_status)

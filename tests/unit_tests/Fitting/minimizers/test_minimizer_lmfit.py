@@ -53,7 +53,7 @@ class TestLMFit():
         pars = {'key_1': mock_parm_1, 'key_2': mock_parm_2}
 
         # Then
-        model = minimizer.make_model(pars=pars)
+        model = minimizer._make_model(pars=pars)
         
         # Expect
         minimizer._generate_fit_function.assert_called_once_with()
@@ -79,7 +79,7 @@ class TestLMFit():
         minimizer._cached_pars = {'key_1': mock_parm_1, 'key_2': mock_parm_2}
 
         # Then
-        model = minimizer.make_model()
+        model = minimizer._make_model()
         
         # Expect
         minimizer._generate_fit_function.assert_called_once_with()
@@ -147,7 +147,7 @@ class TestLMFit():
 
         mock_model = MagicMock()
         mock_model.fit = MagicMock(return_value='fit')
-        minimizer.make_model = MagicMock(return_value=mock_model)
+        minimizer._make_model = MagicMock(return_value=mock_model)
         minimizer._set_parameter_fit_result = MagicMock()
         minimizer._gen_fit_results = MagicMock(return_value='gen_fit_results')
 
@@ -157,7 +157,7 @@ class TestLMFit():
         # Expect
         assert result == 'gen_fit_results'
         mock_model.fit.assert_called_once_with(2.0, x=1.0, weights=0.7071067811865475, method='least_squares')
-        minimizer.make_model.assert_called_once_with()
+        minimizer._make_model.assert_called_once_with()
         minimizer._set_parameter_fit_result.assert_called_once_with('fit', False)
         minimizer._gen_fit_results.assert_called_once_with('fit')
 
@@ -165,7 +165,7 @@ class TestLMFit():
         # When
         mock_model = MagicMock()
         mock_model.fit = MagicMock(return_value='fit')
-        minimizer.make_model = MagicMock(return_value=mock_model)
+        minimizer._make_model = MagicMock(return_value=mock_model)
         minimizer._set_parameter_fit_result = MagicMock()
         minimizer._gen_fit_results = MagicMock(return_value='gen_fit_results')
 
@@ -174,13 +174,13 @@ class TestLMFit():
 
         # Expect
         mock_model.fit.assert_called_once_with(2.0, x=1.0, weights=0.7071067811865475, method='least_squares')
-        minimizer.make_model.assert_not_called()
+        minimizer._make_model.assert_not_called()
 
     def test_fit_method(self, minimizer: LMFit) -> None:
         # When
         mock_model = MagicMock()
         mock_model.fit = MagicMock(return_value='fit')
-        minimizer.make_model = MagicMock(return_value=mock_model)
+        minimizer._make_model = MagicMock(return_value=mock_model)
         minimizer._set_parameter_fit_result = MagicMock()
         minimizer._gen_fit_results = MagicMock(return_value='gen_fit_results')
         minimizer.available_methods = MagicMock(return_value=['method_passed'])
@@ -196,7 +196,7 @@ class TestLMFit():
         # When
         mock_model = MagicMock()
         mock_model.fit = MagicMock(return_value='fit')
-        minimizer.make_model = MagicMock(return_value=mock_model)
+        minimizer._make_model = MagicMock(return_value=mock_model)
         minimizer._set_parameter_fit_result = MagicMock()
         minimizer._gen_fit_results = MagicMock(return_value='gen_fit_results')
 
@@ -208,7 +208,7 @@ class TestLMFit():
 
     def test_fit_exception(self, minimizer: LMFit) -> None:
         # When
-        minimizer.make_model = MagicMock(side_effect=Exception('Exception'))
+        minimizer._make_model = MagicMock(side_effect=Exception('Exception'))
         minimizer._set_parameter_fit_result = MagicMock()
         minimizer._gen_fit_results = MagicMock(return_value='gen_fit_results')
 

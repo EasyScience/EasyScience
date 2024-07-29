@@ -1,17 +1,9 @@
 import pytest
 
-# from inspect import Parameter as InspectParameter
-# from inspect import Signature
-# from inspect import _empty
 from unittest.mock import MagicMock
 import numpy as np
-import easyscience.fitting.minimizers.minimizer_dfo
 
 from easyscience.fitting.minimizers.minimizer_dfo import DFO
-#from easyscience.fitting.minimizers.minimizer_lmfit import _wrap_to_lm_signature
-#from easyscience.Objects.new_variable import Parameter
-#from lmfit import Parameter as LMParameter
-#from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.fitting.minimizers.utils import FitError
 
 
@@ -79,15 +71,45 @@ class TestDFOFit():
         mock_parm_2.raw_value = 2000.0
 
         # Then
-        model = minimizer.make_model(new_pars=[mock_parm_1, mock_parm_2])
+        model = minimizer._make_model(parameters=[mock_parm_1, mock_parm_2])
         residuals_for_model = model(x=np.array([1, 2]), y=np.array([10, 20]), weights=np.array([100, 200]))
 
         # Expect
         minimizer._generate_fit_function.assert_called_once_with()
         assert all(np.array([-0.01, -0.01]) == residuals_for_model(np.array([1111, 2222])))
         assert all(mock_fit_function.call_args_list[0][0][0] == np.array([1, 2]))
-        assert mock_fit_function.call_args_list[0][1] == {'pmock_parm_1': 1111, 'pmock_parm_2': 2222}    # def test_make_model(self, minimizer: DFO, monkeypatch):
+        assert mock_fit_function.call_args_list[0][1] == {'pmock_parm_1': 1111, 'pmock_parm_2': 2222}
+
+    def test_fit(self, minimizer: DFO) -> None:
+        # When
+        from easyscience import global_object
+        global_object.stack.enabled = False
+
+        mock_model = MagicMock()
+        mock_model_function = MagicMock(return_value=mock_model)
+        minimizer._make_model = MagicMock(return_value=mock_model_function)
+        minimizer._dfols_fit = MagicMock(return_value='fit')
+        minimizer._set_parameter_fit_result = MagicMock()
+        minimizer._gen_fit_results = MagicMock(return_value='gen_fit_results')
+
+        cached_par = MagicMock()
+        cached_par.raw_value = 1
+        minimizer._cached_pars['mock_parm_1'] = cached_par
+
+        # Then
+        result = minimizer.fit(x=1.0, y=2.0)
+
+        # Expect
+        assert result == 'gen_fit_results'
+        minimizer._dfols_fit.assert_called_once_with(mock_model)
+        minimizer._make_model.assert_called_once_with(parameters=None)
+        minimizer._set_parameter_fit_result.assert_called_once_with('fit', False)
+        minimizer._gen_fit_results.assert_called_once_with('fit', 1.4142135623730951)
+
+
+            # def test_make_model(self, minimizer: DFO, monkeypatch):
     #     # When
+
     #     mock_lm_model = MagicMock()
     #     mock_LMModel = MagicMock(return_value=mock_lm_model)
     #     monkeypatch.setattr(easyscience.fitting.minimizers.minimizer_lmfit, "LMModel", mock_LMModel)

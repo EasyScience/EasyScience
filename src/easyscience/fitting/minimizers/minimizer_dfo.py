@@ -39,7 +39,7 @@ class DFO(MinimizerBase):
         super().__init__(obj=obj, fit_function=fit_function, method=method)
         self._p_0 = {}
 
-    def make_model(self, new_pars: Optional[List[Parameter]] = None) -> Callable:
+    def _make_model(self, parameters: Optional[List[Parameter]] = None) -> Callable:
         """
         Generate a model from the supplied `fit_function` and parameters in the base object.
         Note that this makes a callable as it needs to be initialized with *x*, *y*, *weights*
@@ -49,44 +49,36 @@ class DFO(MinimizerBase):
         """
         fit_func = self._generate_fit_function()
 
-        def outer(obj: DFO):
-            def make_func(x, y, weights):
+        def _outer(obj: DFO):
+            def _make_func(x, y, weights):
                 ## TODO clean when full move to new_variable
                 from easyscience.Objects.new_variable import Parameter as NewParameter
 
                 pars = {}
-                if not new_pars:
+                if not parameters:
                     for name, par in obj._cached_pars.items():
-                        #                        ## TODO clean when full move to new_variable
-                        #                        from easyscience.Objects.new_variable import Parameter
-
                         if isinstance(par, NewParameter):
                             pars[MINIMIZER_PARAMETER_PREFIX + str(name)] = par.value
                         else:
                             pars[MINIMIZER_PARAMETER_PREFIX + str(name)] = par.raw_value
 
                 else:
-                    for new_par in new_pars:
-                        #                        ## TODO clean when full move to new_variable
-                        #                        from easyscience.Objects.new_variable import Parameter as NewParameter
-
+                    for new_par in parameters:
                         if isinstance(new_par, NewParameter):
                             pars[MINIMIZER_PARAMETER_PREFIX + new_par.unique_name] = new_par.value
                         else:
                             pars[MINIMIZER_PARAMETER_PREFIX + new_par.unique_name] = new_par.raw_value
 
-                def residuals(pars_values: List[float]) -> np.ndarray:
+                def _residuals(pars_values: List[float]) -> np.ndarray:
                     for idx, par_name in enumerate(pars.keys()):
                         pars[par_name] = pars_values[idx]
                     return (y - fit_func(x, **pars)) / weights
 
-                #                setattr(residuals, 'x', x)
-                #                setattr(residuals, 'y', y)
-                return residuals
+                return _residuals
 
-            return make_func
+            return _make_func
 
-        return outer(self)
+        return _outer(self)
 
     def _generate_fit_function(self) -> Callable:
         """
@@ -186,7 +178,7 @@ class DFO(MinimizerBase):
             weights = np.sqrt(np.abs(y))
 
         if model is None:
-            model = self.make_model(new_pars=parameters)
+            model = self._make_model(parameters=parameters)
             model = model(x, y, weights)
         self._cached_model = model
         self._cached_model.x = x
@@ -207,7 +199,7 @@ class DFO(MinimizerBase):
         global_object.stack.enabled = False
 
         try:
-            model_results = self.dfols_fit(model, **kwargs)
+            model_results = self._dfols_fit(model, **kwargs)
             self._set_parameter_fit_result(model_results, stack_status)
             results = self._gen_fit_results(model_results, weights)
         except Exception as e:
@@ -301,7 +293,7 @@ class DFO(MinimizerBase):
     def available_methods(self) -> List[str]:
         return ['leastsq']
 
-    def dfols_fit(self, model: Callable, **kwargs):
+    def _dfols_fit(self, model: Callable, **kwargs):
         """
         Method to convert EasyScience styling to DFO-LS styling (yes, again)
 
