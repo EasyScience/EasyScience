@@ -2,7 +2,6 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
 
-# from numbers import Number
 from typing import Callable
 from typing import List
 from typing import Optional
@@ -10,20 +9,23 @@ from typing import Optional
 import dfols
 import numpy as np
 
+from easyscience.Objects.ObjectClasses import BaseObj
+from easyscience.Objects.Variable import Parameter
+
 from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
 from .minimizer_base import MinimizerBase
 from .utils import FitError
 from .utils import FitResults
 
 
-class DFO(MinimizerBase):  # noqa: S101
+class DFO(MinimizerBase):
     """
     This is a wrapper to Derivative Free Optimisation for Least Square: https://numericalalgorithmsgroup.github.io/dfols/
     """
 
     wrapping = 'dfo'
 
-    def __init__(self, obj, fit_function: Callable, method: Optional[str] = None):
+    def __init__(self, obj: BaseObj, fit_function: Callable, method: Optional[str] = None):
         """
         Initialize the fitting engine with a `BaseObj` and an arbitrary fitting function.
 
@@ -37,7 +39,7 @@ class DFO(MinimizerBase):  # noqa: S101
         super().__init__(obj=obj, fit_function=fit_function, method=method)
         self._p_0 = {}
 
-    def make_model(self, pars: Optional[List] = None) -> Callable:
+    def make_model(self, new_pars: Optional[List[Parameter]] = None) -> Callable:
         """
         Generate a model from the supplied `fit_function` and parameters in the base object.
         Note that this makes a callable as it needs to be initialized with *x*, *y*, *weights*
@@ -47,36 +49,39 @@ class DFO(MinimizerBase):  # noqa: S101
         """
         fit_func = self._generate_fit_function()
 
-        def outer(obj):
+        def outer(obj: DFO):
             def make_func(x, y, weights):
-                par = {}
-                if not pars:
-                    for name, item in obj._cached_pars.items():
-                        ## TODO clean when full move to new_variable
-                        from easyscience.Objects.new_variable import Parameter
+                ## TODO clean when full move to new_variable
+                from easyscience.Objects.new_variable import Parameter as NewParameter
 
-                        if isinstance(item, Parameter):
-                            par[MINIMIZER_PARAMETER_PREFIX + str(name)] = item.value
+                pars = {}
+                if not new_pars:
+                    for name, par in obj._cached_pars.items():
+                        #                        ## TODO clean when full move to new_variable
+                        #                        from easyscience.Objects.new_variable import Parameter
+
+                        if isinstance(par, NewParameter):
+                            pars[MINIMIZER_PARAMETER_PREFIX + str(name)] = par.value
                         else:
-                            par[MINIMIZER_PARAMETER_PREFIX + str(name)] = item.raw_value
+                            pars[MINIMIZER_PARAMETER_PREFIX + str(name)] = par.raw_value
 
                 else:
-                    for item in pars:
-                        ## TODO clean when full move to new_variable
-                        from easyscience.Objects.new_variable import Parameter
+                    for new_par in new_pars:
+                        #                        ## TODO clean when full move to new_variable
+                        #                        from easyscience.Objects.new_variable import Parameter as NewParameter
 
-                        if isinstance(item, Parameter):
-                            par[MINIMIZER_PARAMETER_PREFIX + item.unique_name] = item.value
+                        if isinstance(new_par, NewParameter):
+                            pars[MINIMIZER_PARAMETER_PREFIX + new_par.unique_name] = new_par.value
                         else:
-                            par[MINIMIZER_PARAMETER_PREFIX + item.unique_name] = item.raw_value
+                            pars[MINIMIZER_PARAMETER_PREFIX + new_par.unique_name] = new_par.raw_value
 
-                def residuals(x0) -> np.ndarray:
-                    for idx, par_name in enumerate(par.keys()):
-                        par[par_name] = x0[idx]
-                    return (y - fit_func(x, **par)) / weights
+                def residuals(pars_values: List[float]) -> np.ndarray:
+                    for idx, par_name in enumerate(pars.keys()):
+                        pars[par_name] = pars_values[idx]
+                    return (y - fit_func(x, **pars)) / weights
 
-                setattr(residuals, 'x', x)
-                setattr(residuals, 'y', y)
+                #                setattr(residuals, 'x', x)
+                #                setattr(residuals, 'y', y)
                 return residuals
 
             return make_func
@@ -181,9 +186,11 @@ class DFO(MinimizerBase):  # noqa: S101
             weights = np.sqrt(np.abs(y))
 
         if model is None:
-            model = self.make_model(pars=parameters)
+            model = self.make_model(new_pars=parameters)
             model = model(x, y, weights)
         self._cached_model = model
+        self._cached_model.x = x
+        self._cached_model.y = y
 
         ## TODO clean when full move to new_variable
         from easyscience.Objects.new_variable import Parameter

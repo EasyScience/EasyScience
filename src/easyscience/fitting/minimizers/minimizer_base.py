@@ -13,8 +13,7 @@ from typing import Union
 
 import numpy as np
 
-#causes circular import when Parameter is imported
-#from easyscience.Objects.ObjectClasses import BaseObj 
+from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.Variable import Parameter
 
 from ..Constraints import ObjConstraint
@@ -31,7 +30,7 @@ class MinimizerBase(metaclass=ABCMeta):
 
     wrapping: str = None
 
-    def __init__(self, obj, fit_function: Callable, method: Optional[str] = None): # todo after constraint changes, add type hint: obj: BaseObj  # noqa: E501
+    def __init__(self, obj: BaseObj, fit_function: Callable, method: Optional[str] = None):
         if method not in self.available_methods():
             raise FitError(f'Method {method} not available in {self.__class__}')
         self._object = obj
@@ -119,7 +118,7 @@ class MinimizerBase(metaclass=ABCMeta):
         if minimizer_parameters is None:
             minimizer_parameters = {}
         if not isinstance(minimizer_parameters, dict):
-            raise TypeError("minimizer_parameters must be a dictionary")
+            raise TypeError('minimizer_parameters must be a dictionary')
 
         if self._fit_function is None:
             # This will also generate self._cached_pars
@@ -170,7 +169,7 @@ class MinimizerBase(metaclass=ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def convert_to_par_object(obj): # todo after constraint changes, add type hint: obj: BaseObj
+    def convert_to_par_object(obj):  # todo after constraint changes, add type hint: obj: BaseObj
         """
         Convert an `EasyScience.Objects.Base.Parameter` object to an engine Parameter object.
         """
@@ -210,4 +209,3 @@ class MinimizerBase(metaclass=ABCMeta):
         z = stats.norm.pdf(z)
         error_matrix = z * np.sqrt(error_matrix)
         return error_matrix
-
