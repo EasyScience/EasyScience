@@ -26,7 +26,6 @@ from easyscience.fitting.Constraints import SelfConstraint
 from easyscience.global_object.undo_redo import property_stack_deco
 from easyscience.Utils.Exceptions import CoreSetException
 
-from .descriptor_number import INFINITESIMAL
 from .descriptor_number import DescriptorNumber
 
 Constraints = namedtuple('Constraints', ['user', 'builtin', 'virtual'])
@@ -582,14 +581,14 @@ class Parameter(DescriptorNumber):
         if isinstance(other, numbers.Number):
             original_other = other
             if other == 0:
-                other = INFINITESIMAL
+                raise ZeroDivisionError("Cannot divide by zero")
             new_value = self.full_value / other
             combinations = [self.min / other, self.max / other]
             name = f"{self.name} / {original_other}"
         elif isinstance(other, DescriptorNumber):
             original_value = other.value
             if original_value == 0:
-                other.value = INFINITESIMAL
+                raise ZeroDivisionError("Cannot divide by zero")
             new_value = self.full_value / other.full_value
             if isinstance(other, Parameter):
                 if (other.min < 0 and other.max > 0):
@@ -625,7 +624,7 @@ class Parameter(DescriptorNumber):
     def __rtruediv__(self, other: Union[DescriptorNumber, numbers.Number]) -> Parameter:
         original_self = self.value
         if original_self == 0:
-            self.value = INFINITESIMAL
+            raise ZeroDivisionError("Cannot divide by zero")
         if isinstance(other, numbers.Number):
             new_value = other / self.full_value
             other_value = other

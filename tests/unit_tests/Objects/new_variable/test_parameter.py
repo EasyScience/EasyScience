@@ -7,7 +7,6 @@ from scipp import UnitError
 
 from easyscience.Objects.new_variable.parameter import Parameter
 from easyscience.Objects.new_variable.descriptor_number import DescriptorNumber
-from easyscience.Objects.new_variable.descriptor_number import INFINITESIMAL
 from easyscience.Objects.new_variable.descriptor_str import DescriptorStr
 from easyscience import global_object
 
@@ -668,9 +667,8 @@ class TestParameter:
             (Parameter("test", 2, "s", 0.01, -10, 20),  Parameter("name / test", 0.5, "m/s", 0.003125, -np.Inf, np.Inf),       Parameter("test / name", 2, "s/m", 0.05, -np.Inf, np.Inf)),
             (Parameter("test", 2, "dm", 0.01, -10, 20), Parameter("name / test", 5, "dimensionless", 0.3125, -np.Inf, np.Inf), Parameter("test / name", 0.2, "dimensionless", 0.0005, -np.Inf, np.Inf)),
             (Parameter("test", 2, "s", 0.01, 0, 20),    Parameter("name / test", 0.5, "m/s", 0.003125, 0.0, np.Inf),           Parameter("test / name", 2, "s/m", 0.05, 0.0, np.Inf)),
-            (Parameter("test", -2, "s", 0.01, -10, 0),  Parameter("name / test", -0.5, "m/s", 0.003125, -np.Inf, 0.0),         Parameter("test / name", -2, "s/m", 0.05, -np.Inf, 0.0)),
-            (Parameter("test", 0, "s", 0.01, -10, 20),  Parameter("name / test", 1e9, "m/s", 1e34, -np.Inf, np.Inf),           Parameter("test / name", 0, "s/m", 0.01, -np.Inf, np.Inf))],
-            ids=["crossing_zero", "base_unit_conversion_dimensionless", "only_positive", "only_negative", "zero_value"])
+            (Parameter("test", -2, "s", 0.01, -10, 0),  Parameter("name / test", -0.5, "m/s", 0.003125, -np.Inf, 0.0),         Parameter("test / name", -2, "s/m", 0.05, -np.Inf, 0.0))],
+            ids=["crossing_zero", "base_unit_conversion_dimensionless", "only_positive", "only_negative"])
     def test_division_with_parameter(self, parameter : Parameter, test, expected, expected_reverse):
         # When 
         parameter._callback = property()
@@ -714,10 +712,10 @@ class TestParameter:
         assert result.max == expected.max
 
     @pytest.mark.parametrize("test, expected, expected_reverse", [
-            (DescriptorNumber(name="test", value=2, variance=0.1, unit="dm^2"), Parameter("name / test", 0.5, "cm**-1", 0.00875, 0, 5), Parameter("test / name", 2.0, "cm", 0.14, 0.2, np.Inf)),
-            (DescriptorNumber(name="test", value=0, variance=0.1, unit="dm^2"), Parameter("name / test", 1e9, "cm**-1,", 1e35, 0, 1e10), DescriptorNumber("test / name", 0.0, "cm", 0.1))],
-            ids=["regular", "zero_value"])
-    def test_division_with_descriptor_number(self, parameter : Parameter, test, expected, expected_reverse):
+            (DescriptorNumber(name="test", value=2, variance=0.1, unit="s"), Parameter("name / test", 0.5, "m/s", 0.00875, 0, 5), Parameter("test / name", 2, "s/m", 0.14, 0.2, np.Inf)),
+            (2, Parameter("name / 2", 0.5, "m", 0.0025, 0, 5), Parameter("2 / name", 2, "m**-1", 0.04, 0.2, np.Inf))],
+            ids=["descriptor_number", "number"])
+    def test_division_with_descriptor_number_and_number(self, parameter : Parameter, test, expected, expected_reverse):
         # When 
         parameter._callback = property()
 
@@ -726,23 +724,39 @@ class TestParameter:
         result_reverse = test / parameter
 
         # Expect
-        assert type(result) == type(expected)
+        assert type(result) == Parameter
         assert result.name == expected.name
-        assert result.value == pytest.approx(expected.value)
+        assert result.value == expected.value
         assert result.unit == expected.unit
-        assert result.variance == pytest.approx(expected.variance)
-        if isinstance(result, Parameter):
-            assert result.min == expected.min
-            assert result.max == expected.max
+        assert result.variance == expected.variance
+        assert result.min == expected.min
+        assert result.max == expected.max
 
-        assert type(result_reverse) == type(expected_reverse)
+        assert type(result_reverse) == Parameter
         assert result_reverse.name == expected_reverse.name
-        assert result_reverse.value == pytest.approx(expected_reverse.value)
+        assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
-        assert result_reverse.variance == pytest.approx(expected_reverse.variance)
-        if isinstance(result_reverse, Parameter):
-            assert result_reverse.min == expected_reverse.min
-            assert result_reverse.max == expected_reverse.max
+        assert result_reverse.variance == expected_reverse.variance
+        assert result_reverse.min == expected_reverse.min
+        assert result_reverse.max == expected_reverse.max
+
+    @pytest.mark.parametrize("test, expected", [
+            (DescriptorNumber(name="test", value=0, variance=0.1, unit="s"), DescriptorNumber("test / name", 0.0, "s/m", 0.1)),
+            (0, DescriptorNumber("0 / name", 0.0, "1/m", 0.0))],
+            ids=["descriptor_number", "number"])
+    def test_zero_value_dividided_by_parameter(self, parameter : Parameter, test, expected):
+        # When 
+        parameter._callback = property()
+
+        # Then
+        result = test / parameter
+
+        # Expect
+        assert type(result) == DescriptorNumber
+        assert result.name == expected.name
+        assert result.value == expected.value
+        assert result.unit == expected.unit
+        assert result.variance == expected.variance
 
     @pytest.mark.parametrize("first, second, expected", [
         (DescriptorNumber("name", 1, "m", 0.01),  Parameter("test", 2, "s", 0.1, -10, 10), Parameter("name / test", 0.5, "m/s", 0.00875, -np.Inf, np.Inf)),
@@ -763,33 +777,20 @@ class TestParameter:
         assert result.min == expected.min
         assert result.max == expected.max
 
-    @pytest.mark.parametrize("test, expected, expected_reverse", [
-            (2, Parameter("name / 2", 0.5, "m", 0.0025, 0, 5), Parameter("2 / name", 2, "m**-1", 0.04, 0.2, np.Inf)),
-            (0, Parameter("name / 0", 1/INFINITESIMAL, "m", (1/(INFINITESIMAL*10))**2, 0, 1/INFINITESIMAL*10), DescriptorNumber("0 / name", 0.0, "m**-1", 0.0))],
-            ids=["regular", "zero_value"])
-    def test_division_with_numbers(self, parameter : Parameter, test, expected, expected_reverse):
+    @pytest.mark.parametrize("test", [0, DescriptorNumber("test", 0, "s", 0.1)], ids=["number", "descriptor_number"])
+    def test_divide_parameter_by_zero(self, parameter : Parameter, test):
         # When 
         parameter._callback = property()
 
-        # Then
-        result = parameter / test
-        result_reverse = test / parameter
+        # Then Expect
+        with pytest.raises(ZeroDivisionError):
+            result = parameter / test
 
-        # Expect
-        assert type(result) == type(expected)
-        assert result.name == expected.name
-        assert result.value == pytest.approx(expected.value)
-        assert result.unit == expected.unit
-        assert result.variance == pytest.approx(expected.variance)
-        if isinstance(result, Parameter):
-            assert result.min == expected.min
-            assert result.max == pytest.approx(expected.max)
+    def test_divide_by_zero_value_parameter(self):
+        # When
+        descriptor = DescriptorNumber("test", 1, "s", 0.1)
+        parameter = Parameter("name", 0, "m", 0.01)
 
-        assert type(result_reverse) == type(expected_reverse)
-        assert result_reverse.name == expected_reverse.name
-        assert result_reverse.value == pytest.approx(expected_reverse.value)
-        assert result_reverse.unit == expected_reverse.unit
-        assert result_reverse.variance == pytest.approx(expected_reverse.variance)
-        if isinstance(result_reverse, Parameter):
-            assert result_reverse.min == expected_reverse.min
-            assert result_reverse.max == pytest.approx(expected_reverse.max)
+        # Then Expect
+        with pytest.raises(ZeroDivisionError):
+            result = descriptor / parameter
