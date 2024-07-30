@@ -18,7 +18,6 @@ from easyscience.Objects.Variable import Parameter
 
 from ..Constraints import ObjConstraint
 from .utils import FitError
-from .utils import FitResults
 
 MINIMIZER_PARAMETER_PREFIX = 'p'
 
@@ -113,26 +112,6 @@ class MinimizerBase(metaclass=ABCMeta):
 
         return self._fit_function(x, **minimizer_parameters, **kwargs)
 
-    def _prepare_parameters(self, parameters: dict[str, float]) -> dict[str, float]:
-        """
-        Prepare the parameters for the minimizer.
-
-        :param parameters: Dict of parameters for the minimizer with names as keys.
-        """
-        pars = self._cached_pars
-
-        for name, item in pars.items():
-            parameter_name = MINIMIZER_PARAMETER_PREFIX + str(name)
-            if parameter_name not in parameters.keys():
-                ## TODO clean when full move to new_variable
-                from easyscience.Objects.new_variable import Parameter as NewParameter
-
-                if isinstance(item, NewParameter):
-                    parameters[parameter_name] = item.value
-                else:
-                    parameters[parameter_name] = item.raw_value
-        return parameters
-
     @abstractmethod
     def convert_to_pars_obj(self, par_list: Optional[Union[list]] = None):
         """
@@ -158,6 +137,26 @@ class MinimizerBase(metaclass=ABCMeta):
         """
         Convert an `EasyScience.Objects.Base.Parameter` object to an engine Parameter object.
         """
+
+    def _prepare_parameters(self, parameters: dict[str, float]) -> dict[str, float]:
+        """
+        Prepare the parameters for the minimizer.
+
+        :param parameters: Dict of parameters for the minimizer with names as keys.
+        """
+        pars = self._cached_pars
+
+        for name, item in pars.items():
+            parameter_name = MINIMIZER_PARAMETER_PREFIX + str(name)
+            if parameter_name not in parameters.keys():
+                ## TODO clean when full move to new_variable
+                from easyscience.Objects.new_variable import Parameter as NewParameter
+
+                if isinstance(item, NewParameter):
+                    parameters[parameter_name] = item.value
+                else:
+                    parameters[parameter_name] = item.raw_value
+        return parameters
 
     @staticmethod
     def _error_from_jacobian(jacobian: np.ndarray, residuals: np.ndarray, confidence: float = 0.95) -> np.ndarray:

@@ -8,7 +8,6 @@ from unittest.mock import MagicMock
 import easyscience.fitting.minimizers.minimizer_lmfit
 
 from easyscience.fitting.minimizers.minimizer_lmfit import LMFit
-from easyscience.fitting.minimizers.minimizer_lmfit import _wrap_to_lm_signature
 from easyscience.Objects.new_variable import Parameter
 from lmfit import Parameter as LMParameter
 from easyscience.Objects.ObjectClasses import BaseObj
@@ -363,23 +362,22 @@ class TestLMFit():
         assert str(domain_fit_results.minimizer_engine) == "<class 'easyscience.fitting.minimizers.minimizer_lmfit.LMFit'>"
         assert domain_fit_results.fit_args is None
 
-def test_wrap_to_lm_signature() -> None:
-    # When
-    mock_parm_1 = MagicMock(Parameter)
-    mock_parm_1.value = 1.0
-    mock_parm_2 = MagicMock(Parameter)
-    mock_parm_2.value = 2.0
-    pars = {1: mock_parm_1, 2: mock_parm_2}
+    def test_wrap_to_lm_signature(self, minimizer: LMFit) -> None:
+        # When
+        mock_parm_1 = MagicMock(Parameter)
+        mock_parm_1.value = 1.0
+        mock_parm_2 = MagicMock(Parameter)
+        mock_parm_2.value = 2.0
+        pars = {1: mock_parm_1, 2: mock_parm_2}
 
-
-    # Then
-    signature = _wrap_to_lm_signature(pars)
-    
-    # Expect
-    wrapped_parameters = [
-        InspectParameter('x', InspectParameter.POSITIONAL_OR_KEYWORD, annotation=_empty),
-        InspectParameter('p1', InspectParameter.POSITIONAL_OR_KEYWORD, annotation=_empty, default=1.0),
-        InspectParameter('p2', InspectParameter.POSITIONAL_OR_KEYWORD, annotation=_empty, default=2.0)
-    ]
-    expected_signature = Signature(wrapped_parameters)
-    assert signature == expected_signature
+        # Then
+        signature = minimizer._wrap_to_lm_signature(pars)
+        
+        # Expect
+        wrapped_parameters = [
+            InspectParameter('x', InspectParameter.POSITIONAL_OR_KEYWORD, annotation=_empty),
+            InspectParameter('p1', InspectParameter.POSITIONAL_OR_KEYWORD, annotation=_empty, default=1.0),
+            InspectParameter('p2', InspectParameter.POSITIONAL_OR_KEYWORD, annotation=_empty, default=2.0)
+        ]
+        expected_signature = Signature(wrapped_parameters)
+        assert signature == expected_signature

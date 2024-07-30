@@ -138,7 +138,7 @@ class LMFit(MinimizerBase):  # noqa: S101
             # TODO Loading or manipulating data here
             return return_data
 
-        lm_fit_function.__signature__ = _wrap_to_lm_signature(self._cached_pars)
+        lm_fit_function.__signature__ = self._wrap_to_lm_signature(self._cached_pars)
         return lm_fit_function
 
     def fit(
@@ -324,29 +324,29 @@ class LMFit(MinimizerBase):  # noqa: S101
             'bfgs',
         ]
 
+    @staticmethod
+    def _wrap_to_lm_signature(parameters: Dict[int, Union[Parameter, NewParameter]]) -> Signature:
+        """
+        Wrap the function signature.
+        This is done as lmfit wants the function to be in the form:
+        f = (x, a=1, b=2)...
+        Where we need to be generic. Note that this won't hold for much outside of this scope.
+        """
+        wrapped_parameters = []
+        wrapped_parameters.append(InspectParameter('x', InspectParameter.POSITIONAL_OR_KEYWORD, annotation=_empty))
+        for name, parameter in parameters.items():
+            ## TODO clean when full move to new_variable
+            if isinstance(parameter, NewParameter):
+                default_value = parameter.value
+            else:
+                default_value = parameter.raw_value
 
-def _wrap_to_lm_signature(parameters: Dict[int, Union[Parameter, NewParameter]]) -> Signature:
-    """
-    Wrap the function signature.
-    This is done as lmfit wants the function to be in the form:
-    f = (x, a=1, b=2)...
-    Where we need to be generic. Note that this won't hold for much outside of this scope.
-    """
-    wrapped_parameters = []
-    wrapped_parameters.append(InspectParameter('x', InspectParameter.POSITIONAL_OR_KEYWORD, annotation=_empty))
-    for name, parameter in parameters.items():
-        ## TODO clean when full move to new_variable
-        if isinstance(parameter, NewParameter):
-            default_value = parameter.value
-        else:
-            default_value = parameter.raw_value
-
-        wrapped_parameters.append(
-            InspectParameter(
-                MINIMIZER_PARAMETER_PREFIX + str(name),
-                InspectParameter.POSITIONAL_OR_KEYWORD,
-                annotation=_empty,
-                default=default_value,
+            wrapped_parameters.append(
+                InspectParameter(
+                    MINIMIZER_PARAMETER_PREFIX + str(name),
+                    InspectParameter.POSITIONAL_OR_KEYWORD,
+                    annotation=_empty,
+                    default=default_value,
+                )
             )
-        )
-    return Signature(wrapped_parameters)
+        return Signature(wrapped_parameters)

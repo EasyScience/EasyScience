@@ -3,6 +3,7 @@
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
 
 from typing import Callable
+from typing import Dict
 from typing import List
 from typing import Optional
 
@@ -39,103 +40,8 @@ class DFO(MinimizerBase):
         super().__init__(obj=obj, fit_function=fit_function, method=method)
         self._p_0 = {}
 
-    def _make_model(self, parameters: Optional[List[Parameter]] = None) -> Callable:
-        """
-        Generate a model from the supplied `fit_function` and parameters in the base object.
-        Note that this makes a callable as it needs to be initialized with *x*, *y*, *weights*
-
-        :return: Callable model which returns residuals
-        :rtype: Callable
-        """
-        fit_func = self._generate_fit_function()
-
-        def _outer(obj: DFO):
-            def _make_func(x, y, weights):
-                ## TODO clean when full move to new_variable
-                from easyscience.Objects.new_variable import Parameter as NewParameter
-
-                pars = {}
-                if not parameters:
-                    for name, par in obj._cached_pars.items():
-                        if isinstance(par, NewParameter):
-                            pars[MINIMIZER_PARAMETER_PREFIX + str(name)] = par.value
-                        else:
-                            pars[MINIMIZER_PARAMETER_PREFIX + str(name)] = par.raw_value
-
-                else:
-                    for new_par in parameters:
-                        if isinstance(new_par, NewParameter):
-                            pars[MINIMIZER_PARAMETER_PREFIX + new_par.unique_name] = new_par.value
-                        else:
-                            pars[MINIMIZER_PARAMETER_PREFIX + new_par.unique_name] = new_par.raw_value
-
-                def _residuals(pars_values: List[float]) -> np.ndarray:
-                    for idx, par_name in enumerate(pars.keys()):
-                        pars[par_name] = pars_values[idx]
-                    return (y - fit_func(x, **pars)) / weights
-
-                return _residuals
-
-            return _make_func
-
-        return _outer(self)
-
-    def _generate_fit_function(self) -> Callable:
-        """
-        Using the user supplied `fit_function`, wrap it in such a way we can update `Parameter` on
-        iterations.
-
-        :return: a fit function which is compatible with bumps models
-        :rtype: Callable
-        """
-        # Original fit function
-        func = self._original_fit_function
-        # Get a list of `Parameters`
-        self._cached_pars = {}
-        self._cached_pars_vals = {}
-        for parameter in self._object.get_fit_parameters():
-            key = parameter.unique_name
-            self._cached_pars[key] = parameter
-            self._cached_pars_vals[key] = (parameter.value, parameter.error)
-
-        # Make a new fit function
-        def fit_function(x: np.ndarray, **kwargs):
-            """
-            Wrapped fit function which now has an EasyScience compatible form
-
-            :param x: array of data points to be calculated
-            :type x: np.ndarray
-            :param kwargs: key word arguments
-            :return: points calculated at `x`
-            :rtype: np.ndarray
-            """
-            # Update the `Parameter` values and the callback if needed
-            # TODO THIS IS NOT THREAD SAFE :-(
-            for name, value in kwargs.items():
-                par_name = name[1:]
-                if par_name in self._cached_pars.keys():
-                    ## TODO clean when full move to new_variable
-                    from easyscience.Objects.new_variable import Parameter
-
-                    if isinstance(self._cached_pars[par_name], Parameter):
-                        # This will take into account constraints
-                        if self._cached_pars[par_name].value != value:
-                            self._cached_pars[par_name].value = value
-                    else:
-                        # This will take into account constraints
-                        if self._cached_pars[par_name].raw_value != value:
-                            self._cached_pars[par_name].value = value
-
-                    # Since we are calling the parameter fset will be called.
-            # TODO Pre processing here
-            for constraint in self.fit_constraints():
-                constraint()
-            return_data = func(x)
-            # TODO Loading or manipulating data here
-            return return_data
-
-        self._fit_function = fit_function
-        return fit_function
+    def available_methods(self) -> List[str]:
+        return ['leastsq']
 
     def fit(
         self,
@@ -199,7 +105,7 @@ class DFO(MinimizerBase):
         global_object.stack.enabled = False
 
         try:
-            model_results = self._dfols_fit(model, **kwargs)
+            model_results = self._dfo_fit(self._cached_pars, model, **kwargs)
             self._set_parameter_fit_result(model_results, stack_status)
             results = self._gen_fit_results(model_results, weights)
         except Exception as e:
@@ -210,18 +116,114 @@ class DFO(MinimizerBase):
 
     def convert_to_pars_obj(self, par_list: Optional[list] = None):
         """
-        NOTE THAT THIS IS NOT NEEDED FOR DFO-LS
+        Required by interface but not needed for DFO-LS
         """
-
         pass
 
     @staticmethod
     def convert_to_par_object(obj) -> None:
         """
-        Convert an `EasyScience.Objects.Base.Parameter` object to a new Parameter object
-        NOTE THAT THIS IS NOT NEEDED FOR DFO-LS
+        Required by interface but not needed for DFO-LS
         """
         pass
+
+    def _make_model(self, parameters: Optional[List[Parameter]] = None) -> Callable:
+        """
+        Generate a model from the supplied `fit_function` and parameters in the base object.
+        Note that this makes a callable as it needs to be initialized with *x*, *y*, *weights*
+
+        :return: Callable model which returns residuals
+        :rtype: Callable
+        """
+        fit_func = self._generate_fit_function()
+
+        def _outer(obj: DFO):
+            def _make_func(x, y, weights):
+                ## TODO clean when full move to new_variable
+                from easyscience.Objects.new_variable import Parameter as NewParameter
+
+                pars = {}
+                if not parameters:
+                    for name, par in obj._cached_pars.items():
+                        if isinstance(par, NewParameter):
+                            pars[MINIMIZER_PARAMETER_PREFIX + str(name)] = par.value
+                        else:
+                            pars[MINIMIZER_PARAMETER_PREFIX + str(name)] = par.raw_value
+
+                else:
+                    for new_par in parameters:
+                        if isinstance(new_par, NewParameter):
+                            pars[MINIMIZER_PARAMETER_PREFIX + new_par.unique_name] = new_par.value
+                        else:
+                            pars[MINIMIZER_PARAMETER_PREFIX + new_par.unique_name] = new_par.raw_value
+
+                def _residuals(pars_values: List[float]) -> np.ndarray:
+                    for idx, par_name in enumerate(pars.keys()):
+                        pars[par_name] = pars_values[idx]
+                    return (y - fit_func(x, **pars)) / weights
+
+                return _residuals
+
+            return _make_func
+
+        return _outer(self)
+
+    def _generate_fit_function(self) -> Callable:
+        """
+        Using the user supplied `fit_function`, wrap it in such a way we can update `Parameter` on
+        iterations.
+
+        :return: a fit function which is compatible with bumps models
+        :rtype: Callable
+        """
+        # Original fit function
+        func = self._original_fit_function
+        # Get a list of `Parameters`
+        self._cached_pars = {}
+        self._cached_pars_vals = {}
+        for parameter in self._object.get_fit_parameters():
+            key = parameter.unique_name
+            self._cached_pars[key] = parameter
+            self._cached_pars_vals[key] = (parameter.value, parameter.error)
+
+        # Make a new fit function
+        def _fit_function(x: np.ndarray, **kwargs):
+            """
+            Wrapped fit function which now has an EasyScience compatible form
+
+            :param x: array of data points to be calculated
+            :type x: np.ndarray
+            :param kwargs: key word arguments
+            :return: points calculated at `x`
+            :rtype: np.ndarray
+            """
+            # Update the `Parameter` values and the callback if needed
+            # TODO THIS IS NOT THREAD SAFE :-(
+            for name, value in kwargs.items():
+                par_name = name[1:]
+                if par_name in self._cached_pars.keys():
+                    ## TODO clean when full move to new_variable
+                    from easyscience.Objects.new_variable import Parameter
+
+                    if isinstance(self._cached_pars[par_name], Parameter):
+                        # This will take into account constraints
+                        if self._cached_pars[par_name].value != value:
+                            self._cached_pars[par_name].value = value
+                    else:
+                        # This will take into account constraints
+                        if self._cached_pars[par_name].raw_value != value:
+                            self._cached_pars[par_name].value = value
+
+                    # Since we are calling the parameter fset will be called.
+            # TODO Pre processing here
+            for constraint in self.fit_constraints():
+                constraint()
+            return_data = func(x)
+            # TODO Loading or manipulating data here
+            return return_data
+
+        self._fit_function = _fit_function
+        return _fit_function
 
     def _set_parameter_fit_result(self, fit_result, stack_status, ci: float = 0.95) -> None:
         """
@@ -264,19 +266,19 @@ class DFO(MinimizerBase):
             if getattr(results, name, False):
                 setattr(results, name, value)
         results.success = not bool(fit_results.flag)
-        pars = self._cached_pars
-        item = {}
-        for p_name, par in pars.items():
+
+        pars = {}
+        for p_name, par in self._cached_pars.items():
             ## TODO clean when full move to new_variable
             from easyscience.Objects.new_variable import Parameter
 
             if isinstance(par, Parameter):
-                item[f'p{p_name}'] = par.value
+                pars[f'p{p_name}'] = par.value
             else:
-                item[f'p{p_name}'] = par.raw_value
+                pars[f'p{p_name}'] = par.raw_value
+        results.p = pars
 
         results.p0 = self._p_0
-        results.p = item
         results.x = self._cached_model.x
         results.y_obs = self._cached_model.y
         results.y_calc = self.evaluate(results.x, minimizer_parameters=results.p)
@@ -290,10 +292,8 @@ class DFO(MinimizerBase):
 
         return results
 
-    def available_methods(self) -> List[str]:
-        return ['leastsq']
-
-    def _dfols_fit(self, model: Callable, **kwargs):
+    @staticmethod
+    def _dfo_fit(pars: Dict[str, Parameter], model: Callable, **kwargs):
         """
         Method to convert EasyScience styling to DFO-LS styling (yes, again)
 
@@ -305,23 +305,23 @@ class DFO(MinimizerBase):
         """
 
         ## TODO clean when full move to new_variable
-        from easyscience.Objects.new_variable import Parameter
+        from easyscience.Objects.new_variable import Parameter as NewParameter
 
-        if isinstance(list(self._cached_pars.values())[0], Parameter):
-            x0 = np.array([par.value for par in iter(self._cached_pars.values())])
+        if isinstance(list(pars.values())[0], NewParameter):
+            pars_values = np.array([par.value for par in iter(pars.values())])
         else:
-            x0 = np.array([par.raw_value for par in iter(self._cached_pars.values())])
+            pars_values = np.array([par.raw_value for par in iter(pars.values())])
 
         bounds = (
-            np.array([par.min for par in iter(self._cached_pars.values())]),
-            np.array([par.max for par in iter(self._cached_pars.values())]),
+            np.array([par.min for par in iter(pars.values())]),
+            np.array([par.max for par in iter(pars.values())]),
         )
         # https://numericalalgorithmsgroup.github.io/dfols/build/html/userguide.html
         if np.isinf(bounds).any():
-            results = dfols.solve(model, x0, bounds=bounds, **kwargs)
+            results = dfols.solve(model, pars_values, bounds=bounds, **kwargs)
         else:
             # It is only possible to scale (normalize) variables if they are bound (different from inf)
-            results = dfols.solve(model, x0, bounds=bounds, scaling_within_bounds=True, **kwargs)
+            results = dfols.solve(model, pars_values, bounds=bounds, scaling_within_bounds=True, **kwargs)
 
         if 'Success' not in results.msg:
             raise FitError(f'Fit failed with message: {results.msg}')
