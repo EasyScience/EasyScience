@@ -100,8 +100,7 @@ class TestLMFit():
         minimizer._object = mock_obj
 
         mock_wrap_to_lm_signature = MagicMock(return_value='signature')
-        monkeypatch.setattr(easyscience.fitting.minimizers.minimizer_lmfit, "_wrap_to_lm_signature", mock_wrap_to_lm_signature)
-
+        minimizer._wrap_to_lm_signature = mock_wrap_to_lm_signature
         minimizer._original_fit_function = MagicMock(return_value='fit_function_return')
 
         # Then
@@ -123,7 +122,7 @@ class TestLMFit():
         minimizer._object = mock_obj
 
         mock_wrap_to_lm_signature = MagicMock(return_value='signature')
-        monkeypatch.setattr(easyscience.fitting.minimizers.minimizer_lmfit, "_wrap_to_lm_signature", mock_wrap_to_lm_signature)
+        minimizer._wrap_to_lm_signature = mock_wrap_to_lm_signature
 
         minimizer._original_fit_function = MagicMock(return_value='fit_function_return')
 
