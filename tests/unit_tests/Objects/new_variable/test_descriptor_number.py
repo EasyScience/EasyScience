@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 import scipp as sc
+from scipp import UnitError
 
 from scipp import UnitError
 
@@ -58,7 +59,7 @@ class TestDescriptorNumber:
 
     def test_init_sc_unit_unknown(self):
         # When Then Expect
-        with pytest.raises(ValueError):
+        with pytest.raises(UnitError):
             DescriptorNumber(
                 name="name",
                 value=1,
@@ -327,3 +328,40 @@ class TestDescriptorNumber:
         assert result_reverse.value == 2.0
         assert result_reverse.unit == "m"
         assert result_reverse.variance == 0.4
+
+    @pytest.mark.parametrize("test, expected", [
+        (DescriptorNumber("test", 2, "m^2", 0.01,),   DescriptorNumber("name / test", 0.5, "1/m", 0.025625)),
+        (DescriptorNumber("test", 0, "m^2", 0.01),   DescriptorNumber("name / test", 1e9, "1/m", 1e34))],
+        ids=["regular", "zero_value"])
+    def test_division(self, descriptor: DescriptorNumber, test, expected):
+        # When Then
+        result = descriptor / test
+
+        # Expect
+        assert type(result) == DescriptorNumber
+        assert result.name == expected.name
+        assert result.value == pytest.approx(expected.value)
+        assert result.unit == expected.unit
+        assert result.variance == pytest.approx(expected.variance)
+
+    @pytest.mark.parametrize("test, expected, expected_reverse", [
+        (2, DescriptorNumber("name / 2", 0.5, "m", 0.025), DescriptorNumber("2 / name", 2, "1/m", 0.4)),
+        (0, DescriptorNumber("name / 0", 1e9, "m", 1e17), DescriptorNumber("0 / name", 0, "1/m", 0))],
+        ids=["regular", "zero_value"])
+    def test_division_with_scalar(self, descriptor: DescriptorNumber, test, expected, expected_reverse):
+        # When Then
+        result = descriptor / test
+        result_reverse = test / descriptor
+
+        # Expect
+        assert type(result) == DescriptorNumber
+        assert result.name == expected.name
+        assert result.value == pytest.approx(expected.value)
+        assert result.unit == expected.unit
+        assert result.variance == pytest.approx(expected.variance)
+
+        assert type(result_reverse) == DescriptorNumber
+        assert result_reverse.name == expected_reverse.name
+        assert result_reverse.value == pytest.approx(expected_reverse.value)
+        assert result_reverse.unit == expected_reverse.unit
+        assert result_reverse.variance == pytest.approx(expected_reverse.variance)

@@ -426,8 +426,9 @@ class Parameter(DescriptorNumber):
         s.append('bounds=[%s:%s]' % (repr(self.min), repr(self.max)))
         return '%s>' % ', '.join(s)
 
-    def __float__(self) -> float:
-        return float(self._scalar.value)
+    # Seems redundant
+    # def __float__(self) -> float:
+    #     return float(self._scalar.value)
     
     def __add__(self, other: Union[DescriptorNumber, Parameter, numbers.Number]) -> Parameter:
         if isinstance(other, numbers.Number):
@@ -591,7 +592,7 @@ class Parameter(DescriptorNumber):
                 other.value = INFINITESIMAL
             new_value = self.full_value / other.full_value
             if isinstance(other, Parameter):
-                if (other.min <= 0 and other.max >= 0):
+                if (other.min < 0 and other.max > 0):
                     combinations = [-np.Inf, np.Inf]
                 elif other.min == 0:
                     if (self.min < 0 and self.max > 0):
@@ -630,16 +631,16 @@ class Parameter(DescriptorNumber):
             other_value = other
             name = f"{other} / {self.name}"
             if other_value == 0:
-                return DescriptorNumber.from_scipp(name=name, value=new_value)
+                return DescriptorNumber.from_scipp(name=name, full_value=new_value)
         elif isinstance(other, DescriptorNumber):
             new_value = other.full_value / self.full_value
             other_value = other.value
             name = other.name+" / "+self.name
             if other_value == 0:
-                return DescriptorNumber.from_scipp(name=name, value=new_value)
+                return DescriptorNumber.from_scipp(name=name, full_value=new_value)
         else:
             return NotImplemented
-        if (self.min <= 0 and self.max >= 0):
+        if (self.min < 0 and self.max > 0):
             combinations = [-np.Inf, np.Inf]
         elif self.min == 0:
             if other_value > 0:
