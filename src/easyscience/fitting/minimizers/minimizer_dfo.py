@@ -48,8 +48,8 @@ class DFO(MinimizerBase):
         x: np.ndarray,
         y: np.ndarray,
         weights: Optional[np.ndarray] = None,
-        model=None,
-        parameters=None,
+        model: Optional[Callable] = None,
+        parameters: Optional[List[Parameter]] = None,
         method: str = None,
         xtol: float = 1e-6,
         ftol: float = 1e-8,
@@ -84,8 +84,8 @@ class DFO(MinimizerBase):
             weights = np.sqrt(np.abs(y))
 
         if model is None:
-            model = self._make_model(parameters=parameters)
-            model = model(x, y, weights)
+            model_function = self._make_model(parameters=parameters)
+            model = model_function(x, y, weights)
         self._cached_model = model
         self._cached_model.x = x
         self._cached_model.y = y

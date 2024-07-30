@@ -14,6 +14,8 @@ from bumps.names import Curve
 from bumps.names import FitProblem
 from bumps.parameter import Parameter as BumpsParameter
 
+from easyscience.Objects.Variable import Parameter
+
 from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
 from .minimizer_base import MinimizerBase
 from .utils import FitError
@@ -156,8 +158,8 @@ class Bumps(MinimizerBase):  # noqa: S101
         x: np.ndarray,
         y: np.ndarray,
         weights: Optional[np.ndarray] = None,
-        model=None,
-        parameters=None,
+        model: Optional[Callable] = None,
+        parameters: Optional[Parameter] = None,
         method: Optional[str] = None,
         minimizer_kwargs: Optional[dict] = None,
         engine_kwargs: Optional[dict] = None,

@@ -64,9 +64,9 @@ class MinimizerBase(metaclass=ABCMeta):
         x: np.ndarray,
         y: np.ndarray,
         weights: Optional[np.ndarray] = None,
-        model=None,
-        parameters=None,
-        method=None,
+        model: Optional[Callable] = None,
+        parameters: Optional[Parameter] = None,
+        method: Optional[str] = None,
         **kwargs,
     ) -> FitResults:
         """

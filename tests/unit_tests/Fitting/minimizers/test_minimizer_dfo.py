@@ -62,6 +62,7 @@ class TestDFOFit():
         minimizer._make_model.assert_called_once_with(parameters=None)
         minimizer._set_parameter_fit_result.assert_called_once_with('fit', False)
         minimizer._gen_fit_results.assert_called_once_with('fit', 1.4142135623730951)
+        mock_model_function.assert_called_once_with(1.0, 2.0, 1.4142135623730951)
 
     def test_generate_fit_function(self, minimizer: DFO) -> None:
         # When
