@@ -199,12 +199,13 @@ class DFO(MinimizerBase):
             """
             # Update the `Parameter` values and the callback if needed
             # TODO THIS IS NOT THREAD SAFE :-(
+            # TODO clean when full move to new_variable
+            from easyscience.Objects.new_variable import Parameter
+
             for name, value in kwargs.items():
                 par_name = name[1:]
                 if par_name in self._cached_pars.keys():
-                    ## TODO clean when full move to new_variable
-                    from easyscience.Objects.new_variable import Parameter
-
+                    # TODO clean when full move to new_variable
                     if isinstance(self._cached_pars[par_name], Parameter):
                         # This will take into account constraints
                         if self._cached_pars[par_name].value != value:
@@ -308,13 +309,13 @@ class DFO(MinimizerBase):
         from easyscience.Objects.new_variable import Parameter as NewParameter
 
         if isinstance(list(pars.values())[0], NewParameter):
-            pars_values = np.array([par.value for par in iter(pars.values())])
+            pars_values = np.array([par.value for par in pars.values()])
         else:
-            pars_values = np.array([par.raw_value for par in iter(pars.values())])
+            pars_values = np.array([par.raw_value for par in pars.values()])
 
         bounds = (
-            np.array([par.min for par in iter(pars.values())]),
-            np.array([par.max for par in iter(pars.values())]),
+            np.array([par.min for par in pars.values()]),
+            np.array([par.max for par in pars.values()]),
         )
         # https://numericalalgorithmsgroup.github.io/dfols/build/html/userguide.html
         if np.isinf(bounds).any():

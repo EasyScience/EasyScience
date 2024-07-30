@@ -2,6 +2,8 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/easyscience
 
-from .minimizer_base import MinimizerBase  # noqa: F401, E402
-from .utils import FitError  # noqa: F401, E402
-from .utils import FitResults  # noqa: F401, E402
+from .minimizer_base import MinimizerBase
+from .utils import FitError
+from .utils import FitResults
+
+__all__ = [MinimizerBase, FitError, FitResults]

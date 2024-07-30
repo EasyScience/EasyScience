@@ -18,6 +18,7 @@ from easyscience.Objects.Variable import Parameter
 
 from ..Constraints import ObjConstraint
 from .utils import FitError
+from .utils import FitResults
 
 MINIMIZER_PARAMETER_PREFIX = 'p'
 
@@ -67,7 +68,7 @@ class MinimizerBase(metaclass=ABCMeta):
         parameters=None,
         method=None,
         **kwargs,
-    ):
+    ) -> FitResults:
         """
         Perform a fit using the  engine.
 
@@ -133,7 +134,7 @@ class MinimizerBase(metaclass=ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def convert_to_par_object(obj):  # todo after constraint changes, add type hint: obj: BaseObj
+    def convert_to_par_object(obj: BaseObj):
         """
         Convert an `EasyScience.Objects.Base.Parameter` object to an engine Parameter object.
         """
@@ -146,12 +147,13 @@ class MinimizerBase(metaclass=ABCMeta):
         """
         pars = self._cached_pars
 
+        # TODO clean when full move to new_variable
+        from easyscience.Objects.new_variable import Parameter as NewParameter
+
         for name, item in pars.items():
             parameter_name = MINIMIZER_PARAMETER_PREFIX + str(name)
             if parameter_name not in parameters.keys():
-                ## TODO clean when full move to new_variable
-                from easyscience.Objects.new_variable import Parameter as NewParameter
-
+                # TODO clean when full move to new_variable
                 if isinstance(item, NewParameter):
                     parameters[parameter_name] = item.value
                 else:
