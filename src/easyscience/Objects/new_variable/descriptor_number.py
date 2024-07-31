@@ -336,6 +336,39 @@ class DescriptorNumber(DescriptorBase):
             return NotImplemented
         return DescriptorNumber.from_scipp(name=name, full_value=new_value)
 
+    def __pow__(self, other: Union[DescriptorNumber, numbers.Number]) -> DescriptorNumber:
+        if isinstance(other, numbers.Number):
+            exponent = other
+            name = f"{self.name} ** {other}"
+        elif type(other) == DescriptorNumber:
+            if other.unit != 'dimensionless':
+                raise UnitError("Exponents must be dimensionless")
+            if other.variance is not None:
+                raise ValueError("Exponents must not have variance")
+            exponent = other.value
+            name = self.name+" ** "+other.name
+        else:
+            return NotImplemented
+        try:
+            new_value = self.full_value ** exponent
+        except Exception as message:
+            raise message from None
+        return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+    
+    def __rpow__(self, other: numbers.Number) -> numbers.Number:
+        if isinstance(other, numbers.Number):
+            if self.unit != 'dimensionless':
+                raise UnitError("Exponents must be dimensionless")
+            if self.variance is not None:
+                raise ValueError("Exponents must not have variance")
+            try:
+                new_value = other ** self.full_value
+            except Exception as message:
+                raise message from None
+        else:
+            return NotImplemented
+        return new_value
+
     def _base_unit(self) -> str:
         string = str(self._scalar.unit)
         for i in range(len(string)):
