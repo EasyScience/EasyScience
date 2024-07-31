@@ -659,3 +659,28 @@ class Parameter(DescriptorNumber):
         parameter.convert_unit(parameter._base_unit())
         self.value = original_self
         return parameter
+    
+    def __pow__(self, other: Union[DescriptorNumber, numbers.Number]) -> Parameter:
+        if isinstance(other, numbers.Number):
+            exponent = other
+            name = f"{self.name} ** {other}"
+        elif type(other) == DescriptorNumber:
+            if other.unit != 'dimensionless':
+                raise UnitError("Exponents must be dimensionless")
+            if other.variance is not None:
+                raise ValueError("Exponents must not have variance")
+            exponent = other.value
+            name = self.name+" ** "+other.name
+        else:
+            return NotImplemented
+        try:
+            new_value = self.full_value ** exponent
+        except Exception as message:
+            raise message from None
+        if exponent % 2 == 0 and self.min <= 0 and self.max >= 0:
+            combinations = [0, self.max ** exponent]
+        else:
+            combinations = [self.min ** exponent, self.max ** exponent]
+        min_value = min(combinations)
+        max_value = max(combinations)
+        return Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)
