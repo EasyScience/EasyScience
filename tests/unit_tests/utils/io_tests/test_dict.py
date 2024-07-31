@@ -18,6 +18,7 @@ from .test_core import Descriptor
 from .test_core import check_dict
 from .test_core import dp_param_dict
 from .test_core import skip_dict
+from easyscience import global_object
 
 
 def recursive_remove(d, remove_keys: list) -> dict:
@@ -215,7 +216,7 @@ def test_custom_class_full_encode_with_numpy():
     except metadata.PackageNotFoundError:
         version = '0.0.0'
 
-    obj = B(Descriptor("a", 1.0), np.array([1.0, 2.0, 3.0]))
+    obj = B(Descriptor("a", 1.0, unique_name="a"), np.array([1.0, 2.0, 3.0]))
     full_enc = obj.encode(encoder=DictSerializer, full_encode=True)
     expected = {
         "@module": "tests.unit_tests.utils.io_tests.test_dict",
@@ -237,6 +238,7 @@ def test_custom_class_full_encode_with_numpy():
             "name": "a",
             "enabled": True,
             "value": 1.0,
+            "unique_name": "a",
             "url": "",
         },
     }
@@ -247,6 +249,7 @@ def test_custom_class_full_decode_with_numpy():
 
     obj = B(Descriptor("a", 1.0), np.array([1.0, 2.0, 3.0]))
     full_enc = obj.encode(encoder=DictSerializer, full_encode=True)
+    global_object.map._clear()
     obj2 = B.decode(full_enc, decoder=DictSerializer)
     assert obj.name == obj2.name
     assert obj.a.raw_value == obj2.a.raw_value
@@ -267,6 +270,7 @@ def test_variable_DictSerializer_decode(dp_kwargs: dict, dp_cls: Type[Descriptor
         data_dict["raw_value"] = data_dict.pop("value")
 
     enc = obj.encode(encoder=DictSerializer)
+    global_object.map._clear()
     dec = dp_cls.decode(enc, decoder=DictSerializer)
 
     for k in data_dict.keys():
@@ -287,6 +291,7 @@ def test_variable_DictSerializer_from_dict(dp_kwargs: dict, dp_cls: Type[Descrip
         data_dict["raw_value"] = data_dict.pop("value")
 
     enc = obj.encode(encoder=DictSerializer)
+    global_object.map._clear()
     dec = dp_cls.from_dict(enc)
 
     for k in data_dict.keys():

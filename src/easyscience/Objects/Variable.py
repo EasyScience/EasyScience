@@ -27,14 +27,14 @@ from typing import Union
 
 import numpy as np
 
-from easyscience import borg
+from easyscience import global_object
 from easyscience import pint
 from easyscience import ureg
-from easyscience.Fitting.Constraints import SelfConstraint
+from easyscience.fitting.Constraints import SelfConstraint
+from easyscience.global_object.undo_redo import property_stack_deco
 from easyscience.Objects.core import ComponentSerializer
 from easyscience.Utils.classTools import addProp
 from easyscience.Utils.Exceptions import CoreSetException
-from easyscience.Utils.UndoRedo import property_stack_deco
 
 if TYPE_CHECKING:
     from easyscience.Utils.typing import C
@@ -55,7 +55,7 @@ class Descriptor(ComponentSerializer):
     """
 
     _constructor = Q_
-    _borg = borg
+    _global_object = global_object
     _REDIRECT = {
         'value': lambda obj: obj.raw_value,
         'units': lambda obj: obj._args['units'],
@@ -69,6 +69,7 @@ class Descriptor(ComponentSerializer):
         name: str,
         value: Any,
         units: Optional[Union[str, ureg.Unit]] = None,
+        unique_name: Optional[str] = None,
         description: Optional[str] = None,
         url: Optional[str] = None,
         display_name: Optional[str] = None,
@@ -107,21 +108,23 @@ class Descriptor(ComponentSerializer):
         """
         if not hasattr(self, '_args'):
             self._args = {'value': None, 'units': ''}
-
+        if unique_name is None:
+            unique_name = self._unique_name_generator()
+        self._unique_name = unique_name
+        self.name = name
         # Let the collective know we've been assimilated
-        self._borg.map.add_vertex(self, obj_type='created')
+        self._global_object.map.add_vertex(self, obj_type='created')
         # Make the connection between self and parent
         if parent is not None:
-            self._borg.map.add_edge(parent, self)
+            self._global_object.map.add_edge(parent, self)
 
-        self.name: str = name
         # Attach units if necessary
         if isinstance(units, ureg.Unit):
             self._units = ureg.Quantity(1, units=deepcopy(units))
         elif isinstance(units, (str, type(None))):
             self._units = ureg.parse_expression(units)
         else:
-            raise AttributeError
+            raise AttributeError('Units must be a string or a pint unit object')
         # Clunky method of keeping self.value up to date
         self._type = type(value)
         self.__isBooleanValue = isinstance(value, bool)
@@ -178,6 +181,25 @@ class Descriptor(ComponentSerializer):
         if hasattr(self, '__old_class__'):
             cls = self.__old_class__
         return cls.from_dict, (state,)
+
+    @property
+    def unique_name(self) -> str:
+        """
+        Get the unique name of this object.
+
+        :return: Unique name of this object
+        """
+        return self._unique_name
+    
+    @unique_name.setter
+    def unique_name(self, new_unique_name: str):
+        """ Set a new unique name for the object. The old name is still kept in the map. 
+        
+        :param new_unique_name: New unique name for the object"""
+        if not isinstance(new_unique_name, str):
+            raise TypeError("Unique name has to be a string.")
+        self._unique_name = new_unique_name
+        self._global_object.map.add_vertex(self)
 
     @property
     def display_name(self) -> str:
@@ -283,7 +305,7 @@ class Descriptor(ComponentSerializer):
         :return: None
         """
         if not self.enabled:
-            if borg.debug:
+            if global_object.debug:
                 raise CoreSetException(f'{str(self)} is not enabled.')
             return
         self.__deepValueSetter(value)
@@ -340,6 +362,15 @@ class Descriptor(ComponentSerializer):
         self._units = new_unit
         self._args['value'] = self.raw_value
         self._args['units'] = str(self.unit)
+
+    def _unique_name_generator(self) -> str:
+        """
+        Generate a generic unique name for the object using the class name and a global iterator.
+        """
+        class_name = self.__class__.__name__
+        iterator_string = str(self._global_object.map._get_name_iterator(class_name))
+        return class_name + "_" + iterator_string
+
 
     # @cached_property
     @property
@@ -433,15 +464,15 @@ class ComboDescriptor(Descriptor):
             set_value = set_value.magnitude
         # Save the old state and create the new state
         old_value = self._value
-        state = self._borg.stack.enabled
+        state = self._global_object.stack.enabled
         if state:
-            self._borg.stack.force_state(False)
+            self._global_object.stack.force_state(False)
         try:
             new_value = old_value
             if set_value in self.available_options:
                 new_value = set_value
         finally:
-            self._borg.stack.force_state(state)
+            self._global_object.stack.force_state(state)
 
         # Restore to the old state
         self.__previous_set(self, new_value)
@@ -478,8 +509,8 @@ class Parameter(Descriptor):
         name: str,
         value: Union[numbers.Number, np.ndarray],
         error: Optional[Union[numbers.Number, np.ndarray]] = 0.0,
-        min: Optional[numbers.Number] = -np.Inf,
-        max: Optional[numbers.Number] = np.Inf,
+        min: Optional[numbers.Number] = -np.inf,
+        max: Optional[numbers.Number] = np.inf,
         fixed: Optional[bool] = False,
         **kwargs,
     ):
@@ -510,7 +541,7 @@ class Parameter(Descriptor):
         # Set the error
         self._args = {'value': value, 'units': '', 'error': error}
 
-        if not isinstance(value, numbers.Number):
+        if not isinstance(value, numbers.Number) or isinstance(value, np.ndarray):
             raise ValueError('In a parameter the `value` must be numeric')
         if value < min:
             raise ValueError('`value` can not be less than `min`')
@@ -519,7 +550,7 @@ class Parameter(Descriptor):
         if error < 0:
             raise ValueError('Standard deviation `error` must be positive')
 
-        super().__init__(name, value, **kwargs)
+        super().__init__(name=name, value=value, **kwargs)
         self._args['units'] = str(self.unit)
 
         # Warnings if we are given a boolean
@@ -588,13 +619,13 @@ class Parameter(Descriptor):
         new_value = self.__constraint_runner(constraint_type, set_value)
         # Then run any user constraints.
         constraint_type: dict = self.user_constraints
-        state = self._borg.stack.enabled
+        state = self._global_object.stack.enabled
         if state:
-            self._borg.stack.force_state(False)
+            self._global_object.stack.force_state(False)
         try:
             new_value = self.__constraint_runner(constraint_type, new_value)
         finally:
-            self._borg.stack.force_state(state)
+            self._global_object.stack.force_state(state)
 
         # And finally update any virtual constraints
         constraint_type: dict = self._constraints['virtual']
@@ -689,9 +720,9 @@ class Parameter(Descriptor):
         :return: None
         """
         if not self.enabled:
-            if self._borg.stack.enabled:
-                self._borg.stack.pop()
-            if borg.debug:
+            if self._global_object.stack.enabled:
+                self._global_object.stack.pop()
+            if global_object.debug:
                 raise CoreSetException(f'{str(self)} is not enabled.')
             return
         # TODO Should we try and cast value to bool rather than throw ValueError?
@@ -781,13 +812,13 @@ class Parameter(Descriptor):
         # Then run any user constraints.
         if run_user_constraints:
             constraint_type: dict = self.user_constraints
-            state = self._borg.stack.enabled
+            state = self._global_object.stack.enabled
             if state:
-                self._borg.stack.force_state(False)
+                self._global_object.stack.force_state(False)
             try:
                 set_value = self.__constraint_runner(constraint_type, set_value)
             finally:
-                self._borg.stack.force_state(state)
+                self._global_object.stack.force_state(state)
         if run_virtual_constraints:
             # And finally update any virtual constraints
             constraint_type: dict = self._constraints['virtual']
@@ -810,7 +841,7 @@ class Parameter(Descriptor):
                 continue
             this_new_value = constraint(no_set=True)
             if this_new_value != newer_value:
-                if borg.debug:
+                if global_object.debug:
                     print(f'Constraint `{constraint}` has been applied')
                 self._value = self.__class__._constructor(
                     value=this_new_value,
@@ -839,8 +870,8 @@ class Parameter(Descriptor):
         """
         # Macro checking and opening for undo/redo
         close_macro = False
-        if self._borg.stack.enabled:
-            self._borg.stack.beginMacro('Setting bounds')
+        if self._global_object.stack.enabled:
+            self._global_object.stack.beginMacro('Setting bounds')
             close_macro = True
         # Have we only been given a single number (MIN)?
         if isinstance(new_bound, numbers.Number):
@@ -860,4 +891,4 @@ class Parameter(Descriptor):
         self.fixed = False
         # Close the macro if we opened it
         if close_macro:
-            self._borg.stack.endMacro()
+            self._global_object.stack.endMacro()

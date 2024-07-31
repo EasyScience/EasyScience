@@ -5,21 +5,22 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
-from easyscience.Objects.Graph import Graph
 from easyscience.Utils.classUtils import singleton
-from easyscience.Utils.Hugger.Hugger import ScriptManager
-from easyscience.Utils.Logging import Logger
+
+from .hugger.hugger import ScriptManager
+from .logger import Logger
+from .map import Map
 
 
 @singleton
-class Borg:
+class GlobalObject:
     """
-    Borg is the assimilated knowledge of `EasyScience`. Every class based on `EasyScience` gets brought
+    GlobalObject is the assimilated knowledge of `EasyScience`. Every class based on `EasyScience` gets brought
     into the collective.
     """
 
     __log = Logger()
-    __map = Graph()
+    __map = Map()
     __stack = None
     __debug = False
 
@@ -32,8 +33,8 @@ class Borg:
         self.stack = self.__stack
         #
         self.script: ScriptManager = ScriptManager()
-        # Map. This is the conduit database between all borg species
-        self.map: Graph = self.__map
+        # Map. This is the conduit database between all global object species
+        self.map: Map = self.__map
 
     def instantiate_stack(self):
         """
@@ -43,6 +44,6 @@ class Borg:
         :return: None
         :rtype: noneType
         """
-        from easyscience.Utils.UndoRedo import UndoStack
+        from easyscience.global_object.undo_redo import UndoStack
 
         self.stack = UndoStack()

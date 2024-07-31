@@ -15,6 +15,7 @@ from .test_core import Descriptor
 from .test_core import check_dict
 from .test_core import dp_param_dict
 from .test_core import skip_dict
+from easyscience import global_object
 
 
 def recursive_remove(d, remove_keys: list) -> dict:
@@ -178,6 +179,7 @@ def test_variable_DictSerializer_decode(dp_kwargs: dict, dp_cls: Type[Descriptor
         data_dict["raw_value"] = data_dict.pop("value")
 
     enc = obj.encode(encoder=JsonSerializer)
+    global_object.map._clear()
     assert isinstance(enc, str)
     dec = obj.decode(enc, decoder=JsonSerializer)
 
@@ -199,5 +201,6 @@ def test_variable_DataDictSerializer_decode(dp_kwargs: dict, dp_cls: Type[Descri
         data_dict["raw_value"] = data_dict.pop("value")
 
     enc = obj.encode(encoder=JsonDataSerializer)
+    global_object.map._clear()
     with pytest.raises(NotImplementedError):
         dec = obj.decode(enc, decoder=JsonDataSerializer)

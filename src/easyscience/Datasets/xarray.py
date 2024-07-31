@@ -20,7 +20,7 @@ import numpy as np
 import xarray as xr
 
 from easyscience import ureg
-from easyscience.Fitting.fitting_template import FitResults
+from easyscience.fitting import FitResults
 
 T_ = TypeVar('T_')
 
@@ -371,13 +371,13 @@ class EasyScienceDatasetAccessor:
         **kwargs,
     ) -> List[FitResults]:
         """
-        Perform a fit on one or more DataArrays. This fit utilises a given fitter from `EasyScience.Fitting.Fitter`, though
+        Perform a fit on one or more DataArrays. This fit utilises a given fitter from `EasyScience.fitting.Fitter`, though
         there are a few differences to a standard EasyScience fit. In particular, key-word arguments to control the
         optimisation algorithm go in the `fit_kwargs` dictionary, fit function key-word arguments go in the `fn_kwargs`
         and given key-word arguments control the `xarray.apply_ufunc` function.
 
         :param fitter: Fitting object which controls the fitting
-        :type fitter: EasyScience.Fitting.Fitter
+        :type fitter: EasyScience.fitting.Fitter
         :param args: Arguments to go to the fit function
         :type args: Any
         :param dask: Dask control string. See `xarray.apply_ufunc` documentation
@@ -681,13 +681,13 @@ class EasyScienceDataarrayAccessor:
         **kwargs,
     ) -> FitResults:
         """
-        Perform a fit on the given DataArray. This fit utilises a given fitter from `EasyScience.Fitting.Fitter`, though
+        Perform a fit on the given DataArray. This fit utilises a given fitter from `EasyScience.fitting.Fitter`, though
         there are a few differences to a standard EasyScience fit. In particular, key-word arguments to control the
         optimisation algorithm go in the `fit_kwargs` dictionary, fit function key-word arguments go in the `fn_kwargs`
         and given key-word arguments control the `xarray.apply_ufunc` function.
 
         :param fitter: Fitting object which controls the fitting
-        :type fitter: EasyScience.Fitting.Fitter
+        :type fitter: EasyScience.fitting.Fitter
         :param args: Arguments to go to the fit function
         :type args: Any
         :param dask: Dask control string. See `xarray.apply_ufunc` documentation
@@ -732,7 +732,7 @@ class EasyScienceDataarrayAccessor:
 
         # Set the new callable to the fitter and initialize
         fitter.initialize(fitter.fit_object, local_fit_func)
-        # Make EasyScience.Fitting.Fitter compatible `x`
+        # Make EasyScience.fitting.Fitter compatible `x`
         x_for_fit = xr.concat(bdims, dim='fit_dim')
         x_for_fit = x_for_fit.stack(all_x=[d.name for d in bdims])
         try:
@@ -803,7 +803,7 @@ def check_sanity_multiple(fit_results: FitResults, originals: List[xr.DataArray]
         current_results = fit_results.__class__()
         # Fill out the basic stuff....
         current_results.engine_result = fit_results.engine_result
-        current_results.fitting_engine = fit_results.fitting_engine
+        current_results.minimizer_engine = fit_results.minimizer_engine
         current_results.success = fit_results.success
         current_results.p = fit_results.p
         current_results.p0 = fit_results.p0

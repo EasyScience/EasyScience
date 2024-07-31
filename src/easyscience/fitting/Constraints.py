@@ -21,7 +21,7 @@ from typing import Union
 import numpy as np
 from asteval import Interpreter
 
-from easyscience import borg
+from easyscience import global_object
 from easyscience.Objects.core import ComponentSerializer
 
 if TYPE_CHECKING:
@@ -33,7 +33,7 @@ class ConstraintBase(ComponentSerializer, metaclass=ABCMeta):
     A base class used to describe a constraint to be applied to EasyScience base objects.
     """
 
-    _borg = borg
+    _global_object = global_object
 
     def __init__(
         self,
@@ -43,18 +43,18 @@ class ConstraintBase(ComponentSerializer, metaclass=ABCMeta):
         value: Optional[Number] = None,
     ):
         self.aeval = Interpreter()
-        self.dependent_obj_ids = self.get_key(dependent_obj)
+        self.dependent_obj_ids = dependent_obj.unique_name
         self.independent_obj_ids = None
         self._enabled = True
         self.external = False
         self._finalizer = None
         if independent_obj is not None:
             if isinstance(independent_obj, list):
-                self.independent_obj_ids = [self.get_key(obj) for obj in independent_obj]
+                self.independent_obj_ids = [obj.unique_name for obj in independent_obj]
                 if self.dependent_obj_ids in self.independent_obj_ids:
                     raise AttributeError('A dependent object can not be an independent object')
             else:
-                self.independent_obj_ids = self.get_key(independent_obj)
+                self.independent_obj_ids = independent_obj.unique_name
                 if self.dependent_obj_ids == self.independent_obj_ids:
                     raise AttributeError('A dependent object can not be an independent object')
             # Test if dependent is a parameter or a descriptor.
@@ -62,7 +62,7 @@ class ConstraintBase(ComponentSerializer, metaclass=ABCMeta):
             if dependent_obj.__class__.__name__ == 'Parameter':
                 if not dependent_obj.enabled:
                     raise AssertionError('A dependent object needs to be initially enabled.')
-                if borg.debug:
+                if global_object.debug:
                     print(f'Dependent variable {dependent_obj}. It should be a `Descriptor`.' f'Setting to fixed')
                 dependent_obj.enabled = False
                 self._finalizer = weakref.finalize(self, cleanup_constraint, self.dependent_obj_ids, True)
@@ -111,11 +111,11 @@ class ConstraintBase(ComponentSerializer, metaclass=ABCMeta):
                 return None
             return
         independent_objs = None
-        if isinstance(self.dependent_obj_ids, int):
+        if isinstance(self.dependent_obj_ids, str):
             dependent_obj = self.get_obj(self.dependent_obj_ids)
         else:
             raise AttributeError
-        if isinstance(self.independent_obj_ids, int):
+        if isinstance(self.independent_obj_ids, str):
             independent_objs = self.get_obj(self.independent_obj_ids)
         elif isinstance(self.independent_obj_ids, list):
             independent_objs = [self.get_obj(obj_id) for obj_id in self.independent_obj_ids]
@@ -147,15 +147,6 @@ class ConstraintBase(ComponentSerializer, metaclass=ABCMeta):
     def __repr__(self):
         pass
 
-    def get_key(self, obj) -> int:
-        """
-        Get the unique key of a EasyScience object
-
-        :param obj: EasyScience object
-        :return: key for EasyScience object
-        """
-        return self._borg.map.convert_id_to_key(obj)
-
     def get_obj(self, key: int) -> V:
         """
         Get an EasyScience object from its unique key
@@ -163,7 +154,7 @@ class ConstraintBase(ComponentSerializer, metaclass=ABCMeta):
         :param key: an EasyScience objects unique key
         :return: EasyScience object
         """
-        return self._borg.map.get_item_by_key(key)
+        return self._global_object.map.get_item_by_key(key)
 
 
 C = TypeVar('C', bound=ConstraintBase)
@@ -187,7 +178,7 @@ class NumericConstraint(ConstraintBase):
         :example:
         .. code-block:: python
 
-             from easyscience.Fitting.Constraints import NumericConstraint
+             from easyscience.fitting.Constraints import NumericConstraint
              from easyscience.Objects.Base import Parameter
              # Create an `a < 1` constraint
              a = Parameter('a', 0.2)
@@ -202,7 +193,14 @@ class NumericConstraint(ConstraintBase):
         super(NumericConstraint, self).__init__(dependent_obj, operator=operator, value=value)
 
     def _parse_operator(self, obj: V, *args, **kwargs) -> Number:
-        value = obj.raw_value
+        ## TODO clean when full move to new_variable
+        import easyscience.Objects.new_variable.parameter
+
+        if isinstance(obj, easyscience.Objects.new_variable.parameter.Parameter):
+            value = obj.value
+        else:
+            value = obj.raw_value
+
         if isinstance(value, list):
             value = np.array(value)
         self.aeval.symtable['value1'] = value
@@ -243,7 +241,7 @@ class SelfConstraint(ConstraintBase):
         :example:
         .. code-block:: python
 
-             from easyscience.Fitting.Constraints import SelfConstraint
+             from easyscience.fitting.Constraints import SelfConstraint
              from easyscience.Objects.Base import Parameter
              # Create an `a < a.max` constraint
              a = Parameter('a', 0.2, max=1)
@@ -258,7 +256,14 @@ class SelfConstraint(ConstraintBase):
         super(SelfConstraint, self).__init__(dependent_obj, operator=operator, value=value)
 
     def _parse_operator(self, obj: V, *args, **kwargs) -> Number:
-        value = obj.raw_value
+        ## TODO clean when full move to new_variable
+        import easyscience.Objects.new_variable.parameter
+
+        if isinstance(obj, easyscience.Objects.new_variable.parameter.Parameter):
+            value = obj.value
+        else:
+            value = obj.raw_value
+
         self.aeval.symtable['value1'] = value
         self.aeval.symtable['value2'] = getattr(obj, self.value)
         try:
@@ -297,7 +302,7 @@ class ObjConstraint(ConstraintBase):
         :example:
         .. code-block:: python
 
-             from easyscience.Fitting.Constraints import ObjConstraint
+             from easyscience.fitting.Constraints import ObjConstraint
              from easyscience.Objects.Base import Parameter
              # Create an `a = 2 * b` constraint
              a = Parameter('a', 0.2)
@@ -314,7 +319,14 @@ class ObjConstraint(ConstraintBase):
         self.external = True
 
     def _parse_operator(self, obj: V, *args, **kwargs) -> Number:
-        value = obj.raw_value
+        ## TODO clean when full move to new_variable
+        import easyscience.Objects.new_variable.parameter
+
+        if isinstance(obj, easyscience.Objects.new_variable.parameter.Parameter):
+            value = obj.value
+        else:
+            value = obj.raw_value
+
         self.aeval.symtable['value1'] = value
         try:
             self.aeval.eval(f'value2 = {self.operator} value1')
@@ -331,7 +343,7 @@ class ObjConstraint(ConstraintBase):
 
 class MultiObjConstraint(ConstraintBase):
     """
-    A `MultiObjConstraint` is similar to :class:`EasyScience.Fitting.Constraints.ObjConstraint` except that it relates to
+    A `MultiObjConstraint` is similar to :class:`EasyScience.fitting.Constraints.ObjConstraint` except that it relates to
     multiple independent objects.
     """
 
@@ -343,7 +355,7 @@ class MultiObjConstraint(ConstraintBase):
         value: Number,
     ):
         """
-        A `MultiObjConstraint` is similar to :class:`EasyScience.Fitting.Constraints.ObjConstraint` except that it relates
+        A `MultiObjConstraint` is similar to :class:`EasyScience.fitting.Constraints.ObjConstraint` except that it relates
         to one or more independent objects.
 
         E.g.
@@ -360,7 +372,7 @@ class MultiObjConstraint(ConstraintBase):
 
         .. code-block:: python
 
-             from easyscience.Fitting.Constraints import MultiObjConstraint
+             from easyscience.fitting.Constraints import MultiObjConstraint
              from easyscience.Objects.Base import Parameter
              # Create an `a + b = 1` constraint
              a = Parameter('a', 0.2)
@@ -376,7 +388,7 @@ class MultiObjConstraint(ConstraintBase):
 
         .. code-block:: python
 
-             from easyscience.Fitting.Constraints import MultiObjConstraint
+             from easyscience.fitting.Constraints import MultiObjConstraint
              from easyscience.Objects.Base import Parameter
              # Create an `a + b - 2c = 0` constraint
              a = Parameter('a', 0.5)
@@ -401,10 +413,17 @@ class MultiObjConstraint(ConstraintBase):
         self.external = True
 
     def _parse_operator(self, independent_objs: List[V], *args, **kwargs) -> Number:
+        import easyscience.Objects.new_variable.parameter
+
         in_str = ''
         value = None
         for idx, obj in enumerate(independent_objs):
-            self.aeval.symtable['p' + str(self.independent_obj_ids[idx])] = obj.raw_value
+            ## TODO clean when full move to new_variable
+            if isinstance(obj, easyscience.Objects.new_variable.parameter.Parameter):
+                self.aeval.symtable['p' + str(self.independent_obj_ids[idx])] = obj.value
+            else:
+                self.aeval.symtable['p' + str(self.independent_obj_ids[idx])] = obj.raw_value
+
             in_str += ' p' + str(self.independent_obj_ids[idx])
             if idx < len(self.operator):
                 in_str += ' ' + self.operator[idx]
@@ -442,7 +461,7 @@ class FunctionalConstraint(ConstraintBase):
         .. code-block:: python
 
             import numpy as np
-            from easyscience.Fitting.Constraints import FunctionalConstraint
+            from easyscience.fitting.Constraints import FunctionalConstraint
             from easyscience.Objects.Base import Parameter
 
             a = Parameter('a', 0.2, max=1)
@@ -461,14 +480,26 @@ class FunctionalConstraint(ConstraintBase):
             self.external = True
 
     def _parse_operator(self, obj: V, *args, **kwargs) -> Number:
+        import easyscience.Objects.new_variable.parameter
+
         self.aeval.symtable[f'f{id(self.function)}'] = self.function
         value_str = f'r_value = f{id(self.function)}('
         if isinstance(obj, list):
             for o in obj:
-                value_str += f'{o.raw_value},'
+                ## TODO clean when full move to new_variable
+                if isinstance(o, easyscience.Objects.new_variable.parameter.Parameter):
+                    value_str += f'{o.value},'
+                else:
+                    value_str += f'{o.raw_value},'
+
             value_str = value_str[:-1]
         else:
-            value_str += f'{obj.raw_value}'
+            ## TODO clean when full move to new_variable
+            if isinstance(o, easyscience.Objects.new_variable.parameter.Parameter):
+                value_str += f'{obj.value}'
+            else:
+                value_str += f'{obj.raw_value}'
+
         value_str += ')'
         try:
             self.aeval.eval(value_str)
@@ -485,8 +516,8 @@ class FunctionalConstraint(ConstraintBase):
 
 def cleanup_constraint(obj_id: str, enabled: bool):
     try:
-        obj = borg.map.get_item_by_key(obj_id)
+        obj = global_object.map.get_item_by_key(obj_id)
         obj.enabled = enabled
     except ValueError:
-        if borg.debug:
+        if global_object.debug:
             print(f'Object with ID {obj_id} has already been deleted')

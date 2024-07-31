@@ -11,9 +11,10 @@ from typing import Any
 from typing import Callable
 from typing import List
 
-from easyscience import borg
-from easyscience.Utils.Hugger.Hugger import PatcherFactory
-from easyscience.Utils.Hugger.Hugger import Store
+from easyscience import global_object
+
+from .hugger import PatcherFactory
+from .hugger import Store
 
 
 class LoggedProperty(property):
@@ -24,7 +25,7 @@ class LoggedProperty(property):
     `BaseObj`.
     """
 
-    _borg = borg
+    _global_object = global_object
 
     def __init__(self, *args, get_id=None, my_self=None, test_class=None, **kwargs):
         super(LoggedProperty, self).__init__(*args, **kwargs)
@@ -52,7 +53,7 @@ class LoggedProperty(property):
         return test
 
     def __get__(self, instance, owner=None):
-        if not borg.script.enabled:
+        if not global_object.script.enabled:
             return super(LoggedProperty, self).__get__(instance, owner)
         test = self._caller_class(self.test_class)
         res = super(LoggedProperty, self).__get__(instance, owner)
@@ -60,10 +61,10 @@ class LoggedProperty(property):
         def result_item(item_to_be_resulted):
             if item_to_be_resulted is None:
                 return None
-            if borg.map.is_known(item_to_be_resulted):
-                borg.map.change_type(item_to_be_resulted, "returned")
+            if global_object.map.is_known(item_to_be_resulted):
+                global_object.map.change_type(item_to_be_resulted, "returned")
             else:
-                borg.map.add_vertex(item_to_be_resulted, obj_type="returned")
+                global_object.map.add_vertex(item_to_be_resulted, obj_type="returned")
 
         if not test and self._get_id is not None and self._my_self is not None:
             if not isinstance(res, list):
@@ -72,19 +73,19 @@ class LoggedProperty(property):
                 for item in res:
                     result_item(item)
             Store().append_log(self.makeEntry("get", res))
-            if borg.debug:  # noqa: S1006
+            if global_object.debug:  # noqa: S1006
                 print(
                     f"I'm {self._my_self} and {self._get_id} has been called from the outside!"
                 )
         return res
 
     def __set__(self, instance, value):
-        if not borg.script.enabled:
+        if not global_object.script.enabled:
             return super().__set__(instance, value)
         test = self._caller_class(self.test_class)
         if not test and self._get_id is not None and self._my_self is not None:
             Store().append_log(self.makeEntry("set", value))
-            if borg.debug:  # noqa: S1006
+            if global_object.debug:  # noqa: S1006
                 print(
                     f"I'm {self._my_self} and {self._get_id} has been set to {value} from the outside!"
                 )
@@ -98,51 +99,51 @@ class LoggedProperty(property):
             returns = [returns]
         if log_type == "get":
             for var in returns:
-                if borg.map.convert_id_to_key(var) in borg.map.returned_objs:
-                    index = borg.map.returned_objs.index(
-                        borg.map.convert_id_to_key(var)
+                if var.unique_name in global_object.map.returned_objs:
+                    index = global_object.map.returned_objs.index(
+                        var.unique_name
                     )
                     temp += f"{Store().var_ident}{index}, "
             if len(returns) > 0:
                 temp = temp[:-2]
                 temp += " = "
-            if borg.map.convert_id_to_key(self._my_self) in borg.map.created_objs:
+            if self._my_self.unique_name in global_object.map.created_objs:
                 # for edge in route[::-1]:
-                index = borg.map.created_objs.index(
-                    borg.map.convert_id_to_key(self._my_self)
+                index = global_object.map.created_objs.index(
+                    self._my_self.unique_name
                 )
                 temp += (
                     f"{self._my_self.__class__.__name__.lower()}_{index}.{self._get_id}"
                 )
-            if borg.map.convert_id(self._my_self) in borg.map.created_internal:
+            if self._my_self.unique_name in global_object.map.created_internal:
                 # We now have to trace....
-                route = borg.map.reverse_route(self._my_self)  # noqa: F841
-                index = borg.map.created_objs.index(
-                    borg.map.convert_id_to_key(self._my_self)
+                route = global_object.map.reverse_route(self._my_self)  # noqa: F841
+                index = global_object.map.created_internal.index(
+                    self._my_self.unique_name
                 )
                 temp += (
                     f"{self._my_self.__class__.__name__.lower()}_{index}.{self._get_id}"
                 )
         elif log_type == "set":
-            if borg.map.convert_id_to_key(self._my_self) in borg.map.created_objs:
-                index = borg.map.created_objs.index(
-                    borg.map.convert_id_to_key(self._my_self)
+            if self._my_self.unique_name in global_object.map.created_objs:
+                index = global_object.map.created_objs.index(
+                    self._my_self.unique_name
                 )
                 temp += f"{self._my_self.__class__.__name__.lower()}_{index}.{self._get_id} = "
             args = args[1:]
             for var in args:
-                if borg.map.convert_id_to_key(var) in borg.map.argument_objs:
-                    index = borg.map.argument_objs.index(
-                        borg.map.convert_id_to_key(var)
+                if var.unique_name in global_object.map.argument_objs:
+                    index = global_object.map.argument_objs.index(
+                        var.unique_name
                     )
                     temp += f"{Store().var_ident}{index}"
-                elif borg.map.convert_id_to_key(var) in borg.map.returned_objs:
-                    index = borg.map.returned_objs.index(
-                        borg.map.convert_id_to_key(var)
+                elif var.unique_name in global_object.map.returned_objs:
+                    index = global_object.map.returned_objs.index(
+                        var.unique_name
                     )
                     temp += f"{Store().var_ident}{index}"
-                elif borg.map.convert_id_to_key(var) in borg.map.created_objs:
-                    index = borg.map.created_objs.index(borg.map.convert_id_to_key(var))
+                elif var.unique_name in global_object.map.created_objs:
+                    index = global_object.map.created_objs.index(var.unique_name)
                     temp += f"{self._my_self.__class__.__name__.lower()}_{index}"
                 else:
                     if isinstance(var, str):
@@ -158,7 +159,7 @@ class PropertyHugger(PatcherFactory):
     # Properties are immutable, so need to be set at the parent level. However unlike `FunctionHugger` we can't traverse
     # the stack to get the parent. So, it and it's name has to be set at initialization. Boo!
 
-    _borg = borg
+    _global_object = global_object
 
     def __init__(self, klass, prop_name):
         super().__init__()
@@ -180,7 +181,7 @@ class PropertyHugger(PatcherFactory):
         for key, item in self.__patch_ref.items():
             func = getattr(self.property, key)
             if func is not None:
-                if borg.debug:
+                if global_object.debug:
                     print(f"Patching property {self.klass.__name__}.{self.prop_name}")
                 patch_function: Callable = item.get("patcher")
                 new_func = patch_function(func)
@@ -188,14 +189,14 @@ class PropertyHugger(PatcherFactory):
         setattr(self.klass, self.prop_name, property(**option))
 
     def restore(self):
-        if borg.debug:
+        if global_object.debug:
             print(f"Restoring property {self.klass.__name__}.{self.prop_name}")
         setattr(self.klass, self.prop_name, self.property)
 
     def patch_get(self, func: Callable) -> Callable:
         @wraps(func)
         def inner(*args, **kwargs):
-            if borg.debug:
+            if global_object.debug:
                 print(
                     f"{self.klass.__name__}.{self.prop_name} has been called with {args[1:]}, {kwargs}"
                 )
@@ -210,7 +211,7 @@ class PropertyHugger(PatcherFactory):
     def patch_set(self, func: Callable) -> Callable:
         @wraps(func)
         def inner(*args, **kwargs):
-            if borg.debug:
+            if global_object.debug:
                 print(
                     f"{self.klass.__name__}.{self.prop_name} has been set with {args[1:]}, {kwargs}"
                 )
@@ -223,7 +224,7 @@ class PropertyHugger(PatcherFactory):
     def patch_del(self, func: Callable) -> Callable:
         @wraps(func)
         def inner(*args, **kwargs):
-            if borg.debug:
+            if global_object.debug:
                 print(f"{self.klass.__name__}.{self.prop_name} has been deleted.")
             self._append_log(self.makeEntry("del", None, *args, **kwargs))
             return func(*args, **kwargs)

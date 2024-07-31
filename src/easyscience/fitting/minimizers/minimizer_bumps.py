@@ -2,37 +2,33 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
 
-__author__ = "github.com/wardsimon"
-__version__ = "0.1.0"
-
 import inspect
+from typing import Callable
 from typing import List
 from typing import Optional
 
+import numpy as np
 from bumps.fitters import FIT_AVAILABLE_IDS
 from bumps.fitters import fit as bumps_fit
 from bumps.names import Curve
 from bumps.names import FitProblem
-from bumps.parameter import Parameter as bumpsParameter
+from bumps.parameter import Parameter as BumpsParameter
 
-from easyscience.Fitting.fitting_template import Callable
-from easyscience.Fitting.fitting_template import FitError
-from easyscience.Fitting.fitting_template import FitResults
-from easyscience.Fitting.fitting_template import FittingTemplate
-from easyscience.Fitting.fitting_template import NameConverter
-from easyscience.Fitting.fitting_template import np
+from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
+from .minimizer_base import MinimizerBase
+from .utils import FitError
+from .utils import FitResults
 
 
-class bumps(FittingTemplate):  # noqa: S101
+class Bumps(MinimizerBase):  # noqa: S101
     """
-    This is a wrapper to bumps: https://bumps.readthedocs.io/
-    It allows for the bumps fitting engine to use parameters declared in an `EasyScience.Objects.Base.BaseObj`.
+    This is a wrapper to Bumps: https://bumps.readthedocs.io/
+    It allows for the Bumps fitting engine to use parameters declared in an `EasyScience.Objects.Base.BaseObj`.
     """
 
-    property_type = bumpsParameter
-    name = "bumps"
+    wrapping = 'bumps'
 
-    def __init__(self, obj, fit_function: Callable):
+    def __init__(self, obj, fit_function: Callable, method: Optional[str] = None):
         """
         Initialize the fitting engine with a `BaseObj` and an arbitrary fitting function.
 
@@ -43,11 +39,11 @@ class bumps(FittingTemplate):  # noqa: S101
                             keyword/value pairs
         :type fit_function: Callable
         """
-        super().__init__(obj, fit_function)
+        super().__init__(obj=obj, fit_function=fit_function, method=method)
         self._cached_pars_order = ()
-        self.p_0 = {}
+        self._p_0 = {}
 
-    def make_model(self, pars: Optional[List[bumpsParameter]] = None) -> Callable:
+    def make_model(self, pars: Optional[List[BumpsParameter]] = None) -> Callable:
         """
         Generate a bumps model from the supplied `fit_function` and parameters in the base object.
         Note that this makes a callable as it needs to be initialized with *x*, *y*, *weights*
@@ -62,12 +58,10 @@ class bumps(FittingTemplate):  # noqa: S101
                 par = {}
                 if not pars:
                     for name, item in obj._cached_pars.items():
-                        par["p" + str(name)] = obj.convert_to_par_object(item)
+                        par[MINIMIZER_PARAMETER_PREFIX + str(name)] = obj.convert_to_par_object(item)
                 else:
                     for item in pars:
-                        par[
-                            "p" + str(NameConverter().get_key(item))
-                        ] = obj.convert_to_par_object(item)
+                        par[MINIMIZER_PARAMETER_PREFIX + item.unique_name] = obj.convert_to_par_object(item)
                 return Curve(fit_func, x, y, dy=weights, **par)
 
             return make_func
@@ -87,7 +81,7 @@ class bumps(FittingTemplate):  # noqa: S101
         # Get a list of `Parameters`
         self._cached_pars_vals = {}
         for parameter in self._object.get_fit_parameters():
-            key = NameConverter().get_key(parameter)
+            key = parameter.unique_name
             self._cached_pars[key] = parameter
             self._cached_pars_vals[key] = (parameter.value, parameter.error)
 
@@ -104,10 +98,18 @@ class bumps(FittingTemplate):  # noqa: S101
             """
             # Update the `Parameter` values and the callback if needed
             for name, value in kwargs.items():
-                par_name = int(name[1:])
+                par_name = name[1:]
                 if par_name in self._cached_pars.keys():
-                    if self._cached_pars[par_name].raw_value != value:
-                        self._cached_pars[par_name].value = value
+                    ## TODO clean when full move to new_variable
+                    from easyscience.Objects.new_variable import Parameter
+
+                    if isinstance(self._cached_pars[par_name], Parameter):
+                        if self._cached_pars[par_name].value != value:
+                            self._cached_pars[par_name].value = value
+                    else:
+                        if self._cached_pars[par_name].raw_value != value:
+                            self._cached_pars[par_name].value = value
+
                     # update_fun = self._cached_pars[par_name]._callback.fset
                     # if update_fun:
                     #     update_fun(value)
@@ -123,17 +125,23 @@ class bumps(FittingTemplate):  # noqa: S101
         # f = (x, a=1, b=2)...
         # Where we need to be generic. Note that this won't hold for much outside of this scope.
 
+        ## TODO clean when full move to new_variable
+        from easyscience.Objects.new_variable import Parameter
+
+        if isinstance(parameter, Parameter):
+            default_value = parameter.value
+        else:
+            default_value = parameter.raw_value
+
         self._cached_pars_order = tuple(self._cached_pars.keys())
         params = [
-            inspect.Parameter(
-                "x", inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=inspect._empty
-            ),
+            inspect.Parameter('x', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=inspect._empty),
             *[
                 inspect.Parameter(
-                    "p" + str(name),
+                    MINIMIZER_PARAMETER_PREFIX + str(name),
                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
                     annotation=inspect._empty,
-                    default=self._cached_pars[name].raw_value,
+                    default=default_value,
                 )
                 for name in self._cached_pars_order
             ],
@@ -148,8 +156,8 @@ class bumps(FittingTemplate):  # noqa: S101
         x: np.ndarray,
         y: np.ndarray,
         weights: Optional[np.ndarray] = None,
-        model: Optional = None,
-        parameters: Optional = None,
+        model=None,
+        parameters=None,
         method: Optional[str] = None,
         minimizer_kwargs: Optional[dict] = None,
         engine_kwargs: Optional[dict] = None,
@@ -167,17 +175,18 @@ class bumps(FittingTemplate):  # noqa: S101
         :param model: Optional Model which is being fitted to
         :type model: lmModel
         :param parameters: Optional parameters for the fit
-        :type parameters: List[bumpsParameter]
+        :type parameters: List[BumpsParameter]
         :param kwargs: Additional arguments for the fitting function.
         :param method: Method for minimization
         :type method: str
         :return: Fit results
         :rtype: ModelResult
         """
-
         default_method = {}
+        if self._method is not None:
+            default_method = {'method': self._method}
         if method is not None and method in self.available_methods():
-            default_method["method"] = method
+            default_method['method'] = method
 
         if weights is None:
             weights = np.sqrt(np.abs(y))
@@ -195,21 +204,24 @@ class bumps(FittingTemplate):  # noqa: S101
             model = self.make_model(pars=parameters)
             model = model(x, y, weights)
         self._cached_model = model
-        self.p_0 = {
-            f"p{key}": self._cached_pars[key].raw_value
-            for key in self._cached_pars.keys()
-        }
-        problem = FitProblem(model)
-        # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
-        from easyscience import borg
 
-        stack_status = borg.stack.enabled
-        borg.stack.enabled = False
+        ## TODO clean when full move to new_variable
+        from easyscience.Objects.new_variable import Parameter
+
+        if isinstance(self._cached_pars[list(self._cached_pars.keys())[0]], Parameter):
+            self._p_0 = {f'p{key}': self._cached_pars[key].value for key in self._cached_pars.keys()}
+        else:
+            self._p_0 = {f'p{key}': self._cached_pars[key].raw_value for key in self._cached_pars.keys()}
+
+        problem = FitProblem(model)
+        # Why do we do this? Because a fitting template has to have global_object instantiated outside pre-runtime
+        from easyscience import global_object
+
+        stack_status = global_object.stack.enabled
+        global_object.stack.enabled = False
 
         try:
-            model_results = bumps_fit(
-                problem, **default_method, **minimizer_kwargs, **kwargs
-            )
+            model_results = bumps_fit(problem, **default_method, **minimizer_kwargs, **kwargs)
             self._set_parameter_fit_result(model_results, stack_status)
             results = self._gen_fit_results(model_results)
         except Exception as e:
@@ -218,16 +230,14 @@ class bumps(FittingTemplate):  # noqa: S101
             raise FitError(e)
         return results
 
-    def convert_to_pars_obj(
-        self, par_list: Optional[List] = None
-    ) -> List[bumpsParameter]:
+    def convert_to_pars_obj(self, par_list: Optional[List] = None) -> List[BumpsParameter]:
         """
         Create a container with the `Parameters` converted from the base object.
 
         :param par_list: If only a single/selection of parameter is required. Specify as a list
         :type par_list: List[str]
         :return: bumps Parameters list
-        :rtype: List[bumpsParameter]
+        :rtype: List[BumpsParameter]
         """
         if par_list is None:
             # Assume that we have a BaseObj for which we can obtain a list
@@ -237,16 +247,25 @@ class bumps(FittingTemplate):  # noqa: S101
 
     # For some reason I have to double staticmethod :-/
     @staticmethod
-    def convert_to_par_object(obj) -> bumpsParameter:
+    def convert_to_par_object(obj) -> BumpsParameter:
         """
         Convert an `EasyScience.Objects.Base.Parameter` object to a bumps Parameter object
 
         :return: bumps Parameter compatible object.
-        :rtype: bumpsParameter
+        :rtype: BumpsParameter
         """
-        return bumpsParameter(
-            name="p" + str(NameConverter().get_key(obj)),
-            value=obj.raw_value,
+
+        ## TODO clean when full move to new_variable
+        from easyscience.Objects.new_variable import Parameter
+
+        if isinstance(obj, Parameter):
+            value = obj.value
+        else:
+            value = obj.raw_value
+
+        return BumpsParameter(
+            name=MINIMIZER_PARAMETER_PREFIX + obj.unique_name,
+            value=value,
             bounds=[obj.min, obj.max],
             fixed=obj.fixed,
         )
@@ -259,7 +278,7 @@ class bumps(FittingTemplate):  # noqa: S101
         :return: None
         :rtype: noneType
         """
-        from easyscience import borg
+        from easyscience import global_object
 
         pars = self._cached_pars
 
@@ -267,15 +286,15 @@ class bumps(FittingTemplate):  # noqa: S101
             for name in pars.keys():
                 pars[name].value = self._cached_pars_vals[name][0]
                 pars[name].error = self._cached_pars_vals[name][1]
-            borg.stack.enabled = True
-            borg.stack.beginMacro("Fitting routine")
+            global_object.stack.enabled = True
+            global_object.stack.beginMacro('Fitting routine')
 
         for index, name in enumerate(self._cached_model._pnames):
-            dict_name = int(name[1:])
+            dict_name = name[1:]
             pars[dict_name].value = fit_result.x[index]
             pars[dict_name].error = fit_result.dx[index]
         if stack_status:
-            borg.stack.endMacro()
+            global_object.stack.endMacro()
 
     def _gen_fit_results(self, fit_results, **kwargs) -> FitResults:
         """
@@ -294,17 +313,25 @@ class bumps(FittingTemplate):  # noqa: S101
         pars = self._cached_pars
         item = {}
         for index, name in enumerate(self._cached_model._pnames):
-            dict_name = int(name[1:])
-            item[name] = pars[dict_name].raw_value
-        results.p0 = self.p_0
+            dict_name = name[1:]
+ 
+            ## TODO clean when full move to new_variable 
+            from easyscience.Objects.new_variable import Parameter
+
+            if isinstance(pars[dict_name], Parameter):
+                item[name] = pars[dict_name].value
+            else:
+                item[name] = pars[dict_name].raw_value
+
+        results.p0 = self._p_0
         results.p = item
         results.x = self._cached_model.x
         results.y_obs = self._cached_model.y
-        results.y_calc = self.evaluate(results.x, parameters=results.p)
+        results.y_calc = self.evaluate(results.x, minimizer_parameters=results.p)
         results.y_err = self._cached_model.dy
         # results.residual = results.y_obs - results.y_calc
         # results.goodness_of_fit = np.sum(results.residual**2)
-        results.fitting_engine = self.__class__
+        results.minimizer_engine = self.__class__
         results.fit_args = None
         results.engine_result = fit_results
         # results.check_sanity()
