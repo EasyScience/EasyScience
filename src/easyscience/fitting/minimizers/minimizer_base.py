@@ -13,7 +13,8 @@ from typing import Union
 
 import numpy as np
 
-from easyscience.Objects.ObjectClasses import BaseObj
+# causes circular import when Parameter is imported
+# from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.Variable import Parameter
 
 from ..Constraints import ObjConstraint
@@ -30,7 +31,9 @@ class MinimizerBase(metaclass=ABCMeta):
 
     wrapping: str = None
 
-    def __init__(self, obj: BaseObj, fit_function: Callable, method: Optional[str] = None):
+    def __init__(
+        self, obj, fit_function: Callable, method: Optional[str] = None
+    ):  # todo after constraint changes, add type hint: obj: BaseObj  # noqa: E501
         if method not in self.available_methods():
             raise FitError(f'Method {method} not available in {self.__class__}')
         self._object = obj
@@ -134,7 +137,7 @@ class MinimizerBase(metaclass=ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def convert_to_par_object(obj: BaseObj):
+    def convert_to_par_object(obj):  # todo after constraint changes, add type hint: obj: BaseObj
         """
         Convert an `EasyScience.Objects.Base.Parameter` object to an engine Parameter object.
         """
