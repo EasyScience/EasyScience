@@ -57,7 +57,6 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN_NEW }}
         name: Pytest coverage
         env_vars: OS,PYTHON,GITHUB_ACTIONS,GITHUB_ACTION,GITHUB_REF,GITHUB_REPOSITORY,GITHUB_HEAD_REF,GITHUB_RUN_ID,GITHUB_SHA,COVERAGE_FILE
-        token: ${{ secrets.CODECOV_TOKEN }}
         verbose: true
         flags: unittests
       env:
