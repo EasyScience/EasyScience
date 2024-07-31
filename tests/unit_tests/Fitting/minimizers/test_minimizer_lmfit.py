@@ -87,7 +87,7 @@ class TestLMFit():
         assert mock_lm_model.set_param_hint.call_count == 2
         assert model == mock_lm_model
 
-    def test_generate_fit_function_signatur(self, minimizer: LMFit, monkeypatch) -> None:
+    def test_generate_fit_function_signatur(self, minimizer: LMFit) -> None:
         # When
         mock_parm_1 = MagicMock(Parameter)
         mock_parm_1.value = 1.0
@@ -109,7 +109,7 @@ class TestLMFit():
         # Expect
         assert fit_function.__signature__ == 'signature'
 
-    def test_generate_fit_function_lm_fit_function(self, minimizer: LMFit, monkeypatch) -> None:
+    def test_generate_fit_function_lm_fit_function(self, minimizer: LMFit) -> None:
         # When
         mock_parm_1 = MagicMock(Parameter)
         mock_parm_1.value = 1.0
