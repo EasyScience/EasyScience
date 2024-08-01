@@ -368,6 +368,16 @@ class DescriptorNumber(DescriptorBase):
             return NotImplemented
         return new_value
 
+    def __neg__(self) -> DescriptorNumber:
+        new_value = -self.full_value
+        name = '-'+self.name
+        return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+    
+    def __abs__(self) -> DescriptorNumber:
+        new_value = abs(self.full_value)
+        name = 'abs('+self.name+')'
+        return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+
     def _base_unit(self) -> str:
         string = str(self._scalar.unit)
         for i in range(len(string)):

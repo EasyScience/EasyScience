@@ -703,3 +703,18 @@ class Parameter(DescriptorNumber):
         min_value = min(combinations)
         max_value = max(combinations)
         return Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)
+    
+    def __neg__(self) -> Parameter:
+        new_value = -self.full_value
+        name = f"-{self.name}"
+        min_value = -self.max
+        max_value = -self.min
+        return Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)
+    
+    def __abs__(self) -> Parameter:
+        new_value = abs(self.full_value)
+        name = f"abs({self.name})"
+        if self.min < 0 and self.max > 0:
+            min_value = 0
+            max_value = max(abs(self.min), abs(self.max))
+        return Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)
