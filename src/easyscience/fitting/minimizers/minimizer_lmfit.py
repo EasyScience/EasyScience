@@ -18,7 +18,8 @@ from lmfit import Parameters as LMParameters
 from lmfit.model import ModelResult
 
 from easyscience.Objects.new_variable import Parameter as NewParameter
-from easyscience.Objects.ObjectClasses import BaseObj
+
+# from easyscience.Objects.ObjectClasses import BaseObj ruff complained about this was unused
 from easyscience.Objects.Variable import Parameter
 
 from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
