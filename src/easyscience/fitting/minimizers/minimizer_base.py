@@ -13,8 +13,8 @@ from typing import Union
 
 import numpy as np
 
-#causes circular import when Parameter is imported
-#from easyscience.Objects.ObjectClasses import BaseObj 
+# causes circular import when Parameter is imported
+# from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.Variable import Parameter
 
 from ..Constraints import ObjConstraint
@@ -31,7 +31,9 @@ class MinimizerBase(metaclass=ABCMeta):
 
     wrapping: str = None
 
-    def __init__(self, obj, fit_function: Callable, method: Optional[str] = None): # todo after constraint changes, add type hint: obj: BaseObj  # noqa: E501
+    def __init__(
+        self, obj, fit_function: Callable, method: Optional[str] = None
+    ):  # todo after constraint changes, add type hint: obj: BaseObj  # noqa: E501
         if method not in self.available_methods():
             raise FitError(f'Method {method} not available in {self.__class__}')
         self._object = obj
@@ -60,31 +62,16 @@ class MinimizerBase(metaclass=ABCMeta):
         del self._constraints[index]
 
     @abstractmethod
-    def make_model(self, pars: List[Parameter] = None):
-        """
-        Generate an engine model from the supplied `fit_function` and parameters in the base object.
-
-        :return: Callable model
-        """
-
-    @abstractmethod
-    def _generate_fit_function(self) -> Callable:
-        """
-        Using the user supplied `fit_function`, wrap it in such a way we can update `Parameter` on
-        iterations.
-        """
-
-    @abstractmethod
     def fit(
         self,
         x: np.ndarray,
         y: np.ndarray,
         weights: Optional[np.ndarray] = None,
-        model=None,
-        parameters=None,
-        method=None,
+        model: Optional[Callable] = None,
+        parameters: Optional[Parameter] = None,
+        method: Optional[str] = None,
         **kwargs,
-    ):
+    ) -> FitResults:
         """
         Perform a fit using the  engine.
 
@@ -119,7 +106,7 @@ class MinimizerBase(metaclass=ABCMeta):
         if minimizer_parameters is None:
             minimizer_parameters = {}
         if not isinstance(minimizer_parameters, dict):
-            raise TypeError("minimizer_parameters must be a dictionary")
+            raise TypeError('minimizer_parameters must be a dictionary')
 
         if self._fit_function is None:
             # This will also generate self._cached_pars
@@ -128,26 +115,6 @@ class MinimizerBase(metaclass=ABCMeta):
         minimizer_parameters = self._prepare_parameters(minimizer_parameters)
 
         return self._fit_function(x, **minimizer_parameters, **kwargs)
-
-    def _prepare_parameters(self, parameters: dict[str, float]) -> dict[str, float]:
-        """
-        Prepare the parameters for the minimizer.
-
-        :param parameters: Dict of parameters for the minimizer with names as keys.
-        """
-        pars = self._cached_pars
-
-        for name, item in pars.items():
-            parameter_name = MINIMIZER_PARAMETER_PREFIX + str(name)
-            if parameter_name not in parameters.keys():
-                ## TODO clean when full move to new_variable
-                from easyscience.Objects.new_variable import Parameter as NewParameter
-
-                if isinstance(item, NewParameter):
-                    parameters[parameter_name] = item.value
-                else:
-                    parameters[parameter_name] = item.raw_value
-        return parameters
 
     @abstractmethod
     def convert_to_pars_obj(self, par_list: Optional[Union[list]] = None):
@@ -170,30 +137,31 @@ class MinimizerBase(metaclass=ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def convert_to_par_object(obj): # todo after constraint changes, add type hint: obj: BaseObj
+    def convert_to_par_object(obj):  # todo after constraint changes, add type hint: obj: BaseObj
         """
         Convert an `EasyScience.Objects.Base.Parameter` object to an engine Parameter object.
         """
 
-    @abstractmethod
-    def _set_parameter_fit_result(self, fit_result):
+    def _prepare_parameters(self, parameters: dict[str, float]) -> dict[str, float]:
         """
-        Update parameters to their final values and assign a std error to them.
+        Prepare the parameters for the minimizer.
 
-        :param fit_result: Fit object which contains info on the fit
-        :return: None
-        :rtype: noneType
+        :param parameters: Dict of parameters for the minimizer with names as keys.
         """
+        pars = self._cached_pars
 
-    @abstractmethod
-    def _gen_fit_results(self, fit_results, **kwargs) -> FitResults:
-        """
-        Convert fit results into the unified `FitResults` format.
+        # TODO clean when full move to new_variable
+        from easyscience.Objects.new_variable import Parameter as NewParameter
 
-        :param fit_result: Fit object which contains info on the fit
-        :return: fit results container
-        :rtype: FitResults
-        """
+        for name, item in pars.items():
+            parameter_name = MINIMIZER_PARAMETER_PREFIX + str(name)
+            if parameter_name not in parameters.keys():
+                # TODO clean when full move to new_variable
+                if isinstance(item, NewParameter):
+                    parameters[parameter_name] = item.value
+                else:
+                    parameters[parameter_name] = item.raw_value
+        return parameters
 
     @staticmethod
     def _error_from_jacobian(jacobian: np.ndarray, residuals: np.ndarray, confidence: float = 0.95) -> np.ndarray:
@@ -210,4 +178,3 @@ class MinimizerBase(metaclass=ABCMeta):
         z = stats.norm.pdf(z)
         error_matrix = z * np.sqrt(error_matrix)
         return error_matrix
-
