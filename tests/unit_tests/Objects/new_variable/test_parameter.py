@@ -794,3 +794,60 @@ class TestParameter:
         # Then Expect
         with pytest.raises(ZeroDivisionError):
             result = descriptor / parameter
+
+    @pytest.mark.parametrize("test, expected", [
+        (3, Parameter("name ** 3", 125, "m^3", 281.25, -125, 1000)),
+        (2, Parameter("name ** 2", 25, "m^2", 5.0, 0, 100)),
+        (-1, Parameter("name ** -1", 0.2, "1/m", 8e-5, -np.Inf, np.Inf)),
+        (-2, Parameter("name ** -2", 0.04, "1/m^2", 1.28e-5, 0, np.Inf)),
+        (0, DescriptorNumber("name ** 0", 1, "dimensionless", 0)),
+        (DescriptorNumber("test", 2), Parameter("name ** test", 25, "m^2", 5.0, 0, 100))],
+        ids=["power_3", "power_2", "power_-1", "power_-2", "power_0", "power_descriptor_number"])
+    def test_power_of_parameter(self, test, expected):
+        # When 
+        parameter = Parameter("name", 5, "m", 0.05, -5, 10)
+
+        # Then
+        result = parameter ** test
+
+        # Expect
+        assert type(result) == type(expected)
+        assert result.name == expected.name
+        assert result.value == expected.value
+        assert result.unit == expected.unit
+        assert result.variance == expected.variance
+        if isinstance(result, Parameter):
+            assert result.min == expected.min
+            assert result.max == expected.max
+
+    @pytest.mark.parametrize("test, exponent, expected", [
+        (Parameter("name", 5, "m", 0.05, 0, 10),    -1, Parameter("name ** -1", 0.2, "1/m", 8e-5, 0.1, np.Inf)),
+        (Parameter("name", -5, "m", 0.05, -5, 0),   -1, Parameter("name ** -1", -0.2, "1/m", 8e-5, -np.Inf, -0.2)),
+        (Parameter("name", 5, "m", 0.05, 5, 10),    -1, Parameter("name ** -1", 0.2, "1/m", 8e-5, 0.1, 0.2)),
+        (Parameter("name", -5, "m", 0.05, -10, -5), -1, Parameter("name ** -1", -0.2, "1/m", 8e-5, -0.2, -0.1)),
+        (Parameter("name", -5, "m", 0.05, -10, -5), -2, Parameter("name ** -2", 0.04, "1/m^2", 1.28e-5, 0.01, 0.04)),
+        (Parameter("name", 5, "", 0.1, 1, 10),     0.3, Parameter("name ** 0.3", 1.6206565966927624, "", 0.0009455500095853564, 1, 1.9952623149688795)),
+        (Parameter("name", 5, "", 0.1),            0.5, Parameter("name ** 0.5", 2.23606797749979, "", 0.005, 0, np.Inf))],
+        ids=["0_positive", "negative_0", "both_positive", "both_negative_invert", "both_negative_invert_square", "fractional", "fractional_negative_limit"])
+    def test_power_of_diffent_parameters(self, test, exponent, expected):
+        # When Then
+        result = test ** exponent
+
+        # Expect
+        assert result.name == expected.name
+        assert result.value == expected.value
+        assert result.unit == expected.unit
+        assert result.variance == expected.variance
+        assert result.min == expected.min
+        assert result.max == expected.max
+
+    @pytest.mark.parametrize("parameter, exponent, expected", [
+        (Parameter("name", 5, "m"), DescriptorNumber("test", 2, unit="s"), UnitError),
+        (Parameter("name", 5, "m"), DescriptorNumber("test", 2, variance=0.01), ValueError),
+        (Parameter("name", 5, "m"), 0.5, UnitError),
+        (Parameter("name", -5, ""), 0.5, ValueError),],
+        ids=["exponent_unit", "exponent_variance", "exponent_fractional", "negative_base_fractional"])
+    def test_power_exceptions(self, parameter, exponent, expected):
+        # When Then Expect
+        with pytest.raises(expected):
+            result = parameter ** exponent

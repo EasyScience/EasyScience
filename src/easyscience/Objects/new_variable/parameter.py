@@ -677,10 +677,29 @@ class Parameter(DescriptorNumber):
             new_value = self.full_value ** exponent
         except Exception as message:
             raise message from None
-        if exponent % 2 == 0 and self.min <= 0 and self.max >= 0:
-            combinations = [0, self.max ** exponent]
+        if np.isnan(new_value.value):
+            raise ValueError("The result of the exponentiation is not a number")
+        if exponent == 0:
+            return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+        elif exponent < 0:
+            if self.min < 0 and self.max > 0:
+                combinations = [-np.Inf, np.Inf]
+            elif self.min == 0:
+                combinations = [self.max ** exponent, np.Inf]
+            elif self.max == 0:
+                combinations = [-np.Inf, self.min ** exponent]
+            else:
+                combinations = [self.min ** exponent, self.max ** exponent]
         else:
             combinations = [self.min ** exponent, self.max ** exponent]
+        if exponent % 2 == 0:
+            if self.min < 0 and self.max > 0:
+                combinations.append(0)
+            combinations = [abs(combination) for combination in combinations]
+        elif exponent % 1 != 0:
+            if self.min < 0:
+                combinations.append(0)
+            combinations = [combination for combination in combinations if combination >= 0]
         min_value = min(combinations)
         max_value = max(combinations)
         return Parameter.from_scipp(name=name, full_value=new_value, min=min_value, max=max_value)

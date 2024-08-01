@@ -353,6 +353,8 @@ class DescriptorNumber(DescriptorBase):
             new_value = self.full_value ** exponent
         except Exception as message:
             raise message from None
+        if np.isnan(new_value.value):
+            raise ValueError("The result of the exponentiation is not a number")
         return DescriptorNumber.from_scipp(name=name, full_value=new_value)
     
     def __rpow__(self, other: numbers.Number) -> numbers.Number:
@@ -361,10 +363,7 @@ class DescriptorNumber(DescriptorBase):
                 raise UnitError("Exponents must be dimensionless")
             if self.variance is not None:
                 raise ValueError("Exponents must not have variance")
-            try:
-                new_value = other ** self.full_value
-            except Exception as message:
-                raise message from None
+            new_value = other ** self.value
         else:
             return NotImplemented
         return new_value
