@@ -142,25 +142,25 @@ class DFO(MinimizerBase):
                 ## TODO clean when full move to new_variable
                 from easyscience.Objects.new_variable import Parameter as NewParameter
 
-                pars = {}
+                dfo_pars = {}
                 if not parameters:
                     for name, par in obj._cached_pars.items():
                         if isinstance(par, NewParameter):
-                            pars[MINIMIZER_PARAMETER_PREFIX + str(name)] = par.value
+                            dfo_pars[MINIMIZER_PARAMETER_PREFIX + str(name)] = par.value
                         else:
-                            pars[MINIMIZER_PARAMETER_PREFIX + str(name)] = par.raw_value
+                            dfo_pars[MINIMIZER_PARAMETER_PREFIX + str(name)] = par.raw_value
 
                 else:
-                    for new_par in parameters:
-                        if isinstance(new_par, NewParameter):
-                            pars[MINIMIZER_PARAMETER_PREFIX + new_par.unique_name] = new_par.value
+                    for par in parameters:
+                        if isinstance(par, NewParameter):
+                            dfo_pars[MINIMIZER_PARAMETER_PREFIX + par.unique_name] = par.value
                         else:
-                            pars[MINIMIZER_PARAMETER_PREFIX + new_par.unique_name] = new_par.raw_value
+                            dfo_pars[MINIMIZER_PARAMETER_PREFIX + par.unique_name] = par.raw_value
 
                 def _residuals(pars_values: List[float]) -> np.ndarray:
-                    for idx, par_name in enumerate(pars.keys()):
-                        pars[par_name] = pars_values[idx]
-                    return (y - fit_func(x, **pars)) / weights
+                    for idx, par_name in enumerate(dfo_pars.keys()):
+                        dfo_pars[par_name] = pars_values[idx]
+                    return (y - fit_func(x, **dfo_pars)) / weights
 
                 return _residuals
 
