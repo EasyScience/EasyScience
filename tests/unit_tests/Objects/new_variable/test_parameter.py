@@ -851,3 +851,34 @@ class TestParameter:
         # When Then Expect
         with pytest.raises(expected):
             result = parameter ** exponent
+
+    def test_negation(self):
+        # When
+        parameter = Parameter("name", 5, "m", 0.05, -5, 10)
+
+        # Then
+        result = -parameter
+
+        # Expect
+        assert result.name == "-name"
+        assert result.value == -5
+        assert result.unit == "m"
+        assert result.variance == 0.05
+        assert result.min == -10
+        assert result.max == 5
+
+    @pytest.mark.parametrize("test, expected", [
+        (Parameter("name", -5, "m", 0.05, -10, -5), Parameter("abs(name)", 5, "m", 0.05, 5, 10)),
+        (Parameter("name", 5, "m", 0.05, -10, 10), Parameter("abs(name)", 5, "m", 0.05, 0, 10))],
+        ids=["pure_negative", "crossing_zero"])
+    def test_abs(self, test, expected):
+        # When Then
+        result = abs(test)
+
+        # Expect
+        assert result.name == expected.name
+        assert result.value == expected.value
+        assert result.unit == expected.unit
+        assert result.variance == expected.variance
+        assert result.min == expected.min
+        assert result.max == expected.max

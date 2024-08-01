@@ -428,3 +428,31 @@ class TestDescriptorNumber:
         # When Then Expect
         with pytest.raises(exception):
             result = 2 ** exponent
+
+    def test_negation(self):
+        # When 
+        descriptor = DescriptorNumber(name="name", unit="m", value=2, variance=0.1) 
+
+        # Then
+        result = -descriptor
+
+        # Expect
+        assert type(result) == DescriptorNumber
+        assert result.name == "-name"
+        assert result.value == -2
+        assert result.unit == "m"
+        assert result.variance == 0.1
+
+    def test_abs(self):
+        # When 
+        descriptor = DescriptorNumber(name="name", unit="m", value=-2, variance=0.1) 
+
+        # Then
+        result = abs(descriptor)
+
+        # Expect
+        assert type(result) == DescriptorNumber
+        assert result.name == "abs(name)"
+        assert result.value == 2
+        assert result.unit == "m"
+        assert result.variance == 0.1
