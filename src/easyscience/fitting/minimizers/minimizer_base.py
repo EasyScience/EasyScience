@@ -32,7 +32,10 @@ class MinimizerBase(metaclass=ABCMeta):
     wrapping: str = None
 
     def __init__(
-        self, obj, fit_function: Callable, method: Optional[str] = None
+        self,
+        obj,  #: BaseObj,
+        fit_function: Callable,
+        method: Optional[str] = None,
     ):  # todo after constraint changes, add type hint: obj: BaseObj  # noqa: E501
         if method not in self.available_methods():
             raise FitError(f'Method {method} not available in {self.__class__}')

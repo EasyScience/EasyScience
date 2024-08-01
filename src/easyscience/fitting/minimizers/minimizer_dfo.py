@@ -10,7 +10,8 @@ from typing import Optional
 import dfols
 import numpy as np
 
-from easyscience.Objects.ObjectClasses import BaseObj
+# causes circular import when Parameter is imported
+# from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.Variable import Parameter
 
 from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
@@ -26,7 +27,12 @@ class DFO(MinimizerBase):
 
     wrapping = 'dfo'
 
-    def __init__(self, obj: BaseObj, fit_function: Callable, method: Optional[str] = None):
+    def __init__(
+        self,
+        obj,  #: BaseObj,
+        fit_function: Callable,
+        method: Optional[str] = None,
+    ):  # todo after constraint changes, add type hint: obj: BaseObj  # noqa: E501
         """
         Initialize the fitting engine with a `BaseObj` and an arbitrary fitting function.
 

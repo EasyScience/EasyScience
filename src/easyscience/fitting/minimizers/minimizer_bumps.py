@@ -14,7 +14,8 @@ from bumps.names import Curve
 from bumps.names import FitProblem
 from bumps.parameter import Parameter as BumpsParameter
 
-from easyscience.Objects.ObjectClasses import BaseObj
+# causes circular import when Parameter is imported
+# from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.Variable import Parameter
 
 from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
@@ -31,7 +32,12 @@ class Bumps(MinimizerBase):
 
     wrapping = 'bumps'
 
-    def __init__(self, obj: BaseObj, fit_function: Callable, method: Optional[str] = None):
+    def __init__(
+        self,
+        obj,  #: BaseObj,
+        fit_function: Callable,
+        method: Optional[str] = None,
+    ):  # todo after constraint changes, add type hint: obj: BaseObj  # noqa: E501
         """
         Initialize the fitting engine with a `BaseObj` and an arbitrary fitting function.
 
