@@ -35,7 +35,7 @@ class LMFit(MinimizerBase):  # noqa: S101
 
     wrapping = 'lmfit'
 
-    def __init__(self, obj: BaseObj, fit_function: Callable, method: Optional[str] = None):
+    def __init__(self, obj, fit_function: Callable, method: Optional[str] = None):
         """
         Initialize the minimizer with the `BaseObj` and the `fit_function` to be used.
 

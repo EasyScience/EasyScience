@@ -364,3 +364,67 @@ class TestDescriptorNumber:
         # Then Expect
         with pytest.raises(ZeroDivisionError):
             result = 2 / descriptor
+
+    @pytest.mark.parametrize("test, expected", [
+        (DescriptorNumber("test", 2), DescriptorNumber("name ** test", 4, unit="m^2", variance=1.6)),
+        (2, DescriptorNumber("name ** 2", 4, unit="m^2", variance=1.6)),
+        (-2, DescriptorNumber("name ** -2", 0.25, unit="1/m^2", variance=0.00625))],
+        ids=["descriptorNumber", "scalar", "negative_scalar"])
+    def test_power_of_descriptor(self, test, expected):
+        # When 
+        descriptor = DescriptorNumber(name="name", value=2, unit="m", variance=0.1) 
+
+        # Then
+        result = descriptor ** test
+
+        # Expect
+        assert type(result) == DescriptorNumber
+        assert result.name == expected.name
+        assert result.value == expected.value
+        assert result.unit == expected.unit
+        assert result.variance == expected.variance
+
+    def test_power_of_dimensionless_descriptor(self):
+        # When 
+        descriptor = DescriptorNumber(name="name", value=2, unit="dimensionless", variance=0.1) 
+
+        # Then
+        result = descriptor ** 0.5
+
+        # Expect
+        assert type(result) == DescriptorNumber
+        assert result.name == "name ** 0.5"
+        assert result.value == 1.4142135623730951
+        assert result.unit == "dimensionless"
+        assert result.variance == pytest.approx(0.0125)
+
+    @pytest.mark.parametrize("descriptor, exponent, exception", [
+        (DescriptorNumber("name", 2), DescriptorNumber("test", 2, unit="m"), UnitError),
+        (DescriptorNumber("name", 2), DescriptorNumber("test", 2, variance=0.1), ValueError),
+        (DescriptorNumber("name", 2, unit="m"), 0.5, UnitError),
+        (DescriptorNumber("name", -2), 0.5, ValueError)],
+        ids=["descriptor_unit", "descriptor_variance", "fractional_of_unit", "fractonal_of_negative"])
+    def test_power_of_descriptor_exceptions(self, descriptor, exponent, exception):
+        # When Then Expect
+        with pytest.raises(exception):
+            result = descriptor ** exponent
+
+
+    def test_descriptor_as_exponentiation(self):
+        # When 
+        descriptor = DescriptorNumber(name="name", value=2) 
+
+        # Then
+        result = 2 ** descriptor
+
+        # Expect
+        assert result == 4
+
+    @pytest.mark.parametrize("exponent, exception", [
+        (DescriptorNumber("test", 2, unit="m"), UnitError),
+        (DescriptorNumber("test", 2, variance=0.1), ValueError)],
+        ids=["descriptor_unit", "descriptor_variance"])
+    def test_descriptor_as_exponentiation_exception(self, exponent, exception):
+        # When Then Expect
+        with pytest.raises(exception):
+            result = 2 ** exponent
