@@ -233,7 +233,7 @@ class DescriptorNumber(DescriptorBase):
                 raise UnitError("Numbers can only be added to dimensionless values")
             new_value = self.full_value  + other
             name = self.name + ' + ' + str(other)
-        elif type(other) == DescriptorNumber:
+        elif type(other) is DescriptorNumber:
             original_unit = other.unit
             try:
                 other.convert_unit(self.unit)
@@ -262,7 +262,7 @@ class DescriptorNumber(DescriptorBase):
                 raise UnitError("Numbers can only be subtracted from dimensionless values")
             new_value = self.full_value - other
             name = self.name + ' - ' + str(other)
-        elif type(other) == DescriptorNumber:
+        elif type(other) is DescriptorNumber:
             original_unit = other.unit
             try:
                 other.convert_unit(self.unit)
@@ -289,7 +289,7 @@ class DescriptorNumber(DescriptorBase):
         if isinstance(other, numbers.Number):
             new_value = self.full_value * other
             name = self.name + ' * ' + str(other)
-        elif type(other) == DescriptorNumber:
+        elif type(other) is DescriptorNumber:
             new_value = self.full_value * other.full_value
             name = self._name + ' * ' + other._name
         else:
@@ -313,7 +313,7 @@ class DescriptorNumber(DescriptorBase):
                 raise ZeroDivisionError("Cannot divide by zero")
             new_value = self.full_value / other
             name = self.name + ' / ' + str(original_other)
-        elif type(other) == DescriptorNumber:
+        elif type(other) is DescriptorNumber:
             original_other = other.value
             if original_other == 0:
                 raise ZeroDivisionError("Cannot divide by zero")
@@ -340,7 +340,7 @@ class DescriptorNumber(DescriptorBase):
         if isinstance(other, numbers.Number):
             exponent = other
             name = f"{self.name} ** {other}"
-        elif type(other) == DescriptorNumber:
+        elif type(other) is DescriptorNumber:
             if other.unit != 'dimensionless':
                 raise UnitError("Exponents must be dimensionless")
             if other.variance is not None:
