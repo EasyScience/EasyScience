@@ -535,7 +535,7 @@ class Parameter(DescriptorNumber):
         elif isinstance(other, DescriptorNumber):
             new_value = self.full_value * other.full_value
             name = self.name+" * "+other.name
-            if other.value == 0 and type(other) == DescriptorNumber:
+            if other.value == 0 and type(other) is DescriptorNumber:
                 return DescriptorNumber.from_scipp(name=name, full_value=new_value)
             if isinstance(other, Parameter):
                 combinations = []
@@ -664,7 +664,7 @@ class Parameter(DescriptorNumber):
         if isinstance(other, numbers.Number):
             exponent = other
             name = f"{self.name} ** {other}"
-        elif type(other) == DescriptorNumber:
+        elif type(other) is DescriptorNumber:
             if other.unit != 'dimensionless':
                 raise UnitError("Exponents must be dimensionless")
             if other.variance is not None:
