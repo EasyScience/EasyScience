@@ -7,7 +7,6 @@ from scipp import UnitError
 
 from easyscience.Objects.new_variable.parameter import Parameter
 from easyscience.Objects.new_variable.descriptor_number import DescriptorNumber
-from easyscience.Objects.new_variable.descriptor_str import DescriptorStr
 from easyscience import global_object
 
 class TestParameter:
@@ -744,7 +743,7 @@ class TestParameter:
             (DescriptorNumber(name="test", value=0, variance=0.1, unit="s"), DescriptorNumber("test / name", 0.0, "s/m", 0.1)),
             (0, DescriptorNumber("0 / name", 0.0, "1/m", 0.0))],
             ids=["descriptor_number", "number"])
-    def test_zero_value_dividided_by_parameter(self, parameter : Parameter, test, expected):
+    def test_zero_value_divided_by_parameter(self, parameter : Parameter, test, expected):
         # When 
         parameter._callback = property()
 

@@ -380,7 +380,10 @@ class DescriptorNumber(DescriptorBase):
 
     def _base_unit(self) -> str:
         string = str(self._scalar.unit)
-        for i in range(len(string)):
-            if string[i] not in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."]:
+        for i, letter in enumerate(string):
+            if letter == "e":
+                if string[i:i+2] not in ["e+", "e-"]:
+                    return string[i:]
+            elif letter not in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "+", "-"]:
                 return string[i:]
         return ""
