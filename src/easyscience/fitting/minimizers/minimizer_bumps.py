@@ -2,6 +2,7 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
 
+import copy
 import inspect
 from typing import Callable
 from typing import List
@@ -22,6 +23,10 @@ from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
 from .minimizer_base import MinimizerBase
 from .utils import FitError
 from .utils import FitResults
+
+FIT_AVAILABLE_IDS_FILTERED = copy.copy(FIT_AVAILABLE_IDS)
+# Considered experimental
+FIT_AVAILABLE_IDS_FILTERED.remove('pt')
 
 
 class Bumps(MinimizerBase):
@@ -53,7 +58,7 @@ class Bumps(MinimizerBase):
         self._p_0 = {}
 
     def available_methods(self) -> List[str]:
-        return FIT_AVAILABLE_IDS
+        return FIT_AVAILABLE_IDS_FILTERED
 
     def fit(
         self,

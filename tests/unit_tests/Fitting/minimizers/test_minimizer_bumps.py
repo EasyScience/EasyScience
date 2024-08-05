@@ -35,7 +35,7 @@ class TestBumpsFit():
 
     def test_available_methods(self, minimizer: Bumps) -> None:
         # When Then Expect
-        assert minimizer.available_methods() == ['amoeba', 'de', 'dream', 'newton', 'scipy.leastsq', 'lm', 'pt']
+        assert minimizer.available_methods() == ['amoeba', 'de', 'dream', 'newton', 'scipy.leastsq', 'lm']
 
     def test_fit(self, minimizer: Bumps, monkeypatch) -> None:
         # When
