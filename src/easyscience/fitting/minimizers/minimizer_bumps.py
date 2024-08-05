@@ -14,6 +14,8 @@ from bumps.names import Curve
 from bumps.names import FitProblem
 from bumps.parameter import Parameter as BumpsParameter
 
+from easyscience.Objects.Variable import Parameter
+
 from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
 from .minimizer_base import MinimizerBase
 from .utils import FitError
@@ -43,7 +45,7 @@ class Bumps(MinimizerBase):  # noqa: S101
         self._cached_pars_order = ()
         self._p_0 = {}
 
-    def make_model(self, pars: Optional[List[BumpsParameter]] = None) -> Callable:
+    def _make_model(self, pars: Optional[List[BumpsParameter]] = None) -> Callable:
         """
         Generate a bumps model from the supplied `fit_function` and parameters in the base object.
         Note that this makes a callable as it needs to be initialized with *x*, *y*, *weights*
@@ -156,8 +158,8 @@ class Bumps(MinimizerBase):  # noqa: S101
         x: np.ndarray,
         y: np.ndarray,
         weights: Optional[np.ndarray] = None,
-        model=None,
-        parameters=None,
+        model: Optional[Callable] = None,
+        parameters: Optional[Parameter] = None,
         method: Optional[str] = None,
         minimizer_kwargs: Optional[dict] = None,
         engine_kwargs: Optional[dict] = None,
@@ -201,7 +203,7 @@ class Bumps(MinimizerBase):  # noqa: S101
         minimizer_kwargs.update(engine_kwargs)
 
         if model is None:
-            model = self.make_model(pars=parameters)
+            model = self._make_model(pars=parameters)
             model = model(x, y, weights)
         self._cached_model = model
 
@@ -314,8 +316,8 @@ class Bumps(MinimizerBase):  # noqa: S101
         item = {}
         for index, name in enumerate(self._cached_model._pnames):
             dict_name = name[1:]
- 
-            ## TODO clean when full move to new_variable 
+
+            ## TODO clean when full move to new_variable
             from easyscience.Objects.new_variable import Parameter
 
             if isinstance(pars[dict_name], Parameter):
