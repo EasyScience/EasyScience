@@ -59,7 +59,7 @@ class AbsSin2D(BaseObj):
 
 
 @pytest.mark.parametrize("with_errors", [False, True])
-@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo"])
+@pytest.mark.parametrize("fit_engine", [None, "LMFit", "Bumps", "DFO"])
 def test_multi_fit(fit_engine, with_errors):
     ref_sin_1 = AbsSin(0.2, np.pi)
     sp_sin_1 = AbsSin(0.354, 3.05)
@@ -120,7 +120,7 @@ def test_multi_fit(fit_engine, with_errors):
 
 
 @pytest.mark.parametrize("with_errors", [False, True])
-@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo"])
+@pytest.mark.parametrize("fit_engine", [None, "LMFit", "Bumps", "DFO"])
 def test_multi_fit2(fit_engine, with_errors):
     ref_sin_1 = AbsSin(0.2, np.pi)
     sp_sin_1 = AbsSin(0.354, 3.05)
@@ -198,7 +198,7 @@ def test_multi_fit2(fit_engine, with_errors):
 
 
 @pytest.mark.parametrize("with_errors", [False, True])
-@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "dfo"])
+@pytest.mark.parametrize("fit_engine", [None, "LMFit", "Bumps", "DFO"])
 def test_multi_fit_1D_2D(fit_engine, with_errors):
     # Generate fit and reference objects
     ref_sin1D = AbsSin(0.2, np.pi)

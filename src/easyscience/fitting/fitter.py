@@ -14,7 +14,7 @@ from .minimizers.factory import AvailableMinimizers
 from .minimizers.factory import factory
 from .minimizers.factory import from_string_to_enum
 
-DEFAULT_MINIMIZER = 'lmfit-leastsq'
+DEFAULT_MINIMIZER = 'LMFit_leastsq'
 
 
 class Fitter:
