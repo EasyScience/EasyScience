@@ -91,6 +91,9 @@ class Parameter(DescriptorNumber):
             raise ValueError('The min and max bounds cannot be identical. Please use fixed=True instead to fix the value.')
         if not isinstance(fixed, bool):
             raise TypeError('`fixed` must be either True or False')
+        
+        self._min = sc.scalar(float(min), unit=unit)
+        self._max = sc.scalar(float(max), unit=unit)
 
         super().__init__(
             name=name,
@@ -109,8 +112,6 @@ class Parameter(DescriptorNumber):
             weakref.finalize(self, self._callback.fdel)
 
         # Create additional fitting elements
-        self._min = sc.scalar(float(min), unit=unit)
-        self._max = sc.scalar(float(max), unit=unit)
         self._fixed = fixed
         self._enabled = enabled
         self._initial_scalar = copy.deepcopy(self._scalar)
@@ -120,6 +121,10 @@ class Parameter(DescriptorNumber):
             'max': SelfConstraint(self, '<=', 'max'),
         }
         self._constraints = Constraints(builtin=builtin_constraint, user={}, virtual={})
+
+        if self.unit is not None:
+            self.convert_unit(self._base_unit())
+
 
     @property
     def value_no_call_back(self) -> numbers.Number:
@@ -181,7 +186,7 @@ class Parameter(DescriptorNumber):
     @property_stack_deco
     def value(self, value: numbers.Number) -> None:
         """
-        Set the value of self. This only update the value of the scipp scalar.
+        Set the value of self. This only updates the value of the scipp scalar.
 
         :param value: New value of self
         """
@@ -582,12 +587,11 @@ class Parameter(DescriptorNumber):
     
     def __truediv__(self, other: Union[DescriptorNumber, Parameter, numbers.Number]) -> Parameter:
         if isinstance(other, numbers.Number):
-            original_other = other
             if other == 0:
                 raise ZeroDivisionError("Cannot divide by zero")
             new_full_value = self.full_value / other
             combinations = [self.min / other, self.max / other]
-            name = f"{self.name} / {original_other}"
+            name = f"{self.name} / {other}"
         elif isinstance(other, DescriptorNumber):  # Parameter inherits from DescriptorNumber and is also handled here
             original_value = other.value
             if original_value == 0:
