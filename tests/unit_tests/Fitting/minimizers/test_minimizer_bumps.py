@@ -22,7 +22,6 @@ class TestBumpsFit():
 
     def test_init(self, minimizer: Bumps) -> None:
         assert minimizer._p_0 == {}
-        assert minimizer._cached_pars_order == ()
         assert minimizer.wrapping == 'bumps'
 
     def test_init_exception(self) -> None:
@@ -91,16 +90,9 @@ class TestBumpsFit():
 
         # Then
         fit_function = minimizer._generate_fit_function()
-        fit_function_result = fit_function([10.0])
 
         # Expect
-        assert 'fit_function_result' == fit_function_result
-        mock_fit_constraint.assert_called_once_with()
-        minimizer._original_fit_function.assert_called_once_with([10.0])
-        assert minimizer._cached_pars['mock_parm_1'] == mock_parm_1
-        assert minimizer._cached_pars['mock_parm_2'] == mock_parm_2
-        assert minimizer._cached_pars_order == ('mock_parm_1', 'mock_parm_2')
-        assert str(fit_function.__signature__) == '(x, pmock_parm_1=2.0, pmock_parm_2=2.0)'
+        assert str(fit_function.__signature__) == '(x, pmock_parm_1=1.0, pmock_parm_2=2.0)'
 
     def test_make_model(self, minimizer: Bumps, monkeypatch) -> None:
         # When

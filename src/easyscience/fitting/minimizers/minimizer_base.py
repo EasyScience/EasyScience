@@ -4,6 +4,9 @@
 
 from abc import ABCMeta
 from abc import abstractmethod
+from inspect import Parameter as InspectParameter
+from inspect import Signature
+from inspect import _empty
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -165,6 +168,93 @@ class MinimizerBase(metaclass=ABCMeta):
                 else:
                     parameters[parameter_name] = item.raw_value
         return parameters
+
+    def _generate_fit_function(self) -> Callable:
+        """
+        Using the user supplied `fit_function`, wrap it in such a way we can update `Parameter` on
+        iterations.
+
+        :return: a fit function which is compatible with bumps models
+        """
+        # Original fit function
+        func = self._original_fit_function
+        # Get a list of `Parameters`
+        self._cached_pars = {}
+        self._cached_pars_vals = {}
+        for parameter in self._object.get_fit_parameters():
+            key = parameter.unique_name
+            self._cached_pars[key] = parameter
+            self._cached_pars_vals[key] = (parameter.value, parameter.error)
+
+        # Make a new fit function
+        def _fit_function(x: np.ndarray, **kwargs):
+            """
+            Wrapped fit function which now has an EasyScience compatible form
+
+            :param x: array of data points to be calculated
+            :type x: np.ndarray
+            :param kwargs: key word arguments
+            :return: points calculated at `x`
+            :rtype: np.ndarray
+            """
+            # Update the `Parameter` values and the callback if needed
+            # TODO THIS IS NOT THREAD SAFE :-(
+            # TODO clean when full move to new_variable
+            from easyscience.Objects.new_variable import Parameter
+
+            for name, value in kwargs.items():
+                par_name = name[1:]
+                if par_name in self._cached_pars.keys():
+                    # TODO clean when full move to new_variable
+                    if isinstance(self._cached_pars[par_name], Parameter):
+                        # This will take into account constraints
+                        if self._cached_pars[par_name].value != value:
+                            self._cached_pars[par_name].value = value
+                    else:
+                        # This will take into account constraints
+                        if self._cached_pars[par_name].raw_value != value:
+                            self._cached_pars[par_name].value = value
+
+                    # Since we are calling the parameter fset will be called.
+            # TODO Pre processing here
+            for constraint in self.fit_constraints():
+                constraint()
+            return_data = func(x)
+            # TODO Loading or manipulating data here
+            return return_data
+
+        return _fit_function
+
+    @staticmethod
+    def _create_signature(parameters: Dict[int, Parameter]) -> Signature:
+        """
+        Wrap the function signature.
+        This is done as lmfit wants the function to be in the form:
+        f = (x, a=1, b=2)...
+        Where we need to be generic. Note that this won't hold for much outside of this scope.
+        """
+        wrapped_parameters = []
+        wrapped_parameters.append(InspectParameter('x', InspectParameter.POSITIONAL_OR_KEYWORD, annotation=_empty))
+
+        ## TODO clean when full move to new_variable
+        from easyscience.Objects.new_variable import Parameter as NewParameter
+
+        for name, parameter in parameters.items():
+            ## TODO clean when full move to new_variable
+            if isinstance(parameter, NewParameter):
+                default_value = parameter.value
+            else:
+                default_value = parameter.raw_value
+
+            wrapped_parameters.append(
+                InspectParameter(
+                    MINIMIZER_PARAMETER_PREFIX + str(name),
+                    InspectParameter.POSITIONAL_OR_KEYWORD,
+                    annotation=_empty,
+                    default=default_value,
+                )
+            )
+        return Signature(wrapped_parameters)
 
     @staticmethod
     def _error_from_jacobian(jacobian: np.ndarray, residuals: np.ndarray, confidence: float = 0.95) -> np.ndarray:
