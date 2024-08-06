@@ -437,7 +437,7 @@ class Parameter(DescriptorNumber):
             min_value = self.min + other
             max_value = self.max + other
             name = f"{self.name} + {other}"
-        elif isinstance(other, DescriptorNumber):
+        elif isinstance(other, DescriptorNumber): # Parameter inherits from DescriptorNumber and is also handled here 
             other_unit = other.unit
             try:
                 other.convert_unit(self.unit)
@@ -460,7 +460,7 @@ class Parameter(DescriptorNumber):
             min_value = self.min + other
             max_value = self.max + other
             name = f"{other} + {self.name}"
-        elif isinstance(other, DescriptorNumber):
+        elif isinstance(other, DescriptorNumber): # Parameter inherits from DescriptorNumber and is also handled here 
             original_unit = self.unit
             try:
                 self.convert_unit(other.unit)
@@ -483,7 +483,7 @@ class Parameter(DescriptorNumber):
             min_value = self.min - other
             max_value = self.max - other
             name = f"{self.name} - {other}"
-        elif isinstance(other, DescriptorNumber):
+        elif isinstance(other, DescriptorNumber): # Parameter inherits from DescriptorNumber and is also handled here
             other_unit = other.unit
             try:
                 other.convert_unit(self.unit)
@@ -510,7 +510,7 @@ class Parameter(DescriptorNumber):
             min_value = other - self.max
             max_value = other - self.min
             name = f"{other} - {self.name}"
-        elif isinstance(other, DescriptorNumber):
+        elif isinstance(other, DescriptorNumber):   # Parameter inherits from DescriptorNumber and is also handled here
             original_unit = self.unit
             try:
                 self.convert_unit(other.unit)
@@ -532,7 +532,7 @@ class Parameter(DescriptorNumber):
             if other == 0:
                 return DescriptorNumber.from_scipp(name=name, full_value=new_full_value)
             combinations = [self.min * other, self.max * other]
-        elif isinstance(other, DescriptorNumber):
+        elif isinstance(other, DescriptorNumber): # Parameter inherits from DescriptorNumber and is also handled here
             new_full_value = self.full_value * other.full_value
             name = f"{self.name} * {other.name}"
             if other.value == 0 and isinstance(other, DescriptorNumber):
@@ -563,7 +563,7 @@ class Parameter(DescriptorNumber):
             if other == 0:
                 return DescriptorNumber.from_scipp(name=name, full_value=new_full_value)
             combinations = [other * self.min, other * self.max]
-        elif isinstance(other, DescriptorNumber):
+        elif isinstance(other, DescriptorNumber):   # Parameter inherits from DescriptorNumber and is also handled here
             new_full_value = other.full_value * self.full_value
             name = f"{other.name} * {self.name}"
             if other.value == 0:
@@ -585,7 +585,7 @@ class Parameter(DescriptorNumber):
             new_full_value = self.full_value / other
             combinations = [self.min / other, self.max / other]
             name = f"{self.name} / {original_other}"
-        elif isinstance(other, DescriptorNumber):
+        elif isinstance(other, DescriptorNumber):  # Parameter inherits from DescriptorNumber and is also handled here
             original_value = other.value
             if original_value == 0:
                 raise ZeroDivisionError("Cannot divide by zero")
@@ -631,7 +631,7 @@ class Parameter(DescriptorNumber):
             name = f"{other} / {self.name}"
             if other_value == 0:
                 return DescriptorNumber.from_scipp(name=name, full_value=new_full_value)
-        elif isinstance(other, DescriptorNumber):
+        elif isinstance(other, DescriptorNumber): # Parameter inherits from DescriptorNumber and is also handled here
             new_full_value = other.full_value / self.full_value
             other_value = other.value
             name = other.name+" / "+self.name
@@ -664,7 +664,7 @@ class Parameter(DescriptorNumber):
         if isinstance(other, numbers.Number):
             exponent = other
             name = f"{self.name} ** {other}"
-        elif isinstance(other, DescriptorNumber):
+        elif isinstance(other, DescriptorNumber): # Parameter inherits from DescriptorNumber and is also handled here
             if other.unit != 'dimensionless':
                 raise UnitError("Exponents must be dimensionless")
             if other.variance is not None:
