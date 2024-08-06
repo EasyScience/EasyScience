@@ -5,9 +5,9 @@
 from abc import ABCMeta
 from abc import abstractmethod
 
-from easyscience.Objects.Job.Analysis import AnalysisBase
-from easyscience.Objects.Job.Experiment import ExperimentBase
-from easyscience.Objects.Job.TheoreticalModel import TheoreticalModelBase
+from easyscience.Objects.job.analysis import AnalysisBase
+from easyscience.Objects.job.experiment import ExperimentBase
+from easyscience.Objects.job.theoreticalmodel import TheoreticalModelBase
 from easyscience.Objects.ObjectClasses import BaseObj
 
 
@@ -74,13 +74,11 @@ class JobBase(BaseObj, metaclass=ABCMeta):
     # def info(self, info: InfoBase):
     #     raise NotImplementedError("info setter not implemented")
 
-    # @abstractmethod
-    # def calculate_theory(self, *args, **kwargs):
-    #     raise NotImplementedError("calculate_theory not implemented")
-    #     #pass
+    @abstractmethod
+    def calculate_theory(self, *args, **kwargs):
+        raise NotImplementedError("calculate_theory not implemented")
 
     @abstractmethod
     def fit(self, *args, **kwargs):
         raise NotImplementedError("fit not implemented")
-        #pass
     

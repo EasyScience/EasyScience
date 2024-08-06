@@ -9,6 +9,7 @@ import numpy as np
 
 from easyscience.Datasets.xarray import xr  # type: ignore
 from easyscience.Objects.ObjectClasses import BaseObj
+from easyscience.fitting.minimizers import MinimizerBase
 
 
 class AnalysisBase(BaseObj, metaclass=ABCMeta):
@@ -34,26 +35,26 @@ class AnalysisBase(BaseObj, metaclass=ABCMeta):
             x: Union[xr.DataArray, np.ndarray],
             y: Union[xr.DataArray, np.ndarray],
             e: Union[xr.DataArray, np.ndarray],
-            **kwargs):
+            **kwargs) -> None:
         raise NotImplementedError("fit not implemented")
 
     @property
-    def calculator(self):
+    def calculator(self) -> str:
         if self._calculator is None:
             self._calculator = self.interface.current_interface_name
         return self._calculator
 
     @calculator.setter
-    def calculator(self, value):
+    def calculator(self, value) -> None:
         # TODO: check if the calculator is available for the given JobType
         self.interface.switch(value, fitter=self._fitter)
 
     @property
-    def minimizer(self):
+    def minimizer(self) -> MinimizerBase:
         return self._minimizer
 
     @minimizer.setter
-    def minimizer(self, minimizer):
+    def minimizer(self, minimizer: MinimizerBase) -> None:
         self._minimizer = minimizer
 
     # required dunder methods
