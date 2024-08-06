@@ -9,7 +9,6 @@ from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Optional
-from typing import Union
 
 import numpy as np
 from lmfit import Model as LMModel
@@ -17,8 +16,8 @@ from lmfit import Parameter as LMParameter
 from lmfit import Parameters as LMParameters
 from lmfit.model import ModelResult
 
-from easyscience.Objects.new_variable import Parameter as NewParameter
-from easyscience.Objects.ObjectClasses import BaseObj
+# causes circular import when Parameter is imported
+# from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.Variable import Parameter
 
 from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
@@ -35,7 +34,12 @@ class LMFit(MinimizerBase):  # noqa: S101
 
     wrapping = 'lmfit'
 
-    def __init__(self, obj: BaseObj, fit_function: Callable, method: Optional[str] = None):
+    def __init__(
+        self,
+        obj,  #: BaseObj,
+        fit_function: Callable,
+        method: Optional[str] = None,
+    ):  # todo after constraint changes, add type hint: obj: BaseObj  # noqa: E501
         """
         Initialize the minimizer with the `BaseObj` and the `fit_function` to be used.
 
@@ -214,7 +218,7 @@ class LMFit(MinimizerBase):  # noqa: S101
             raise FitError(e)
         return results
 
-    def convert_to_pars_obj(self, parameters: Optional[List[Union[Parameter, NewParameter]]] = None) -> LMParameters:
+    def convert_to_pars_obj(self, parameters: Optional[List[Parameter]] = None) -> LMParameters:
         """
         Create an lmfit compatible container with the `Parameters` converted from the base object.
 
@@ -228,14 +232,16 @@ class LMFit(MinimizerBase):  # noqa: S101
         return lm_parameters
 
     @staticmethod
-    def convert_to_par_object(parameter: Union[Parameter, NewParameter]) -> LMParameter:
+    def convert_to_par_object(parameter: Parameter) -> LMParameter:
         """
         Convert an `EasyScience.Objects.Base.Parameter` object to a lmfit Parameter object.
 
         :return: lmfit Parameter compatible object.
         :rtype: LMParameter
         """
-        ## TODO clean when full move to new_variable
+        ## TODO clean when full move to
+        from easyscience.Objects.new_variable import Parameter as NewParameter
+
         if isinstance(parameter, NewParameter):
             value = parameter.value
         else:
@@ -325,7 +331,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         ]
 
     @staticmethod
-    def _wrap_to_lm_signature(parameters: Dict[int, Union[Parameter, NewParameter]]) -> Signature:
+    def _wrap_to_lm_signature(parameters: Dict[int, Parameter]) -> Signature:
         """
         Wrap the function signature.
         This is done as lmfit wants the function to be in the form:
@@ -334,6 +340,10 @@ class LMFit(MinimizerBase):  # noqa: S101
         """
         wrapped_parameters = []
         wrapped_parameters.append(InspectParameter('x', InspectParameter.POSITIONAL_OR_KEYWORD, annotation=_empty))
+
+        ## TODO clean when full move to new_variable
+        from easyscience.Objects.new_variable import Parameter as NewParameter
+
         for name, parameter in parameters.items():
             ## TODO clean when full move to new_variable
             if isinstance(parameter, NewParameter):

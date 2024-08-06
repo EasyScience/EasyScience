@@ -21,7 +21,7 @@ try:
     bumps_engine_imported = True
 except ImportError:
     # TODO make this a proper message (use logging?)
-    warnings.warn('Bummps minimization is not available. Probably bumps has not been installed.', ImportWarning, stacklevel=2)
+    warnings.warn('Bumps minimization is not available. Probably bumps has not been installed.', ImportWarning, stacklevel=2)
 
 dfo_engine_imported = False
 try:
@@ -50,31 +50,32 @@ class AvailableMinimizers(Enum):
         DFO = auto()
         DFO_leastsq = auto()
 
-
 # Temporary solution to convert string to enum
 def from_string_to_enum(minimizer_name: str) -> AvailableMinimizers:
-    if minimizer_name == 'lmfit':
+    if minimizer_name == 'LMFit':
         minmizer_enum = AvailableMinimizers.LMFit
-    elif minimizer_name == 'lmfit-leastsq':
+    elif minimizer_name == 'LMFit_leastsq':
         minmizer_enum = AvailableMinimizers.LMFit_leastsq
-    elif minimizer_name == 'lmfit-powell':
+    elif minimizer_name == 'LMFit_powell':
         minmizer_enum = AvailableMinimizers.LMFit_powell
-    elif minimizer_name == 'lmfit-cobyla':
+    elif minimizer_name == 'LMFit_cobyla':
         minmizer_enum = AvailableMinimizers.LMFit_cobyla
 
-    elif minimizer_name == 'bumps':
+    elif minimizer_name == 'Bumps':
         minmizer_enum = AvailableMinimizers.Bumps
-    elif minimizer_name == 'bumps-simplex':
+    elif minimizer_name == 'Bumps_simplex':
         minmizer_enum = AvailableMinimizers.Bumps_simplex
-    elif minimizer_name == 'bumps-newton':
+    elif minimizer_name == 'Bumps_newton':
         minmizer_enum = AvailableMinimizers.Bumps_newton
-    elif minimizer_name == 'bumps-lm':
+    elif minimizer_name == 'Bumps_lm':
         minmizer_enum = AvailableMinimizers.Bumps_lm
 
-    elif minimizer_name == 'dfo':
+    elif minimizer_name == 'DFO':
         minmizer_enum = AvailableMinimizers.DFO
-    elif minimizer_name == 'dfo-leastsq':
+    elif minimizer_name == 'DFO_leastsq':
         minmizer_enum = AvailableMinimizers.DFO_leastsq
+    else:
+        raise ValueError(f"Invalid minimizer name: {minimizer_name}. The following minimizers are available: {[minimize.name for minimize in AvailableMinimizers]}")          # noqa: E501
 
     return minmizer_enum
 

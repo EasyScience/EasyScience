@@ -5,6 +5,7 @@ import functools
 from typing import Callable
 from typing import List
 from typing import Optional
+from typing import Union
 
 import numpy as np
 
@@ -14,7 +15,7 @@ from .minimizers.factory import AvailableMinimizers
 from .minimizers.factory import factory
 from .minimizers.factory import from_string_to_enum
 
-DEFAULT_MINIMIZER = 'lmfit-leastsq'
+DEFAULT_MINIMIZER = AvailableMinimizers.LMFit_leastsq
 
 
 class Fitter:
@@ -27,9 +28,9 @@ class Fitter:
         self._fit_function = fit_function
         self._dependent_dims = None
 
-        self._name_current_minimizer = DEFAULT_MINIMIZER
+        self._enum_current_minimizer = DEFAULT_MINIMIZER
         self._minimizer: MinimizerBase  # _minimizer is set in the create method
-        self._update_minimizer(self._name_current_minimizer)
+        self._update_minimizer(self._enum_current_minimizer)
 
     def fit_constraints(self) -> list:
         return self._minimizer.fit_constraints()
@@ -62,26 +63,32 @@ class Fitter:
         self._update_minimizer(DEFAULT_MINIMIZER)
 
     # TODO: remove this method when we are ready to adjust the dependent products
-    def create(self, minimizer_name: str = DEFAULT_MINIMIZER) -> None:
+    def create(self, minimizer_enum: Union[AvailableMinimizers, str] = DEFAULT_MINIMIZER) -> None:
         """
         Create the required minimizer.
-        :param minimizer_name: The label of the minimization engine to create.
+        :param minimizer_enum: The enum of the minimization engine to create.
         """
-        self._update_minimizer(minimizer_name)
+        if isinstance(minimizer_enum, str):
+            print(f'minimizer should be set with enum {minimizer_enum}')
+            minimizer_enum = from_string_to_enum(minimizer_enum)
+        self._update_minimizer(minimizer_enum)
 
-    def switch_minimizer(self, minimizer_name: str) -> None:
+    def switch_minimizer(self, minimizer_enum: Union[AvailableMinimizers, str]) -> None:
         """
         Switch minimizer and initialize.
-        :param minimizer_name: The label of the  minimizer to create and instantiate.
+        :param minimizer_enum: The enum of the minimizer to create and instantiate.
         """
+        if isinstance(minimizer_enum, str):
+            print(f'minimizer should be set with enum {minimizer_enum}')
+            minimizer_enum = from_string_to_enum(minimizer_enum)
+
         constraints = self._minimizer.fit_constraints()
-        self._update_minimizer(minimizer_name)
+        self._update_minimizer(minimizer_enum)
         self._minimizer.set_fit_constraint(constraints)
 
-    def _update_minimizer(self, minimizer_name: str) -> None:
-        minimizer_enum = from_string_to_enum(minimizer_name)
+    def _update_minimizer(self, minimizer_enum: AvailableMinimizers) -> None:
         self._minimizer = factory(minimizer_enum=minimizer_enum, fit_object=self._fit_object, fit_function=self.fit_function)
-        self._name_current_minimizer = minimizer_name
+        self._enum_current_minimizer = minimizer_enum
 
     @property
     def available_minimizers(self) -> List[str]:
@@ -119,7 +126,7 @@ class Fitter:
         :return: None
         """
         self._fit_function = fit_function
-        self._update_minimizer(self._name_current_minimizer)
+        self._update_minimizer(self._enum_current_minimizer)
 
     @property
     def fit_object(self):
@@ -137,7 +144,7 @@ class Fitter:
         :return: None
         """
         self._fit_object = fit_object
-        self._update_minimizer(self._name_current_minimizer)
+        self._update_minimizer(self._enum_current_minimizer)
 
     def _fit_function_wrapper(self, real_x=None, flatten: bool = True) -> Callable:
         """

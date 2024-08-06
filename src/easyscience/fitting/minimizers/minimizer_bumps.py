@@ -2,6 +2,7 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
 
+import copy
 import inspect
 from typing import Callable
 from typing import List
@@ -14,6 +15,8 @@ from bumps.names import Curve
 from bumps.names import FitProblem
 from bumps.parameter import Parameter as BumpsParameter
 
+# causes circular import when Parameter is imported
+# from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.Variable import Parameter
 
 from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
@@ -21,8 +24,12 @@ from .minimizer_base import MinimizerBase
 from .utils import FitError
 from .utils import FitResults
 
+FIT_AVAILABLE_IDS_FILTERED = copy.copy(FIT_AVAILABLE_IDS)
+# Considered experimental
+FIT_AVAILABLE_IDS_FILTERED.remove('pt')
 
-class Bumps(MinimizerBase):  # noqa: S101
+
+class Bumps(MinimizerBase):
     """
     This is a wrapper to Bumps: https://bumps.readthedocs.io/
     It allows for the Bumps fitting engine to use parameters declared in an `EasyScience.Objects.Base.BaseObj`.
@@ -30,7 +37,12 @@ class Bumps(MinimizerBase):  # noqa: S101
 
     wrapping = 'bumps'
 
-    def __init__(self, obj, fit_function: Callable, method: Optional[str] = None):
+    def __init__(
+        self,
+        obj,  #: BaseObj,
+        fit_function: Callable,
+        method: Optional[str] = None,
+    ):  # todo after constraint changes, add type hint: obj: BaseObj  # noqa: E501
         """
         Initialize the fitting engine with a `BaseObj` and an arbitrary fitting function.
 
@@ -45,113 +57,8 @@ class Bumps(MinimizerBase):  # noqa: S101
         self._cached_pars_order = ()
         self._p_0 = {}
 
-    def _make_model(self, pars: Optional[List[BumpsParameter]] = None) -> Callable:
-        """
-        Generate a bumps model from the supplied `fit_function` and parameters in the base object.
-        Note that this makes a callable as it needs to be initialized with *x*, *y*, *weights*
-
-        :return: Callable to make a bumps Curve model
-        :rtype: Callable
-        """
-        fit_func = self._generate_fit_function()
-
-        def outer(obj):
-            def make_func(x, y, weights):
-                par = {}
-                if not pars:
-                    for name, item in obj._cached_pars.items():
-                        par[MINIMIZER_PARAMETER_PREFIX + str(name)] = obj.convert_to_par_object(item)
-                else:
-                    for item in pars:
-                        par[MINIMIZER_PARAMETER_PREFIX + item.unique_name] = obj.convert_to_par_object(item)
-                return Curve(fit_func, x, y, dy=weights, **par)
-
-            return make_func
-
-        return outer(self)
-
-    def _generate_fit_function(self) -> Callable:
-        """
-        Using the user supplied `fit_function`, wrap it in such a way we can update `Parameter` on
-        iterations.
-
-        :return: a fit function which is compatible with bumps models
-        :rtype: Callable
-        """
-        # Original fit function
-        func = self._original_fit_function
-        # Get a list of `Parameters`
-        self._cached_pars_vals = {}
-        for parameter in self._object.get_fit_parameters():
-            key = parameter.unique_name
-            self._cached_pars[key] = parameter
-            self._cached_pars_vals[key] = (parameter.value, parameter.error)
-
-        # Make a new fit function
-        def fit_function(x: np.ndarray, **kwargs):
-            """
-            Wrapped fit function which now has a bumps compatible form
-
-            :param x: array of data points to be calculated
-            :type x: np.ndarray
-            :param kwargs: key word arguments
-            :return: points calculated at `x`
-            :rtype: np.ndarray
-            """
-            # Update the `Parameter` values and the callback if needed
-            for name, value in kwargs.items():
-                par_name = name[1:]
-                if par_name in self._cached_pars.keys():
-                    ## TODO clean when full move to new_variable
-                    from easyscience.Objects.new_variable import Parameter
-
-                    if isinstance(self._cached_pars[par_name], Parameter):
-                        if self._cached_pars[par_name].value != value:
-                            self._cached_pars[par_name].value = value
-                    else:
-                        if self._cached_pars[par_name].raw_value != value:
-                            self._cached_pars[par_name].value = value
-
-                    # update_fun = self._cached_pars[par_name]._callback.fset
-                    # if update_fun:
-                    #     update_fun(value)
-            # TODO Pre processing here
-            for constraint in self.fit_constraints():
-                constraint()
-            return_data = func(x)
-            # TODO Loading or manipulating data here
-            return return_data
-
-        # Fake the function signature.
-        # This is done as lmfit wants the function to be in the form:
-        # f = (x, a=1, b=2)...
-        # Where we need to be generic. Note that this won't hold for much outside of this scope.
-
-        ## TODO clean when full move to new_variable
-        from easyscience.Objects.new_variable import Parameter
-
-        if isinstance(parameter, Parameter):
-            default_value = parameter.value
-        else:
-            default_value = parameter.raw_value
-
-        self._cached_pars_order = tuple(self._cached_pars.keys())
-        params = [
-            inspect.Parameter('x', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=inspect._empty),
-            *[
-                inspect.Parameter(
-                    MINIMIZER_PARAMETER_PREFIX + str(name),
-                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                    annotation=inspect._empty,
-                    default=default_value,
-                )
-                for name in self._cached_pars_order
-            ],
-        ]
-        # Sign the function
-        fit_function.__signature__ = inspect.Signature(params)
-        self._fit_function = fit_function
-        return fit_function
+    def available_methods(self) -> List[str]:
+        return FIT_AVAILABLE_IDS_FILTERED
 
     def fit(
         self,
@@ -203,8 +110,8 @@ class Bumps(MinimizerBase):  # noqa: S101
         minimizer_kwargs.update(engine_kwargs)
 
         if model is None:
-            model = self._make_model(pars=parameters)
-            model = model(x, y, weights)
+            model_function = self._make_model(parameters=parameters)
+            model = model_function(x, y, weights)
         self._cached_model = model
 
         ## TODO clean when full move to new_variable
@@ -272,6 +179,115 @@ class Bumps(MinimizerBase):  # noqa: S101
             fixed=obj.fixed,
         )
 
+    def _make_model(self, parameters: Optional[List[BumpsParameter]] = None) -> Callable:
+        """
+        Generate a bumps model from the supplied `fit_function` and parameters in the base object.
+        Note that this makes a callable as it needs to be initialized with *x*, *y*, *weights*
+
+        :return: Callable to make a bumps Curve model
+        :rtype: Callable
+        """
+        fit_func = self._generate_fit_function()
+
+        def _outer(obj):
+            def _make_func(x, y, weights):
+                bumps_pars = {}
+                if not parameters:
+                    for name, par in obj._cached_pars.items():
+                        bumps_pars[MINIMIZER_PARAMETER_PREFIX + str(name)] = obj.convert_to_par_object(par)
+                else:
+                    for par in parameters:
+                        bumps_pars[MINIMIZER_PARAMETER_PREFIX + par.unique_name] = obj.convert_to_par_object(par)
+                return Curve(fit_func, x, y, dy=weights, **bumps_pars)
+
+            return _make_func
+
+        return _outer(self)
+
+    def _generate_fit_function(self) -> Callable:
+        """
+        Using the user supplied `fit_function`, wrap it in such a way we can update `Parameter` on
+        iterations.
+
+        :return: a fit function which is compatible with bumps models
+        :rtype: Callable
+        """
+        # Original fit function
+        func = self._original_fit_function
+        # Get a list of `Parameters`
+        self._cached_pars_vals = {}
+        for parameter in self._object.get_fit_parameters():
+            key = parameter.unique_name
+            self._cached_pars[key] = parameter
+            self._cached_pars_vals[key] = (parameter.value, parameter.error)
+
+        # Make a new fit function
+        def _fit_function(x: np.ndarray, **kwargs):
+            """
+            Wrapped fit function which now has a bumps compatible form
+
+            :param x: array of data points to be calculated
+            :type x: np.ndarray
+            :param kwargs: key word arguments
+            :return: points calculated at `x`
+            :rtype: np.ndarray
+            """
+            # Update the `Parameter` values and the callback if needed
+            ## TODO clean when full move to new_variable
+            from easyscience.Objects.new_variable import Parameter
+
+            for name, value in kwargs.items():
+                par_name = name[1:]
+                if par_name in self._cached_pars.keys():
+                    ## TODO clean when full move to new_variable
+                    if isinstance(self._cached_pars[par_name], Parameter):
+                        if self._cached_pars[par_name].value != value:
+                            self._cached_pars[par_name].value = value
+                    else:
+                        if self._cached_pars[par_name].raw_value != value:
+                            self._cached_pars[par_name].value = value
+
+                    # update_fun = self._cached_pars[par_name]._callback.fset
+                    # if update_fun:
+                    #     update_fun(value)
+            # TODO Pre processing here
+            for constraint in self.fit_constraints():
+                constraint()
+            return_data = func(x)
+            # TODO Loading or manipulating data here
+            return return_data
+
+        # Fake the function signature.
+        # This is done as lmfit wants the function to be in the form:
+        # f = (x, a=1, b=2)...
+        # Where we need to be generic. Note that this won't hold for much outside of this scope.
+
+        ## TODO clean when full move to new_variable
+        from easyscience.Objects.new_variable import Parameter
+
+        if isinstance(parameter, Parameter):
+            default_value = parameter.value
+        else:
+            default_value = parameter.raw_value
+
+        self._cached_pars_order = tuple(self._cached_pars.keys())
+        params = [
+            inspect.Parameter('x', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=inspect._empty),
+            *[
+                inspect.Parameter(
+                    MINIMIZER_PARAMETER_PREFIX + str(name),
+                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    annotation=inspect._empty,
+                    default=default_value,
+                )
+                for name in self._cached_pars_order
+            ],
+        ]
+        # Sign the function
+        _fit_function.__signature__ = inspect.Signature(params)
+        self._fit_function = _fit_function
+        return _fit_function
+
     def _set_parameter_fit_result(self, fit_result, stack_status: bool):
         """
         Update parameters to their final values and assign a std error to them.
@@ -292,7 +308,7 @@ class Bumps(MinimizerBase):  # noqa: S101
             global_object.stack.beginMacro('Fitting routine')
 
         for index, name in enumerate(self._cached_model._pnames):
-            dict_name = name[1:]
+            dict_name = name[len(MINIMIZER_PARAMETER_PREFIX) :]
             pars[dict_name].value = fit_result.x[index]
             pars[dict_name].error = fit_result.dx[index]
         if stack_status:
@@ -315,7 +331,7 @@ class Bumps(MinimizerBase):  # noqa: S101
         pars = self._cached_pars
         item = {}
         for index, name in enumerate(self._cached_model._pnames):
-            dict_name = name[1:]
+            dict_name = name[len(MINIMIZER_PARAMETER_PREFIX) :]
 
             ## TODO clean when full move to new_variable
             from easyscience.Objects.new_variable import Parameter
@@ -338,6 +354,3 @@ class Bumps(MinimizerBase):  # noqa: S101
         results.engine_result = fit_results
         # results.check_sanity()
         return results
-
-    def available_methods(self) -> List[str]:
-        return FIT_AVAILABLE_IDS
