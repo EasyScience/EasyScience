@@ -612,13 +612,13 @@ class EasyScienceDataarrayAccessor:
 
     def fit_prep(self, func_in: Callable, bdims=None, dask_chunks=None) -> Tuple[xr.DataArray, Callable]:
         """
-        Generate boradcasted coordinates for fitting and reform the fitting function into one which can handle xarrays
+        Generate broadcasted coordinates for fitting and reform the fitting function into one which can handle xarrays.
 
-        :param func_in: Function to be wrapped and made xarray fitting compatable.
+        :param func_in: Function to be wrapped and made xarray fitting compatible.
         :type func_in: Callable
         :param bdims: Optional precomputed broadcasted dimensions.
         :type bdims: xarray.DataArray
-        :param dask_chunks: How to split to broadcasted dimensions for dask.
+        :param dask_chunks: How to split the broadcasted dimensions for dask.
         :type dask_chunks: Tuple[int..]
         :return: Tuple of broadcasted fit arrays and wrapped fit function.
         :rtype: xarray.DataArray, Callable
