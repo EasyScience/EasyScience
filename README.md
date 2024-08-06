@@ -2,7 +2,6 @@
 [![PyPI badge](http://img.shields.io/pypi/v/EasyScience.svg)](https://pypi.python.org/pypi/EasyScience)
 [![License: BSD 3-Clause](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](LICENSE)
 
-
 # Easyscience
 
 ## About
