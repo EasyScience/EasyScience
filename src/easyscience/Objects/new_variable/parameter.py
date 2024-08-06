@@ -46,8 +46,8 @@ class Parameter(DescriptorNumber):
         value: numbers.Number,
         unit: Optional[Union[str, sc.Unit]] = '',
         variance: Optional[numbers.Number] = 0.0,
-        min: Optional[numbers.Number] = -np.Inf,
-        max: Optional[numbers.Number] = np.Inf,
+        min: Optional[numbers.Number] = -np.inf,
+        max: Optional[numbers.Number] = np.inf,
         fixed: Optional[bool] = False,
         unique_name: Optional[str] = None,
         description: Optional[str] = None,
@@ -446,7 +446,7 @@ class Parameter(DescriptorNumber):
             new_value = self.full_value + other.full_value
             min_value = self.min + other.min if isinstance(other, Parameter) else self.min + other.value
             max_value = self.max + other.max if isinstance(other, Parameter) else self.max + other.value
-            name = self.name+" + "+other.name
+            name = f"{self.name} + {other.name}"
             other.convert_unit(original_unit)
         else: 
             return NotImplemented
@@ -469,7 +469,7 @@ class Parameter(DescriptorNumber):
             new_value = self.full_value + other.full_value
             min_value = self.min + other.value
             max_value = self.max + other.value
-            name = other.name+" + "+self.name
+            name = f"{other.name} + {self.name}"
             self.convert_unit(original_unit)
         else:
             return NotImplemented
@@ -491,8 +491,8 @@ class Parameter(DescriptorNumber):
                 raise UnitError(f"Values with units {self.unit} and {other.unit} cannot be subtracted") from None
             new_value = self.full_value - other.full_value
             if isinstance(other, Parameter):
-                min_value = self.min - other.max if other.max != np.Inf else -np.Inf
-                max_value = self.max - other.min if other.min != -np.Inf else np.Inf
+                min_value = self.min - other.max if other.max != np.inf else -np.inf
+                max_value = self.max - other.min if other.min != -np.inf else np.inf
             else:
                 min_value = self.min - other.value
                 max_value = self.max - other.value
@@ -519,7 +519,7 @@ class Parameter(DescriptorNumber):
             new_value = other.full_value - self.full_value
             min_value = other.value - self.max 
             max_value = other.value - self.min 
-            name = other.name+" - "+self.name
+            name = f"{other.name} - {self.name}"
             self.convert_unit(original_unit)
         else:
             return NotImplemented
@@ -534,8 +534,8 @@ class Parameter(DescriptorNumber):
             combinations = [self.min * other, self.max * other]
         elif isinstance(other, DescriptorNumber):
             new_value = self.full_value * other.full_value
-            name = self.name+" * "+other.name
-            if other.value == 0 and type(other) is DescriptorNumber:
+            name = f"{self.name} * {other.name}"
+            if other.value == 0 and isinstance(other, DescriptorNumber):
                 return DescriptorNumber.from_scipp(name=name, full_value=new_value)
             if isinstance(other, Parameter):
                 combinations = []
@@ -565,7 +565,7 @@ class Parameter(DescriptorNumber):
             combinations = [other * self.min, other * self.max]
         elif isinstance(other, DescriptorNumber):
             new_value = other.full_value * self.full_value
-            name = other.name+" * "+self.name
+            name = f"{other.name} * {self.name}"
             if other.value == 0:
                 return DescriptorNumber.from_scipp(name=name, full_value=new_value)
             combinations = [self.min * other.value, self.max * other.value]
@@ -592,26 +592,26 @@ class Parameter(DescriptorNumber):
             new_value = self.full_value / other.full_value
             if isinstance(other, Parameter):
                 if (other.min < 0 and other.max > 0):
-                    combinations = [-np.Inf, np.Inf]
+                    combinations = [-np.inf, np.inf]
                 elif other.min == 0:
                     if (self.min < 0 and self.max > 0):
-                        combinations = [-np.Inf, np.Inf]
+                        combinations = [-np.inf, np.inf]
                     elif self.min >= 0:
-                        combinations = [self.min/other.max, np.Inf]
+                        combinations = [self.min/other.max, np.inf]
                     elif self.max <= 0:
-                        combinations = [-np.Inf, self.max/other.max]
+                        combinations = [-np.inf, self.max/other.max]
                 elif other.max == 0:
                     if (self.min < 0 and self.max > 0):
-                        combinations = [-np.Inf, np.Inf]
+                        combinations = [-np.inf, np.inf]
                     elif self.min >= 0:
-                        combinations = [-np.Inf, self.min/other.min]
+                        combinations = [-np.inf, self.min/other.min]
                     elif self.max <= 0:
-                        combinations = [self.max/other.min, np.Inf]
+                        combinations = [self.max/other.min, np.inf]
                 else:
                     combinations = [self.min/other.min, self.max/other.max, self.min/other.max, self.max/other.min]
             else:
                 combinations = [self.min / other.value, self.max / other.value]
-            name = self.name+" / "+other.name
+            name = f"{self.name} / {other.name}"
             other.value = original_value
         else:
             return NotImplemented
@@ -640,17 +640,17 @@ class Parameter(DescriptorNumber):
         else:
             return NotImplemented
         if (self.min < 0 and self.max > 0):
-            combinations = [-np.Inf, np.Inf]
+            combinations = [-np.inf, np.inf]
         elif self.min == 0:
             if other_value > 0:
-                combinations = [other_value/self.max, np.Inf]
+                combinations = [other_value/self.max, np.inf]
             elif other_value < 0:
-                combinations = [-np.Inf, other_value/self.max]
+                combinations = [-np.inf, other_value/self.max]
         elif self.max == 0:
             if other_value > 0:
-                combinations = [-np.Inf, other_value/self.min]
+                combinations = [-np.inf, other_value/self.min]
             elif other_value < 0:
-                combinations = [other_value/self.min, np.Inf]
+                combinations = [other_value/self.min, np.inf]
         else:
             combinations = [other_value / self.min, other_value / self.max]
         min_value = min(combinations)
@@ -664,30 +664,32 @@ class Parameter(DescriptorNumber):
         if isinstance(other, numbers.Number):
             exponent = other
             name = f"{self.name} ** {other}"
-        elif type(other) is DescriptorNumber:
+        elif isinstance(other, DescriptorNumber):
             if other.unit != 'dimensionless':
                 raise UnitError("Exponents must be dimensionless")
             if other.variance is not None:
                 raise ValueError("Exponents must not have variance")
             exponent = other.value
-            name = self.name+" ** "+other.name
+            name = f"{self.name} ** {other.name}"
         else:
             return NotImplemented
+        
         try:
             new_value = self.full_value ** exponent
         except Exception as message:
             raise message from None
+        
         if np.isnan(new_value.value):
             raise ValueError("The result of the exponentiation is not a number")
         if exponent == 0:
             return DescriptorNumber.from_scipp(name=name, full_value=new_value)
         elif exponent < 0:
             if self.min < 0 and self.max > 0:
-                combinations = [-np.Inf, np.Inf]
+                combinations = [-np.inf, np.inf]
             elif self.min == 0:
-                combinations = [self.max ** exponent, np.Inf]
+                combinations = [self.max ** exponent, np.inf]
             elif self.max == 0:
-                combinations = [-np.Inf, self.min ** exponent]
+                combinations = [-np.inf, self.min ** exponent]
             else:
                 combinations = [self.min ** exponent, self.max ** exponent]
         else:

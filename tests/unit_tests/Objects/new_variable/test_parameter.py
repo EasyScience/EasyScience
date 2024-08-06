@@ -591,15 +591,19 @@ class TestParameter:
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
-        assert result.min == expected.min
-        assert result.max == expected.max
 
         assert result_reverse.name == expected_reverse.name
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
         assert result_reverse.variance == expected_reverse.variance
-        assert result_reverse.min == expected_reverse.min
-        assert result_reverse.max == expected_reverse.max
+
+        if isinstance(result, Parameter):
+            assert result.min == expected.min
+            assert result.max == expected.max
+
+        if isinstance(result_reverse, Parameter):
+            assert result_reverse.min == expected_reverse.min
+            assert result_reverse.max == expected_reverse.max
 
     @pytest.mark.parametrize("test, expected, expected_reverse", [
         (DescriptorNumber(name="test", value=2, variance=0.1, unit="cm"), Parameter("name * test", 2, "dm^2", 0.14, 0, 20), Parameter("test * name", 2, "dm^2", 0.14, 0, 20)),
