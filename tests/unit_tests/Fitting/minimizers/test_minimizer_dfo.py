@@ -112,8 +112,8 @@ class TestDFOFit():
         # Expect
         minimizer._generate_fit_function.assert_called_once_with()
         assert all(np.array([-0.01, -0.01]) == residuals_for_model(np.array([1111, 2222])))
-        assert all(mock_fit_function.call_args_list[0][0][0] == np.array([1, 2]))
-        assert mock_fit_function.call_args_list[0][1] == {'pmock_parm_1': 1111, 'pmock_parm_2': 2222}
+        assert all(mock_fit_function.call_args[0][0] == np.array([1, 2]))
+        assert mock_fit_function.call_args[1] == {'pmock_parm_1': 1111, 'pmock_parm_2': 2222}
 
     def test_set_parameter_fit_result_no_stack_status(self, minimizer: DFO):
         # When
@@ -179,6 +179,7 @@ class TestDFOFit():
         assert domain_fit_results.y_err == 'weights'
         assert str(domain_fit_results.minimizer_engine) == "<class 'easyscience.fitting.minimizers.minimizer_dfo.DFO'>"
         assert domain_fit_results.fit_args is None
+        minimizer.evaluate.assert_called_once_with('x', minimizer_parameters={'ppar_1': 'par_raw_value_1', 'ppar_2': 'par_raw_value_2'})
 
     def test_dfo_fit(self, minimizer: DFO, monkeypatch):
         # When
@@ -206,12 +207,12 @@ class TestDFOFit():
         
         # Expect
         assert results == mock_results
-        assert mock_dfols.solve.call_args_list[0][0][0] == 'model'
-        assert all(mock_dfols.solve.call_args_list[0][0][1] == np.array([1., 2.]))
-        assert all(mock_dfols.solve.call_args_list[0][1]['bounds'][0] == np.array([0.1, 0.2]))
-        assert all(mock_dfols.solve.call_args_list[0][1]['bounds'][1] == np.array([10., 20.]))
-        assert mock_dfols.solve.call_args_list[0][1]['scaling_within_bounds'] is True
-        assert mock_dfols.solve.call_args_list[0][1]['kwargs_set_key'] == 'kwargs_set_val'
+        assert mock_dfols.solve.call_args[0][0] == 'model'
+        assert all(mock_dfols.solve.call_args[0][1] == np.array([1., 2.]))
+        assert all(mock_dfols.solve.call_args[1]['bounds'][0] == np.array([0.1, 0.2]))
+        assert all(mock_dfols.solve.call_args[1]['bounds'][1] == np.array([10., 20.]))
+        assert mock_dfols.solve.call_args[1]['scaling_within_bounds'] is True
+        assert mock_dfols.solve.call_args[1]['kwargs_set_key'] == 'kwargs_set_val'
 
     def test_dfo_fit_no_scaling(self, minimizer: DFO, monkeypatch):
         # When
@@ -239,13 +240,13 @@ class TestDFOFit():
         
         # Expect
         assert results == mock_results
-        assert mock_dfols.solve.call_args_list[0][0][0] == 'model'
-        assert all(mock_dfols.solve.call_args_list[0][0][1] == np.array([1., 2.]))
-        assert all(mock_dfols.solve.call_args_list[0][1]['bounds'][0] == np.array([-np.inf, 0.2]))
-        assert all(mock_dfols.solve.call_args_list[0][1]['bounds'][1] == np.array([10., 20.]))
-        assert not 'scaling_within_bounds' in list(mock_dfols.solve.call_args_list[0][1].keys())
-        assert 'kwargs_set_key' in list(mock_dfols.solve.call_args_list[0][1].keys())
-        assert mock_dfols.solve.call_args_list[0][1]['kwargs_set_key'] == 'kwargs_set_val'
+        assert mock_dfols.solve.call_args[0][0] == 'model'
+        assert all(mock_dfols.solve.call_args[0][1] == np.array([1., 2.]))
+        assert all(mock_dfols.solve.call_args[1]['bounds'][0] == np.array([-np.inf, 0.2]))
+        assert all(mock_dfols.solve.call_args[1]['bounds'][1] == np.array([10., 20.]))
+        assert not 'scaling_within_bounds' in list(mock_dfols.solve.call_args[1].keys())
+        assert 'kwargs_set_key' in list(mock_dfols.solve.call_args[1].keys())
+        assert mock_dfols.solve.call_args[1]['kwargs_set_key'] == 'kwargs_set_val'
 
     def test_dfo_fit_exception(self, minimizer: DFO, monkeypatch):
         # When
