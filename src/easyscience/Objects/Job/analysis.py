@@ -8,8 +8,8 @@ from typing import Union
 import numpy as np
 
 from easyscience.Datasets.xarray import xr  # type: ignore
-from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.fitting.minimizers import MinimizerBase
+from easyscience.Objects.ObjectClasses import BaseObj
 
 
 class AnalysisBase(BaseObj, metaclass=ABCMeta):
