@@ -86,7 +86,8 @@ class Parameter(DescriptorNumber):
             raise ValueError(f'{value=} can not be less than {min=}')
         if value > max:
             raise ValueError(f'{value=} can not be greater than {max=}')
-        if min == max:
+
+        if np.isclose(min, max, rtol=1e-9, atol=0.0):
             raise ValueError('The min and max bounds cannot be identical. Please use fixed=True instead to fix the value.')
         if not isinstance(fixed, bool):
             raise TypeError('`fixed` must be either True or False')
@@ -249,7 +250,8 @@ class Parameter(DescriptorNumber):
         """
         if not isinstance(min_value, numbers.Number):
             raise TypeError('`min` must be a number')
-        if min_value == self._max.value:
+        # if min_value == self._max.value:
+        if np.isclose(min_value, self._max.value, rtol=1e-9, atol=0.0):
             raise ValueError('The min and max bounds cannot be identical. Please use fixed=True instead to fix the value.')
         if min_value <= self.value:
             self._min.value = min_value
@@ -277,7 +279,8 @@ class Parameter(DescriptorNumber):
         """
         if not isinstance(max_value, numbers.Number):
             raise TypeError('`max` must be a number')
-        if max_value == self._min.value:
+        # if max_value == self._min.value:
+        if np.isclose(max_value, self._min.value, rtol=1e-9, atol=0.0):
             raise ValueError('The min and max bounds cannot be identical. Please use fixed=True instead to fix the value.')
         if max_value >= self.value:
             self._max.value = max_value
