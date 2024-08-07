@@ -23,8 +23,8 @@ class DescriptorNumber(DescriptorBase):
 
     def __init__(
         self,
+        name: str,
         value: numbers.Number,
-        name: Optional[str] = None,
         unit: Optional[Union[str, sc.Unit]] = '',
         variance: Optional[numbers.Number] = None,
         unique_name: Optional[str] = None,
@@ -237,7 +237,6 @@ class DescriptorNumber(DescriptorBase):
             if self.unit != 'dimensionless':
                 raise UnitError("Numbers can only be added to dimensionless values")
             new_value = self.full_value  + other
-            name = self.name + ' + ' + str(other)
         elif type(other) is DescriptorNumber:
             original_unit = other.unit
             try:
@@ -245,28 +244,31 @@ class DescriptorNumber(DescriptorBase):
             except UnitError:
                 raise UnitError(f"Values with units {self.unit} and {other.unit} cannot be added") from None
             new_value = self.full_value + other.full_value
-            name = self._name + ' + ' + other._name
             other.convert_unit(original_unit)
         else:
             return NotImplemented
-        return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+        descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_value)
+        descriptor_number.name=descriptor_number.unique_name
+        return descriptor_number
+    
+    
 
     def __radd__(self, other: numbers.Number) -> DescriptorNumber:
         if isinstance(other, numbers.Number):
             if self.unit != 'dimensionless':
                 raise UnitError("Numbers can only be added to dimensionless values")
             new_value = other + self.full_value
-            name = str(other) + ' + ' + self.name
         else:
             return NotImplemented
-        return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+        descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_value)
+        descriptor_number.name=descriptor_number.unique_name
+        return descriptor_number
 
     def __sub__(self, other: Union[DescriptorNumber, numbers.Number]) -> DescriptorNumber:
         if isinstance(other, numbers.Number):
             if self.unit != 'dimensionless':
                 raise UnitError("Numbers can only be subtracted from dimensionless values")
             new_value = self.full_value - other
-            name = self.name + ' - ' + str(other)
         elif type(other) is DescriptorNumber:
             original_unit = other.unit
             try:
@@ -274,42 +276,44 @@ class DescriptorNumber(DescriptorBase):
             except UnitError:
                 raise UnitError(f"Values with units {self.unit} and {other.unit} cannot be subtracted") from None
             new_value = self.full_value - other.full_value
-            name = self._name + ' - ' + other._name
             other.convert_unit(original_unit)
         else:
             return NotImplemented
-        return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+        descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_value)
+        descriptor_number.name=descriptor_number.unique_name
+        return descriptor_number
         
     def __rsub__(self, other: numbers.Number) -> DescriptorNumber:
         if isinstance(other, numbers.Number):
             if self.unit != 'dimensionless':
                 raise UnitError("Numbers can only be subtracted from dimensionless values")
             new_value = other - self.full_value
-            name = str(other) + ' - ' + self.name
         else:
             return NotImplemented
-        return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+        descriptor= DescriptorNumber.from_scipp(name=self.name, full_value=new_value)
+        descriptor.name=descriptor.unique_name
+        return descriptor
     
     def __mul__(self, other: Union[DescriptorNumber, numbers.Number]) -> DescriptorNumber:
         if isinstance(other, numbers.Number):
             new_value = self.full_value * other
-            name = self.name + ' * ' + str(other)
         elif type(other) is DescriptorNumber:
             new_value = self.full_value * other.full_value
-            name = self._name + ' * ' + other._name
         else:
             return NotImplemented
-        descriptor_number = DescriptorNumber.from_scipp(name=name, full_value=new_value)
+        descriptor_number = DescriptorNumber.from_scipp(name=self.name, full_value=new_value)
         descriptor_number.convert_unit(descriptor_number._base_unit())
+        descriptor_number.name=descriptor_number.unique_name
         return descriptor_number
         
     def __rmul__(self, other: numbers.Number) -> DescriptorNumber:
         if isinstance(other, numbers.Number):
             new_value = other * self.full_value
-            name = str(other) + ' * ' + self.name
         else:
             return NotImplemented
-        return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+        descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_value)
+        descriptor_number.name=descriptor_number.unique_name
+        return descriptor_number
     
     def __truediv__(self, other: Union[DescriptorNumber, numbers.Number]) -> DescriptorNumber:
         if isinstance(other, numbers.Number):
@@ -317,18 +321,17 @@ class DescriptorNumber(DescriptorBase):
             if other == 0:
                 raise ZeroDivisionError("Cannot divide by zero")
             new_value = self.full_value / other
-            name = self.name + ' / ' + str(original_other)
         elif type(other) is DescriptorNumber:
             original_other = other.value
             if original_other == 0:
                 raise ZeroDivisionError("Cannot divide by zero")
             new_value = self.full_value / other.full_value
             other.value = original_other
-            name = self._name + ' / ' + other._name
         else:
             return NotImplemented
-        descriptor_number = DescriptorNumber.from_scipp(name=name, full_value=new_value)
+        descriptor_number = DescriptorNumber.from_scipp(name=self.name, full_value=new_value)
         descriptor_number.convert_unit(descriptor_number._base_unit())
+        descriptor_number.name=descriptor_number.unique_name
         return descriptor_number
     
     def __rtruediv__(self, other: numbers.Number) -> DescriptorNumber:
@@ -336,22 +339,21 @@ class DescriptorNumber(DescriptorBase):
             if self.value == 0:
                 raise ZeroDivisionError("Cannot divide by zero")
             new_value = other / self.full_value
-            name = str(other) + ' / ' + self.name
         else:
             return NotImplemented
-        return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+        descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_value)
+        descriptor_number.name=descriptor_number.unique_name
+        return descriptor_number
 
     def __pow__(self, other: Union[DescriptorNumber, numbers.Number]) -> DescriptorNumber:
         if isinstance(other, numbers.Number):
             exponent = other
-            name = f"{self.name} ** {other}"
         elif type(other) is DescriptorNumber:
             if other.unit != 'dimensionless':
                 raise UnitError("Exponents must be dimensionless")
             if other.variance is not None:
                 raise ValueError("Exponents must not have variance")
             exponent = other.value
-            name = self.name+" ** "+other.name
         else:
             return NotImplemented
         try:
@@ -360,7 +362,9 @@ class DescriptorNumber(DescriptorBase):
             raise message from None
         if np.isnan(new_value.value):
             raise ValueError("The result of the exponentiation is not a number")
-        return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+        descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_value)
+        descriptor_number.name=descriptor_number.unique_name
+        return descriptor_number
     
     def __rpow__(self, other: numbers.Number) -> numbers.Number:
         if isinstance(other, numbers.Number):
@@ -375,13 +379,15 @@ class DescriptorNumber(DescriptorBase):
 
     def __neg__(self) -> DescriptorNumber:
         new_value = -self.full_value
-        name = '-'+self.name
-        return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+        descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_value)
+        descriptor_number.name=descriptor_number.unique_name
+        return descriptor_number
     
     def __abs__(self) -> DescriptorNumber:
         new_value = abs(self.full_value)
-        name = 'abs('+self.name+')'
-        return DescriptorNumber.from_scipp(name=name, full_value=new_value)
+        descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_value)
+        descriptor_number.name=descriptor_number.unique_name
+        return descriptor_number
 
     def _base_unit(self) -> str:
         string = str(self._scalar.unit)

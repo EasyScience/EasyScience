@@ -14,8 +14,8 @@ class DescriptorBool(DescriptorBase):
     """
     def __init__(
         self,
+        name: str,
         value: bool,
-        name: Optional[str] = None,
         unique_name: Optional[str] = None,
         description: Optional[str] = None,
         url: Optional[str] = None,

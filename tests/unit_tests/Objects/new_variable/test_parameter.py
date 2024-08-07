@@ -355,15 +355,15 @@ class TestParameter:
         result_reverse = test + parameter
 
         # Expect
-        assert result.name == expected.name
+        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
         assert result.min == expected.min
         assert result.max == expected.max
 
-        assert result_reverse.name == expected_reverse.name
-        assert result_reverse.value == expected_reverse.value
+        assert result_reverse.name == result_reverse.unique_name 
+        assert result_reverse.value == result_reverse.value
         assert result_reverse.unit == expected_reverse.unit
         assert result_reverse.variance == expected_reverse.variance
         assert result_reverse.min == expected_reverse.min
@@ -380,14 +380,14 @@ class TestParameter:
         result_reverse = 1.0 + parameter
 
         # Expect
-        assert result.name == "name + 1.0"
+        assert result.name == result.unique_name
         assert result.value == 2.0
         assert result.unit == "dimensionless"
         assert result.variance == 0.01
         assert result.min == 1.0
         assert result.max == 11.0
 
-        assert result_reverse.name == "1.0 + name"
+        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == 2.0
         assert result_reverse.unit == "dimensionless"
         assert result_reverse.variance == 0.01
@@ -405,7 +405,7 @@ class TestParameter:
 
         # Expect
         assert type(result) == Parameter
-        assert result.name == "name + test"
+        assert result.name == result.unique_name
         assert result.value == 1.01
         assert result.unit == "m"
         assert result.variance == 0.01001
@@ -413,7 +413,7 @@ class TestParameter:
         assert result.max == 10.01
 
         assert type(result_reverse) == Parameter
-        assert result_reverse.name == "test + name"
+        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == 101.0
         assert result_reverse.unit == "cm"
         assert result_reverse.variance == 100.1
@@ -445,14 +445,14 @@ class TestParameter:
         result_reverse = test - parameter
 
         # Expect
-        assert result.name == expected.name
+        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
         assert result.min == expected.min
         assert result.max == expected.max
 
-        assert result_reverse.name == expected_reverse.name
+        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
         assert result_reverse.variance == expected_reverse.variance
@@ -471,14 +471,14 @@ class TestParameter:
         result_reverse = test - parameter
 
         # Expect
-        assert result.name == "name - test"
+        assert result.name == result.unique_name
         assert result.value == -1.0
         assert result.unit == "dimensionless"
         assert result.variance == 0.02
         assert result.min == -np.Inf
         assert result.max == np.Inf
 
-        assert result_reverse.name == "test - name"
+        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == 1.0
         assert result_reverse.unit == "dimensionless"
         assert result_reverse.variance == 0.02
@@ -494,14 +494,14 @@ class TestParameter:
         result_reverse = 1.0 - parameter
 
         # Expect
-        assert result.name == "name - 1.0"
+        assert result.name == result.unique_name
         assert result.value == 1.0
         assert result.unit == "dimensionless"
         assert result.variance == 0.01
         assert result.min == -1.0
         assert result.max == 9.0
 
-        assert result_reverse.name == "1.0 - name"
+        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == -1.0
         assert result_reverse.unit == "dimensionless"
         assert result_reverse.variance == 0.01
@@ -519,7 +519,7 @@ class TestParameter:
 
         # Expect
         assert type(result) == Parameter
-        assert result.name == "name - test"
+        assert result.name == result.unique_name
         assert result.value == 0.99
         assert result.unit == "m"
         assert result.variance == 0.01001
@@ -527,7 +527,7 @@ class TestParameter:
         assert result.max == 9.99
 
         assert type(result_reverse) == Parameter
-        assert result_reverse.name == "test - name"
+        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == -99.0
         assert result_reverse.unit == "cm"
         assert result_reverse.variance == 100.1
@@ -560,14 +560,14 @@ class TestParameter:
         result_reverse = test * parameter
 
         # Expect
-        assert result.name == expected.name
+        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == pytest.approx(expected.variance)
         assert result.min == expected.min
         assert result.max == expected.max
 
-        assert result_reverse.name == expected_reverse.name
+        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
         assert result_reverse.variance == pytest.approx(expected_reverse.variance)
@@ -587,12 +587,12 @@ class TestParameter:
         result_reverse = test * parameter
 
         # Expect
-        assert result.name == expected.name
+        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
 
-        assert result_reverse.name == expected_reverse.name
+        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
         assert result_reverse.variance == expected_reverse.variance
@@ -619,7 +619,7 @@ class TestParameter:
 
         # Expect
         assert type(result) == type(expected)
-        assert result.name == expected.name
+        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
@@ -628,7 +628,7 @@ class TestParameter:
             assert result.max == expected.max
 
         assert type(result_reverse) == type(expected_reverse)
-        assert result_reverse.name == expected_reverse.name
+        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
         assert result_reverse.variance == expected_reverse.variance
@@ -650,7 +650,7 @@ class TestParameter:
 
         # Expect
         assert type(result) == type(expected)
-        assert result.name == expected.name
+        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
@@ -658,7 +658,7 @@ class TestParameter:
             assert result.min == expected.min
             assert result.max == expected.max
 
-        assert result_reverse.name == expected_reverse.name
+        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
         assert result_reverse.variance == expected_reverse.variance
@@ -682,7 +682,7 @@ class TestParameter:
 
         # Expect
         assert type(result) == Parameter
-        assert result.name == expected.name
+        assert result.name == result.unique_name
         assert result.value == pytest.approx(expected.value)
         assert result.unit == expected.unit
         assert result.variance == pytest.approx(expected.variance)
@@ -690,7 +690,7 @@ class TestParameter:
         assert result.max == expected.max
 
         assert type(result) == Parameter
-        assert result_reverse.name == expected_reverse.name
+        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == pytest.approx(expected_reverse.value)
         assert result_reverse.unit == expected_reverse.unit
         assert result_reverse.variance == pytest.approx(expected_reverse.variance)
@@ -707,7 +707,7 @@ class TestParameter:
         result = first / second
 
         # Expect
-        assert result.name == expected.name
+        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
@@ -728,7 +728,7 @@ class TestParameter:
 
         # Expect
         assert type(result) == Parameter
-        assert result.name == expected.name
+        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
@@ -736,7 +736,7 @@ class TestParameter:
         assert result.max == expected.max
 
         assert type(result_reverse) == Parameter
-        assert result_reverse.name == expected_reverse.name
+        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
         assert result_reverse.variance == expected_reverse.variance
@@ -756,7 +756,7 @@ class TestParameter:
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == expected.name
+        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
@@ -773,7 +773,7 @@ class TestParameter:
         result = first / second
 
         # Expect
-        assert result.name == expected.name
+        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
@@ -815,7 +815,7 @@ class TestParameter:
 
         # Expect
         assert type(result) == type(expected)
-        assert result.name == expected.name
+        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
@@ -837,7 +837,7 @@ class TestParameter:
         result = test ** exponent
 
         # Expect
-        assert result.name == expected.name
+        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
@@ -863,7 +863,7 @@ class TestParameter:
         result = -parameter
 
         # Expect
-        assert result.name == "-name"
+        assert result.name == result.unique_name
         assert result.value == -5
         assert result.unit == "m"
         assert result.variance == 0.05
@@ -879,7 +879,7 @@ class TestParameter:
         result = abs(test)
 
         # Expect
-        assert result.name == expected.name
+        assert result.name == result.unique_name 
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
