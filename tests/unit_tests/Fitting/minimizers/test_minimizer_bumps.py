@@ -22,7 +22,6 @@ class TestBumpsFit():
 
     def test_init(self, minimizer: Bumps) -> None:
         assert minimizer._p_0 == {}
-        assert minimizer._cached_pars_order == ()
         assert minimizer.wrapping == 'bumps'
 
     def test_init_exception(self) -> None:
@@ -71,36 +70,6 @@ class TestBumpsFit():
         mock_model_function.assert_called_once_with(1.0, 2.0, 1.4142135623730951)
         mock_FitProblem.assert_called_once_with(mock_model)
  
-    def test_generate_fit_function(self, minimizer: Bumps) -> None:
-        # When
-        minimizer._original_fit_function = MagicMock(return_value='fit_function_result')
-
-        mock_fit_constraint = MagicMock()
-        minimizer.fit_constraints = MagicMock(return_value=[mock_fit_constraint])
-
-        minimizer._object = MagicMock()
-        mock_parm_1 = MagicMock(Parameter)
-        mock_parm_1.unique_name = 'mock_parm_1'
-        mock_parm_1.value = 1.0
-        mock_parm_1.error = 0.1
-        mock_parm_2 = MagicMock(Parameter)
-        mock_parm_2.unique_name = 'mock_parm_2'
-        mock_parm_2.value = 2.0
-        mock_parm_2.error = 0.2
-        minimizer._object.get_fit_parameters = MagicMock(return_value=[mock_parm_1, mock_parm_2])
-
-        # Then
-        fit_function = minimizer._generate_fit_function()
-        fit_function_result = fit_function([10.0])
-
-        # Expect
-        assert 'fit_function_result' == fit_function_result
-        mock_fit_constraint.assert_called_once_with()
-        minimizer._original_fit_function.assert_called_once_with([10.0])
-        assert minimizer._cached_pars['mock_parm_1'] == mock_parm_1
-        assert minimizer._cached_pars['mock_parm_2'] == mock_parm_2
-        assert minimizer._cached_pars_order == ('mock_parm_1', 'mock_parm_2')
-        assert str(fit_function.__signature__) == '(x, pmock_parm_1=2.0, pmock_parm_2=2.0)'
 
     def test_make_model(self, minimizer: Bumps, monkeypatch) -> None:
         # When

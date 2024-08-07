@@ -174,64 +174,6 @@ class DFO(MinimizerBase):
 
         return _outer(self)
 
-    def _generate_fit_function(self) -> Callable:
-        """
-        Using the user supplied `fit_function`, wrap it in such a way we can update `Parameter` on
-        iterations.
-
-        :return: a fit function which is compatible with bumps models
-        :rtype: Callable
-        """
-        # Original fit function
-        func = self._original_fit_function
-        # Get a list of `Parameters`
-        self._cached_pars = {}
-        self._cached_pars_vals = {}
-        for parameter in self._object.get_fit_parameters():
-            key = parameter.unique_name
-            self._cached_pars[key] = parameter
-            self._cached_pars_vals[key] = (parameter.value, parameter.error)
-
-        # Make a new fit function
-        def _fit_function(x: np.ndarray, **kwargs):
-            """
-            Wrapped fit function which now has an EasyScience compatible form
-
-            :param x: array of data points to be calculated
-            :type x: np.ndarray
-            :param kwargs: key word arguments
-            :return: points calculated at `x`
-            :rtype: np.ndarray
-            """
-            # Update the `Parameter` values and the callback if needed
-            # TODO THIS IS NOT THREAD SAFE :-(
-            # TODO clean when full move to new_variable
-            from easyscience.Objects.new_variable import Parameter
-
-            for name, value in kwargs.items():
-                par_name = name[1:]
-                if par_name in self._cached_pars.keys():
-                    # TODO clean when full move to new_variable
-                    if isinstance(self._cached_pars[par_name], Parameter):
-                        # This will take into account constraints
-                        if self._cached_pars[par_name].value != value:
-                            self._cached_pars[par_name].value = value
-                    else:
-                        # This will take into account constraints
-                        if self._cached_pars[par_name].raw_value != value:
-                            self._cached_pars[par_name].value = value
-
-                    # Since we are calling the parameter fset will be called.
-            # TODO Pre processing here
-            for constraint in self.fit_constraints():
-                constraint()
-            return_data = func(x)
-            # TODO Loading or manipulating data here
-            return return_data
-
-        self._fit_function = _fit_function
-        return _fit_function
-
     def _set_parameter_fit_result(self, fit_result, stack_status, ci: float = 0.95) -> None:
         """
         Update parameters to their final values and assign a std error to them.

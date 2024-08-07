@@ -2,8 +2,13 @@ import pytest
 
 from unittest.mock import MagicMock
 
+from inspect import Parameter as InspectParameter
+from inspect import Signature
+from inspect import _empty
+
 from easyscience.fitting.minimizers.minimizer_base import MinimizerBase
 from easyscience.fitting.minimizers.utils import FitError
+from easyscience.Objects.new_variable import Parameter
 
 class TestMinimizerBase():
     @pytest.fixture
@@ -23,6 +28,7 @@ class TestMinimizerBase():
         # When Then
         MinimizerBase.__abstractmethods__ = set()
         MinimizerBase.available_methods = MagicMock(return_value=['method'])
+
         # Expect
         with pytest.raises(FitError):
             MinimizerBase(
@@ -113,3 +119,53 @@ class TestMinimizerBase():
             'pb': 2,
             'pc': 5
         }
+
+    def test_generate_fit_function(self, minimizer: MinimizerBase) -> None:
+        # When
+        minimizer._original_fit_function = MagicMock(return_value='fit_function_result')
+
+        mock_fit_constraint = MagicMock()
+        minimizer.fit_constraints = MagicMock(return_value=[mock_fit_constraint])
+
+        minimizer._object = MagicMock()
+        mock_parm_1 = MagicMock(Parameter)
+        mock_parm_1.unique_name = 'mock_parm_1'
+        mock_parm_1.value = 1.0
+        mock_parm_1.error = 0.1
+        mock_parm_2 = MagicMock(Parameter)
+        mock_parm_2.unique_name = 'mock_parm_2'
+        mock_parm_2.value = 2.0
+        mock_parm_2.error = 0.2
+        minimizer._object.get_fit_parameters = MagicMock(return_value=[mock_parm_1, mock_parm_2])
+
+        # Then
+        fit_function = minimizer._generate_fit_function()
+        fit_function_result = fit_function([10.0])
+
+        # Expect
+        assert 'fit_function_result' == fit_function_result
+        mock_fit_constraint.assert_called_once_with()
+        minimizer._original_fit_function.assert_called_once_with([10.0])
+        assert minimizer._cached_pars['mock_parm_1'] == mock_parm_1
+        assert minimizer._cached_pars['mock_parm_2'] == mock_parm_2
+        assert str(fit_function.__signature__) == '(x, pmock_parm_1=1.0, pmock_parm_2=2.0)'
+
+    def test_create_signature(self, minimizer: MinimizerBase) -> None:
+        # When
+        mock_parm_1 = MagicMock(Parameter)
+        mock_parm_1.value = 1.0
+        mock_parm_2 = MagicMock(Parameter)
+        mock_parm_2.value = 2.0
+        pars = {1: mock_parm_1, 2: mock_parm_2}
+
+        # Then
+        signature = minimizer._create_signature(pars)
+        
+        # Expect
+        wrapped_parameters = [
+            InspectParameter('x', InspectParameter.POSITIONAL_OR_KEYWORD, annotation=_empty),
+            InspectParameter('p1', InspectParameter.POSITIONAL_OR_KEYWORD, annotation=_empty, default=1.0),
+            InspectParameter('p2', InspectParameter.POSITIONAL_OR_KEYWORD, annotation=_empty, default=2.0)
+        ]
+        expected_signature = Signature(wrapped_parameters)
+        assert signature == expected_signature

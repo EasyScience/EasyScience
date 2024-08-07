@@ -2,11 +2,8 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
 
-from inspect import Parameter as InspectParameter
-from inspect import Signature
-from inspect import _empty
+
 from typing import Callable
-from typing import Dict
 from typing import List
 from typing import Optional
 
@@ -52,98 +49,21 @@ class LMFit(MinimizerBase):  # noqa: S101
         """
         super().__init__(obj=obj, fit_function=fit_function, method=method)
 
-    def _make_model(self, pars: Optional[LMParameters] = None) -> LMModel:
-        """
-        Generate a lmfit model from the supplied `fit_function` and parameters in the base object.
-
-        :return: Callable lmfit model
-        :rtype: LMModel
-        """
-        # Generate the fitting function
-        fit_func = self._generate_fit_function()
-        self._fit_function = fit_func
-
-        if pars is None:
-            pars = self._cached_pars
-        # Create the model
-        model = LMModel(
-            fit_func,
-            independent_vars=['x'],
-            param_names=[MINIMIZER_PARAMETER_PREFIX + str(key) for key in pars.keys()],
-        )
-        # Assign values from the `Parameter` to the model
-        for name, item in pars.items():
-            if isinstance(item, LMParameter):
-                value = item.value
-            else:
-                ## TODO clean when full move to new_variable
-                from easyscience.Objects.new_variable import Parameter
-
-                if isinstance(item, Parameter):
-                    value = item.value
-                else:
-                    value = item.raw_value
-
-            model.set_param_hint(MINIMIZER_PARAMETER_PREFIX + str(name), value=value, min=item.min, max=item.max)
-
-        # Cache the model for later reference
-        self._cached_model = model
-        return model
-
-    def _generate_fit_function(self) -> Callable:
-        """
-        Using the user supplied `fit_function`, wrap it in such a way we can update `Parameter` on
-        iterations.
-
-        :return: a fit function which is compatible with lmfit models
-        :rtype: Callable
-        """
-        # Get a list of `Parameters`
-        self._cached_pars = {}
-        self._cached_pars_vals = {}
-        for parameter in self._object.get_fit_parameters():
-            key = parameter.unique_name
-            self._cached_pars[key] = parameter
-            self._cached_pars_vals[key] = (parameter.value, parameter.error)
-
-        # Make a lm fit function
-        def lm_fit_function(x: np.ndarray, **kwargs):
-            """
-            Fit function with a lmfit compatible signature.
-
-            :param x: array of data points to be calculated
-            :type x: np.ndarray
-            :param kwargs: key word arguments
-            :return: points, `f(x)`, calculated at `x`
-            :rtype: np.ndarray
-            """
-            # Update the `Parameter` values and the callback if needed
-            # TODO THIS IS NOT THREAD SAFE :-(
-            for name, value in kwargs.items():
-                par_name = name[1:]
-                if par_name in self._cached_pars.keys():
-                    # This will take into account constraints
-
-                    ## TODO clean when full move to new_variable
-                    from easyscience.Objects.new_variable import Parameter
-
-                    if isinstance(self._cached_pars[par_name], Parameter):
-                        if self._cached_pars[par_name].value != value:
-                            self._cached_pars[par_name].value = value
-                    else:
-                        if self._cached_pars[par_name].raw_value != value:
-                            self._cached_pars[par_name].value = value
-
-                    # Since we are calling the parameter fset will be called.
-            # TODO Pre processing here
-            for constraint in self.fit_constraints():
-                constraint()
-            return_data = self._original_fit_function(x)
-            # TODO Loading or manipulating data here
-            return return_data
-
-        lm_fit_function.__signature__ = self._wrap_to_lm_signature(self._cached_pars)
-        return lm_fit_function
+    def available_methods(self) -> List[str]:
+        return [
+            'least_squares',
+            'leastsq',
+            'differential_evolution',
+            'basinhopping',
+            'ampgo',
+            'nelder',
+            'lbfgsb',
+            'powell',
+            'cg',
+            'newton',
+            'cobyla',
+            'bfgs',
+        ]
 
     def fit(
         self,
@@ -257,6 +177,45 @@ class LMFit(MinimizerBase):  # noqa: S101
             brute_step=None,
         )
 
+    def _make_model(self, pars: Optional[LMParameters] = None) -> LMModel:
+        """
+        Generate a lmfit model from the supplied `fit_function` and parameters in the base object.
+
+        :return: Callable lmfit model
+        :rtype: LMModel
+        """
+        # Generate the fitting function
+        fit_func = self._generate_fit_function()
+
+        self._fit_function = fit_func
+
+        if pars is None:
+            pars = self._cached_pars
+        # Create the model
+        model = LMModel(
+            fit_func,
+            independent_vars=['x'],
+            param_names=[MINIMIZER_PARAMETER_PREFIX + str(key) for key in pars.keys()],
+        )
+        # Assign values from the `Parameter` to the model
+        for name, item in pars.items():
+            if isinstance(item, LMParameter):
+                value = item.value
+            else:
+                ## TODO clean when full move to new_variable
+                from easyscience.Objects.new_variable import Parameter
+
+                if isinstance(item, Parameter):
+                    value = item.value
+                else:
+                    value = item.raw_value
+
+            model.set_param_hint(MINIMIZER_PARAMETER_PREFIX + str(name), value=value, min=item.min, max=item.max)
+
+        # Cache the model for later reference
+        self._cached_model = model
+        return model
+
     def _set_parameter_fit_result(self, fit_result: ModelResult, stack_status: bool):
         """
         Update parameters to their final values and assign a std error to them.
@@ -313,50 +272,3 @@ class LMFit(MinimizerBase):  # noqa: S101
         results.engine_result = fit_results
         # results.check_sanity()
         return results
-
-    def available_methods(self) -> List[str]:
-        return [
-            'least_squares',
-            'leastsq',
-            'differential_evolution',
-            'basinhopping',
-            'ampgo',
-            'nelder',
-            'lbfgsb',
-            'powell',
-            'cg',
-            'newton',
-            'cobyla',
-            'bfgs',
-        ]
-
-    @staticmethod
-    def _wrap_to_lm_signature(parameters: Dict[int, Parameter]) -> Signature:
-        """
-        Wrap the function signature.
-        This is done as lmfit wants the function to be in the form:
-        f = (x, a=1, b=2)...
-        Where we need to be generic. Note that this won't hold for much outside of this scope.
-        """
-        wrapped_parameters = []
-        wrapped_parameters.append(InspectParameter('x', InspectParameter.POSITIONAL_OR_KEYWORD, annotation=_empty))
-
-        ## TODO clean when full move to new_variable
-        from easyscience.Objects.new_variable import Parameter as NewParameter
-
-        for name, parameter in parameters.items():
-            ## TODO clean when full move to new_variable
-            if isinstance(parameter, NewParameter):
-                default_value = parameter.value
-            else:
-                default_value = parameter.raw_value
-
-            wrapped_parameters.append(
-                InspectParameter(
-                    MINIMIZER_PARAMETER_PREFIX + str(name),
-                    InspectParameter.POSITIONAL_OR_KEYWORD,
-                    annotation=_empty,
-                    default=default_value,
-                )
-            )
-        return Signature(wrapped_parameters)
