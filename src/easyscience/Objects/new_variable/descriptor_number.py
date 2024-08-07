@@ -23,8 +23,8 @@ class DescriptorNumber(DescriptorBase):
 
     def __init__(
         self,
-        name: str,
         value: numbers.Number,
+        name: Optional[str] = None,
         unit: Optional[Union[str, sc.Unit]] = '',
         variance: Optional[numbers.Number] = None,
         unique_name: Optional[str] = None,

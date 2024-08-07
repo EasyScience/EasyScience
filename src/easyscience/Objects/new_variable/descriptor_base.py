@@ -31,7 +31,7 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
 
     def __init__(
         self,
-        name: str,
+        name: Optional[str] = None,
         unique_name: Optional[str] = None,
         description: Optional[str] = None,
         url: Optional[str] = None,
@@ -57,6 +57,9 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
         if unique_name is None:
             unique_name = self._unique_name_generator()
         self._unique_name = unique_name
+
+        if name is None:
+            name=unique_name
 
         if not isinstance(name, str):
             raise TypeError('Name must be a string')
