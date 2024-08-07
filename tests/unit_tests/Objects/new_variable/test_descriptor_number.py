@@ -213,7 +213,7 @@ class TestDescriptorNumber:
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == expected.name
+        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
@@ -230,13 +230,13 @@ class TestDescriptorNumber:
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == "name + 1.0"
+        assert result.name == result.unique_name
         assert result.value == 2.0
         assert result.unit == "dimensionless"
         assert result.variance == 0.1
 
         assert type(result_reverse) == DescriptorNumber
-        assert result_reverse.name == "1.0 + name"
+        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == 2.0
         assert result_reverse.unit == "dimensionless"
         assert result_reverse.variance == 0.1
@@ -259,7 +259,7 @@ class TestDescriptorNumber:
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == expected.name
+        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
@@ -276,13 +276,13 @@ class TestDescriptorNumber:
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == "name - 1.0"
+        assert result.name == result.unique_name
         assert result.value == 1.0
         assert result.unit == "dimensionless"
         assert result.variance == 0.1
 
         assert type(result_reverse) == DescriptorNumber
-        assert result_reverse.name == "1.0 - name"
+        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == -1.0
         assert result_reverse.unit == "dimensionless"
         assert result_reverse.variance == 0.1
@@ -306,7 +306,7 @@ class TestDescriptorNumber:
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == expected.name
+        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == pytest.approx(expected.variance)
@@ -318,13 +318,13 @@ class TestDescriptorNumber:
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == "name * 2.0"
+        assert result.name == result.unique_name
         assert result.value == 2.0
         assert result.unit == "m"
         assert result.variance == 0.4
 
         assert type(result_reverse) == DescriptorNumber
-        assert result_reverse.name == "2.0 * name"
+        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == 2.0
         assert result_reverse.unit == "m"
         assert result_reverse.variance == 0.4
@@ -340,13 +340,13 @@ class TestDescriptorNumber:
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == expected.name
+        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == pytest.approx(expected.variance)
 
         assert type(result_reverse) == DescriptorNumber
-        assert result_reverse.name == expected_reverse.name
+        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
         assert result_reverse.variance == pytest.approx(expected_reverse.variance)
@@ -379,7 +379,7 @@ class TestDescriptorNumber:
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == expected.name
+        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
@@ -393,7 +393,7 @@ class TestDescriptorNumber:
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == "name ** 0.5"
+        assert result.name == result.unique_name
         assert result.value == 1.4142135623730951
         assert result.unit == "dimensionless"
         assert result.variance == pytest.approx(0.0125)
@@ -438,7 +438,7 @@ class TestDescriptorNumber:
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == "-name"
+        assert result.name == result.unique_name
         assert result.value == -2
         assert result.unit == "m"
         assert result.variance == 0.1
@@ -452,7 +452,7 @@ class TestDescriptorNumber:
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == "abs(name)"
+        assert result.name == result.unique_name
         assert result.value == 2
         assert result.unit == "m"
         assert result.variance == 0.1
