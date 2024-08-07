@@ -84,30 +84,6 @@ class TestLMFit():
         assert mock_lm_model.set_param_hint.call_count == 2
         assert model == mock_lm_model
 
-    def test_generate_fit_function(self, minimizer: LMFit) -> None:
-        # When
-        minimizer._original_fit_function = MagicMock(return_value='fit_function_result')
-
-        mock_fit_constraint = MagicMock()
-        minimizer.fit_constraints = MagicMock(return_value=[mock_fit_constraint])
-
-        minimizer._object = MagicMock()
-        mock_parm_1 = MagicMock(Parameter)
-        mock_parm_1.unique_name = 'mock_parm_1'
-        mock_parm_1.value = 1.0
-        mock_parm_1.error = 0.1
-        mock_parm_2 = MagicMock(Parameter)
-        mock_parm_2.unique_name = 'mock_parm_2'
-        mock_parm_2.value = 2.0
-        mock_parm_2.error = 0.2
-        minimizer._object.get_fit_parameters = MagicMock(return_value=[mock_parm_1, mock_parm_2])
-
-        # Then
-        fit_function = minimizer._generate_fit_function()
-
-        # Expect
-        assert str(fit_function.__signature__) == '(x, pmock_parm_1=1.0, pmock_parm_2=2.0)'
-
     def test_fit(self, minimizer: LMFit) -> None:
         # When
         from easyscience import global_object

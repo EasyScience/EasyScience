@@ -53,7 +53,6 @@ class Bumps(MinimizerBase):
         :type fit_function: Callable
         """
         super().__init__(obj=obj, fit_function=fit_function, method=method)
-        #        self._cached_pars_order = ()
         self._p_0 = {}
 
     def available_methods(self) -> List[str]:
@@ -202,17 +201,6 @@ class Bumps(MinimizerBase):
             return _make_func
 
         return _outer(self)
-
-    def _generate_fit_function(self) -> Callable:
-        """
-        Using the user supplied `fit_function`, wrap it in such a way we can update `Parameter` on
-        iterations.
-
-        :return: a fit function which is compatible with lmfit models
-        """
-        fit_function = super()._generate_fit_function()
-        fit_function.__signature__ = self._create_signature(self._cached_pars)
-        return fit_function
 
     def _set_parameter_fit_result(self, fit_result, stack_status: bool):
         """

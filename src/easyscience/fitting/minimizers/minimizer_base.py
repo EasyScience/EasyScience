@@ -223,6 +223,7 @@ class MinimizerBase(metaclass=ABCMeta):
             # TODO Loading or manipulating data here
             return return_data
 
+        _fit_function.__signature__ = self._create_signature(self._cached_pars)
         return _fit_function
 
     @staticmethod

@@ -148,6 +148,7 @@ class TestMinimizerBase():
         minimizer._original_fit_function.assert_called_once_with([10.0])
         assert minimizer._cached_pars['mock_parm_1'] == mock_parm_1
         assert minimizer._cached_pars['mock_parm_2'] == mock_parm_2
+        assert str(fit_function.__signature__) == '(x, pmock_parm_1=1.0, pmock_parm_2=2.0)'
 
     def test_create_signature(self, minimizer: MinimizerBase) -> None:
         # When
