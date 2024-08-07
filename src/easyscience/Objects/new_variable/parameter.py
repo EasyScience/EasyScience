@@ -122,9 +122,6 @@ class Parameter(DescriptorNumber):
         }
         self._constraints = Constraints(builtin=builtin_constraint, user={}, virtual={})
 
-        if self.unit is not None:
-            self.convert_unit(self._base_unit())
-
 
     @property
     def value_no_call_back(self) -> numbers.Number:
@@ -255,7 +252,6 @@ class Parameter(DescriptorNumber):
         """
         if not isinstance(min_value, numbers.Number):
             raise TypeError('`min` must be a number')
-        # if min_value == self._max.value:
         if np.isclose(min_value, self._max.value, rtol=1e-9, atol=0.0):
             raise ValueError('The min and max bounds cannot be identical. Please use fixed=True instead to fix the value.')
         if min_value <= self.value:
@@ -284,7 +280,6 @@ class Parameter(DescriptorNumber):
         """
         if not isinstance(max_value, numbers.Number):
             raise TypeError('`max` must be a number')
-        # if max_value == self._min.value:
         if np.isclose(max_value, self._min.value, rtol=1e-9, atol=0.0):
             raise ValueError('The min and max bounds cannot be identical. Please use fixed=True instead to fix the value.')
         if max_value >= self.value:
@@ -504,7 +499,7 @@ class Parameter(DescriptorNumber):
             else:
                 min_value = self.min - other.value
                 max_value = self.max - other.value
-            name = self.name+" - "+other.name
+            name = f"{self.name} - {other.name}"
             other.convert_unit(other_unit)
         else: 
             return NotImplemented
@@ -593,8 +588,8 @@ class Parameter(DescriptorNumber):
             combinations = [self.min / other, self.max / other]
             name = f"{self.name} / {other}"
         elif isinstance(other, DescriptorNumber):  # Parameter inherits from DescriptorNumber and is also handled here
-            original_value = other.value
-            if original_value == 0:
+            other_value = other.value
+            if other_value == 0:
                 raise ZeroDivisionError("Cannot divide by zero")
             new_full_value = self.full_value / other.full_value
             if isinstance(other, Parameter):
@@ -619,7 +614,7 @@ class Parameter(DescriptorNumber):
             else:
                 combinations = [self.min / other.value, self.max / other.value]
             name = f"{self.name} / {other.name}"
-            other.value = original_value
+            other.value = other_value
         else:
             return NotImplemented
         min_value = min(combinations)
@@ -641,7 +636,7 @@ class Parameter(DescriptorNumber):
         elif isinstance(other, DescriptorNumber): # Parameter inherits from DescriptorNumber and is also handled here
             new_full_value = other.full_value / self.full_value
             other_value = other.value
-            name = other.name+" / "+self.name
+            name = f"{other.name} / {self.name}"
             if other_value == 0:
                 return DescriptorNumber.from_scipp(name=name, full_value=new_full_value)
         else:
