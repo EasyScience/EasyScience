@@ -451,7 +451,9 @@ class Parameter(DescriptorNumber):
             other.convert_unit(other_unit)
         else: 
             return NotImplemented
-        return Parameter.from_scipp(name=None, full_value=new_full_value, min=min_value, max=max_value)
+        parameter=Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
+        parameter.name=parameter.unique_name
+        return parameter
 
     def __radd__(self, other: Union[DescriptorNumber, numbers.Number]) -> Parameter:
         if isinstance(other, numbers.Number):
@@ -472,7 +474,9 @@ class Parameter(DescriptorNumber):
             self.convert_unit(original_unit)
         else:
             return NotImplemented
-        return Parameter.from_scipp(name=None, full_value=new_full_value, min=min_value, max=max_value)
+        parameter=Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
+        parameter.name=parameter.unique_name
+        return parameter
 
     def __sub__(self, other: Union[DescriptorNumber, Parameter, numbers.Number]) -> Parameter:
         if isinstance(other, numbers.Number):
@@ -497,7 +501,9 @@ class Parameter(DescriptorNumber):
             other.convert_unit(other_unit)
         else: 
             return NotImplemented
-        return Parameter.from_scipp(name=None, full_value=new_full_value, min=min_value, max=max_value)
+        parameter=Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
+        parameter.name=parameter.unique_name
+        return parameter
     
     def __rsub__(self, other: Union[DescriptorNumber, numbers.Number]) -> Parameter:
         if isinstance(other, numbers.Number):
@@ -518,18 +524,24 @@ class Parameter(DescriptorNumber):
             self.convert_unit(original_unit)
         else:
             return NotImplemented
-        return Parameter.from_scipp(name=None, full_value=new_full_value, min=min_value, max=max_value)
+        parameter=Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
+        parameter.name=parameter.unique_name
+        return parameter
     
     def __mul__(self, other: Union[DescriptorNumber, Parameter, numbers.Number]) -> Parameter:
         if isinstance(other, numbers.Number):
             new_full_value = self.full_value * other
             if other == 0:
-                return DescriptorNumber.from_scipp(name=None, full_value=new_full_value)
+                descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_full_value)
+                descriptor_number.name=descriptor_number.unique_name
+                return descriptor_number
             combinations = [self.min * other, self.max * other]
         elif isinstance(other, DescriptorNumber): # Parameter inherits from DescriptorNumber and is also handled here
             new_full_value = self.full_value * other.full_value
             if other.value == 0 and isinstance(other, DescriptorNumber):
-                return DescriptorNumber.from_scipp(name=None, full_value=new_full_value)
+                descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_full_value)
+                descriptor_number.name=descriptor_number.unique_name
+                return descriptor_number
             if isinstance(other, Parameter):
                 combinations = []
                 for first, second in [(self.min, other.min), (self.min, other.max), (self.max, other.min), (self.max, other.max)]:  # noqa: E501
@@ -545,29 +557,33 @@ class Parameter(DescriptorNumber):
             return NotImplemented
         min_value = min(combinations)
         max_value = max(combinations)
-        parameter = Parameter.from_scipp(name=None, full_value=new_full_value, min=min_value, max=max_value)
+        parameter = Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
         parameter.convert_unit(parameter._base_unit())
+        parameter.name=parameter.unique_name
         return parameter
             
     def __rmul__(self, other: Union[DescriptorNumber, numbers.Number]) -> Parameter:
         if isinstance(other, numbers.Number):
             new_full_value = other * self.full_value
-            name = f"{other} * {self.name}"
             if other == 0:
-                return DescriptorNumber.from_scipp(name=None, full_value=new_full_value)
+                descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_full_value)
+                descriptor_number.name=descriptor_number.unique_name
+                return descriptor_number
             combinations = [other * self.min, other * self.max]
         elif isinstance(other, DescriptorNumber):   # Parameter inherits from DescriptorNumber and is also handled here
             new_full_value = other.full_value * self.full_value
-            name = f"{other.name} * {self.name}"
             if other.value == 0:
-                return DescriptorNumber.from_scipp(name=None, full_value=new_full_value)
+                descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_full_value)
+                descriptor_number.name=descriptor_number.unique_name
+                return descriptor_number
             combinations = [self.min * other.value, self.max * other.value]
         else:
             return NotImplemented
         min_value = min(combinations)
         max_value = max(combinations)
-        parameter = Parameter.from_scipp(name=None, full_value=new_full_value, min=min_value, max=max_value)
+        parameter = Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
         parameter.convert_unit(parameter._base_unit())
+        parameter.name=parameter.unique_name
         return parameter
     
     def __truediv__(self, other: Union[DescriptorNumber, Parameter, numbers.Number]) -> Parameter:
@@ -607,8 +623,9 @@ class Parameter(DescriptorNumber):
             return NotImplemented
         min_value = min(combinations)
         max_value = max(combinations)
-        parameter = Parameter.from_scipp(name=None, full_value=new_full_value, min=min_value, max=max_value)
+        parameter = Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
         parameter.convert_unit(parameter._base_unit())
+        parameter.name=parameter.unique_name
         return parameter
     
     def __rtruediv__(self, other: Union[DescriptorNumber, numbers.Number]) -> Parameter:
@@ -619,12 +636,16 @@ class Parameter(DescriptorNumber):
             new_full_value = other / self.full_value
             other_value = other
             if other_value == 0:
-                return DescriptorNumber.from_scipp(name=None, full_value=new_full_value)
+                descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_full_value)
+                descriptor_number.name=descriptor_number.unique_name
+                return descriptor_number
         elif isinstance(other, DescriptorNumber): # Parameter inherits from DescriptorNumber and is also handled here
             new_full_value = other.full_value / self.full_value
             other_value = other.value
             if other_value == 0:
-                return DescriptorNumber.from_scipp(name=None, full_value=new_full_value)
+                descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_full_value)
+                descriptor_number.name=descriptor_number.unique_name
+                return descriptor_number
         else:
             return NotImplemented
         if (self.min < 0 and self.max > 0):
@@ -643,8 +664,9 @@ class Parameter(DescriptorNumber):
             combinations = [other_value / self.min, other_value / self.max]
         min_value = min(combinations)
         max_value = max(combinations)
-        parameter = Parameter.from_scipp(name=None, full_value=new_full_value, min=min_value, max=max_value)
+        parameter = Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
         parameter.convert_unit(parameter._base_unit())
+        parameter.name=parameter.unique_name
         self.value = original_self
         return parameter
     
@@ -668,7 +690,9 @@ class Parameter(DescriptorNumber):
         if np.isnan(new_full_value.value):
             raise ValueError("The result of the exponentiation is not a number")
         if exponent == 0:
-            return DescriptorNumber.from_scipp(name=None, full_value=new_full_value)
+                descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_full_value)
+                descriptor_number.name=descriptor_number.unique_name
+                return descriptor_number
         elif exponent < 0:
             if self.min < 0 and self.max > 0:
                 combinations = [-np.inf, np.inf]
@@ -690,13 +714,17 @@ class Parameter(DescriptorNumber):
             combinations = [combination for combination in combinations if combination >= 0]
         min_value = min(combinations)
         max_value = max(combinations)
-        return Parameter.from_scipp(name=None, full_value=new_full_value, min=min_value, max=max_value)
+        parameter=Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
+        parameter.name=parameter.unique_name
+        return parameter
     
     def __neg__(self) -> Parameter:
         new_full_value = -self.full_value
         min_value = -self.max
         max_value = -self.min
-        return Parameter.from_scipp(name=None, full_value=new_full_value, min=min_value, max=max_value)
+        parameter=Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
+        parameter.name=parameter.unique_name
+        return parameter
     
     def __abs__(self) -> Parameter:
         new_full_value = abs(self.full_value)
@@ -705,4 +733,6 @@ class Parameter(DescriptorNumber):
             combinations.append(0)
         min_value = min(combinations)
         max_value = max(combinations)
-        return Parameter.from_scipp(name=None, full_value=new_full_value, min=min_value, max=max_value)
+        parameter=Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
+        parameter.name=parameter.unique_name
+        return parameter
