@@ -3,8 +3,6 @@ from unittest.mock import MagicMock
 import scipp as sc
 from scipp import UnitError
 
-from scipp import UnitError
-
 from easyscience.Objects.new_variable.descriptor_number import DescriptorNumber
 from easyscience import global_object
 
