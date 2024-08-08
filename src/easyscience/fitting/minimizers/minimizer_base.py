@@ -40,7 +40,7 @@ class MinimizerBase(metaclass=ABCMeta):
         fit_function: Callable,
         method: Optional[str] = None,
     ):  # todo after constraint changes, add type hint: obj: BaseObj  # noqa: E501
-        if method not in self.available_methods():
+        if method not in self.supported_methods():
             raise FitError(f'Method {method} not available in {self.__class__}')
         self._object = obj
         self._original_fit_function = fit_function
@@ -132,12 +132,23 @@ class MinimizerBase(metaclass=ABCMeta):
         :return: engine Parameters compatible object
         """
 
+    @staticmethod
     @abstractmethod
-    def available_methods(self) -> List[str]:
+    def supported_methods() -> List[str]:
         """
-        Return a list of available methods for the engine.
+        Return a list of supported methods for the minimizer.
 
-        :return: List of available methods
+        :return: List of supported methods
+        :rtype: List[str]
+        """
+
+    @staticmethod
+    @abstractmethod
+    def all_methods() -> List[str]:
+        """
+        Return a list of all available methods for the minimizer.
+
+        :return: List of all available methods
         :rtype: List[str]
         """
 
