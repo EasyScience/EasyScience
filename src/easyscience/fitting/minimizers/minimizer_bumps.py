@@ -55,8 +55,15 @@ class Bumps(MinimizerBase):
         super().__init__(obj=obj, fit_function=fit_function, method=method)
         self._p_0 = {}
 
-    def available_methods(self) -> List[str]:
+    @staticmethod
+    def all_methods() -> List[str]:
         return FIT_AVAILABLE_IDS_FILTERED
+
+    @staticmethod
+    def supported_methods() -> List[str]:
+        # only a small subset
+        methods = ['scipy.leastsq','amoeba', 'newton', 'lm']
+        return methods
 
     def fit(
         self,
@@ -92,7 +99,7 @@ class Bumps(MinimizerBase):
         default_method = {}
         if self._method is not None:
             default_method = {'method': self._method}
-        if method is not None and method in self.available_methods():
+        if method is not None and method in self.supported_methods():
             default_method['method'] = method
 
         if weights is None:

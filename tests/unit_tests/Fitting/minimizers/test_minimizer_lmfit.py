@@ -127,14 +127,15 @@ class TestLMFit():
         minimizer._make_model = MagicMock(return_value=mock_model)
         minimizer._set_parameter_fit_result = MagicMock()
         minimizer._gen_fit_results = MagicMock(return_value='gen_fit_results')
-        minimizer.available_methods = MagicMock(return_value=['method_passed'])
+        minimizer.supported_methods = MagicMock(return_value=['method_passed'])
+        minimizer.all_methods = MagicMock(return_value=['method_passed'])
 
         # Then
         minimizer.fit(x=1.0, y=2.0, method='method_passed')
 
         # Expect
         mock_model.fit.assert_called_once_with(2.0, x=1.0, weights=0.7071067811865475, method='method_passed')
-        minimizer.available_methods.assert_called_once_with()
+        minimizer.supported_methods.assert_called_once_with()
 
     def test_fit_kwargs(self, minimizer: LMFit) -> None:
         # When

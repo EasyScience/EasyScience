@@ -15,7 +15,7 @@ class TestMinimizerBase():
     def minimizer(self):
         # This avoids the error: TypeError: Can't instantiate abstract class with abstract methods __init__
         MinimizerBase.__abstractmethods__ = set()
-        MinimizerBase.available_methods = MagicMock(return_value=['method'])
+        MinimizerBase.supported_methods = MagicMock(return_value=['method'])
 
         minimizer = MinimizerBase(
             obj='obj',
@@ -27,7 +27,7 @@ class TestMinimizerBase():
     def test_init_exception(self):
         # When Then
         MinimizerBase.__abstractmethods__ = set()
-        MinimizerBase.available_methods = MagicMock(return_value=['method'])
+        MinimizerBase.supported_methods = MagicMock(return_value=['method'])
 
         # Expect
         with pytest.raises(FitError):

@@ -32,9 +32,13 @@ class TestBumpsFit():
                 method='not_leastsq'
             )
 
-    def test_available_methods(self, minimizer: Bumps) -> None:
+    def test_all_methods(self, minimizer: Bumps) -> None:
         # When Then Expect
-        assert minimizer.available_methods() == ['amoeba', 'de', 'dream', 'newton', 'scipy.leastsq', 'lm']
+        assert minimizer.all_methods() == ['amoeba', 'de', 'dream', 'newton', 'scipy.leastsq', 'lm']
+
+    def test_supported_methods(self, minimizer: Bumps) -> None:
+        # When Then Expect
+        assert set(minimizer.supported_methods()) == set(['scipy.leastsq','newton', 'lm', 'amoeba'])
 
     def test_fit(self, minimizer: Bumps, monkeypatch) -> None:
         # When

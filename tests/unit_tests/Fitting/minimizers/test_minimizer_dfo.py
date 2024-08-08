@@ -32,9 +32,13 @@ class TestDFOFit():
                 method='not_leastsq'
             )
 
-    def test_available_methods(self, minimizer: DFO) -> None:
+    def test_supported_methods(self, minimizer: DFO) -> None:
         # When Then Expect
-        assert minimizer.available_methods() == ['leastsq']
+        assert minimizer.supported_methods() == ['leastsq']
+
+    def test_supported_methods(self, minimizer: DFO) -> None:
+        # When Then Expect
+        assert minimizer.supported_methods() == ['leastsq']
 
     def test_fit(self, minimizer: DFO) -> None:
         # When

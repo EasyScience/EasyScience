@@ -49,7 +49,8 @@ class LMFit(MinimizerBase):  # noqa: S101
         """
         super().__init__(obj=obj, fit_function=fit_function, method=method)
 
-    def available_methods(self) -> List[str]:
+    @staticmethod
+    def all_methods() -> List[str]:
         return [
             'least_squares',
             'leastsq',
@@ -63,6 +64,15 @@ class LMFit(MinimizerBase):  # noqa: S101
             'newton',
             'cobyla',
             'bfgs',
+        ]
+
+    @staticmethod
+    def supported_methods() -> List[str]:
+        return [
+            'least_squares',
+            'leastsq',
+            'powell',
+            'cobyla',
         ]
 
     def fit(
@@ -102,7 +112,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         if self._method is not None:
             default_method = {'method': self._method}
         if method is not None:
-            if method in self.available_methods():
+            if method in self.supported_methods():
                 default_method['method'] = method
             else:
                 raise FitError(f'Method {method} not available in {self.__class__}')
