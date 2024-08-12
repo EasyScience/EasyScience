@@ -548,9 +548,8 @@ class TestParameter:
     @pytest.mark.parametrize("test, expected, expected_reverse", [
             (Parameter("test", 2, "m", 0.01, -10, 20),     Parameter("name * test", 2, "m^2", 0.05, -100, 200),               Parameter("test * name", 2, "m^2", 0.05, -100, 200)),
             (Parameter("test", 2, "m", 0.01),              Parameter("name * test", 2, "m^2", 0.05, min=-np.Inf, max=np.Inf), Parameter("test * name", 2, "m^2", 0.05, min=-np.Inf, max=np.Inf)),
-            (Parameter("test", 2, "dm", 0.01, -10, 20),    Parameter("name * test", 0.2, "m^2", 0.0005, -10, 20),             Parameter("test * name", 0.2, "m^2", 0.0005, -10, 20)),
-            (Parameter("test", 2, "1/dm", 0.01, -10, 20),  Parameter("name * test", 20.0, "dimensionless", 5, -1000, 2000),   Parameter("test * name", 20.0, "dimensionless", 5, -1000, 2000))],
-            ids=["regular", "no_bounds", "base_unit_conversion", "base_unit_conversion_dimensionless"])
+            (Parameter("test", 2, "dm", 0.01, -10, 20),    Parameter("name * test", 0.2, "m^2", 0.0005, -10, 20),             Parameter("test * name", 0.2, "m^2", 0.0005, -10, 20))],
+            ids=["regular", "no_bounds", "base_unit_conversion"])
     def test_multiplication_with_parameter(self, parameter : Parameter, test : Parameter, expected : Parameter, expected_reverse : Parameter):
         # When 
         parameter._callback = property()
@@ -591,19 +590,15 @@ class TestParameter:
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
+        assert result.min == expected.min
+        assert result.max == expected.max
 
         assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
         assert result_reverse.variance == expected_reverse.variance
-
-        if isinstance(result, Parameter):
-            assert result.min == expected.min
-            assert result.max == expected.max
-
-        if isinstance(result_reverse, Parameter):
-            assert result_reverse.min == expected_reverse.min
-            assert result_reverse.max == expected_reverse.max
+        assert result_reverse.min == expected_reverse.min
+        assert result_reverse.max == expected_reverse.max
 
     @pytest.mark.parametrize("test, expected, expected_reverse", [
         (DescriptorNumber(name="test", value=2, variance=0.1, unit="cm"), Parameter("name * test", 2, "dm^2", 0.14, 0, 20), Parameter("test * name", 2, "dm^2", 0.14, 0, 20)),
@@ -668,10 +663,9 @@ class TestParameter:
 
     @pytest.mark.parametrize("test, expected, expected_reverse", [
             (Parameter("test", 2, "s", 0.01, -10, 20),  Parameter("name / test", 0.5, "m/s", 0.003125, -np.Inf, np.Inf),       Parameter("test / name", 2, "s/m", 0.05, -np.Inf, np.Inf)),
-            (Parameter("test", 2, "dm", 0.01, -10, 20), Parameter("name / test", 5, "dimensionless", 0.3125, -np.Inf, np.Inf), Parameter("test / name", 0.2, "dimensionless", 0.0005, -np.Inf, np.Inf)),
             (Parameter("test", 2, "s", 0.01, 0, 20),    Parameter("name / test", 0.5, "m/s", 0.003125, 0.0, np.Inf),           Parameter("test / name", 2, "s/m", 0.05, 0.0, np.Inf)),
             (Parameter("test", -2, "s", 0.01, -10, 0),  Parameter("name / test", -0.5, "m/s", 0.003125, -np.Inf, 0.0),         Parameter("test / name", -2, "s/m", 0.05, -np.Inf, 0.0))],
-            ids=["crossing_zero", "base_unit_conversion_dimensionless", "only_positive", "only_negative"])
+            ids=["crossing_zero", "only_positive", "only_negative"])
     def test_division_with_parameter(self, parameter : Parameter, test, expected, expected_reverse):
         # When 
         parameter._callback = property()

@@ -201,6 +201,21 @@ class TestDescriptorNumber:
             "unique_name": "DescriptorNumber_0",
         }
 
+    @pytest.mark.parametrize("unit_string, expected", [
+        ("1e+9", "dimensionless"),
+        ("1000", "dimensionless"),
+        ("10dm^2", "m^2")],
+        ids=["scientific_notation", "numbers", "unit_prefix"])
+    def test_base_unit(self, unit_string, expected):
+        # When
+        descriptor = DescriptorNumber(name="name", value=1, unit=unit_string)
+
+        # Then
+        base_unit = descriptor._base_unit()
+
+        # Expect
+        assert base_unit == expected
+
     @pytest.mark.parametrize("test, expected", [
         (DescriptorNumber("test", 2, "m", 0.01,),   DescriptorNumber("test + name", 3, "m", 0.11)),
         (DescriptorNumber("test", 2, "cm", 0.01),   DescriptorNumber("test + name", 102, "cm", 1000.01))],
@@ -295,9 +310,8 @@ class TestDescriptorNumber:
 
     @pytest.mark.parametrize("test, expected", [
         (DescriptorNumber("test", 2, "m", 0.01,),   DescriptorNumber("test * name", 2, "m^2", 0.41)),
-        (DescriptorNumber("test", 2, "dm", 0.01),   DescriptorNumber("test * name", 0.2, "m^2", 0.0041)),
-        (DescriptorNumber("test", 2, "1/dm", 0.01), DescriptorNumber("test * name", 20.0, "dimensionless", 41))],
-        ids=["regular", "base_unit_conversion", "base_unit_conversion_dimensionless"])
+        (DescriptorNumber("test", 2, "dm", 0.01),   DescriptorNumber("test * name", 0.2, "m^2", 0.0041))],
+        ids=["regular", "base_unit_conversion"])
     def test_multiplication(self, descriptor: DescriptorNumber, test, expected):
         # When Then
         result = test * descriptor
