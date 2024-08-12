@@ -538,7 +538,7 @@ class Parameter(DescriptorNumber):
             combinations = [self.min * other, self.max * other]
         elif isinstance(other, DescriptorNumber): # Parameter inherits from DescriptorNumber and is also handled here
             new_full_value = self.full_value * other.full_value
-            if other.value == 0 and isinstance(other, DescriptorNumber):
+            if other.value == 0 and type(other) is DescriptorNumber: # Only return DescriptorNumber if other is strictly 0, i.e. not a parameter  # noqa: E501
                 descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_full_value)
                 descriptor_number.name=descriptor_number.unique_name
                 return descriptor_number
@@ -673,7 +673,7 @@ class Parameter(DescriptorNumber):
     def __pow__(self, other: Union[DescriptorNumber, numbers.Number]) -> Parameter:
         if isinstance(other, numbers.Number):
             exponent = other
-        elif isinstance(other, DescriptorNumber): # Parameter inherits from DescriptorNumber and is also handled here
+        elif type(other) is DescriptorNumber: # Strictly a DescriptorNumber, We can't raise to the power of a Parameter
             if other.unit != 'dimensionless':
                 raise UnitError("Exponents must be dimensionless")
             if other.variance is not None:
