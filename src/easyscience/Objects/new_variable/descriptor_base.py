@@ -195,7 +195,11 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
         """
         class_name = self.__class__.__name__
         iterator_string = str(self._global_object.map._get_name_iterator(class_name))
-        return class_name + "_" + iterator_string
+        name = class_name + "_" + iterator_string
+        while name in self._global_object.map.vertices():
+            iterator_string = str(self._global_object.map._get_name_iterator(class_name))
+            name = class_name + "_" + iterator_string
+        return name
 
     @property
     @abc.abstractmethod
