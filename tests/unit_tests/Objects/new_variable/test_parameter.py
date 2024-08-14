@@ -363,7 +363,7 @@ class TestParameter:
         assert result.max == expected.max
 
         assert result_reverse.name == result_reverse.unique_name 
-        assert result_reverse.value == result_reverse.value
+        assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
         assert result_reverse.variance == expected_reverse.variance
         assert result_reverse.min == expected_reverse.min

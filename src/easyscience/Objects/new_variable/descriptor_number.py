@@ -70,7 +70,6 @@ class DescriptorNumber(DescriptorBase):
         )
 
         # Call convert_unit during initialization to ensure that the unit has no numbers in it, and to ensure unit consistency.
-        # For some reason, converting to the same unit often changes the representation. This breaks almost every test.
         if self.unit is not None:
             self.convert_unit(self._base_unit())
 
