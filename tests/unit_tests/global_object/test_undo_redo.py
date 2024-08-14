@@ -230,7 +230,7 @@ def test_UndoRedoMacros():
         assert item.raw_value == old_value + offset
 
 
-@pytest.mark.parametrize("fit_engine", ["lmfit", "bumps", "dfo"])
+@pytest.mark.parametrize("fit_engine", ["LMFit", "Bumps", "DFO"])
 def test_fittingUndoRedo(fit_engine):
     m_value = 6
     c_value = 2

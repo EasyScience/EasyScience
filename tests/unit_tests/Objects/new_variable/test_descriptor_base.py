@@ -154,8 +154,17 @@ class TestDesciptorBase:
         }
 
     def test_unique_name_generator(self, clear, descriptor: DescriptorBase):
-        # When Then Expect
+        # When
+        second_descriptor = DescriptorBase(name="test", unique_name="DescriptorBase_2")
+
+        # Then 
+        third_descriptor = DescriptorBase(name="test2")
+        fourth_descriptor = DescriptorBase(name="test3")
+        
+        # Expect
         assert descriptor.unique_name == "DescriptorBase_0"
+        assert third_descriptor.unique_name == "DescriptorBase_1"
+        assert fourth_descriptor.unique_name == "DescriptorBase_3"
 
     def test_unique_name_change(self, clear, descriptor: DescriptorBase):
         # When Then

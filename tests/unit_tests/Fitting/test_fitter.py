@@ -2,8 +2,9 @@ from unittest.mock import MagicMock
 
 import pytest
 import numpy as np
-from easyscience.fitting.fitter import Fitter
 import easyscience.fitting.fitter
+from easyscience.fitting.fitter import Fitter
+from easyscience.fitting.minimizers.factory import AvailableMinimizers
 
 
 class TestFitter():
@@ -19,8 +20,8 @@ class TestFitter():
         assert fitter._fit_object == self.mock_fit_object
         assert fitter._fit_function == self.mock_fit_function
         assert fitter._dependent_dims is None
-        assert fitter._name_current_minimizer == 'lmfit-leastsq'
-        fitter._update_minimizer.assert_called_once_with('lmfit-leastsq')
+        assert fitter._enum_current_minimizer == AvailableMinimizers.LMFit_leastsq
+        fitter._update_minimizer.assert_called_once_with(AvailableMinimizers.LMFit_leastsq)
 
     def test_fit_constraints(self, fitter: Fitter):
         # When
@@ -110,22 +111,27 @@ class TestFitter():
         assert fitter._fit_function == mock_fit_function
         fitter._update_minimizer.count(2)
 
-    def test_create(self, fitter: Fitter):
+    def test_create(self, fitter: Fitter, monkeypatch):
         # When
         fitter._update_minimizer = MagicMock()
+        mock_string_to_enum = MagicMock(return_value=10)
+        monkeypatch.setattr(easyscience.fitting.fitter, 'from_string_to_enum', mock_string_to_enum)
 
         # Then
         fitter.create('great-minimizer')
 
         # Expect
-        fitter._update_minimizer.assert_called_once_with('great-minimizer')
+        mock_string_to_enum.assert_called_once_with('great-minimizer')
+        fitter._update_minimizer.assert_called_once_with(10)
     
-    def test_switch_minimizer(self, fitter: Fitter):
+    def test_switch_minimizer(self, fitter: Fitter, monkeypatch):
         # When
         mock_minimizer = MagicMock()
         mock_minimizer.fit_constraints = MagicMock(return_value='constraints')
         mock_minimizer.set_fit_constraint = MagicMock()
         fitter._minimizer = mock_minimizer
+        mock_string_to_enum = MagicMock(return_value=10)
+        monkeypatch.setattr(easyscience.fitting.fitter, 'from_string_to_enum', mock_string_to_enum)
 
         # Then
         fitter.switch_minimizer('great-minimizer')
@@ -134,6 +140,7 @@ class TestFitter():
         fitter._update_minimizer.count(2)
         mock_minimizer.set_fit_constraint.assert_called_once_with('constraints')
         mock_minimizer.fit_constraints.assert_called_once()
+        mock_string_to_enum.assert_called_once_with('great-minimizer')
 
     def test_update_minimizer(self, monkeypatch):
         # When
@@ -150,7 +157,7 @@ class TestFitter():
         fitter._update_minimizer('great-minimizer')
 
         # Expect
-        assert fitter._name_current_minimizer == 'great-minimizer'
+        assert fitter._enum_current_minimizer == 'great-minimizer'
         assert fitter._minimizer == 'minimizer'
 
     def test_available_minimizers(self, fitter: Fitter):
@@ -183,7 +190,7 @@ class TestFitter():
 
     def test_set_fit_function(self, fitter: Fitter):
         # When
-        fitter._name_current_minimizer = 'current_minimizer'
+        fitter._enum_current_minimizer = 'current_minimizer'
 
         # Then
         fitter.fit_function = 'new-fit-function'
@@ -201,7 +208,7 @@ class TestFitter():
 
     def test_set_fit_object(self, fitter: Fitter):
         # When
-        fitter._name_current_minimizer = 'current_minimizer'
+        fitter._enum_current_minimizer = 'current_minimizer'
 
         # Then
         fitter.fit_object = 'new-fit-object'

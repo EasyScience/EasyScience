@@ -10,7 +10,8 @@ from typing import Optional
 import dfols
 import numpy as np
 
-from easyscience.Objects.ObjectClasses import BaseObj
+# causes circular import when Parameter is imported
+# from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.Variable import Parameter
 
 from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
@@ -26,7 +27,12 @@ class DFO(MinimizerBase):
 
     wrapping = 'dfo'
 
-    def __init__(self, obj: BaseObj, fit_function: Callable, method: Optional[str] = None):
+    def __init__(
+        self,
+        obj,  #: BaseObj,
+        fit_function: Callable,
+        method: Optional[str] = None,
+    ):  # todo after constraint changes, add type hint: obj: BaseObj  # noqa: E501
         """
         Initialize the fitting engine with a `BaseObj` and an arbitrary fitting function.
 
@@ -40,8 +46,15 @@ class DFO(MinimizerBase):
         super().__init__(obj=obj, fit_function=fit_function, method=method)
         self._p_0 = {}
 
-    def available_methods(self) -> List[str]:
+    @staticmethod
+    def supported_methods() -> List[str]:
         return ['leastsq']
+
+    @staticmethod
+    def all_methods() -> List[str]:
+        return [
+            'leastsq',
+        ]
 
     def fit(
         self,
@@ -77,7 +90,7 @@ class DFO(MinimizerBase):
         default_method = {}
         if self._method is not None:
             default_method = {'method': self._method}
-        if method is not None and method in self.available_methods():
+        if method is not None and method in self.supported_methods():
             default_method['method'] = method
 
         if weights is None:
@@ -142,89 +155,31 @@ class DFO(MinimizerBase):
                 ## TODO clean when full move to new_variable
                 from easyscience.Objects.new_variable import Parameter as NewParameter
 
-                pars = {}
+                dfo_pars = {}
                 if not parameters:
                     for name, par in obj._cached_pars.items():
                         if isinstance(par, NewParameter):
-                            pars[MINIMIZER_PARAMETER_PREFIX + str(name)] = par.value
+                            dfo_pars[MINIMIZER_PARAMETER_PREFIX + str(name)] = par.value
                         else:
-                            pars[MINIMIZER_PARAMETER_PREFIX + str(name)] = par.raw_value
+                            dfo_pars[MINIMIZER_PARAMETER_PREFIX + str(name)] = par.raw_value
 
                 else:
-                    for new_par in parameters:
-                        if isinstance(new_par, NewParameter):
-                            pars[MINIMIZER_PARAMETER_PREFIX + new_par.unique_name] = new_par.value
+                    for par in parameters:
+                        if isinstance(par, NewParameter):
+                            dfo_pars[MINIMIZER_PARAMETER_PREFIX + par.unique_name] = par.value
                         else:
-                            pars[MINIMIZER_PARAMETER_PREFIX + new_par.unique_name] = new_par.raw_value
+                            dfo_pars[MINIMIZER_PARAMETER_PREFIX + par.unique_name] = par.raw_value
 
                 def _residuals(pars_values: List[float]) -> np.ndarray:
-                    for idx, par_name in enumerate(pars.keys()):
-                        pars[par_name] = pars_values[idx]
-                    return (y - fit_func(x, **pars)) / weights
+                    for idx, par_name in enumerate(dfo_pars.keys()):
+                        dfo_pars[par_name] = pars_values[idx]
+                    return (y - fit_func(x, **dfo_pars)) / weights
 
                 return _residuals
 
             return _make_func
 
         return _outer(self)
-
-    def _generate_fit_function(self) -> Callable:
-        """
-        Using the user supplied `fit_function`, wrap it in such a way we can update `Parameter` on
-        iterations.
-
-        :return: a fit function which is compatible with bumps models
-        :rtype: Callable
-        """
-        # Original fit function
-        func = self._original_fit_function
-        # Get a list of `Parameters`
-        self._cached_pars = {}
-        self._cached_pars_vals = {}
-        for parameter in self._object.get_fit_parameters():
-            key = parameter.unique_name
-            self._cached_pars[key] = parameter
-            self._cached_pars_vals[key] = (parameter.value, parameter.error)
-
-        # Make a new fit function
-        def _fit_function(x: np.ndarray, **kwargs):
-            """
-            Wrapped fit function which now has an EasyScience compatible form
-
-            :param x: array of data points to be calculated
-            :type x: np.ndarray
-            :param kwargs: key word arguments
-            :return: points calculated at `x`
-            :rtype: np.ndarray
-            """
-            # Update the `Parameter` values and the callback if needed
-            # TODO THIS IS NOT THREAD SAFE :-(
-            # TODO clean when full move to new_variable
-            from easyscience.Objects.new_variable import Parameter
-
-            for name, value in kwargs.items():
-                par_name = name[1:]
-                if par_name in self._cached_pars.keys():
-                    # TODO clean when full move to new_variable
-                    if isinstance(self._cached_pars[par_name], Parameter):
-                        # This will take into account constraints
-                        if self._cached_pars[par_name].value != value:
-                            self._cached_pars[par_name].value = value
-                    else:
-                        # This will take into account constraints
-                        if self._cached_pars[par_name].raw_value != value:
-                            self._cached_pars[par_name].value = value
-
-                    # Since we are calling the parameter fset will be called.
-            # TODO Pre processing here
-            for constraint in self.fit_constraints():
-                constraint()
-            return_data = func(x)
-            # TODO Loading or manipulating data here
-            return return_data
-
-        self._fit_function = _fit_function
-        return _fit_function
 
     def _set_parameter_fit_result(self, fit_result, stack_status, ci: float = 0.95) -> None:
         """

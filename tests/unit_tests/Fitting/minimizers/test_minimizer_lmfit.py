@@ -1,8 +1,5 @@
 import pytest
 
-from inspect import Parameter as InspectParameter
-from inspect import Signature
-from inspect import _empty
 from unittest.mock import MagicMock
 
 import easyscience.fitting.minimizers.minimizer_lmfit
@@ -87,57 +84,6 @@ class TestLMFit():
         assert mock_lm_model.set_param_hint.call_count == 2
         assert model == mock_lm_model
 
-    def test_generate_fit_function_signatur(self, minimizer: LMFit) -> None:
-        # When
-        mock_parm_1 = MagicMock(Parameter)
-        mock_parm_1.value = 1.0
-        mock_parm_1.error = 0.1
-        mock_parm_2 = MagicMock(Parameter)
-        mock_parm_2.value = 2.0
-        mock_parm_2.error = 0.2
-        mock_obj = MagicMock(BaseObj)
-        mock_obj.get_fit_parameters = MagicMock(return_value=[mock_parm_1, mock_parm_2])
-        minimizer._object = mock_obj
-
-        mock_wrap_to_lm_signature = MagicMock(return_value='signature')
-        minimizer._wrap_to_lm_signature = mock_wrap_to_lm_signature
-        minimizer._original_fit_function = MagicMock(return_value='fit_function_return')
-
-        # Then
-        fit_function = minimizer._generate_fit_function()
-
-        # Expect
-        assert fit_function.__signature__ == 'signature'
-
-    def test_generate_fit_function_lm_fit_function(self, minimizer: LMFit) -> None:
-        # When
-        mock_parm_1 = MagicMock(Parameter)
-        mock_parm_1.value = 1.0
-        mock_parm_1.error = 0.1
-        mock_parm_2 = MagicMock(Parameter)
-        mock_parm_2.value = 2.0
-        mock_parm_2.error = 0.2
-        mock_obj = MagicMock(BaseObj)
-        mock_obj.get_fit_parameters = MagicMock(return_value=[mock_parm_1, mock_parm_2])
-        minimizer._object = mock_obj
-
-        mock_wrap_to_lm_signature = MagicMock(return_value='signature')
-        minimizer._wrap_to_lm_signature = mock_wrap_to_lm_signature
-
-        minimizer._original_fit_function = MagicMock(return_value='fit_function_return')
-
-        mock_constraint = MagicMock()
-        minimizer.fit_constraints = MagicMock(return_value=[mock_constraint])
-
-        fit_function = minimizer._generate_fit_function()
-
-        # Then
-        result = fit_function(1)
-
-        # Expect
-        result == 'fit_function_return'
-        mock_constraint.assert_called_once_with()
-
     def test_fit(self, minimizer: LMFit) -> None:
         # When
         from easyscience import global_object
@@ -181,14 +127,15 @@ class TestLMFit():
         minimizer._make_model = MagicMock(return_value=mock_model)
         minimizer._set_parameter_fit_result = MagicMock()
         minimizer._gen_fit_results = MagicMock(return_value='gen_fit_results')
-        minimizer.available_methods = MagicMock(return_value=['method_passed'])
+        minimizer.supported_methods = MagicMock(return_value=['method_passed'])
+        minimizer.all_methods = MagicMock(return_value=['method_passed'])
 
         # Then
         minimizer.fit(x=1.0, y=2.0, method='method_passed')
 
         # Expect
         mock_model.fit.assert_called_once_with(2.0, x=1.0, weights=0.7071067811865475, method='method_passed')
-        minimizer.available_methods.assert_called_once_with()
+        minimizer.supported_methods.assert_called_once_with()
 
     def test_fit_kwargs(self, minimizer: LMFit) -> None:
         # When
@@ -361,22 +308,3 @@ class TestLMFit():
         assert str(domain_fit_results.minimizer_engine) == "<class 'easyscience.fitting.minimizers.minimizer_lmfit.LMFit'>"
         assert domain_fit_results.fit_args is None
 
-    def test_wrap_to_lm_signature(self, minimizer: LMFit) -> None:
-        # When
-        mock_parm_1 = MagicMock(Parameter)
-        mock_parm_1.value = 1.0
-        mock_parm_2 = MagicMock(Parameter)
-        mock_parm_2.value = 2.0
-        pars = {1: mock_parm_1, 2: mock_parm_2}
-
-        # Then
-        signature = minimizer._wrap_to_lm_signature(pars)
-        
-        # Expect
-        wrapped_parameters = [
-            InspectParameter('x', InspectParameter.POSITIONAL_OR_KEYWORD, annotation=_empty),
-            InspectParameter('p1', InspectParameter.POSITIONAL_OR_KEYWORD, annotation=_empty, default=1.0),
-            InspectParameter('p2', InspectParameter.POSITIONAL_OR_KEYWORD, annotation=_empty, default=2.0)
-        ]
-        expected_signature = Signature(wrapped_parameters)
-        assert signature == expected_signature
