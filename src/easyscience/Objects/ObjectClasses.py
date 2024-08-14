@@ -41,7 +41,7 @@ class BasedBase(ComponentSerializer):
     def __init__(self, name: str, interface: Optional[iF] = None, unique_name: Optional[str] = None):
         self._global_object = global_object
         if unique_name is None:
-            unique_name = self._global_object.generate_unique_name(self.__class__.__name__)  # self._unique_name_generator()
+            unique_name = self._global_object.generate_unique_name(self.__class__.__name__)
         self._unique_name = unique_name
         self._name = name
         self._global_object.map.add_vertex(self, obj_type='created')

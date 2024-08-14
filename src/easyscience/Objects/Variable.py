@@ -109,7 +109,7 @@ class Descriptor(ComponentSerializer):
         if not hasattr(self, '_args'):
             self._args = {'value': None, 'units': ''}
         if unique_name is None:
-            unique_name = self._global_object.generate_unique_name(self.__class__.__name__)  # self._unique_name_generator()
+            unique_name = self._global_object.generate_unique_name(self.__class__.__name__)
         self._unique_name = unique_name
         self.name = name
         # Let the collective know we've been assimilated
