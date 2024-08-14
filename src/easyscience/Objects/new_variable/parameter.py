@@ -17,6 +17,7 @@ from typing import Union
 
 import numpy as np
 import scipp as sc
+from scipp import UnitError
 from scipp import Variable
 
 from easyscience import global_object
@@ -45,8 +46,8 @@ class Parameter(DescriptorNumber):
         value: numbers.Number,
         unit: Optional[Union[str, sc.Unit]] = '',
         variance: Optional[numbers.Number] = 0.0,
-        min: Optional[numbers.Number] = -np.Inf,
-        max: Optional[numbers.Number] = np.Inf,
+        min: Optional[numbers.Number] = -np.inf,
+        max: Optional[numbers.Number] = np.inf,
         fixed: Optional[bool] = False,
         unique_name: Optional[str] = None,
         description: Optional[str] = None,
@@ -85,8 +86,14 @@ class Parameter(DescriptorNumber):
             raise ValueError(f'{value=} can not be less than {min=}')
         if value > max:
             raise ValueError(f'{value=} can not be greater than {max=}')
+
+        if np.isclose(min, max, rtol=1e-9, atol=0.0):
+            raise ValueError('The min and max bounds cannot be identical. Please use fixed=True instead to fix the value.')
         if not isinstance(fixed, bool):
             raise TypeError('`fixed` must be either True or False')
+        
+        self._min = sc.scalar(float(min), unit=unit)
+        self._max = sc.scalar(float(max), unit=unit)
 
         super().__init__(
             name=name,
@@ -105,8 +112,6 @@ class Parameter(DescriptorNumber):
             weakref.finalize(self, self._callback.fdel)
 
         # Create additional fitting elements
-        self._min = sc.scalar(float(min), unit=unit)
-        self._max = sc.scalar(float(max), unit=unit)
         self._fixed = fixed
         self._enabled = enabled
         self._initial_scalar = copy.deepcopy(self._scalar)
@@ -116,6 +121,7 @@ class Parameter(DescriptorNumber):
             'max': SelfConstraint(self, '<=', 'max'),
         }
         self._constraints = Constraints(builtin=builtin_constraint, user={}, virtual={})
+
 
     @property
     def value_no_call_back(self) -> numbers.Number:
@@ -177,7 +183,7 @@ class Parameter(DescriptorNumber):
     @property_stack_deco
     def value(self, value: numbers.Number) -> None:
         """
-        Set the value of self. This only update the value of the scipp scalar.
+        Set the value of self. This only updates the value of the scipp scalar.
 
         :param value: New value of self
         """
@@ -246,6 +252,8 @@ class Parameter(DescriptorNumber):
         """
         if not isinstance(min_value, numbers.Number):
             raise TypeError('`min` must be a number')
+        if np.isclose(min_value, self._max.value, rtol=1e-9, atol=0.0):
+            raise ValueError('The min and max bounds cannot be identical. Please use fixed=True instead to fix the value.')
         if min_value <= self.value:
             self._min.value = min_value
         else:
@@ -272,6 +280,8 @@ class Parameter(DescriptorNumber):
         """
         if not isinstance(max_value, numbers.Number):
             raise TypeError('`max` must be a number')
+        if np.isclose(max_value, self._min.value, rtol=1e-9, atol=0.0):
+            raise ValueError('The min and max bounds cannot be identical. Please use fixed=True instead to fix the value.')
         if max_value >= self.value:
             self._max.value = max_value
         else:
@@ -418,5 +428,311 @@ class Parameter(DescriptorNumber):
         s.append('bounds=[%s:%s]' % (repr(self.min), repr(self.max)))
         return '%s>' % ', '.join(s)
 
-    def __float__(self) -> float:
-        return float(self._scalar.value)
+    # Seems redundant
+    # def __float__(self) -> float:
+    #     return float(self._scalar.value)
+    
+    def __add__(self, other: Union[DescriptorNumber, Parameter, numbers.Number]) -> Parameter:
+        if isinstance(other, numbers.Number):
+            if self.unit != 'dimensionless':
+                raise UnitError("Numbers can only be added to dimensionless values")
+            new_full_value = self.full_value + other
+            min_value = self.min + other
+            max_value = self.max + other
+        elif isinstance(other, DescriptorNumber): # Parameter inherits from DescriptorNumber and is also handled here 
+            other_unit = other.unit
+            try:
+                other.convert_unit(self.unit)
+            except UnitError:
+                raise UnitError(f"Values with units {self.unit} and {other.unit} cannot be added") from None
+            new_full_value = self.full_value + other.full_value
+            min_value = self.min + other.min if isinstance(other, Parameter) else self.min + other.value
+            max_value = self.max + other.max if isinstance(other, Parameter) else self.max + other.value
+            other.convert_unit(other_unit)
+        else: 
+            return NotImplemented
+        parameter=Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
+        parameter.name=parameter.unique_name
+        return parameter
+
+    def __radd__(self, other: Union[DescriptorNumber, numbers.Number]) -> Parameter:
+        if isinstance(other, numbers.Number):
+            if self.unit != 'dimensionless':
+                raise UnitError("Numbers can only be added to dimensionless values")
+            new_full_value = self.full_value + other
+            min_value = self.min + other
+            max_value = self.max + other
+        elif isinstance(other, DescriptorNumber): # Parameter inherits from DescriptorNumber and is also handled here 
+            original_unit = self.unit
+            try:
+                self.convert_unit(other.unit)
+            except UnitError:
+                raise UnitError(f"Values with units {other.unit} and {self.unit} cannot be added") from None
+            new_full_value = self.full_value + other.full_value
+            min_value = self.min + other.value
+            max_value = self.max + other.value
+            self.convert_unit(original_unit)
+        else:
+            return NotImplemented
+        parameter=Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
+        parameter.name=parameter.unique_name
+        return parameter
+
+    def __sub__(self, other: Union[DescriptorNumber, Parameter, numbers.Number]) -> Parameter:
+        if isinstance(other, numbers.Number):
+            if self.unit != 'dimensionless':
+                raise UnitError("Numbers can only be subtracted from dimensionless values")
+            new_full_value = self.full_value - other
+            min_value = self.min - other
+            max_value = self.max - other
+        elif isinstance(other, DescriptorNumber): # Parameter inherits from DescriptorNumber and is also handled here
+            other_unit = other.unit
+            try:
+                other.convert_unit(self.unit)
+            except UnitError:
+                raise UnitError(f"Values with units {self.unit} and {other.unit} cannot be subtracted") from None
+            new_full_value = self.full_value - other.full_value
+            if isinstance(other, Parameter):
+                min_value = self.min - other.max if other.max != np.inf else -np.inf
+                max_value = self.max - other.min if other.min != -np.inf else np.inf
+            else:
+                min_value = self.min - other.value
+                max_value = self.max - other.value
+            other.convert_unit(other_unit)
+        else: 
+            return NotImplemented
+        parameter=Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
+        parameter.name=parameter.unique_name
+        return parameter
+    
+    def __rsub__(self, other: Union[DescriptorNumber, numbers.Number]) -> Parameter:
+        if isinstance(other, numbers.Number):
+            if self.unit != 'dimensionless':
+                raise UnitError("Numbers can only be subtracted from dimensionless values")
+            new_full_value = other - self.full_value
+            min_value = other - self.max
+            max_value = other - self.min
+        elif isinstance(other, DescriptorNumber):   # Parameter inherits from DescriptorNumber and is also handled here
+            original_unit = self.unit
+            try:
+                self.convert_unit(other.unit)
+            except UnitError:
+                raise UnitError(f"Values with units {other.unit} and {self.unit} cannot be subtracted") from None
+            new_full_value = other.full_value - self.full_value
+            min_value = other.value - self.max 
+            max_value = other.value - self.min 
+            self.convert_unit(original_unit)
+        else:
+            return NotImplemented
+        parameter=Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
+        parameter.name=parameter.unique_name
+        return parameter
+    
+    def __mul__(self, other: Union[DescriptorNumber, Parameter, numbers.Number]) -> Parameter:
+        if isinstance(other, numbers.Number):
+            new_full_value = self.full_value * other
+            if other == 0:
+                descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_full_value)
+                descriptor_number.name=descriptor_number.unique_name
+                return descriptor_number
+            combinations = [self.min * other, self.max * other]
+        elif isinstance(other, DescriptorNumber): # Parameter inherits from DescriptorNumber and is also handled here
+            new_full_value = self.full_value * other.full_value
+            if other.value == 0 and type(other) is DescriptorNumber: # Only return DescriptorNumber if other is strictly 0, i.e. not a parameter  # noqa: E501
+                descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_full_value)
+                descriptor_number.name=descriptor_number.unique_name
+                return descriptor_number
+            if isinstance(other, Parameter):
+                combinations = []
+                for first, second in [(self.min, other.min), (self.min, other.max), (self.max, other.min), (self.max, other.max)]:  # noqa: E501
+                    if first == 0 and np.isinf(second):
+                        combinations.append(0)
+                    elif second == 0 and np.isinf(first):
+                        combinations.append(0)
+                    else:
+                        combinations.append(first * second)
+            else:
+                combinations = [self.min * other.value, self.max * other.value]
+        else: 
+            return NotImplemented
+        min_value = min(combinations)
+        max_value = max(combinations)
+        parameter = Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
+        parameter.convert_unit(parameter._base_unit())
+        parameter.name=parameter.unique_name
+        return parameter
+            
+    def __rmul__(self, other: Union[DescriptorNumber, numbers.Number]) -> Parameter:
+        if isinstance(other, numbers.Number):
+            new_full_value = other * self.full_value
+            if other == 0:
+                descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_full_value)
+                descriptor_number.name=descriptor_number.unique_name
+                return descriptor_number
+            combinations = [other * self.min, other * self.max]
+        elif isinstance(other, DescriptorNumber):   # Parameter inherits from DescriptorNumber and is also handled here
+            new_full_value = other.full_value * self.full_value
+            if other.value == 0:
+                descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_full_value)
+                descriptor_number.name=descriptor_number.unique_name
+                return descriptor_number
+            combinations = [self.min * other.value, self.max * other.value]
+        else:
+            return NotImplemented
+        min_value = min(combinations)
+        max_value = max(combinations)
+        parameter = Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
+        parameter.convert_unit(parameter._base_unit())
+        parameter.name=parameter.unique_name
+        return parameter
+    
+    def __truediv__(self, other: Union[DescriptorNumber, Parameter, numbers.Number]) -> Parameter:
+        if isinstance(other, numbers.Number):
+            if other == 0:
+                raise ZeroDivisionError("Cannot divide by zero")
+            new_full_value = self.full_value / other
+            combinations = [self.min / other, self.max / other]
+        elif isinstance(other, DescriptorNumber):  # Parameter inherits from DescriptorNumber and is also handled here
+            other_value = other.value
+            if other_value == 0:
+                raise ZeroDivisionError("Cannot divide by zero")
+            new_full_value = self.full_value / other.full_value
+            if isinstance(other, Parameter):
+                if (other.min < 0 and other.max > 0):
+                    combinations = [-np.inf, np.inf]
+                elif other.min == 0:
+                    if (self.min < 0 and self.max > 0):
+                        combinations = [-np.inf, np.inf]
+                    elif self.min >= 0:
+                        combinations = [self.min/other.max, np.inf]
+                    elif self.max <= 0:
+                        combinations = [-np.inf, self.max/other.max]
+                elif other.max == 0:
+                    if (self.min < 0 and self.max > 0):
+                        combinations = [-np.inf, np.inf]
+                    elif self.min >= 0:
+                        combinations = [-np.inf, self.min/other.min]
+                    elif self.max <= 0:
+                        combinations = [self.max/other.min, np.inf]
+                else:
+                    combinations = [self.min/other.min, self.max/other.max, self.min/other.max, self.max/other.min]
+            else:
+                combinations = [self.min / other.value, self.max / other.value]
+            other.value = other_value
+        else:
+            return NotImplemented
+        min_value = min(combinations)
+        max_value = max(combinations)
+        parameter = Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
+        parameter.convert_unit(parameter._base_unit())
+        parameter.name=parameter.unique_name
+        return parameter
+    
+    def __rtruediv__(self, other: Union[DescriptorNumber, numbers.Number]) -> Parameter:
+        original_self = self.value
+        if original_self == 0:
+            raise ZeroDivisionError("Cannot divide by zero")
+        if isinstance(other, numbers.Number):
+            new_full_value = other / self.full_value
+            other_value = other
+            if other_value == 0:
+                descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_full_value)
+                descriptor_number.name=descriptor_number.unique_name
+                return descriptor_number
+        elif isinstance(other, DescriptorNumber): # Parameter inherits from DescriptorNumber and is also handled here
+            new_full_value = other.full_value / self.full_value
+            other_value = other.value
+            if other_value == 0:
+                descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_full_value)
+                descriptor_number.name=descriptor_number.unique_name
+                return descriptor_number
+        else:
+            return NotImplemented
+        if (self.min < 0 and self.max > 0):
+            combinations = [-np.inf, np.inf]
+        elif self.min == 0:
+            if other_value > 0:
+                combinations = [other_value/self.max, np.inf]
+            elif other_value < 0:
+                combinations = [-np.inf, other_value/self.max]
+        elif self.max == 0:
+            if other_value > 0:
+                combinations = [-np.inf, other_value/self.min]
+            elif other_value < 0:
+                combinations = [other_value/self.min, np.inf]
+        else:
+            combinations = [other_value / self.min, other_value / self.max]
+        min_value = min(combinations)
+        max_value = max(combinations)
+        parameter = Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
+        parameter.convert_unit(parameter._base_unit())
+        parameter.name=parameter.unique_name
+        self.value = original_self
+        return parameter
+    
+    def __pow__(self, other: Union[DescriptorNumber, numbers.Number]) -> Parameter:
+        if isinstance(other, numbers.Number):
+            exponent = other
+        elif type(other) is DescriptorNumber: # Strictly a DescriptorNumber, We can't raise to the power of a Parameter
+            if other.unit != 'dimensionless':
+                raise UnitError("Exponents must be dimensionless")
+            if other.variance is not None:
+                raise ValueError("Exponents must not have variance")
+            exponent = other.value
+        else:
+            return NotImplemented
+        
+        try:
+            new_full_value = self.full_value ** exponent
+        except Exception as message:
+            raise message from None
+        
+        if np.isnan(new_full_value.value):
+            raise ValueError("The result of the exponentiation is not a number")
+        if exponent == 0:
+                descriptor_number= DescriptorNumber.from_scipp(name=self.name, full_value=new_full_value)
+                descriptor_number.name=descriptor_number.unique_name
+                return descriptor_number
+        elif exponent < 0:
+            if self.min < 0 and self.max > 0:
+                combinations = [-np.inf, np.inf]
+            elif self.min == 0:
+                combinations = [self.max ** exponent, np.inf]
+            elif self.max == 0:
+                combinations = [-np.inf, self.min ** exponent]
+            else:
+                combinations = [self.min ** exponent, self.max ** exponent]
+        else:
+            combinations = [self.min ** exponent, self.max ** exponent]
+        if exponent % 2 == 0:
+            if self.min < 0 and self.max > 0:
+                combinations.append(0)
+            combinations = [abs(combination) for combination in combinations]
+        elif exponent % 1 != 0:
+            if self.min < 0:
+                combinations.append(0)
+            combinations = [combination for combination in combinations if combination >= 0]
+        min_value = min(combinations)
+        max_value = max(combinations)
+        parameter=Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
+        parameter.name=parameter.unique_name
+        return parameter
+    
+    def __neg__(self) -> Parameter:
+        new_full_value = -self.full_value
+        min_value = -self.max
+        max_value = -self.min
+        parameter=Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
+        parameter.name=parameter.unique_name
+        return parameter
+    
+    def __abs__(self) -> Parameter:
+        new_full_value = abs(self.full_value)
+        combinations = [abs(self.min), abs(self.max)]
+        if self.min < 0 and self.max > 0:
+            combinations.append(0)
+        min_value = min(combinations)
+        max_value = max(combinations)
+        parameter=Parameter.from_scipp(name=self.name, full_value=new_full_value, min=min_value, max=max_value)
+        parameter.name=parameter.unique_name
+        return parameter
