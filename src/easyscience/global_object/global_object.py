@@ -2,8 +2,8 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
 
-__author__ = "github.com/wardsimon"
-__version__ = "0.1.0"
+__author__ = 'github.com/wardsimon'
+__version__ = '0.1.0'
 
 from easyscience.Utils.classUtils import singleton
 
@@ -47,3 +47,14 @@ class GlobalObject:
         from easyscience.global_object.undo_redo import UndoStack
 
         self.stack = UndoStack()
+
+    def generate_unique_name(self, name_prefix: str) -> str:
+        """
+        Generate a generic unique name for the object using the class name and a global iterator.
+        """
+        iterator_string = str(self.map._get_name_iterator(name_prefix))
+        name = name_prefix + '_' + iterator_string
+        while name in self.map.vertices():
+            iterator_string = str(self.map._get_name_iterator(name_prefix))
+            name = name_prefix + '_' + iterator_string
+        return name
