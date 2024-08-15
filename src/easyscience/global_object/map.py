@@ -5,6 +5,7 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
 
+import gc
 import sys
 import weakref
 from typing import List
@@ -286,6 +287,7 @@ class Map:
         self._store = weakref.WeakValueDictionary()
         self.__type_dict = {}
         self._name_iterator_dict = {}
+        gc.collect()
 
     def __repr__(self) -> str:
         return f'Map object of {len(self._store)} vertices.'
