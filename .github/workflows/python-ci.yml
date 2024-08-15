@@ -63,7 +63,7 @@ jobs:
 
   Package_Testing:
 
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, '[ci skip]')"
 
     steps:
@@ -80,5 +80,5 @@ jobs:
 
     - name: Check Build
       run: |
-        cd ./dist
-        pytest ../
+        pip install tox tox-gh-actions coverage
+        tox
