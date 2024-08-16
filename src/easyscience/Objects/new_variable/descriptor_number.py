@@ -122,7 +122,7 @@ class DescriptorNumber(DescriptorBase):
         """
         if not isinstance(value, numbers.Number) or isinstance(value, bool):
             raise TypeError(f'{value=} must be a number')
-        self._scalar.value = value
+        self._scalar.value = float(value)
 
     @property
     def unit(self) -> str:
