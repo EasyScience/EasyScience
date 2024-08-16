@@ -14,7 +14,7 @@ from .test_core import A
 from .test_core import Descriptor
 from .test_core import dp_param_dict
 from .test_core import skip_dict
-
+from easyscience import global_object
 
 def recursive_remove(d, remove_keys: list) -> dict:
     """
@@ -115,6 +115,7 @@ def test_variable_XMLDictSerializer_decode(dp_kwargs: dict, dp_cls: Type[Descrip
     assert isinstance(enc, str)
     data_xml = ET.XML(enc)
     assert data_xml.tag == "data"
+    global_object.map._clear()
     dec = dp_cls.decode(enc, decoder=XMLSerializer)
 
     for k in data_dict.keys():

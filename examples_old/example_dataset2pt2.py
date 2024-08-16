@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 from easyscience.Datasets.xarray import xr
-from easyscience.Fitting.Fitting import Fitter
+from easyscience.Fitting import Fitter
 from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.ObjectClasses import Parameter
 
@@ -39,11 +39,11 @@ f = Fitter()
 f.initialize(b, fit_fun)
 
 fig, ax = plt.subplots(2, 3, sharey='row')
-for idx, minimizer in enumerate(['lmfit', 'bumps', 'DFO_LS']):
+for idx, minimizer in enumerate(['lmfit', 'bumps', 'dfo_ls']):
 
     b.m = m_starting_point
     b.c = c_starting_point
-    f.switch_engine(minimizer)
+    f.switch_minimizer(minimizer)
 
     f_res = d['y'].easyscience.fit(f, vectorize=True)
     print(f_res.p)

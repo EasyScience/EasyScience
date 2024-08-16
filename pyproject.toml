@@ -34,10 +34,11 @@ dependencies = [
     "bumps",
     "DFO-LS",
     "lmfit",
-    "numpy",
-    "pint",
+    "numpy==1.26",  # Should be updated to numpy 2.0
     "uncertainties",
-    "xarray"
+    "xarray",
+    "pint==0.23",  # Only to ensure that unit is reported as dimensionless rather than empty string
+    "scipp"
 ]
 
 [project.optional-dependencies]

@@ -222,8 +222,8 @@ class BaseEncoderDecoder:
             d.update({'value': runner(obj.value)})  # pylint: disable=E1101
         if hasattr(obj, '_convert_to_dict'):
             d = obj._convert_to_dict(d, self, skip=skip, **kwargs)
-        if hasattr(obj, '_borg') and '@id' not in d:
-            d['@id'] = str(obj._borg.map.convert_id(obj).int)
+        if hasattr(obj, '_global_object') and '@id' not in d:
+            d['@id'] = obj.unique_name
         return d
 
     @staticmethod

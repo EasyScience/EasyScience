@@ -10,7 +10,7 @@ import functools
 import warnings
 from time import time
 
-from easyscience import borg
+from easyscience import global_object
 
 
 class memoized:
@@ -67,7 +67,7 @@ def time_it(func):
     :return: callable function with timer
     """
     name = func.__module__ + "." + func.__name__
-    time_logger = borg.log.getLogger("timer." + name)
+    time_logger = global_object.log.getLogger("timer." + name)
 
     @functools.wraps(func)
     def _time_it(*args, **kwargs):

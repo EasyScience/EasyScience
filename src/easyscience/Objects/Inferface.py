@@ -4,8 +4,8 @@ from __future__ import annotations
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
 
-__author__ = "github.com/wardsimon"
-__version__ = "0.1.0"
+__author__ = 'github.com/wardsimon'
+__version__ = '0.1.0'
 
 from abc import ABCMeta
 from typing import TYPE_CHECKING
@@ -16,10 +16,10 @@ from typing import Optional
 from typing import Type
 from typing import TypeVar
 
-_C = TypeVar("_C", bound=ABCMeta)
-_M = TypeVar("_M")
+_C = TypeVar('_C', bound=ABCMeta)
+_M = TypeVar('_M')
 if TYPE_CHECKING:
-    from easyscience.Fitting.Fitting import Fitter
+    from easyscience.fitting import Fitter
 
 
 class InterfaceFactoryTemplate:
@@ -44,14 +44,14 @@ class InterfaceFactoryTemplate:
         :return: None
         :rtype: noneType
         """
-        if kwargs.get("interface_name", None) is None:
+        if kwargs.get('interface_name', None) is None:
             if len(self._interfaces) > 0:
                 # Fallback name
                 interface_name = self.return_name(self._interfaces[0])
             else:
                 raise NotImplementedError
         else:
-            interface_name = kwargs.pop("interface_name")
+            interface_name = kwargs.pop('interface_name')
         interfaces = self.available_interfaces
         if interface_name in interfaces:
             self._current_interface = self._interfaces[interfaces.index(interface_name)]
@@ -65,7 +65,7 @@ class InterfaceFactoryTemplate:
         :param new_interface: name of new interface to be created
         :type new_interface: str
         :param fitter: Fitting interface which contains the fitting object which may have bindings which will be updated.
-        :type fitter: EasyScience.Fitting.Fitting.Fitter
+        :type fitter: EasyScience.fitting.Fitter
         :return: None
         :rtype: noneType
         """
@@ -74,20 +74,20 @@ class InterfaceFactoryTemplate:
             self._current_interface = self._interfaces[interfaces.index(new_interface)]
             self.__interface_obj = self._current_interface()
         else:
-            raise AttributeError("The user supplied interface is not valid.")
+            raise AttributeError('The user supplied interface is not valid.')
         if fitter is not None:
-            if hasattr(fitter, "_fit_object"):
-                obj = getattr(fitter, "_fit_object")
+            if hasattr(fitter, '_fit_object'):
+                obj = getattr(fitter, '_fit_object')
                 try:
-                    if hasattr(obj, "update_bindings"):
+                    if hasattr(obj, 'update_bindings'):
                         obj.update_bindings()
                 except Exception as e:
-                    print(f"Unable to auto generate bindings.\n{e}")
-            elif hasattr(fitter, "generate_bindings"):
+                    print(f'Unable to auto generate bindings.\n{e}')
+            elif hasattr(fitter, 'generate_bindings'):
                 try:
                     fitter.generate_bindings()
                 except Exception as e:
-                    print(f"Unable to auto generate bindings.\n{e}")
+                    print(f'Unable to auto generate bindings.\n{e}')
 
     @property
     def available_interfaces(self) -> List[str]:
@@ -152,6 +152,8 @@ class InterfaceFactoryTemplate:
         :return: binding property
         :rtype: property
         """
+        import easyscience.Objects.new_variable.parameter
+
         class_links = self.__interface_obj.create(model)
         props = model._get_linkable_attributes()
         props_names = [prop.name for prop in props]
@@ -161,8 +163,16 @@ class InterfaceFactoryTemplate:
                     continue
                 idx = props_names.index(item_key)
                 prop = props[idx]
+
+                ## TODO clean when full move to new_variable
+                if isinstance(prop, easyscience.Objects.new_variable.parameter.Parameter):
+                    # Should be fetched this way to ensure we don't get value from callback
+                    prop_value = prop.value_no_call_back
+                else:
+                    prop_value = prop.raw_value
+
                 prop._callback = item.make_prop(item_key)
-                prop._callback.fset(prop.raw_value)
+                prop._callback.fset(prop_value)
 
     def __call__(self, *args, **kwargs) -> _M:
         return self.__interface_obj
@@ -189,8 +199,8 @@ class InterfaceFactoryTemplate:
         Return an interfaces name
         """
         interface_name = this_interface.__name__
-        if hasattr(this_interface, "name"):
-            interface_name = getattr(this_interface, "name")
+        if hasattr(this_interface, 'name'):
+            interface_name = getattr(this_interface, 'name')
         return interface_name
 
 
@@ -225,4 +235,4 @@ class ItemContainer(NamedTuple):
         return set_value
 
 
-iF = TypeVar("iF", bound=InterfaceFactoryTemplate)
+iF = TypeVar('iF', bound=InterfaceFactoryTemplate)

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-__author__ = "github.com/wardsimon"
-__version__ = "0.1.0"
+__author__ = 'github.com/wardsimon'
+__version__ = '0.1.0'
 
 #  SPDX-FileCopyrightText: 2023 EasyScience contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
@@ -16,11 +16,14 @@ from typing import List
 from typing import Optional
 from typing import Set
 from typing import TypeVar
+from typing import Union
 
-from easyscience import borg
+from easyscience import global_object
 from easyscience.Utils.classTools import addLoggedProp
 
 from .core import ComponentSerializer
+from .new_variable import Parameter as NewParameter
+from .new_variable.descriptor_base import DescriptorBase
 from .Variable import Descriptor
 from .Variable import Parameter
 
@@ -31,20 +34,23 @@ if TYPE_CHECKING:
 
 
 class BasedBase(ComponentSerializer):
-    __slots__ = ["_name", "_borg", "user_data", "_kwargs"]
+    __slots__ = ['_name', '_global_object', 'user_data', '_kwargs']
 
     _REDIRECT = {}
 
-    def __init__(self, name: str, interface: Optional[iF] = None):
-        self._borg = borg
-        self._borg.map.add_vertex(self, obj_type="created")
+    def __init__(self, name: str, interface: Optional[iF] = None, unique_name: Optional[str] = None):
+        self._global_object = global_object
+        if unique_name is None:
+            unique_name = self._unique_name_generator()
+        self._unique_name = unique_name
+        self._name = name
+        self._global_object.map.add_vertex(self, obj_type="created")
         self.interface = interface
         self.user_data: dict = {}
-        self._name: str = name
 
     @property
     def _arg_spec(self) -> Set[str]:
-        base_cls = getattr(self, "__old_class__", self.__class__)
+        base_cls = getattr(self, '__old_class__', self.__class__)
         spec = getfullargspec(base_cls.__init__)
         names = set(spec.args[1:])
         return names
@@ -58,8 +64,23 @@ class BasedBase(ComponentSerializer):
         :rtype: tuple
         """
         state = self.encode()
-        cls = getattr(self, "__old_class__", self.__class__)
+        cls = getattr(self, '__old_class__', self.__class__)
         return cls.from_dict, (state,)
+
+    @property
+    def unique_name(self) -> str:
+        """ Get the unique name of the object."""
+        return self._unique_name
+
+    @unique_name.setter
+    def unique_name(self, new_unique_name: str):
+        """ Set a new unique name for the object. The old name is still kept in the map. 
+        
+        :param new_unique_name: New unique name for the object"""
+        if not isinstance(new_unique_name, str):
+            raise TypeError("Unique name has to be a string.")
+        self._unique_name = new_unique_name
+        self._global_object.map.add_vertex(self)
 
     @property
     def name(self) -> str:
@@ -109,16 +130,14 @@ class BasedBase(ComponentSerializer):
         :raises: AttributeError
         """
         if self.interface is None:
-            raise AttributeError(
-                "Interface error for generating bindings. `interface` has to be set."
-            )
+            raise AttributeError('Interface error for generating bindings. `interface` has to be set.')
         interfaceable_children = [
             key
-            for key in self._borg.map.get_edges(self)
-            if issubclass(type(self._borg.map.get_item_by_key(key)), BasedBase)
+            for key in self._global_object.map.get_edges(self)
+            if issubclass(type(self._global_object.map.get_item_by_key(key)), BasedBase)
         ]
         for child_key in interfaceable_children:
-            child = self._borg.map.get_item_by_key(child_key)
+            child = self._global_object.map.get_item_by_key(child_key)
             child.interface = self.interface
         self.interface.generate_bindings(self)
 
@@ -127,9 +146,7 @@ class BasedBase(ComponentSerializer):
         Switch or create a new interface.
         """
         if self.interface is None:
-            raise AttributeError(
-                "Interface error for generating bindings. `interface` has to be set."
-            )
+            raise AttributeError('Interface error for generating bindings. `interface` has to be set.')
         self.interface.switch(new_interface_name)
         self.generate_bindings()
 
@@ -143,7 +160,8 @@ class BasedBase(ComponentSerializer):
                 constraints.append(con[key])
         return constraints
 
-    def get_parameters(self) -> List[Parameter]:
+    ## TODO clean when full move to new_variable
+    def get_parameters(self) -> Union[List[Parameter], List[NewParameter]]:
         """
         Get all parameter objects as a list.
 
@@ -151,12 +169,13 @@ class BasedBase(ComponentSerializer):
         """
         par_list = []
         for key, item in self._kwargs.items():
-            if hasattr(item, "get_parameters"):
+            if hasattr(item, 'get_parameters'):
                 par_list = [*par_list, *item.get_parameters()]
-            elif isinstance(item, Parameter):
+            elif isinstance(item, Parameter) or isinstance(item, NewParameter):
                 par_list.append(item)
         return par_list
 
+    ## TODO clean when full move to new_variable
     def _get_linkable_attributes(self) -> List[V]:
         """
         Get all objects which can be linked against as a list.
@@ -165,13 +184,14 @@ class BasedBase(ComponentSerializer):
         """
         item_list = []
         for key, item in self._kwargs.items():
-            if hasattr(item, "_get_linkable_attributes"):
+            if hasattr(item, '_get_linkable_attributes'):
                 item_list = [*item_list, *item._get_linkable_attributes()]
-            elif issubclass(type(item), Descriptor):
+            elif issubclass(type(item), Descriptor) or issubclass(type(item), DescriptorBase):
                 item_list.append(item)
         return item_list
 
-    def get_fit_parameters(self) -> List[Parameter]:
+    ## TODO clean when full move to new_variable
+    def get_fit_parameters(self) -> Union[List[Parameter], List[NewParameter]]:
         """
         Get all objects which can be fitted (and are not fixed) as a list.
 
@@ -179,11 +199,24 @@ class BasedBase(ComponentSerializer):
         """
         fit_list = []
         for key, item in self._kwargs.items():
-            if hasattr(item, "get_fit_parameters"):
+            if hasattr(item, 'get_fit_parameters'):
                 fit_list = [*fit_list, *item.get_fit_parameters()]
-            elif isinstance(item, Parameter) and item.enabled and not item.fixed:
-                fit_list.append(item)
+            elif isinstance(item, Parameter) or isinstance(item, NewParameter):
+                if item.enabled and not item.fixed:
+                    fit_list.append(item)
         return fit_list
+
+    def _unique_name_generator(self) -> str:
+        """
+        Generate a generic unique name for the object using the class name and a global iterator.
+        """
+        class_name = self.__class__.__name__
+        iterator_string = str(self._global_object.map._get_name_iterator(class_name))
+        name = class_name + "_" + iterator_string
+        while name in self._global_object.map.vertices():
+            iterator_string = str(self._global_object.map._get_name_iterator(class_name))
+            name = class_name + "_" + iterator_string
+        return name
 
     def __dir__(self) -> Iterable[str]:
         """
@@ -191,13 +224,14 @@ class BasedBase(ComponentSerializer):
 
         :return: list of function and parameter names for auto-completion
         """
-        new_class_objs = list(k for k in dir(self.__class__) if not k.startswith("_"))
+        new_class_objs = list(k for k in dir(self.__class__) if not k.startswith('_'))
         return sorted(new_class_objs)
+    
 
 
 if TYPE_CHECKING:
-    B = TypeVar("B", bound=BasedBase)
-    BV = TypeVar("BV", bound=ComponentSerializer)
+    B = TypeVar('B', bound=BasedBase)
+    BV = TypeVar('BV', bound=ComponentSerializer)
 
 
 class BaseObj(BasedBase):
@@ -208,9 +242,11 @@ class BaseObj(BasedBase):
     cheat with `BaseObj(*[Descriptor(...), Parameter(...), ...])`.
     """
 
+    ## TODO clean when full move to new_variable
     def __init__(
         self,
         name: str,
+        unique_name: Optional[str] = None,
         *args: Optional[BV],
         **kwargs: Optional[BV],
     ):
@@ -221,22 +257,22 @@ class BaseObj(BasedBase):
         :param args: Any arguments?
         :param kwargs: Fields which this class should contain
         """
-        super(BaseObj, self).__init__(name)
+        super(BaseObj, self).__init__(name=name, unique_name=unique_name)
         # If Parameter or Descriptor is given as arguments...
         for arg in args:
-            if issubclass(type(arg), (BaseObj, Descriptor)):
-                kwargs[getattr(arg, "name")] = arg
+            if issubclass(type(arg), (BaseObj, Descriptor, DescriptorBase)):
+                kwargs[getattr(arg, 'name')] = arg
         # Set kwargs, also useful for serialization
         known_keys = self.__dict__.keys()
         self._kwargs = kwargs
         for key in kwargs.keys():
             if key in known_keys:
-                raise AttributeError
-            if issubclass(
-                type(kwargs[key]), (BasedBase, Descriptor)
-            ) or "BaseCollection" in [c.__name__ for c in type(kwargs[key]).__bases__]:
-                self._borg.map.add_edge(self, kwargs[key])
-                self._borg.map.reset_type(kwargs[key], "created_internal")
+                raise AttributeError("Kwargs cannot overwrite class attributes in BaseObj.")
+            if issubclass(type(kwargs[key]), (BasedBase, Descriptor, DescriptorBase)) or 'BaseCollection' in [
+                c.__name__ for c in type(kwargs[key]).__bases__
+            ]:
+                self._global_object.map.add_edge(self, kwargs[key])
+                self._global_object.map.reset_type(kwargs[key], 'created_internal')
             addLoggedProp(
                 self,
                 key,
@@ -269,8 +305,8 @@ class BaseObj(BasedBase):
         :return: None
         """
         self._kwargs[key] = component
-        self._borg.map.add_edge(self, component)
-        self._borg.map.reset_type(component, "created_internal")
+        self._global_object.map.add_edge(self, component)
+        self._global_object.map.reset_type(component, 'created_internal')
         addLoggedProp(
             self,
             key,
@@ -281,31 +317,32 @@ class BaseObj(BasedBase):
             test_class=BaseObj,
         )
 
+    ## TODO clean when full move to new_variable
     def __setattr__(self, key: str, value: BV) -> None:
         # Assume that the annotation is a ClassVar
         old_obj = None
         if (
-            hasattr(self.__class__, "__annotations__")
+            hasattr(self.__class__, '__annotations__')
             and key in self.__class__.__annotations__
-            and hasattr(self.__class__.__annotations__[key], "__args__")
+            and hasattr(self.__class__.__annotations__[key], '__args__')
             and issubclass(
-                getattr(value, "__old_class__", value.__class__),
+                getattr(value, '__old_class__', value.__class__),
                 self.__class__.__annotations__[key].__args__,
             )
         ):
-            if issubclass(type(getattr(self, key, None)), (BasedBase, Descriptor)):
+            if issubclass(type(getattr(self, key, None)), (BasedBase, Descriptor, DescriptorBase)):
                 old_obj = self.__getattribute__(key)
-                self._borg.map.prune_vertex_from_edge(self, old_obj)
+                self._global_object.map.prune_vertex_from_edge(self, old_obj)
             self._add_component(key, value)
         else:
-            if hasattr(self, key) and issubclass(type(value), (BasedBase, Descriptor)):
+            if hasattr(self, key) and issubclass(type(value), (BasedBase, Descriptor, DescriptorBase)):
                 old_obj = self.__getattribute__(key)
-                self._borg.map.prune_vertex_from_edge(self, old_obj)
-                self._borg.map.add_edge(self, value)
+                self._global_object.map.prune_vertex_from_edge(self, old_obj)
+                self._global_object.map.add_edge(self, value)
         super(BaseObj, self).__setattr__(key, value)
         # Update the interface bindings if something changed (BasedBase and Descriptor)
         if old_obj is not None:
-            old_interface = getattr(self, "interface", None)
+            old_interface = getattr(self, 'interface', None)
             if old_interface is not None:
                 self.generate_bindings()
 
@@ -322,9 +359,7 @@ class BaseObj(BasedBase):
     @staticmethod
     def __setter(key: str) -> Callable[[BV], None]:
         def setter(obj: BV, value: float) -> None:
-            if issubclass(obj._kwargs[key].__class__, Descriptor) and not issubclass(
-                value.__class__, Descriptor
-            ):
+            if issubclass(obj._kwargs[key].__class__, Descriptor) and not issubclass(value.__class__, Descriptor):
                 obj._kwargs[key].value = value
             else:
                 obj._kwargs[key] = value

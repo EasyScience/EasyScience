@@ -3,7 +3,7 @@ __version__ = "0.1.0"
 
 import numpy as np
 
-from easyscience.Fitting.Fitting import Fitter
+from easyscience.Fitting import Fitter
 from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.ObjectClasses import Parameter
 
@@ -19,7 +19,7 @@ def fit_fun(x):
 
 f = Fitter()
 f.initialize(b, fit_fun)
-f.switch_engine("bumps")
+f.switch_minimizer("bumps")
 
 x = np.array([1, 2, 3])
 y = np.array([2, 4, 6]) - 1
