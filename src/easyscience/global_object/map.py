@@ -5,7 +5,6 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
 
-import gc
 import sys
 import weakref
 from typing import List
@@ -75,8 +74,6 @@ class Map:
         self._store = weakref.WeakValueDictionary()
         # A dict with object names as keys and a list of their object types as values, with weak references
         self.__type_dict = {}
-        # A dictionary of class names and their corresponding default name_generator iterators
-        self._name_iterator_dict = {}
 
     def vertices(self) -> List[str]:
         """returns the vertices of a map"""
@@ -105,12 +102,6 @@ class Map:
     def _nested_get(self, obj_type: str) -> List[str]:
         """Access a nested object in root by key sequence."""
         return [key for key, item in self.__type_dict.items() if obj_type in item.type]
-
-    def _get_name_iterator(self, class_name: str) -> int:
-        """Get the iterator for the name generator for a class"""
-        iterator = self._name_iterator_dict.setdefault(class_name, 0)
-        self._name_iterator_dict[class_name] += 1
-        return iterator
 
     def get_item_by_key(self, item_id: str) -> object:
         if item_id in self._store.keys():
@@ -286,8 +277,6 @@ class Map:
         """Reset the map to an empty state."""
         self._store = weakref.WeakValueDictionary()
         self.__type_dict = {}
-        self._name_iterator_dict = {}
-        gc.collect()
 
     def __repr__(self) -> str:
         return f'Map object of {len(self._store)} vertices.'

@@ -51,10 +51,19 @@ class GlobalObject:
     def generate_unique_name(self, name_prefix: str) -> str:
         """
         Generate a generic unique name for the object using the class name and a global iterator.
+        Names are in the format `name_prefix_0`, `name_prefix_1`, `name_prefix_2`, etc.
+
+        :param name_prefix: The prefix to be used for the name
         """
-        iterator_string = str(self.map._get_name_iterator(name_prefix))
-        name = name_prefix + '_' + iterator_string
-        while name in self.map.vertices():
-            iterator_string = str(self.map._get_name_iterator(name_prefix))
-            name = name_prefix + '_' + iterator_string
-        return name
+        names_with_prefix = [name for name in self.map.vertices() if name.startswith(name_prefix + '_')]
+        if names_with_prefix:
+            name_with_prefix_count = [0]
+            for name in names_with_prefix:
+                # Strip away the prefix and trailing _
+                name_without_prefix = name.replace(name_prefix + '_', '')
+                if name_without_prefix.isdecimal():
+                    name_with_prefix_count.append(int(name_without_prefix))
+            unique_name = name_prefix + '_' + str(max(name_with_prefix_count) + 1)
+        else:
+            unique_name = name_prefix + '_0'
+        return unique_name

@@ -25,15 +25,12 @@ class TestGlobalObject:
         # When
         global_object = GlobalObject()
         # Block the other_name_prefix_2 name
-        keep_due_toweakref = DescriptorBool(name="test", value=True, unique_name="other_name_prefix_2")
+        keep_due_toweakref_1 = DescriptorBool(name="test", value=True, unique_name="other_name_prefix_2")
+        keep_due_toweakref_2 = DescriptorBool(name="test", value=True, unique_name="other_name_prefix_a_3")
+        keep_due_toweakref_3 = DescriptorBool(name="test", value=True, unique_name="almost_other_name_prefix_3")
 
         # Then 
-        zero_name = global_object.generate_unique_name("other_name_prefix")
-        first_name = global_object.generate_unique_name("other_name_prefix")
-        second_name = global_object.generate_unique_name("other_name_prefix")
+        name = global_object.generate_unique_name("other_name_prefix")
 
         # Expect
-        assert zero_name == "other_name_prefix_0"
-        assert first_name == "other_name_prefix_1"
-        # Name was already taken, so the next available name is 3
-        assert second_name == "other_name_prefix_3"
+        assert name == "other_name_prefix_3"
