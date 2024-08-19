@@ -5,6 +5,7 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
 
+import gc
 import sys
 import weakref
 from typing import List
@@ -276,6 +277,8 @@ class Map:
     def _clear(self):
         """Reset the map to an empty state."""
         self._store = weakref.WeakValueDictionary()
+        # Force garbeage collection after a clear
+        gc.collect()
         self.__type_dict = {}
 
     def __repr__(self) -> str:
