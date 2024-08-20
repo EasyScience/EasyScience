@@ -276,8 +276,8 @@ class Map:
 
     def _clear(self):
         """Reset the map to an empty state."""
-        self._store = weakref.WeakValueDictionary()
-        # Force garbeage collection after a clear
+        for vertex in self.vertices():
+            self.prune(vertex)
         gc.collect()
         self.__type_dict = {}
 
