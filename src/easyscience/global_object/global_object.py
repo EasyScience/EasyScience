@@ -63,7 +63,7 @@ class GlobalObject:
                 name_without_prefix = name.replace(name_prefix + '_', '')
                 if name_without_prefix.isdecimal():
                     name_with_prefix_count.append(int(name_without_prefix))
-            unique_name = name_prefix + '_' + str(max(name_with_prefix_count) + 1)
+            unique_name = f'{name_prefix}_{max(name_with_prefix_count) + 1}'
         else:
-            unique_name = name_prefix + '_0'
+            unique_name = f'{name_prefix}_0'
         return unique_name
