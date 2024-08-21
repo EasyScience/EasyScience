@@ -163,8 +163,8 @@ class TestDesciptorBase:
         
         # Expect
         assert descriptor.unique_name == "DescriptorBase_0"
-        assert third_descriptor.unique_name == "DescriptorBase_1"
-        assert fourth_descriptor.unique_name == "DescriptorBase_3"
+        assert third_descriptor.unique_name == "DescriptorBase_3"
+        assert fourth_descriptor.unique_name == "DescriptorBase_4"
 
     def test_unique_name_change(self, clear, descriptor: DescriptorBase):
         # When Then

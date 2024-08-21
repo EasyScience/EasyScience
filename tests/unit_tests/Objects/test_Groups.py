@@ -385,8 +385,8 @@ def test_baseCollection_as_dict(cls):
 def test_baseCollection_from_dict(cls):
     name = "testing"
     kwargs = {"p1": Descriptor("par1", 1)}
-    ref = cls(name, **kwargs)
     expected = cls.from_dict(test_dict)
+    ref = cls(name, **kwargs)
 
     assert ref.name == expected.name
     assert len(ref) == len(expected)

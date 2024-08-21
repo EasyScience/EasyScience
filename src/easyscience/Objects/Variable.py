@@ -109,7 +109,7 @@ class Descriptor(ComponentSerializer):
         if not hasattr(self, '_args'):
             self._args = {'value': None, 'units': ''}
         if unique_name is None:
-            unique_name = self._unique_name_generator()
+            unique_name = self._global_object.generate_unique_name(self.__class__.__name__)
         self._unique_name = unique_name
         self.name = name
         # Let the collective know we've been assimilated
@@ -190,14 +190,14 @@ class Descriptor(ComponentSerializer):
         :return: Unique name of this object
         """
         return self._unique_name
-    
+
     @unique_name.setter
     def unique_name(self, new_unique_name: str):
-        """ Set a new unique name for the object. The old name is still kept in the map. 
-        
+        """Set a new unique name for the object. The old name is still kept in the map.
+
         :param new_unique_name: New unique name for the object"""
         if not isinstance(new_unique_name, str):
-            raise TypeError("Unique name has to be a string.")
+            raise TypeError('Unique name has to be a string.')
         self._unique_name = new_unique_name
         self._global_object.map.add_vertex(self)
 
@@ -362,19 +362,6 @@ class Descriptor(ComponentSerializer):
         self._units = new_unit
         self._args['value'] = self.raw_value
         self._args['units'] = str(self.unit)
-
-    def _unique_name_generator(self) -> str:
-        """
-        Generate a generic unique name for the object using the class name and a global iterator.
-        """
-        class_name = self.__class__.__name__
-        iterator_string = str(self._global_object.map._get_name_iterator(class_name))
-        name = class_name + "_" + iterator_string
-        while name in self._global_object.map.vertices():
-            iterator_string = str(self._global_object.map._get_name_iterator(class_name))
-            name = class_name + "_" + iterator_string
-        return name
-
 
     # @cached_property
     @property

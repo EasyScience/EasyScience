@@ -2,9 +2,10 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
 
-__author__ = "github.com/wardsimon"
-__version__ = "0.1.0"
+__author__ = 'github.com/wardsimon'
+__version__ = '0.1.0'
 
+import gc
 import sys
 import weakref
 from typing import List
@@ -13,22 +14,22 @@ from typing import List
 class _EntryList(list):
     def __init__(self, *args, my_type=None, **kwargs):
         super(_EntryList, self).__init__(*args, **kwargs)
-        self.__known_types = {"argument", "created", "created_internal", "returned"}
+        self.__known_types = {'argument', 'created', 'created_internal', 'returned'}
         self.finalizer = None
         self._type = []
         if my_type in self.__known_types:
             self._type.append(my_type)
 
     def __repr__(self) -> str:
-        s = "Map entry of type: "
+        s = 'Map entry of type: '
         if self._type:
-            s += ", ".join(self._type)
+            s += ', '.join(self._type)
         else:
-            s += "Undefined"
-        s += ". With"
+            s += 'Undefined'
+        s += '. With'
         if self.finalizer is None:
-            s += "out"
-        s += "a finalizer."
+            s += 'out'
+        s += 'a finalizer.'
         return s
 
     def __delitem__(self, key):
@@ -53,19 +54,19 @@ class _EntryList(list):
 
     @property
     def is_argument(self) -> bool:
-        return "argument" in self._type
+        return 'argument' in self._type
 
     @property
     def is_created(self) -> bool:
-        return "created" in self._type
+        return 'created' in self._type
 
     @property
     def is_created_internal(self) -> bool:
-        return "created_internal" in self._type
+        return 'created_internal' in self._type
 
     @property
     def is_returned(self) -> bool:
-        return "returned" in self._type
+        return 'returned' in self._type
 
 
 class Map:
@@ -74,8 +75,6 @@ class Map:
         self._store = weakref.WeakValueDictionary()
         # A dict with object names as keys and a list of their object types as values, with weak references
         self.__type_dict = {}
-        # A dictionary of class names and their corresponding default name_generator iterators
-        self._name_iterator_dict = {}
 
     def vertices(self) -> List[str]:
         """returns the vertices of a map"""
@@ -87,36 +86,28 @@ class Map:
 
     @property
     def argument_objs(self) -> List[str]:
-        return self._nested_get("argument")
+        return self._nested_get('argument')
 
     @property
     def created_objs(self) -> List[str]:
-        return self._nested_get("created")
+        return self._nested_get('created')
 
     @property
     def created_internal(self) -> List[str]:
-        return self._nested_get("created_internal")
+        return self._nested_get('created_internal')
 
     @property
     def returned_objs(self) -> List[str]:
-        return self._nested_get("returned")
+        return self._nested_get('returned')
 
     def _nested_get(self, obj_type: str) -> List[str]:
         """Access a nested object in root by key sequence."""
         return [key for key, item in self.__type_dict.items() if obj_type in item.type]
 
-
-    def _get_name_iterator(self, class_name: str) -> int:
-        """Get the iterator for the name generator for a class"""
-        iterator = self._name_iterator_dict.setdefault(class_name, 0)
-        self._name_iterator_dict[class_name] += 1
-        return iterator
-
-
     def get_item_by_key(self, item_id: str) -> object:
         if item_id in self._store.keys():
             return self._store[item_id]
-        raise ValueError("Item not in map.")
+        raise ValueError('Item not in map.')
 
     def is_known(self, vertex: object) -> bool:
         # All objects should have a 'unique_name' attribute
@@ -137,19 +128,17 @@ class Map:
     def add_vertex(self, obj: object, obj_type: str = None):
         name = obj.unique_name
         if name in self._store.keys():
-            raise ValueError(f"Object name {name} already exists in the graph.")
+            raise ValueError(f'Object name {name} already exists in the graph.')
         self._store[name] = obj
         self.__type_dict[name] = _EntryList()  # Add objects type to the list of types
-        self.__type_dict[name].finalizer = weakref.finalize(
-            self._store[name], self.prune, name
-        )
+        self.__type_dict[name].finalizer = weakref.finalize(self._store[name], self.prune, name)
         self.__type_dict[name].type = obj_type
 
     def add_edge(self, start_obj: object, end_obj: object):
         if start_obj.unique_name in self.__type_dict.keys():
             self.__type_dict[start_obj.unique_name].append(end_obj.unique_name)
         else:
-            raise AttributeError("Start object not in map.")
+            raise AttributeError('Start object not in map.')
 
     def get_edges(self, start_obj) -> List[str]:
         if start_obj.unique_name in self.__type_dict.keys():
@@ -176,10 +165,7 @@ class Map:
             return
         vertex2 = child_obj.unique_name
 
-        if (
-            vertex1 in self.__type_dict.keys()
-            and vertex2 in self.__type_dict[vertex1]
-        ):
+        if vertex1 in self.__type_dict.keys() and vertex2 in self.__type_dict[vertex1]:
             del self.__type_dict[vertex1][self.__type_dict[vertex1].index(vertex2)]
 
     def prune(self, key: str):
@@ -282,20 +268,18 @@ class Map:
         vertices_encountered.add(start_vertex)
         if len(vertices_encountered) != len(vertices):
             for vertex in graph[start_vertex]:
-                if vertex not in vertices_encountered and self.is_connected(
-                    vertices_encountered, vertex
-                ):
+                if vertex not in vertices_encountered and self.is_connected(vertices_encountered, vertex):
                     return True
         else:
             return True
         return False
 
     def _clear(self):
-        """ Reset the map to an empty state. """
-        self._store = weakref.WeakValueDictionary()
+        """Reset the map to an empty state."""
+        for vertex in self.vertices():
+            self.prune(vertex)
+        gc.collect()
         self.__type_dict = {}
-        self._name_iterator_dict = {}
 
     def __repr__(self) -> str:
-        return f"Map object of {len(self._store)} vertices."
-
+        return f'Map object of {len(self._store)} vertices.'

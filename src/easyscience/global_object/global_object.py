@@ -2,8 +2,8 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
 
-__author__ = "github.com/wardsimon"
-__version__ = "0.1.0"
+__author__ = 'github.com/wardsimon'
+__version__ = '0.1.0'
 
 from easyscience.Utils.classUtils import singleton
 
@@ -47,3 +47,23 @@ class GlobalObject:
         from easyscience.global_object.undo_redo import UndoStack
 
         self.stack = UndoStack()
+
+    def generate_unique_name(self, name_prefix: str) -> str:
+        """
+        Generate a generic unique name for the object using the class name and a global iterator.
+        Names are in the format `name_prefix_0`, `name_prefix_1`, `name_prefix_2`, etc.
+
+        :param name_prefix: The prefix to be used for the name
+        """
+        names_with_prefix = [name for name in self.map.vertices() if name.startswith(name_prefix + '_')]
+        if names_with_prefix:
+            name_with_prefix_count = [0]
+            for name in names_with_prefix:
+                # Strip away the prefix and trailing _
+                name_without_prefix = name.replace(name_prefix + '_', '')
+                if name_without_prefix.isdecimal():
+                    name_with_prefix_count.append(int(name_without_prefix))
+            unique_name = f'{name_prefix}_{max(name_with_prefix_count) + 1}'
+        else:
+            unique_name = f'{name_prefix}_0'
+        return unique_name
