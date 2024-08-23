@@ -166,7 +166,7 @@ class TestFitter():
 
         # Then Expect
         assert minimizers == [
-            'LMFit', 'LMFit_leastsq', 'LMFit_powell', 'LMFit_cobyla',
+            'LMFit', 'LMFit_leastsq', 'LMFit_powell', 'LMFit_cobyla', 'LMFit_differential_evolution',
             'Bumps', 'Bumps_simplex', 'Bumps_newton', 'Bumps_lm',
             'DFO', 'DFO_leastsq'
         ]

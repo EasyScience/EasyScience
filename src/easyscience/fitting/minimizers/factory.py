@@ -39,6 +39,7 @@ class AvailableMinimizers(Enum):
         LMFit_leastsq = auto()
         LMFit_powell = auto()
         LMFit_cobyla = auto()
+        LMFit_differential_evolution = auto()
 
     if bumps_engine_imported:
         Bumps = auto()
@@ -50,6 +51,7 @@ class AvailableMinimizers(Enum):
         DFO = auto()
         DFO_leastsq = auto()
 
+
 # Temporary solution to convert string to enum
 def from_string_to_enum(minimizer_name: str) -> AvailableMinimizers:
     if minimizer_name == 'LMFit':
@@ -60,6 +62,8 @@ def from_string_to_enum(minimizer_name: str) -> AvailableMinimizers:
         minmizer_enum = AvailableMinimizers.LMFit_powell
     elif minimizer_name == 'LMFit_cobyla':
         minmizer_enum = AvailableMinimizers.LMFit_cobyla
+    elif minimizer_name == 'LMFit_differential_evolution':
+        minmizer_enum = AvailableMinimizers.LMFit_differential_evolution
 
     elif minimizer_name == 'Bumps':
         minmizer_enum = AvailableMinimizers.Bumps
@@ -75,7 +79,9 @@ def from_string_to_enum(minimizer_name: str) -> AvailableMinimizers:
     elif minimizer_name == 'DFO_leastsq':
         minmizer_enum = AvailableMinimizers.DFO_leastsq
     else:
-        raise ValueError(f"Invalid minimizer name: {minimizer_name}. The following minimizers are available: {[minimize.name for minimize in AvailableMinimizers]}")          # noqa: E501
+        raise ValueError(
+            f'Invalid minimizer name: {minimizer_name}. The following minimizers are available: {[minimize.name for minimize in AvailableMinimizers]}'
+        )  # noqa: E501
 
     return minmizer_enum
 
@@ -89,6 +95,8 @@ def factory(minimizer_enum: AvailableMinimizers, fit_object, fit_function: Calla
         minimizer = LMFit(obj=fit_object, fit_function=fit_function, method='powell')
     elif minimizer_enum == AvailableMinimizers.LMFit_cobyla:
         minimizer = LMFit(obj=fit_object, fit_function=fit_function, method='cobyla')
+    elif minimizer_enum == AvailableMinimizers.LMFit_differential_evolution:
+        minimizer = LMFit(obj=fit_object, fit_function=fit_function, method='differential_evolution')
 
     elif minimizer_enum == AvailableMinimizers.Bumps:
         minimizer = Bumps(obj=fit_object, fit_function=fit_function, method='amoeba')

@@ -71,6 +71,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         return [
             'least_squares',
             'leastsq',
+            'differential_evolution',
             'powell',
             'cobyla',
         ]
