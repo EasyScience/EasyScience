@@ -80,8 +80,8 @@ def from_string_to_enum(minimizer_name: str) -> AvailableMinimizers:
         minmizer_enum = AvailableMinimizers.DFO_leastsq
     else:
         raise ValueError(
-            f'Invalid minimizer name: {minimizer_name}. The following minimizers are available: {[minimize.name for minimize in AvailableMinimizers]}'
-        )  # noqa: E501
+            f'Invalid minimizer name: {minimizer_name}. The following minimizers are available: {[minimize.name for minimize in AvailableMinimizers]}'  # noqa: E501
+        )
 
     return minmizer_enum
 

@@ -62,7 +62,7 @@ class Bumps(MinimizerBase):
     @staticmethod
     def supported_methods() -> List[str]:
         # only a small subset
-        methods = ['scipy.leastsq','amoeba', 'newton', 'lm']
+        methods = ['scipy.leastsq', 'amoeba', 'newton', 'lm']
         return methods
 
     def fit(
