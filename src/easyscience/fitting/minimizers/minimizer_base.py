@@ -20,7 +20,6 @@ import numpy as np
 # from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.Variable import Parameter
 
-from ..available_minimizers import AvailableMinimizers
 from ..Constraints import ObjConstraint
 from .utils import FitError
 from .utils import FitResults
