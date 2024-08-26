@@ -292,9 +292,15 @@ class TestParameter:
         assert parameter._callback.fget.call_count == 1
 
     def test_set_full_value(self, parameter: Parameter):
-        # When Then Expect
-        with pytest.raises(AttributeError):
-            parameter.full_value = sc.scalar(2, unit='s')
+        # When
+        self.mock_callback.fget.return_value = sc.scalar(1, unit='m')
+
+        # Then
+        parameter.full_value = sc.scalar(2, unit='m')
+
+        # Expect
+        parameter._callback.fset.assert_called_once_with(sc.scalar(2, unit='m')) 
+        assert parameter._scalar == sc.scalar(2, unit='m')
     
     def test_copy(self, parameter: Parameter):
         # When Then
