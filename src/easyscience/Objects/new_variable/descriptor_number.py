@@ -101,7 +101,7 @@ class DescriptorNumber(DescriptorBase):
 
     @full_value.setter
     def full_value(self, full_value: Variable) -> None:
-        raise AttributeError(f'Full_value is read-only. Change the value and variance seperately. or create a new {self.__class__.__name__}.')  # noqa: E501
+        raise AttributeError(f'Full_value is read-only. Change the value and variance seperately. Or create a new {self.__class__.__name__}.')  # noqa: E501
     
     @property
     def value(self) -> numbers.Number:
@@ -122,7 +122,7 @@ class DescriptorNumber(DescriptorBase):
         """
         if not isinstance(value, numbers.Number) or isinstance(value, bool):
             raise TypeError(f'{value=} must be a number')
-        self._scalar.value = value
+        self._scalar.value = float(value)
 
     @property
     def unit(self) -> str:
