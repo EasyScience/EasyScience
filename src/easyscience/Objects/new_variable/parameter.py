@@ -199,7 +199,7 @@ class Parameter(DescriptorNumber):
 
         value = self._constraint_runner(self._constraints.virtual, value)
 
-        self._scalar.value = value
+        self._scalar.value = float(value)
         if self._callback.fset is not None:
             self._callback.fset(self._scalar.value)
 
