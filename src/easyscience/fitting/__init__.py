@@ -1,5 +1,5 @@
+from .available_minimizers import AvailableMinimizers
 from .fitter import Fitter
-from .minimizers.factory import AvailableMinimizers
 from .minimizers.utils import FitResults
 
 # Causes circular import

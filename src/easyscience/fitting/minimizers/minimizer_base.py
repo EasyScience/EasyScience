@@ -16,8 +16,8 @@ from typing import Union
 
 import numpy as np
 
-#causes circular import when Parameter is imported
-#from easyscience.Objects.ObjectClasses import BaseObj 
+# causes circular import when Parameter is imported
+# from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.Variable import Parameter
 
 from ..Constraints import ObjConstraint

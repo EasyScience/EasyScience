@@ -11,7 +11,7 @@ import numpy as np
 from easyscience.fitting.Constraints import ObjConstraint
 from easyscience.fitting.fitter import Fitter
 from easyscience.fitting.minimizers import FitError
-from easyscience.fitting.minimizers.factory import AvailableMinimizers
+from easyscience.fitting.available_minimizers import AvailableMinimizers
 from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.ObjectClasses import Parameter
 

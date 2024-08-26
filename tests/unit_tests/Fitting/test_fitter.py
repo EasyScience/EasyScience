@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 import easyscience.fitting.fitter
 from easyscience.fitting.fitter import Fitter
-from easyscience.fitting.minimizers.factory import AvailableMinimizers
+from easyscience.fitting.available_minimizers import AvailableMinimizers
 
 
 class TestFitter():

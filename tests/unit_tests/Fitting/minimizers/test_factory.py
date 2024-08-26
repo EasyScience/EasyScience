@@ -1,6 +1,6 @@
 from easyscience.fitting.minimizers.factory import factory
-from easyscience.fitting.minimizers.factory import from_string_to_enum
-from easyscience.fitting.minimizers.factory import AvailableMinimizers
+from easyscience.fitting.available_minimizers import from_string_to_enum
+from easyscience.fitting.available_minimizers import AvailableMinimizers
 from easyscience.fitting.minimizers import MinimizerBase
 from unittest.mock import MagicMock
 import pytest
