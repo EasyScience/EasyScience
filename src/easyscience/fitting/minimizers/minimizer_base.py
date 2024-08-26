@@ -20,6 +20,7 @@ import numpy as np
 # from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.Variable import Parameter
 
+from ..available_minimizers import AvailableMinimizers
 from ..Constraints import ObjConstraint
 from .utils import FitError
 from .utils import FitResults
@@ -121,6 +122,21 @@ class MinimizerBase(metaclass=ABCMeta):
         minimizer_parameters = self._prepare_parameters(minimizer_parameters)
 
         return self._fit_function(x, **minimizer_parameters, **kwargs)
+
+    def _get_method_dict(self, passed_method: Optional[str] = None) -> dict[str, AvailableMinimizers]:
+        method = {}
+
+        # Set if default method is not None
+        if self._method is not None:
+            method['method'] = self._method
+
+        # Set / overwrite if method was passed
+        if passed_method is not None:
+            if passed_method in self.supported_methods():
+                method['method'] = passed_method
+            else:
+                raise FitError(f'Method {passed_method} not available in {self.__class__}')
+        return method
 
     @abstractmethod
     def convert_to_pars_obj(self, par_list: Optional[Union[list]] = None):
