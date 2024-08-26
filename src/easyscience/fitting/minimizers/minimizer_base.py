@@ -96,7 +96,7 @@ class MinimizerBase(metaclass=ABCMeta):
         :return: Fit results
         """
 
-    def evaluate(self, x: np.ndarray, minimizer_parameters: dict[str, float] = None, **kwargs) -> np.ndarray:
+    def evaluate(self, x: np.ndarray, minimizer_parameters: Optional[dict[str, float]] = None, **kwargs) -> np.ndarray:
         """
         Evaluate the fit function for values of x. Parameters used are either the latest or user supplied.
         If the parameters are user supplied, it must be in a dictionary of {'parameter_name': parameter_value,...}.
@@ -123,7 +123,7 @@ class MinimizerBase(metaclass=ABCMeta):
 
         return self._fit_function(x, **minimizer_parameters, **kwargs)
 
-    def _get_method_dict(self, passed_method: Optional[str] = None) -> dict[str, AvailableMinimizers]:
+    def _get_method_dict(self, passed_method: Optional[str] = None) -> dict[str, str]:
         method = {}
 
         # Set if default method is not None
