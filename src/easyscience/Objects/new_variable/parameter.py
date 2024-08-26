@@ -148,7 +148,7 @@ class Parameter(DescriptorNumber):
 
     @full_value.setter
     def full_value(self, scalar: Variable) -> None:
-        raise AttributeError(f'Full_value is read-only. Change the value and variance seperately. or create a new {self.__class__.__name__}.')  # noqa: E501
+        raise AttributeError(f'Full_value is read-only. Change the value and variance seperately. Or create a new {self.__class__.__name__}.')  # noqa: E501
 
     @property
     def value(self) -> numbers.Number:
