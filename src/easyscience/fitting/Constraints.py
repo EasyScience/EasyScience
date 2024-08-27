@@ -488,7 +488,7 @@ class FunctionalConstraint(ConstraintBase):
             for o in obj:
                 ## TODO clean when full move to new_variable
                 if isinstance(o, easyscience.Objects.new_variable.parameter.Parameter):
-                    value_str += f'{o._scalar_value},'
+                    value_str += f'{o.value_no_call_back},'
                 else:
                     value_str += f'{o.raw_value},'
 
