@@ -197,7 +197,7 @@ class NumericConstraint(ConstraintBase):
         import easyscience.Objects.new_variable.parameter
 
         if isinstance(obj, easyscience.Objects.new_variable.parameter.Parameter):
-            value = obj._scalar.value
+            value = obj.value_no_call_back
         else:
             value = obj.raw_value
 
@@ -260,7 +260,7 @@ class SelfConstraint(ConstraintBase):
         import easyscience.Objects.new_variable.parameter
 
         if isinstance(obj, easyscience.Objects.new_variable.parameter.Parameter):
-            value = obj._scalar.value
+            value = obj.value_no_call_back
         else:
             value = obj.raw_value
 
@@ -323,7 +323,7 @@ class ObjConstraint(ConstraintBase):
         import easyscience.Objects.new_variable.parameter
 
         if isinstance(obj, easyscience.Objects.new_variable.parameter.Parameter):
-            value = obj._scalar.value
+            value = obj.value_no_call_back
         else:
             value = obj.raw_value
 
@@ -420,7 +420,7 @@ class MultiObjConstraint(ConstraintBase):
         for idx, obj in enumerate(independent_objs):
             ## TODO clean when full move to new_variable
             if isinstance(obj, easyscience.Objects.new_variable.parameter.Parameter):
-                self.aeval.symtable['p' + str(self.independent_obj_ids[idx])] = obj._scalar.value
+                self.aeval.symtable['p' + str(self.independent_obj_ids[idx])] = obj.value_no_call_back
             else:
                 self.aeval.symtable['p' + str(self.independent_obj_ids[idx])] = obj.raw_value
 
@@ -495,8 +495,8 @@ class FunctionalConstraint(ConstraintBase):
             value_str = value_str[:-1]
         else:
             ## TODO clean when full move to new_variable
-            if isinstance(o, easyscience.Objects.new_variable.parameter.Parameter):
-                value_str += f'{obj.value}'
+            if isinstance(obj, easyscience.Objects.new_variable.parameter.Parameter):
+                value_str += f'{obj.value_no_call_back}'
             else:
                 value_str += f'{obj.raw_value}'
 
