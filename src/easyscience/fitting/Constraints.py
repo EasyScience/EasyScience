@@ -197,7 +197,7 @@ class NumericConstraint(ConstraintBase):
         import easyscience.Objects.new_variable.parameter
 
         if isinstance(obj, easyscience.Objects.new_variable.parameter.Parameter):
-            value = obj.value
+            value = obj._scalar.value
         else:
             value = obj.raw_value
 
@@ -260,7 +260,7 @@ class SelfConstraint(ConstraintBase):
         import easyscience.Objects.new_variable.parameter
 
         if isinstance(obj, easyscience.Objects.new_variable.parameter.Parameter):
-            value = obj.value
+            value = obj._scalar.value
         else:
             value = obj.raw_value
 
@@ -323,7 +323,7 @@ class ObjConstraint(ConstraintBase):
         import easyscience.Objects.new_variable.parameter
 
         if isinstance(obj, easyscience.Objects.new_variable.parameter.Parameter):
-            value = obj.value
+            value = obj._scalar.value
         else:
             value = obj.raw_value
 
@@ -420,7 +420,7 @@ class MultiObjConstraint(ConstraintBase):
         for idx, obj in enumerate(independent_objs):
             ## TODO clean when full move to new_variable
             if isinstance(obj, easyscience.Objects.new_variable.parameter.Parameter):
-                self.aeval.symtable['p' + str(self.independent_obj_ids[idx])] = obj.value
+                self.aeval.symtable['p' + str(self.independent_obj_ids[idx])] = obj._scalar.value
             else:
                 self.aeval.symtable['p' + str(self.independent_obj_ids[idx])] = obj.raw_value
 
@@ -488,7 +488,7 @@ class FunctionalConstraint(ConstraintBase):
             for o in obj:
                 ## TODO clean when full move to new_variable
                 if isinstance(o, easyscience.Objects.new_variable.parameter.Parameter):
-                    value_str += f'{o.value},'
+                    value_str += f'{o._scalar_value},'
                 else:
                     value_str += f'{o.raw_value},'
 
