@@ -38,12 +38,12 @@ def test_NumericConstraints_Equals(twoPars):
     # Should skip
     c = NumericConstraint(twoPars[0][0], "==", value)
     c()
-    assert twoPars[0][0]._scalar.value == twoPars[1][0]
+    assert twoPars[0][0].value_no_call_back == twoPars[1][0]
 
     # Should update to new value
     c = NumericConstraint(twoPars[0][1], "==", value)
     c()
-    assert twoPars[0][1]._scalar.value == value
+    assert twoPars[0][1].value_no_call_back == value
 
 
 def test_NumericConstraints_Greater(twoPars):
@@ -52,12 +52,12 @@ def test_NumericConstraints_Greater(twoPars):
     # Should update to new value
     c = NumericConstraint(twoPars[0][0], ">", value)
     c()
-    assert twoPars[0][0]._scalar.value == value
+    assert twoPars[0][0].value_no_call_back == value
 
     # Should skip
     c = NumericConstraint(twoPars[0][1], ">", value)
     c()
-    assert twoPars[0][1]._scalar.value == twoPars[1][1]
+    assert twoPars[0][1].value_no_call_back == twoPars[1][1]
 
 
 def test_NumericConstraints_Less(twoPars):
@@ -66,12 +66,12 @@ def test_NumericConstraints_Less(twoPars):
     # Should skip
     c = NumericConstraint(twoPars[0][0], "<", value)
     c()
-    assert twoPars[0][0]._scalar.value == twoPars[1][0]
+    assert twoPars[0][0].value_no_call_back == twoPars[1][0]
 
     # Should update to new value
     c = NumericConstraint(twoPars[0][1], "<", value)
     c()
-    assert twoPars[0][1]._scalar.value == value
+    assert twoPars[0][1].value_no_call_back == value
 
 
 @pytest.mark.parametrize("multiplication_factor", [None, 1, 2, 3, 4.5])
@@ -83,7 +83,7 @@ def test_ObjConstraintMultiply(twoPars, multiplication_factor):
         operator_str = f"{multiplication_factor}*"
     c = ObjConstraint(twoPars[0][0], operator_str, twoPars[0][1])
     c()
-    assert twoPars[0][0]._scalar.value == multiplication_factor * twoPars[1][1]
+    assert twoPars[0][0].value_no_call_back == multiplication_factor * twoPars[1][1]
 
 
 @pytest.mark.parametrize("division_factor", [1, 2, 3, 4.5])
@@ -91,7 +91,7 @@ def test_ObjConstraintDivide(twoPars, division_factor):
     operator_str = f"{division_factor}/"
     c = ObjConstraint(twoPars[0][0], operator_str, twoPars[0][1])
     c()
-    assert twoPars[0][0]._scalar.value == division_factor / twoPars[1][1]
+    assert twoPars[0][0].value_no_call_back == division_factor / twoPars[1][1]
 
 
 def test_ObjConstraint_Multiple(threePars):
@@ -106,9 +106,9 @@ def test_ObjConstraint_Multiple(threePars):
     p0.user_constraints["num_2"] = ObjConstraint(p2, "", p0)
 
     p0.value = value
-    assert p0._scalar.value == value
-    assert p1._scalar.value == value
-    assert p2._scalar.value == value
+    assert p0.value_no_call_back == value
+    assert p1.value_no_call_back == value
+    assert p2.value_no_call_back == value
 
 
 def test_ConstraintEnable_Disable(twoPars):
