@@ -1,6 +1,6 @@
 from easyscience.fitting.minimizers.factory import factory
-from easyscience.fitting.minimizers.factory import from_string_to_enum
-from easyscience.fitting.minimizers.factory import AvailableMinimizers
+from easyscience.fitting.available_minimizers import from_string_to_enum
+from easyscience.fitting.available_minimizers import AvailableMinimizers
 from easyscience.fitting.minimizers import MinimizerBase
 from unittest.mock import MagicMock
 import pytest
@@ -51,10 +51,11 @@ def test_available_minimizers():
     assert AvailableMinimizers.LMFit_leastsq
     assert AvailableMinimizers.LMFit_powell
     assert AvailableMinimizers.LMFit_cobyla
+    assert AvailableMinimizers.LMFit_differential_evolution
     assert AvailableMinimizers.Bumps
     assert AvailableMinimizers.Bumps_simplex
     assert AvailableMinimizers.Bumps_newton
     assert AvailableMinimizers.Bumps_lm
     assert AvailableMinimizers.DFO
     assert AvailableMinimizers.DFO_leastsq
-    assert len(AvailableMinimizers) == 10
+    assert len(AvailableMinimizers) == 11

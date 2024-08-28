@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 import easyscience.fitting.fitter
 from easyscience.fitting.fitter import Fitter
-from easyscience.fitting.minimizers.factory import AvailableMinimizers
+from easyscience.fitting.available_minimizers import AvailableMinimizers
 
 
 class TestFitter():
@@ -166,7 +166,7 @@ class TestFitter():
 
         # Then Expect
         assert minimizers == [
-            'LMFit', 'LMFit_leastsq', 'LMFit_powell', 'LMFit_cobyla',
+            'LMFit', 'LMFit_leastsq', 'LMFit_powell', 'LMFit_cobyla', 'LMFit_differential_evolution',
             'Bumps', 'Bumps_simplex', 'Bumps_newton', 'Bumps_lm',
             'DFO', 'DFO_leastsq'
         ]

@@ -62,7 +62,7 @@ class Bumps(MinimizerBase):
     @staticmethod
     def supported_methods() -> List[str]:
         # only a small subset
-        methods = ['scipy.leastsq','amoeba', 'newton', 'lm']
+        methods = ['scipy.leastsq', 'amoeba', 'newton', 'lm']
         return methods
 
     def fit(
@@ -96,11 +96,7 @@ class Bumps(MinimizerBase):
         :return: Fit results
         :rtype: ModelResult
         """
-        default_method = {}
-        if self._method is not None:
-            default_method = {'method': self._method}
-        if method is not None and method in self.supported_methods():
-            default_method['method'] = method
+        method_dict = self._get_method_dict(method)
 
         if weights is None:
             weights = np.sqrt(np.abs(y))
@@ -135,7 +131,7 @@ class Bumps(MinimizerBase):
         global_object.stack.enabled = False
 
         try:
-            model_results = bumps_fit(problem, **default_method, **minimizer_kwargs, **kwargs)
+            model_results = bumps_fit(problem, **method_dict, **minimizer_kwargs, **kwargs)
             self._set_parameter_fit_result(model_results, stack_status)
             results = self._gen_fit_results(model_results)
         except Exception as e:

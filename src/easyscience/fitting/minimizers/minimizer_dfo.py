@@ -87,12 +87,6 @@ class DFO(MinimizerBase):
         :return: Fit results
         :rtype: ModelResult
         """
-        default_method = {}
-        if self._method is not None:
-            default_method = {'method': self._method}
-        if method is not None and method in self.supported_methods():
-            default_method['method'] = method
-
         if weights is None:
             weights = np.sqrt(np.abs(y))
 

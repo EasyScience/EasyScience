@@ -71,6 +71,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         return [
             'least_squares',
             'leastsq',
+            'differential_evolution',
             'powell',
             'cobyla',
         ]
@@ -108,14 +109,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         :return: Fit results
         :rtype: ModelResult
         """
-        default_method = {}
-        if self._method is not None:
-            default_method = {'method': self._method}
-        if method is not None:
-            if method in self.supported_methods():
-                default_method['method'] = method
-            else:
-                raise FitError(f'Method {method} not available in {self.__class__}')
+        method_dict = self._get_method_dict(method)
 
         if weights is None:
             weights = 1 / np.sqrt(np.abs(y))
@@ -139,7 +133,7 @@ class LMFit(MinimizerBase):  # noqa: S101
             if model is None:
                 model = self._make_model()
 
-            model_results = model.fit(y, x=x, weights=weights, **default_method, **minimizer_kwargs, **kwargs)
+            model_results = model.fit(y, x=x, weights=weights, **method_dict, **minimizer_kwargs, **kwargs)
             self._set_parameter_fit_result(model_results, stack_status)
             results = self._gen_fit_results(model_results)
         except Exception as e:

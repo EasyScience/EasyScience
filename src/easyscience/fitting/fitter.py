@@ -9,11 +9,11 @@ from typing import Union
 
 import numpy as np
 
+from .available_minimizers import AvailableMinimizers
+from .available_minimizers import from_string_to_enum
 from .minimizers import FitResults
 from .minimizers import MinimizerBase
-from .minimizers.factory import AvailableMinimizers
 from .minimizers.factory import factory
-from .minimizers.factory import from_string_to_enum
 
 DEFAULT_MINIMIZER = AvailableMinimizers.LMFit_leastsq
 
