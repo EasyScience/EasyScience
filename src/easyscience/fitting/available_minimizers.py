@@ -1,9 +1,14 @@
-import importlib.metadata
 import warnings
 from enum import Enum
 from enum import auto
 
-installed_packages = [x.name for x in importlib.metadata.distributions()]
+import pkg_resources
+
+installed_packages = {pkg.key for pkg in pkg_resources.working_set}
+
+# Change to importlib.metadata when Python 3.10 is the minimum version
+# import importlib.metadata
+# installed_packages = [x.name for x in importlib.metadata.distributions()]
 
 lmfit_engine_available = False
 if 'lmfit' in installed_packages:
@@ -20,7 +25,7 @@ else:
     warnings.warn('Bumps minimization is not available. Probably bumps has not been installed.', ImportWarning, stacklevel=2)
 
 dfo_engine_available = False
-if 'DFO-LS' in installed_packages:
+if 'dfo-ls' in installed_packages:
     dfo_engine_available = True
 else:
     # TODO make this a proper message (use logging?)
