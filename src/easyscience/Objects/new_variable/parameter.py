@@ -126,7 +126,7 @@ class Parameter(DescriptorNumber):
     @property
     def value_no_call_back(self) -> numbers.Number:
         """
-        Get the currently hold value of self surpassing call back.
+        Get the currently hold value of self suppressing call back.
 
         :return: Value of self without unit.
         """
