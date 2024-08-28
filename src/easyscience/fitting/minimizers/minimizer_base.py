@@ -123,19 +123,15 @@ class MinimizerBase(metaclass=ABCMeta):
         return self._fit_function(x, **minimizer_parameters, **kwargs)
 
     def _get_method_dict(self, passed_method: Optional[str] = None) -> dict[str, str]:
-        method = {}
-
-        # Set if default method is not None
-        if self._method is not None:
-            method['method'] = self._method
-
-        # Set / overwrite if method was passed
         if passed_method is not None:
-            if passed_method in self.supported_methods():
-                method['method'] = passed_method
-            else:
+            if passed_method not in self.supported_methods():
                 raise FitError(f'Method {passed_method} not available in {self.__class__}')
-        return method
+            return {'method': passed_method}
+
+        if self._method is not None:
+            return {'method': self._method}
+
+        return {}
 
     @abstractmethod
     def convert_to_pars_obj(self, par_list: Optional[Union[list]] = None):

@@ -169,3 +169,39 @@ class TestMinimizerBase():
         ]
         expected_signature = Signature(wrapped_parameters)
         assert signature == expected_signature
+
+    def test_get_method_dict(self, minimizer: MinimizerBase) -> None:
+        # When Then
+        result = minimizer._get_method_dict()
+
+        # Expect
+        assert result == {'method': 'method'}
+
+    def test_get_method_dict_no_self(self, minimizer: MinimizerBase) -> None:
+        # When 
+        minimizer._method = None
+
+        # Then
+        result = minimizer._get_method_dict()
+
+        # Expect
+        assert result == {}
+
+    def test_get_method_dict_supported_method(self, minimizer: MinimizerBase) -> None:
+        # When
+        minimizer.supported_methods = MagicMock(return_value=['supported_method'])
+
+        # Then
+        result = minimizer._get_method_dict('supported_method')
+
+        # Expect
+        assert result == {'method': 'supported_method'}
+
+    def test_get_method_dict_not_supported_method(self, minimizer: MinimizerBase) -> None:
+        # When
+        minimizer.supported_methods = MagicMock(return_value=['supported_method'])
+
+        # Then Expect
+        with pytest.raises(FitError):
+            result = minimizer._get_method_dict('not_supported_method')
+
