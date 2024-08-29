@@ -208,21 +208,40 @@ class DescriptorNumber(DescriptorBase):
    
     def __repr__(self) -> str:
         """Return printable representation."""
-        string='<'
-        string+= self.__class__.__name__+' '
-        string+=f"'{self._name}': "
-        string+= f'{self._scalar.value:.4f}'
+        # Prepare the base representation
+        string = '<'
+        string += self.__class__.__name__ + ' '
+        string += f"'{self._name}': "
+
+        # Determine if scientific notation is needed
+        value = self._scalar.value
+        if abs(value) >= 1e5 or (abs(value) < 1e-3 and value != 0):
+            value_str = f'{value:.4e}'
+        else:
+            value_str = f'{value:.4f}'
+
+        string += value_str
+
+        # Add the error if it exists
         if self.variance:
-            string += f' \u00B1 {self.error:.4f}'
+            error_value = self.error
+            if abs(error_value) >= 1e5 or (abs(error_value) < 1e-3 and error_value != 0):
+                error_str = f'{error_value:.4e}'
+            else:
+                error_str = f'{error_value:.4f}'
+            string += f' \u00B1 {error_str}'
+
+        # Add the unit if it's not dimensionless
         obj_unit = self._scalar.unit
         if obj_unit == 'dimensionless':
             obj_unit = ''
         else:
             obj_unit = f' {obj_unit}'
-        string+= obj_unit
-        string+='>'
+        
+        string += obj_unit
+        string += '>'
+        
         return string
-        # return f"<{class_name} '{obj_name}': {obj_value:0.04f}{obj_unit}>"
 
     def as_dict(self) -> Dict[str, Any]:
         raw_dict = super().as_dict()
