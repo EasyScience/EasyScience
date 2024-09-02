@@ -23,6 +23,8 @@ def factory(minimizer_enum: AvailableMinimizers, fit_object, fit_function: Calla
         minimizer = LMFit(obj=fit_object, fit_function=fit_function, method='cobyla')
     elif minimizer_enum == AvailableMinimizers.LMFit_differential_evolution:
         minimizer = LMFit(obj=fit_object, fit_function=fit_function, method='differential_evolution')
+    elif minimizer_enum == AvailableMinimizers.LMFit_scipy_least_squares:
+        minimizer = LMFit(obj=fit_object, fit_function=fit_function, method='least_squares')
 
     elif minimizer_enum == AvailableMinimizers.Bumps:
         minimizer = Bumps(obj=fit_object, fit_function=fit_function, method='amoeba')

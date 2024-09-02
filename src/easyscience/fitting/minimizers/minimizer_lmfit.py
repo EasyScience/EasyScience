@@ -52,7 +52,7 @@ class LMFit(MinimizerBase):  # noqa: S101
     @staticmethod
     def all_methods() -> List[str]:
         return [
-            'least_squares (scipy)',
+            'least_squares',
             'leastsq',
             'differential_evolution',
             'basinhopping',
@@ -69,7 +69,7 @@ class LMFit(MinimizerBase):  # noqa: S101
     @staticmethod
     def supported_methods() -> List[str]:
         return [
-            'least_squares (scipy)',
+            'least_squares',
             'leastsq',
             'differential_evolution',
             'powell',
