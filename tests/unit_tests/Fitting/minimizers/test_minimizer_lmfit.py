@@ -16,7 +16,7 @@ class TestLMFit():
         minimizer = LMFit(
             obj='obj',
             fit_function='fit_function', 
-            method='least_squares'
+            method='leastsq'
         )
         return minimizer
 
@@ -99,7 +99,7 @@ class TestLMFit():
 
         # Expect
         assert result == 'gen_fit_results'
-        mock_model.fit.assert_called_once_with(2.0, x=1.0, weights=0.7071067811865475, method='least_squares')
+        mock_model.fit.assert_called_once_with(2.0, x=1.0, weights=0.7071067811865475, method='leastsq')
         minimizer._make_model.assert_called_once_with()
         minimizer._set_parameter_fit_result.assert_called_once_with('fit', False)
         minimizer._gen_fit_results.assert_called_once_with('fit')
@@ -116,7 +116,7 @@ class TestLMFit():
         minimizer.fit(x=1.0, y=2.0, model=mock_model)
 
         # Expect
-        mock_model.fit.assert_called_once_with(2.0, x=1.0, weights=0.7071067811865475, method='least_squares')
+        mock_model.fit.assert_called_once_with(2.0, x=1.0, weights=0.7071067811865475, method='leastsq')
         minimizer._make_model.assert_not_called()
 
     def test_fit_method(self, minimizer: LMFit) -> None:
@@ -148,7 +148,7 @@ class TestLMFit():
         minimizer.fit(x=1.0, y=2.0, minimizer_kwargs={'minimizer_key': 'minimizer_val'}, engine_kwargs={'engine_key': 'engine_val'})
 
         # Expect
-        mock_model.fit.assert_called_once_with(2.0, x=1.0, weights=0.7071067811865475, method='least_squares', fit_kws={'minimizer_key': 'minimizer_val'}, engine_key='engine_val')
+        mock_model.fit.assert_called_once_with(2.0, x=1.0, weights=0.7071067811865475, method='leastsq', fit_kws={'minimizer_key': 'minimizer_val'}, engine_key='engine_val')
 
     def test_fit_exception(self, minimizer: LMFit) -> None:
         # When

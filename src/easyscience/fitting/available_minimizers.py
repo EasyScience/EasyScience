@@ -39,6 +39,7 @@ class AvailableMinimizers(Enum):
         LMFit_powell = auto()
         LMFit_cobyla = auto()
         LMFit_differential_evolution = auto()
+        LMFit_scipy_least_squares = auto()
 
     if bumps_engine_available:
         Bumps = auto()
@@ -63,6 +64,8 @@ def from_string_to_enum(minimizer_name: str) -> AvailableMinimizers:
         minmizer_enum = AvailableMinimizers.LMFit_cobyla
     elif minimizer_name == 'LMFit_differential_evolution':
         minmizer_enum = AvailableMinimizers.LMFit_differential_evolution
+    elif minimizer_name == 'LMFit_scipy_least_squares':
+        minmizer_enum = AvailableMinimizers.LMFit_scipy_least_squares
 
     elif minimizer_name == 'Bumps':
         minmizer_enum = AvailableMinimizers.Bumps
