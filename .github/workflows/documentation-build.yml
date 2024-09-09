@@ -40,7 +40,6 @@ jobs:
       run: |
         sudo apt install pandoc
         pip install . '.[dev,docs]'
-        pip list
     - name: Build and Commit
       uses: sphinx-notes/pages@master
       with:

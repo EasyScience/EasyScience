@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
 
 #  SPDX-FileCopyrightText: 2021 EasyScience contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
