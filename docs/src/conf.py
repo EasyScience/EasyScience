@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
 
 #  SPDX-FileCopyrightText: 2021 EasyScience contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
@@ -73,7 +73,6 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
     'sphinx.ext.intersphinx',
-    'sphinx_rtd_theme',
     'sphinx_gallery.gen_gallery',
 ]
 autoclass_content = 'init'
@@ -111,7 +110,7 @@ highlight_language = 'python3'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'sphinx_book_theme'
 html_logo = os.path.join('_static', 'ec_sidebar_w.png')
 html_favicon = os.path.join('_static', 'favicon.ico')
 html_theme_options = {'logo_only': True}
