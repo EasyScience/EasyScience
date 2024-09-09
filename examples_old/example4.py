@@ -10,7 +10,7 @@ from typing import List
 import numpy as np
 
 from easyscience import global_object
-from easyscience.Fitting import Fitter
+from easyscience.fitting import Fitter
 from easyscience.Objects.core import ComponentSerializer
 from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.ObjectClasses import Parameter

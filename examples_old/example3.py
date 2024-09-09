@@ -5,7 +5,7 @@ from typing import Callable
 
 import numpy as np
 
-from easyscience.Fitting import Fitter
+from easyscience.fitting import Fitter
 from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.ObjectClasses import Parameter
 
