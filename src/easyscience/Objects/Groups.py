@@ -22,9 +22,9 @@ from easyscience.Objects.ObjectClasses import BasedBase
 from easyscience.Objects.ObjectClasses import Descriptor
 
 if TYPE_CHECKING:
-    from easyscience.Utils.typing import B
-    from easyscience.Utils.typing import V
-    from easyscience.Utils.typing import iF
+    from easyscience.Objects.Inferface import iF
+    from easyscience.Objects.ObjectClasses import B
+    from easyscience.Objects.Variable import V
 
 
 class BaseCollection(BasedBase, MutableSequence):

@@ -14,7 +14,7 @@ The easiest way of obtaining EasyScience and using it in your project is via pip
     $ pip install EasyScience
 
 Install as an EasyScience developer
---------------------------------
+-----------------------------------
 
 You can obtain the latest development source from our `Github repository
 <https://github.com/easyScience/EasyScience>`_.:

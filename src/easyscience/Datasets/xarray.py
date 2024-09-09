@@ -281,14 +281,13 @@ class EasyScienceDatasetAccessor:
 
         :param variable_label: Name of the DataArray to perform the calculation on
         :type variable_label: str
-        :param sigma_func: Function to generate the sigmas. Must be of the form f(x) and return an array of the same
-        shape as the input. DEFAULT: sqrt(|data|)
+        :param sigma_func: Function to generate the sigmas. Must be of the form f(x) and return an array of the same shape as the input. Default sqrt(\|x\|)
         :type sigma_func: Callable
         :param label_prefix: What prefix should be used to designate a sigma DataArray from a data DataArray
         :type label_prefix: str
         :return: None
         :rtype: None
-        """
+        """  # noqa: E501
         sigma_values = sigma_func(self._obj[variable_label])
         self.sigma_attach(variable_label, sigma_values, label_prefix)
 

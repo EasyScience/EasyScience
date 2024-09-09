@@ -37,7 +37,7 @@ from easyscience.Utils.classTools import addProp
 from easyscience.Utils.Exceptions import CoreSetException
 
 if TYPE_CHECKING:
-    from easyscience.Utils.typing import C
+    from easyscience.fitting.Constraints import C
 
 Q_ = ureg.Quantity
 M_ = ureg.Measurement

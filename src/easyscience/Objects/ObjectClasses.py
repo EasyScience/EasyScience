@@ -28,9 +28,9 @@ from .Variable import Descriptor
 from .Variable import Parameter
 
 if TYPE_CHECKING:
-    from easyscience.Utils.typing import C
-    from easyscience.Utils.typing import V
-    from easyscience.Utils.typing import iF
+    from easyscience.fitting.Constraints import C
+    from easyscience.Objects.Inferface import iF
+    from easyscience.Objects.Variable import V
 
 
 class BasedBase(ComponentSerializer):

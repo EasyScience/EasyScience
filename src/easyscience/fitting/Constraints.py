@@ -176,19 +176,20 @@ class NumericConstraint(ConstraintBase):
         :param value: What the parameters value should be compared against.
 
         :example:
+
         .. code-block:: python
 
-             from easyscience.fitting.Constraints import NumericConstraint
-             from easyscience.Objects.Base import Parameter
-             # Create an `a < 1` constraint
-             a = Parameter('a', 0.2)
-             constraint = NumericConstraint(a, '<=', 1)
-             a.user_constraints['LEQ_1'] = constraint
-             # This works
-             a.value = 0.85
-             # This triggers the constraint
-             a.value = 2.0
-             # `a` is set to the maximum of the constraint (`a = 1`)
+            from easyscience.fitting.Constraints import NumericConstraint
+            from easyscience.Objects.Base import Parameter
+            # Create an `a < 1` constraint
+            a = Parameter('a', 0.2)
+            constraint = NumericConstraint(a, '<=', 1)
+            a.user_constraints['LEQ_1'] = constraint
+            # This works
+            a.value = 0.85
+            # This triggers the constraint
+            a.value = 2.0
+            # `a` is set to the maximum of the constraint (`a = 1`)
         """
         super(NumericConstraint, self).__init__(dependent_obj, operator=operator, value=value)
 
@@ -239,19 +240,20 @@ class SelfConstraint(ConstraintBase):
         :param value: Name of attribute to be compared against
 
         :example:
+
         .. code-block:: python
 
-             from easyscience.fitting.Constraints import SelfConstraint
-             from easyscience.Objects.Base import Parameter
-             # Create an `a < a.max` constraint
-             a = Parameter('a', 0.2, max=1)
-             constraint = SelfConstraint(a, '<=', 'max')
-             a.user_constraints['MAX'] = constraint
-             # This works
-             a.value = 0.85
-             # This triggers the constraint
-             a.value = 2.0
-             # `a` is set to the maximum of the constraint (`a = 1`)
+            from easyscience.fitting.Constraints import SelfConstraint
+            from easyscience.Objects.Base import Parameter
+            # Create an `a < a.max` constraint
+            a = Parameter('a', 0.2, max=1)
+            constraint = SelfConstraint(a, '<=', 'max')
+            a.user_constraints['MAX'] = constraint
+            # This works
+            a.value = 0.85
+            # This triggers the constraint
+            a.value = 2.0
+            # `a` is set to the maximum of the constraint (`a = 1`)
         """
         super(SelfConstraint, self).__init__(dependent_obj, operator=operator, value=value)
 
@@ -300,19 +302,20 @@ class ObjConstraint(ConstraintBase):
         :param independent_obj: Independent Parameter
 
         :example:
+
         .. code-block:: python
 
-             from easyscience.fitting.Constraints import ObjConstraint
-             from easyscience.Objects.Base import Parameter
-             # Create an `a = 2 * b` constraint
-             a = Parameter('a', 0.2)
-             b = Parameter('b', 1)
+            from easyscience.fitting.Constraints import ObjConstraint
+            from easyscience.Objects.Base import Parameter
+            # Create an `a = 2 * b` constraint
+            a = Parameter('a', 0.2)
+            b = Parameter('b', 1)
 
-             constraint = ObjConstraint(a, '2*', b)
-             b.user_constraints['SET_A'] = constraint
-             b.value = 1
-             # This triggers the constraint
-             a.value # Should equal 2
+            constraint = ObjConstraint(a, '2*', b)
+            b.user_constraints['SET_A'] = constraint
+            b.value = 1
+            # This triggers the constraint
+            a.value # Should equal 2
 
         """
         super(ObjConstraint, self).__init__(dependent_obj, independent_obj=independent_obj, operator=operator)
@@ -368,39 +371,40 @@ class MultiObjConstraint(ConstraintBase):
         :param value: Value of the expression
 
         :example:
+
         **a + b = 1**
 
         .. code-block:: python
 
-             from easyscience.fitting.Constraints import MultiObjConstraint
-             from easyscience.Objects.Base import Parameter
-             # Create an `a + b = 1` constraint
-             a = Parameter('a', 0.2)
-             b = Parameter('b', 0.3)
+            from easyscience.fitting.Constraints import MultiObjConstraint
+            from easyscience.Objects.Base import Parameter
+            # Create an `a + b = 1` constraint
+            a = Parameter('a', 0.2)
+            b = Parameter('b', 0.3)
 
-             constraint = MultiObjConstraint([b], ['+'], a, 1)
-             b.user_constraints['SET_A'] = constraint
-             b.value = 0.4
-             # This triggers the constraint
-             a.value # Should equal 0.6
+            constraint = MultiObjConstraint([b], ['+'], a, 1)
+            b.user_constraints['SET_A'] = constraint
+            b.value = 0.4
+            # This triggers the constraint
+            a.value # Should equal 0.6
 
         **a + b - 2c = 0**
 
         .. code-block:: python
 
-             from easyscience.fitting.Constraints import MultiObjConstraint
-             from easyscience.Objects.Base import Parameter
-             # Create an `a + b - 2c = 0` constraint
-             a = Parameter('a', 0.5)
-             b = Parameter('b', 0.3)
-             c = Parameter('c', 0.1)
+            from easyscience.fitting.Constraints import MultiObjConstraint
+            from easyscience.Objects.Base import Parameter
+            # Create an `a + b - 2c = 0` constraint
+            a = Parameter('a', 0.5)
+            b = Parameter('b', 0.3)
+            c = Parameter('c', 0.1)
 
-             constraint = MultiObjConstraint([b, c], ['+', '-2*'], a, 0)
-             b.user_constraints['SET_A'] = constraint
-             c.user_constraints['SET_A'] = constraint
-             b.value = 0.4
-             # This triggers the constraint. Or it could be triggered by changing the value of c
-             a.value # Should equal 0.2
+            constraint = MultiObjConstraint([b, c], ['+', '-2*'], a, 0)
+            b.user_constraints['SET_A'] = constraint
+            c.user_constraints['SET_A'] = constraint
+            b.value = 0.4
+            # This triggers the constraint. Or it could be triggered by changing the value of c
+            a.value # Should equal 0.2
 
         .. note:: This constraint is evaluated as ``dependent`` = ``value`` - SUM(``operator_i`` ``independent_i``)
         """
@@ -458,6 +462,7 @@ class FunctionalConstraint(ConstraintBase):
         :param func: Function to be evaluated in the form ``f(value, *args, **kwargs)``
 
         :example:
+
         .. code-block:: python
 
             import numpy as np

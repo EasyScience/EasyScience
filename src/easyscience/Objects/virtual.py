@@ -18,7 +18,7 @@ from easyscience import global_object
 from easyscience.fitting.Constraints import ObjConstraint
 
 if TYPE_CHECKING:
-    from easyscience.Utils.typing import BV
+    from easyscience.Objects.ObjectClasses import BV
 
 
 def raise_(ex):
@@ -48,7 +48,7 @@ def realizer(obj: BV):
         args = []
         if klass in ec_var.__dict__.values():  # is_variable check
             kwargs = obj.encode_data()
-            kwargs["unique_name"] = None
+            kwargs['unique_name'] = None
             return klass(**kwargs)
         else:
             kwargs = {name: realizer(item) for name, item in obj._kwargs.items()}
@@ -97,9 +97,7 @@ def component_realizer(obj: BV, component: str, recursive: bool = True):
                 key = value.unique_name
             if getattr(value, '__old_class__', value.__class__) in ec_var.__dict__.values():
                 continue
-            component._global_object.map.prune_vertex_from_edge(
-                component, component._kwargs[key]
-            )
+            component._global_object.map.prune_vertex_from_edge(component, component._kwargs[key])
             component._global_object.map.add_edge(component, old_component._kwargs[key])
             component._kwargs[key] = old_component._kwargs[key]
             done_mapping = False
@@ -142,12 +140,12 @@ def virtualizer(obj: BV) -> BV:
     # The supplied class
     klass = getattr(obj, '__old_class__', obj.__class__)
     virtual_options = {
-        "_is_virtual": True,
-        "is_virtual": property(fget=lambda self: self._is_virtual),
-        "_derived_from": property(fget=lambda self: obj.unique_name),
-        "__non_virtual_class__": klass,
-        "realize": realizer,
-        "relalize_component": component_realizer,
+        '_is_virtual': True,
+        'is_virtual': property(fget=lambda self: self._is_virtual),
+        '_derived_from': property(fget=lambda self: obj.unique_name),
+        '__non_virtual_class__': klass,
+        'realize': realizer,
+        'relalize_component': component_realizer,
     }
 
     import easyscience.Objects.Variable as ec_var
