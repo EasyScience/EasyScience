@@ -9,7 +9,7 @@ from typing import Callable
 import numpy as np
 
 from easyscience import global_object
-from easyscience.Fitting import Fitter
+from easyscience.fitting import Fitter
 from easyscience.Objects.Base import BaseObj
 from easyscience.Objects.Base import Parameter
 from easyscience.Objects.core import ComponentSerializer

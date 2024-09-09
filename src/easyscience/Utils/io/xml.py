@@ -4,8 +4,8 @@
 
 from __future__ import annotations
 
-__author__ = "github.com/wardsimon"
-__version__ = "0.0.1"
+__author__ = 'github.com/wardsimon'
+__version__ = '0.0.1'
 
 import sys
 import xml.etree.ElementTree as ET
@@ -22,7 +22,7 @@ from easyscience.Utils.io.dict import DictSerializer
 from easyscience.Utils.io.template import BaseEncoderDecoder
 
 if TYPE_CHECKING:
-    from easyscience.Utils.typing import BV
+    from easyscience.Objects.ObjectClasses import BV
 
 
 can_intent = (sys.version_info.major > 2) & (sys.version_info.minor > 8)
@@ -64,16 +64,16 @@ class XMLSerializer(BaseEncoderDecoder):
             obj_dict = obj
         else:
             obj_dict = encoder().encode(obj, skip=skip, full_encode=True, **kwargs)
-        block = ET.Element("data")
+        block = ET.Element('data')
         self._check_class(block, None, obj_dict, skip=skip)
-        header = ""
+        header = ''
         if use_header:
             header = '?xml version="1.0"  encoding="UTF-8"?'
         if not fast and can_intent:
             ET.indent(block)
             if use_header:
-                header += "\n"
-        return header + ET.tostring(block, encoding="unicode")
+                header += '\n'
+        return header + ET.tostring(block, encoding='unicode')
 
     @classmethod
     def decode(cls, data: str) -> BV:
@@ -97,8 +97,8 @@ class XMLSerializer(BaseEncoderDecoder):
         """
 
         label = element.tag
-        if label[0] == "_":
-            label = "@" + label[2:]
+        if label[0] == '_':
+            label = '@' + label[2:]
         if len(element) == 0:
             out_dict[label] = XMLSerializer.string_to_variable(element.text)
         else:
@@ -123,25 +123,23 @@ class XMLSerializer(BaseEncoderDecoder):
             return in_string
         in_string = in_string.strip()
         if "'" in in_string:
-            in_string = in_string.replace("'", "")
+            in_string = in_string.replace("'", '')
         if '"' in in_string:
-            in_string = in_string.replace('"', "")
+            in_string = in_string.replace('"', '')
         try:
             value = float(in_string)
         except ValueError:
-            if in_string == "True":
+            if in_string == 'True':
                 value = True
-            elif in_string == "False":
+            elif in_string == 'False':
                 value = False
-            elif in_string == "None":
+            elif in_string == 'None':
                 value = None
             else:
                 value = in_string
         return value
 
-    def _check_class(
-        self, element, key: str, value: Any, skip: Optional[List[str]] = None
-    ):
+    def _check_class(self, element, key: str, value: Any, skip: Optional[List[str]] = None):
         """
         Add a value to an element or create a new element based on input type.
         """
@@ -151,8 +149,8 @@ class XMLSerializer(BaseEncoderDecoder):
                 if k in skip:
                     continue
                 kk = k
-                if k[0] == "@":
-                    kk = "__" + kk[1:]
+                if k[0] == '@':
+                    kk = '__' + kk[1:]
                 if not isinstance(v, list):
                     s = ET.SubElement(element, kk)
                     self._check_class(s, kk, v, skip=skip)
@@ -167,11 +165,11 @@ class XMLSerializer(BaseEncoderDecoder):
                 s = ET.SubElement(element, key)
                 self._check_class(s, None, i, skip=skip)
         elif value is None:
-            element.text = "None"
+            element.text = 'None'
         elif issubclass(T_, Number):
             element.text = str(value)
         elif issubclass(T_, np.ndarray):
             element.text = str(value.tolist())
         else:
-            print(f"Cannot encode {T_} to XML")
+            print(f'Cannot encode {T_} to XML')
             raise NotImplementedError

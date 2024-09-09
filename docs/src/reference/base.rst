@@ -5,13 +5,13 @@ Parameters and Objects
 Descriptors
 ===========
 
-.. autoclass:: easyscience.Objects.Base.Descriptor
+.. autoclass:: easyscience.Objects.Variable.Descriptor
   :members:
 
 Parameters
 ==========
 
-.. autoclass:: easyscience.Objects.Base.Parameter
+.. autoclass:: easyscience.Objects.Variable.Parameter
   :members:
   :inherited-members:
 
@@ -22,11 +22,11 @@ Super Classes and Collections
 Super Classes
 =============
 
-.. autoclass:: easyscience.Objects.Base.BasedBase
+.. autoclass:: easyscience.Objects.ObjectClasses.BasedBase
   :members:
   :inherited-members:
 
-.. autoclass:: easyscience.Objects.Base.BaseObj
+.. autoclass:: easyscience.Objects.ObjectClasses.BaseObj
   :members: +_add_component
   :inherited-members:
 

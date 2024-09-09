@@ -16,8 +16,8 @@ from typing import Union
 
 import numpy as np
 
-#causes circular import when Parameter is imported
-#from easyscience.Objects.ObjectClasses import BaseObj 
+# causes circular import when Parameter is imported
+# from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.Variable import Parameter
 
 from ..Constraints import ObjConstraint
@@ -95,7 +95,7 @@ class MinimizerBase(metaclass=ABCMeta):
         :return: Fit results
         """
 
-    def evaluate(self, x: np.ndarray, minimizer_parameters: dict[str, float] = None, **kwargs) -> np.ndarray:
+    def evaluate(self, x: np.ndarray, minimizer_parameters: Optional[dict[str, float]] = None, **kwargs) -> np.ndarray:
         """
         Evaluate the fit function for values of x. Parameters used are either the latest or user supplied.
         If the parameters are user supplied, it must be in a dictionary of {'parameter_name': parameter_value,...}.
@@ -121,6 +121,17 @@ class MinimizerBase(metaclass=ABCMeta):
         minimizer_parameters = self._prepare_parameters(minimizer_parameters)
 
         return self._fit_function(x, **minimizer_parameters, **kwargs)
+
+    def _get_method_dict(self, passed_method: Optional[str] = None) -> dict[str, str]:
+        if passed_method is not None:
+            if passed_method not in self.supported_methods():
+                raise FitError(f'Method {passed_method} not available in {self.__class__}')
+            return {'method': passed_method}
+
+        if self._method is not None:
+            return {'method': self._method}
+
+        return {}
 
     @abstractmethod
     def convert_to_pars_obj(self, par_list: Optional[Union[list]] = None):

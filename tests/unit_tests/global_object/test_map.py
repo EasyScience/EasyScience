@@ -26,19 +26,16 @@ class TestMap:
         # When Then Expect
         assert len(global_object.map._store) == 2
         assert len(global_object.map._Map__type_dict) == 2
-        assert len(global_object.map._name_iterator_dict) == 2
 
     def test_clear(self, clear, base_object):
         # When
         assert len(global_object.map._store) == 1
         assert len(global_object.map._Map__type_dict) == 1
-        assert len(global_object.map._name_iterator_dict) == 1
         # Then
         global_object.map._clear()
         # Expect
         assert len(global_object.map._store) == 0
         assert global_object.map._Map__type_dict == {}
-        assert global_object.map._name_iterator_dict == {}
 
     def test_weakref(self, clear):
         # When
@@ -60,17 +57,6 @@ class TestMap:
         # When Then Expect
         assert global_object.map.get_item_by_key(base_object.unique_name) == base_object
         assert global_object.map.get_item_by_key(parameter_object.unique_name) == parameter_object
-
-    def test_get_name_iterator(self, clear):
-        # When
-        assert global_object.map._get_name_iterator("BaseObj") == 0
-        assert global_object.map._get_name_iterator("Parameter") == 0
-        # Then
-        test_obj = BaseObj(name="test")
-        test_obj2 = Parameter(value=2.0, name="test2")
-        # Expect
-        assert global_object.map._get_name_iterator("BaseObj") == 2
-        assert global_object.map._get_name_iterator("Parameter") == 2
 
     @pytest.mark.parametrize("cls, kwargs", [(BaseObj, {}), (Parameter, {"value": 2.0})])
     def test_identical_unique_names_exception(self, clear, cls, kwargs):

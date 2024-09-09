@@ -126,7 +126,7 @@ class Parameter(DescriptorNumber):
     @property
     def value_no_call_back(self) -> numbers.Number:
         """
-        Get the currently hold value of self surpassing call back.
+        Get the currently hold value of self suppressing call back.
 
         :return: Value of self without unit.
         """
@@ -147,24 +147,8 @@ class Parameter(DescriptorNumber):
         return self._scalar
 
     @full_value.setter
-    @property_stack_deco
     def full_value(self, scalar: Variable) -> None:
-        """
-        Set the value of self. This creates a scipp scalar with a unit.
-
-        :param full_value: New value of self
-        """
-        if not self.enabled:
-            if global_object.debug:
-                raise CoreSetException(f'{str(self)} is not enabled.')
-            return
-        if not isinstance(scalar, Variable) and len(scalar.dims) == 0:
-            raise TypeError(f'{scalar=} must be a Scipp scalar')
-        if not isinstance(scalar.value, numbers.Number) or isinstance(scalar.value, bool):
-            raise TypeError('value of Scipp scalar must be a number')
-        self._scalar = scalar
-        if self._callback.fset is not None:
-            self._callback.fset(scalar)
+        raise AttributeError(f'Full_value is read-only. Change the value and variance seperately. Or create a new {self.__class__.__name__}.')  # noqa: E501
 
     @property
     def value(self) -> numbers.Number:
@@ -215,7 +199,7 @@ class Parameter(DescriptorNumber):
 
         value = self._constraint_runner(self._constraints.virtual, value)
 
-        self._scalar.value = value
+        self._scalar.value = float(value)
         if self._callback.fset is not None:
             self._callback.fset(self._scalar.value)
 
