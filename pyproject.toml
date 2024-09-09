@@ -54,7 +54,7 @@ dev = [
 docs = [
     "doc8",
     "readme-renderer",
-    "Sphinx",
+#    "Sphinx",
     "sphinx-rtd-theme",
     "sphinx-autodoc-typehints", 
     "sphinx-gallery",
