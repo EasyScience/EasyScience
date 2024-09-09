@@ -1,0 +1,1220 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>easyscience.Datasets.xarray &#8212; EasyScience  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/easyscience/Datasets/xarray';</script>
+    <link rel="icon" href="../../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/ec_sidebar_w.png" class="logo__image only-light" alt="EasyScience  documentation - Home"/>
+    <script>document.write(`<img src="../../../_static/ec_sidebar_w.png" class="logo__image only-dark" alt="EasyScience  documentation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../getting-started/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting-started/installation.html">Installation</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Base Classes</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/base.html">Parameters and Objects</a></li>
+
+
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Fitting</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../fitting/introduction.html">Fitting in EasyScience</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../fitting/constraints.html">Constraints</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Example galleries</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../base_examples/index.html">Subclassing Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../base_examples/plot_baseclass1.html">Subclassing BaseObj - Simple Pendulum</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../fitting_examples/index.html">Fitting Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../fitting_examples/plot_constraints.html">Constraints example</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for easyscience.Datasets.xarray</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  SPDX-FileCopyrightText: 2023 EasyScience contributors  &lt;core@easyscience.software&gt;</span>
+<span class="c1">#  SPDX-License-Identifier: BSD-3-Clause</span>
+<span class="c1">#  © 2021-2023 Contributors to the EasyScience project &lt;https://github.com/easyScience/EasyScience</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;github.com/wardsimon&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;0.1.0&#39;</span>
+
+<span class="kn">import</span> <span class="nn">weakref</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TypeVar</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1"># import pint_xarray</span>
+<span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+
+<span class="kn">from</span> <span class="nn">easyscience</span> <span class="kn">import</span> <span class="n">ureg</span>
+<span class="kn">from</span> <span class="nn">easyscience.fitting</span> <span class="kn">import</span> <span class="n">FitResults</span>
+
+<span class="n">T_</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s1">&#39;T_&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="EasyScienceDatasetAccessor">
+<a class="viewcode-back" href="../../../reference/base.html#easyscience.Datasets.xarray.EasyScienceDatasetAccessor">[docs]</a>
+<span class="nd">@xr</span><span class="o">.</span><span class="n">register_dataset_accessor</span><span class="p">(</span><span class="s1">&#39;easyscience&#39;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">EasyScienceDatasetAccessor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Accessor to extend an xarray DataSet to EasyScience. These functions can be accessed by `obj.EasyScience.func`.</span>
+<span class="sd">        The objective for this class accessor is to facilitate:</span>
+
+<span class="sd">    - Creation of nd datasets by making and assigning axes and data more accessible</span>
+<span class="sd">    - To add and keep track of errors in the form of sigma for datasets.py</span>
+<span class="sd">    - To perform fitting on one or more data arrays in the dataset simultaneously.</span>
+<span class="sd">    - To facilitate dask computation if required.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xarray_obj</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This is called whenever you access obj.EasyScience, hence the attributes in the obj should only be written if they</span>
+<span class="sd">        have not been previously instantiated.</span>
+
+<span class="sd">        :param xarray_obj: DataSet which is called by obj.EasyScience</span>
+<span class="sd">        :type xarray_obj: xarray.Dataset</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span> <span class="o">=</span> <span class="n">xarray_obj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_core_object</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__error_mapper</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma_label_prefix</span> <span class="o">=</span> <span class="s1">&#39;s_&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;description&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;url&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;units&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the common name of the DataSet.</span>
+
+<span class="sd">        :return: Common name of the DataSet</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+
+    <span class="nd">@name</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the common name of the DataSet i.e could be experiment name...</span>
+
+<span class="sd">        :param new_name: Common name of the DataSet</span>
+<span class="sd">        :type new_name: str</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        :rtype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">description</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a description of the DataSet</span>
+
+<span class="sd">        :return: Description of the DataSet</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">]</span>
+
+    <span class="nd">@description</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">description</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_description</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the description of the DataSet</span>
+
+<span class="sd">        :param new_description: Description of the DataSet</span>
+<span class="sd">        :type new_description: str</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        :rtype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_description</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">url</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the url of the DataSet</span>
+
+<span class="sd">        :return: URL of the DataSet (empty if no URL)</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]</span>
+
+    <span class="nd">@url</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the URL of the DataSet. This may be a DOI.</span>
+
+<span class="sd">        :param new_url: New URL/DOI of the DataSet</span>
+<span class="sd">        :type new_url: str</span>
+<span class="sd">        :return:None</span>
+<span class="sd">        :rtype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_url</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">core_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the core object associated to a DataSet. Note that this is called from a weakref. If the EasyScience obj is</span>
+<span class="sd">        garbage collected, None will be returned.</span>
+
+<span class="sd">        :return: EasyScience object associated with the DataSet</span>
+<span class="sd">        :rtype: Any</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_core_object</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_core_object</span><span class="p">()</span>
+
+    <span class="nd">@core_object</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">core_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_core_object</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Associate an EasyScience object to a DataSet.</span>
+
+<span class="sd">        :param new_core_object: EasyScience object to be associated to the DataSet</span>
+<span class="sd">        :type new_core_object: Any</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        :rtype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_core_object</span> <span class="o">=</span> <span class="n">weakref</span><span class="o">.</span><span class="n">ref</span><span class="p">(</span><span class="n">new_core_object</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EasyScienceDatasetAccessor.add_coordinate">
+<a class="viewcode-back" href="../../../reference/base.html#easyscience.Datasets.xarray.EasyScienceDatasetAccessor.add_coordinate">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_coordinate</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">coordinate_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">coordinate_values</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">T_</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a coordinate to the DataSet. This can be then be assigned to one or more DataArrays.</span>
+
+<span class="sd">        :param coordinate_name: Name of the coordinate e.g. `x`</span>
+<span class="sd">        :type coordinate_name: str</span>
+<span class="sd">        :param coordinate_values: Points for the coordinates</span>
+<span class="sd">        :type coordinate_values: Union[List[T_], numpy.ndarray]</span>
+<span class="sd">        :param unit: Unit associated with the coordinate</span>
+<span class="sd">        :type unit: str</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        :rtype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">coordinate_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">coordinate_values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">][</span><span class="n">coordinate_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ureg</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EasyScienceDatasetAccessor.remove_coordinate">
+<a class="viewcode-back" href="../../../reference/base.html#easyscience.Datasets.xarray.EasyScienceDatasetAccessor.remove_coordinate">[docs]</a>
+    <span class="k">def</span> <span class="nf">remove_coordinate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coordinate_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove a coordinate from the DataSet. Note that this will not remove the coordinate from DataArrays which have</span>
+<span class="sd">        already used the it!</span>
+
+<span class="sd">        :param coordinate_name: Name of the coordinate to be removed</span>
+<span class="sd">        :type coordinate_name: str</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        :rtype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">coordinate_name</span><span class="p">]</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">][</span><span class="n">coordinate_name</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="EasyScienceDatasetAccessor.add_variable">
+<a class="viewcode-back" href="../../../reference/base.html#easyscience.Datasets.xarray.EasyScienceDatasetAccessor.add_variable">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_variable</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">variable_name</span><span class="p">,</span>
+        <span class="n">variable_coordinates</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+        <span class="n">variable_values</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">T_</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="n">variable_sigma</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">T_</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+        <span class="n">auto_sigma</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a DataArray from known coordinates and data, assign it to the dataset under a given name. Variances can</span>
+<span class="sd">        be calculated assuming gaussian distribution to 1 sigma.</span>
+
+<span class="sd">        :param variable_name: Name of the DataArray which will be created and added to the dataset</span>
+<span class="sd">        :type variable_name: str</span>
+<span class="sd">        :param variable_coordinates: List of coordinates used in the supplied data array.</span>
+<span class="sd">        :type variable_coordinates: str, List[str]</span>
+<span class="sd">        :param variable_values: Numpy or list of data which will be assigned to the DataArray</span>
+<span class="sd">        :type variable_values: Union[numpy.ndarray, list]</span>
+<span class="sd">        :param variable_sigma: If the sigmas of the dataset are known, they can be supplied here.</span>
+<span class="sd">        :type variable_sigma: Union[numpy.ndarray, list]</span>
+<span class="sd">        :param unit: Unit associated with the DataArray</span>
+<span class="sd">        :type unit: str</span>
+<span class="sd">        :param auto_sigma: Should the sigma DataArray be automatically calculated assuming gaussian probability?</span>
+<span class="sd">        :type auto_sigma: bool</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        :rtype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Check if a user has supplied a coordinate as a string. Make it a list of strings</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variable_coordinates</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">variable_coordinates</span> <span class="o">=</span> <span class="p">[</span><span class="n">variable_coordinates</span><span class="p">]</span>
+
+        <span class="c1"># The variable_coordinates can be any iterable object. Though we would assume list/tuple</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variable_coordinates</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;The variable coordinates must be a list of strings&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Check to see if the user want to assign a coordinate which does not exist yet.</span>
+        <span class="n">known_keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">dimension</span> <span class="ow">in</span> <span class="n">variable_coordinates</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dimension</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">known_keys</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;The supplied coordinate `</span><span class="si">{</span><span class="n">dimension</span><span class="si">}</span><span class="s1">` must first be defined.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Create  the dataset.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">[</span><span class="n">variable_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">variable_coordinates</span><span class="p">,</span> <span class="n">variable_values</span><span class="p">)</span>
+
+        <span class="c1"># Deal with sigmas</span>
+        <span class="k">if</span> <span class="n">variable_sigma</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># CASE 1, user has supplied sigmas</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variable_sigma</span><span class="p">,</span> <span class="n">Callable</span><span class="p">):</span>
+                <span class="c1"># CASE 1-1, The sigmas are created by some kind of generator</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sigma_generator</span><span class="p">(</span><span class="n">variable_name</span><span class="p">,</span> <span class="n">variable_sigma</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variable_sigma</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="c1"># CASE 1-2, The sigmas are a numpy arrays</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sigma_attach</span><span class="p">(</span><span class="n">variable_name</span><span class="p">,</span> <span class="n">variable_sigma</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variable_sigma</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="c1"># CASE 1-3, We have been given a list. Make it a numpy array</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sigma_attach</span><span class="p">(</span><span class="n">variable_name</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">variable_sigma</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;User supplied sigmas must be of the form; Callable fn, numpy array, list&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># CASE 2, No sigmas have been supplied.</span>
+            <span class="k">if</span> <span class="n">auto_sigma</span><span class="p">:</span>
+                <span class="c1"># CASE 2-1, Automatically generate the sigmas using gaussian probability</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sigma_generator</span><span class="p">(</span><span class="n">variable_name</span><span class="p">)</span>
+
+        <span class="c1"># Set units for the newly created DataArray</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">][</span><span class="n">variable_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ureg</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
+        <span class="c1"># If a sigma has been attached, attempt to work out the units.</span>
+        <span class="k">if</span> <span class="n">unit</span> <span class="ow">and</span> <span class="n">variable_sigma</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">auto_sigma</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma_label_prefix</span> <span class="o">+</span> <span class="n">variable_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ureg</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">unit</span> <span class="o">+</span> <span class="s1">&#39; ** 0.5&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">auto_sigma</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma_label_prefix</span> <span class="o">+</span> <span class="n">variable_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ureg</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EasyScienceDatasetAccessor.remove_variable">
+<a class="viewcode-back" href="../../../reference/base.html#easyscience.Datasets.xarray.EasyScienceDatasetAccessor.remove_variable">[docs]</a>
+    <span class="k">def</span> <span class="nf">remove_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove a DataArray from the DataSet by supplied name.</span>
+
+<span class="sd">        :param variable_name: Name of DataArray to be removed</span>
+<span class="sd">        :type variable_name: str</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        :rtype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">[</span><span class="n">variable_name</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="EasyScienceDatasetAccessor.sigma_generator">
+<a class="viewcode-back" href="../../../reference/base.html#easyscience.Datasets.xarray.EasyScienceDatasetAccessor.sigma_generator">[docs]</a>
+    <span class="k">def</span> <span class="nf">sigma_generator</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">variable_label</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">sigma_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span>
+        <span class="n">label_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate sigmas off of a DataArray based on a function.</span>
+
+<span class="sd">        :param variable_label: Name of the DataArray to perform the calculation on</span>
+<span class="sd">        :type variable_label: str</span>
+<span class="sd">        :param sigma_func: Function to generate the sigmas. Must be of the form f(x) and return an array of the same shape as the input. Default sqrt(\|x\|)</span>
+<span class="sd">        :type sigma_func: Callable</span>
+<span class="sd">        :param label_prefix: What prefix should be used to designate a sigma DataArray from a data DataArray</span>
+<span class="sd">        :type label_prefix: str</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        :rtype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
+        <span class="n">sigma_values</span> <span class="o">=</span> <span class="n">sigma_func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">[</span><span class="n">variable_label</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma_attach</span><span class="p">(</span><span class="n">variable_label</span><span class="p">,</span> <span class="n">sigma_values</span><span class="p">,</span> <span class="n">label_prefix</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EasyScienceDatasetAccessor.sigma_attach">
+<a class="viewcode-back" href="../../../reference/base.html#easyscience.Datasets.xarray.EasyScienceDatasetAccessor.sigma_attach">[docs]</a>
+    <span class="k">def</span> <span class="nf">sigma_attach</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">variable_label</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">sigma_values</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">T_</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">],</span>
+        <span class="n">label_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Attach an array of sigmas to the DataSet.</span>
+
+<span class="sd">        :param variable_label: Name of the DataArray to perform the calculation on</span>
+<span class="sd">        :type variable_label: str</span>
+<span class="sd">        :param sigma_values: Array of sigmas in list, numpy or DataArray form</span>
+<span class="sd">        :type sigma_values: Union[List[T_], numpy.ndarray, xarray.DataArray]</span>
+<span class="sd">        :param label_prefix: What prefix should be used to designate a sigma DataArray from a data DataArray</span>
+<span class="sd">        :type label_prefix: str</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        :rtype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Use the default sigma prefix if not defined.</span>
+        <span class="k">if</span> <span class="n">label_prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">label_prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_label_prefix</span>
+
+        <span class="c1"># Form the label for the new DataArray</span>
+        <span class="n">sigma_label</span> <span class="o">=</span> <span class="n">label_prefix</span> <span class="o">+</span> <span class="n">variable_label</span>
+
+        <span class="c1"># Map the original DataArray to the new sigma DataArray</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__error_mapper</span><span class="p">[</span><span class="n">variable_label</span><span class="p">]</span> <span class="o">=</span> <span class="n">sigma_label</span>
+        <span class="c1"># Assign the sigma DataArray to the DataSet</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sigma_values</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">[</span><span class="n">sigma_label</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">[</span><span class="n">variable_label</span><span class="p">]</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+                <span class="n">sigma_values</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">[</span><span class="n">sigma_label</span><span class="p">]</span> <span class="o">=</span> <span class="n">sigma_values</span></div>
+
+
+<div class="viewcode-block" id="EasyScienceDatasetAccessor.generate_points">
+<a class="viewcode-back" href="../../../reference/base.html#easyscience.Datasets.xarray.EasyScienceDatasetAccessor.generate_points">[docs]</a>
+    <span class="k">def</span> <span class="nf">generate_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coordinates</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                Generate an expanded DataArray of points which corresponds to broadcasted dimensions (`all_x`) which have been</span>
+<span class="sd">                concatenated along the second axis (`fit_dim`).</span>
+
+<span class="sd">                :param coordinates: List of coordinate names to broadcast and concatenate along</span>
+<span class="sd">                :type coordinates: List[str]</span>
+<span class="sd">                :return: Broadcasted and concatenated coordinates</span>
+<span class="sd">                :rtype: xarray.DataArray</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">             x = [1, 2], y = [3, 4]</span>
+<span class="sd">             d = xr.DataArray()</span>
+<span class="sd">             d.EasyScience.add_coordinate(&#39;x&#39;, x)</span>
+<span class="sd">             d.EasyScience.add_coordinate(&#39;y&#39;, y)</span>
+<span class="sd">             points = d.EasyScience.generate_points([&#39;x&#39;, &#39;y&#39;])</span>
+<span class="sd">             print(points)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">coords</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">da</span><span class="p">]</span> <span class="k">for</span> <span class="n">da</span> <span class="ow">in</span> <span class="n">coordinates</span><span class="p">]</span>
+        <span class="n">c_array</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">n_array</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">da</span> <span class="ow">in</span> <span class="n">xr</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="o">*</span><span class="n">coords</span><span class="p">):</span>
+            <span class="n">c_array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">da</span><span class="p">)</span>
+            <span class="n">n_array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">da</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">c_array</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="s1">&#39;fit_dim&#39;</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">all_x</span><span class="o">=</span><span class="n">n_array</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">f</span></div>
+
+
+<div class="viewcode-block" id="EasyScienceDatasetAccessor.fit">
+<a class="viewcode-back" href="../../../reference/base.html#easyscience.Datasets.xarray.EasyScienceDatasetAccessor.fit">[docs]</a>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">fitter</span><span class="p">,</span>
+        <span class="n">data_arrays</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="n">dask</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;forbidden&#39;</span><span class="p">,</span>
+        <span class="n">fit_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">fn_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">vectorized</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">FitResults</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform a fit on one or more DataArrays. This fit utilises a given fitter from `EasyScience.fitting.Fitter`, though</span>
+<span class="sd">        there are a few differences to a standard EasyScience fit. In particular, key-word arguments to control the</span>
+<span class="sd">        optimisation algorithm go in the `fit_kwargs` dictionary, fit function key-word arguments go in the `fn_kwargs`</span>
+<span class="sd">        and given key-word arguments control the `xarray.apply_ufunc` function.</span>
+
+<span class="sd">        :param fitter: Fitting object which controls the fitting</span>
+<span class="sd">        :type fitter: EasyScience.fitting.Fitter</span>
+<span class="sd">        :param args: Arguments to go to the fit function</span>
+<span class="sd">        :type args: Any</span>
+<span class="sd">        :param dask: Dask control string. See `xarray.apply_ufunc` documentation</span>
+<span class="sd">        :type dask: str</span>
+<span class="sd">        :param fit_kwargs: Dictionary of key-word arguments to be supplied to the Fitting control</span>
+<span class="sd">        :type fit_kwargs: dict</span>
+<span class="sd">        :param fn_kwargs: Dictionary of key-words to be supplied to the fit function</span>
+<span class="sd">        :type fn_kwargs: dict</span>
+<span class="sd">        :param vectorized: Should the fit function be given dependents in a single object or split</span>
+<span class="sd">        :type vectorized: bool</span>
+<span class="sd">        :param kwargs: Key-word arguments for `xarray.apply_ufunc`. See `xarray.apply_ufunc` documentation</span>
+<span class="sd">        :type kwargs: Any</span>
+<span class="sd">        :return: Results of the fit</span>
+<span class="sd">        :rtype: List[FitResults]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">fn_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fn_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">fit_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fit_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_arrays</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="n">data_arrays</span> <span class="o">=</span> <span class="p">[</span><span class="n">data_arrays</span><span class="p">]</span>
+
+        <span class="c1"># In this case we are only fitting 1 dataset</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_arrays</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">variable_label</span> <span class="o">=</span> <span class="n">data_arrays</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">[</span><span class="n">variable_label</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__error_mapper</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">variable_label</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+                <span class="c1"># Pull out any sigmas and send them to the fitter.</span>
+                <span class="n">temp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">__error_mapper</span><span class="p">[</span><span class="n">variable_label</span><span class="p">]]</span>
+                <span class="n">temp</span><span class="p">[</span><span class="n">xr</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">temp</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">1e5</span>
+                <span class="n">fit_kwargs</span><span class="p">[</span><span class="s1">&#39;weights&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span>
+            <span class="c1"># Perform a standard DataArray fit.</span>
+            <span class="k">return</span> <span class="n">dataset</span><span class="o">.</span><span class="n">EasyScience</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+                <span class="n">fitter</span><span class="p">,</span>
+                <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+                <span class="n">fit_kwargs</span><span class="o">=</span><span class="n">fit_kwargs</span><span class="p">,</span>
+                <span class="n">fn_kwargs</span><span class="o">=</span><span class="n">fn_kwargs</span><span class="p">,</span>
+                <span class="n">dask</span><span class="o">=</span><span class="n">dask</span><span class="p">,</span>
+                <span class="n">vectorize</span><span class="o">=</span><span class="n">vectorized</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># In this case we are fitting multiple datasets to the same fn!</span>
+            <span class="n">bdim_f</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">EasyScience</span><span class="o">.</span><span class="n">fit_prep</span><span class="p">(</span><span class="n">fitter</span><span class="o">.</span><span class="n">fit_function</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">data_arrays</span><span class="p">]</span>
+            <span class="n">dim_names</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">dims</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">dims</span>
+                <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">data_arrays</span>
+            <span class="p">]</span>
+            <span class="n">bdims</span> <span class="o">=</span> <span class="p">[</span><span class="n">bdim</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">bdim</span> <span class="ow">in</span> <span class="n">bdim_f</span><span class="p">]</span>
+            <span class="n">fs</span> <span class="o">=</span> <span class="p">[</span><span class="n">bdim</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">bdim</span> <span class="ow">in</span> <span class="n">bdim_f</span><span class="p">]</span>
+            <span class="n">old_fit_func</span> <span class="o">=</span> <span class="n">fitter</span><span class="o">.</span><span class="n">fit_function</span>
+
+            <span class="n">fn_array</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">y_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">_idx</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bdims</span><span class="p">):</span>
+                <span class="n">dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">[</span><span class="n">data_arrays</span><span class="p">[</span><span class="n">_idx</span><span class="p">]]</span><span class="o">.</span><span class="n">dims</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="n">dims</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dims</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+                <span class="k">def</span> <span class="nf">local_fit_func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">idx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                    <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;vectorize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vectorized</span>
+                    <span class="n">res</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">apply_ufunc</span><span class="p">(</span>
+                        <span class="n">fs</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>
+                        <span class="o">*</span><span class="n">bdims</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>
+                        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+                        <span class="n">dask</span><span class="o">=</span><span class="n">dask</span><span class="p">,</span>
+                        <span class="n">kwargs</span><span class="o">=</span><span class="n">fn_kwargs</span><span class="p">,</span>
+                        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">dask</span> <span class="o">!=</span> <span class="s1">&#39;forbidden&#39;</span><span class="p">:</span>
+                        <span class="n">res</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+                    <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">all_x</span><span class="o">=</span><span class="n">dim_names</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+
+                <span class="n">y_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">[</span><span class="n">data_arrays</span><span class="p">[</span><span class="n">_idx</span><span class="p">]]</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">all_x</span><span class="o">=</span><span class="n">dims</span><span class="p">))</span>
+                <span class="n">fn_array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">local_fit_func</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">fit_func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fn_array</span><span class="p">)):</span>
+                    <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fn_array</span><span class="p">[</span><span class="n">idx</span><span class="p">](</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">idx</span><span class="o">=</span><span class="n">idx</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;all_x&#39;</span><span class="p">:</span> <span class="n">x</span><span class="p">},</span> <span class="n">dims</span><span class="o">=</span><span class="s1">&#39;all_x&#39;</span><span class="p">)</span>
+
+            <span class="n">fitter</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">fitter</span><span class="o">.</span><span class="n">fit_object</span><span class="p">,</span> <span class="n">fit_func</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">fit_kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;weights&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">del</span> <span class="n">fit_kwargs</span><span class="p">[</span><span class="s1">&#39;weights&#39;</span><span class="p">]</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">y</span><span class="o">.</span><span class="n">size</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">y_list</span><span class="p">])),</span> <span class="n">dims</span><span class="o">=</span><span class="s1">&#39;all_x&#39;</span><span class="p">)</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">y_list</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;all_x&#39;</span><span class="p">:</span> <span class="n">x</span><span class="p">},</span> <span class="n">dims</span><span class="o">=</span><span class="s1">&#39;all_x&#39;</span><span class="p">)</span>
+                <span class="n">f_res</span> <span class="o">=</span> <span class="n">fitter</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">fit_kwargs</span><span class="p">)</span>
+                <span class="n">f_res</span> <span class="o">=</span> <span class="n">check_sanity_multiple</span><span class="p">(</span><span class="n">f_res</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">data_arrays</span><span class="p">])</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="n">fitter</span><span class="o">.</span><span class="n">fit_function</span> <span class="o">=</span> <span class="n">old_fit_func</span>
+            <span class="k">return</span> <span class="n">f_res</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="EasyScienceDataarrayAccessor">
+<a class="viewcode-back" href="../../../reference/base.html#easyscience.Datasets.xarray.EasyScienceDataarrayAccessor">[docs]</a>
+<span class="nd">@xr</span><span class="o">.</span><span class="n">register_dataarray_accessor</span><span class="p">(</span><span class="s1">&#39;EasyScience&#39;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">EasyScienceDataarrayAccessor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Accessor to extend an xarray DataArray to EasyScience. These functions can be accessed by `obj.EasyScience.func`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xarray_obj</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span> <span class="o">=</span> <span class="n">xarray_obj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_core_object</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma_label_prefix</span> <span class="o">=</span> <span class="s1">&#39;s_&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;computation&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;computation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;precompute_func&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s1">&#39;compute_func&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s1">&#39;postcompute_func&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__empty_functional</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">outer</span><span class="p">():</span>
+            <span class="k">def</span> <span class="nf">empty_fn</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">input</span>
+
+            <span class="k">return</span> <span class="n">empty_fn</span>
+
+        <span class="k">class</span> <span class="nc">wrapper</span><span class="p">:</span>
+            <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+                <span class="n">obj</span><span class="o">.</span><span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span>
+                <span class="n">obj</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="n">obj</span><span class="o">.</span><span class="n">fn</span> <span class="o">=</span> <span class="n">outer</span><span class="p">()</span>
+
+            <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">wrapper</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">core_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the core object associated to a DataArray. Note that this is called from a weakref. If the EasyScience obj is</span>
+<span class="sd">        garbage collected, None will be returned.</span>
+
+<span class="sd">        :return: EasyScience object associated with the DataArray</span>
+<span class="sd">        :rtype: Any</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_core_object</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_core_object</span><span class="p">()</span>
+
+    <span class="nd">@core_object</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">core_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_core_object</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the core object associated to a dataset</span>
+
+<span class="sd">        :param new_core_object: EasyScience object to be associated with the DataArray</span>
+<span class="sd">        :type new_core_object: Any</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        :rtype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_core_object</span> <span class="o">=</span> <span class="n">weakref</span><span class="o">.</span><span class="n">ref</span><span class="p">(</span><span class="n">new_core_object</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">compute_func</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the computational function which will be executed during a fit</span>
+
+<span class="sd">        :return: Computational function applied to the DataArray</span>
+<span class="sd">        :rtype: Callable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;computation&#39;</span><span class="p">][</span><span class="s1">&#39;compute_func&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__empty_functional</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="nd">@compute_func</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">compute_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_computational_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the computational function which is called during a fit</span>
+
+<span class="sd">        :param new_computational_fn: Computational function applied to the DataArray</span>
+<span class="sd">        :type new_computational_fn: Callable</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        :rtype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;computation&#39;</span><span class="p">][</span><span class="s1">&#39;compute_func&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_computational_fn</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">precompute_func</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the pre-computational function which will be executed before a fit</span>
+
+<span class="sd">        :return: Computational function applied to the DataArray before fitting</span>
+<span class="sd">        :rtype: Callable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;computation&#39;</span><span class="p">][</span><span class="s1">&#39;precompute_func&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__empty_functional</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="nd">@precompute_func</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">precompute_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_computational_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the computational function which is called before a fit</span>
+
+<span class="sd">        :param new_computational_fn: Computational function applied to the DataArray before fitting</span>
+<span class="sd">        :type new_computational_fn: Callable</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        :rtype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;computation&#39;</span><span class="p">][</span><span class="s1">&#39;precompute_func&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_computational_fn</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">postcompute_func</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the post-computational function which will be executed after a fit</span>
+
+<span class="sd">        :return: Computational function applied to the DataArray after fitting</span>
+<span class="sd">        :rtype: Callable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;computation&#39;</span><span class="p">][</span><span class="s1">&#39;postcompute_func&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__empty_functional</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="nd">@postcompute_func</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">postcompute_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_computational_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the computational function which is called after a fit</span>
+
+<span class="sd">        :param new_computational_fn: Computational function applied to the DataArray after fitting</span>
+<span class="sd">        :type new_computational_fn: Callable</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        :rtype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;computation&#39;</span><span class="p">][</span><span class="s1">&#39;postcompute_func&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_computational_fn</span>
+
+<div class="viewcode-block" id="EasyScienceDataarrayAccessor.fit_prep">
+<a class="viewcode-back" href="../../../reference/base.html#easyscience.Datasets.xarray.EasyScienceDataarrayAccessor.fit_prep">[docs]</a>
+    <span class="k">def</span> <span class="nf">fit_prep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func_in</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">bdims</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dask_chunks</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate broadcasted coordinates for fitting and reform the fitting function into one which can handle xarrays.</span>
+
+<span class="sd">        :param func_in: Function to be wrapped and made xarray fitting compatible.</span>
+<span class="sd">        :type func_in: Callable</span>
+<span class="sd">        :param bdims: Optional precomputed broadcasted dimensions.</span>
+<span class="sd">        :type bdims: xarray.DataArray</span>
+<span class="sd">        :param dask_chunks: How to split the broadcasted dimensions for dask.</span>
+<span class="sd">        :type dask_chunks: Tuple[int..]</span>
+<span class="sd">        :return: Tuple of broadcasted fit arrays and wrapped fit function.</span>
+<span class="sd">        :rtype: xarray.DataArray, Callable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">bdims</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">da</span><span class="p">]</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span> <span class="k">for</span> <span class="n">da</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">dims</span><span class="p">]</span>
+            <span class="n">bdims</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="o">*</span><span class="n">coords</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;computation&#39;</span><span class="p">][</span><span class="s1">&#39;compute_func&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">func_in</span>
+
+        <span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">vectorize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">old_shape</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">vectorize</span><span class="p">:</span>
+                <span class="n">xs</span> <span class="o">=</span> <span class="p">[</span><span class="n">x_new</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="k">for</span> <span class="n">x_new</span> <span class="ow">in</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x_new</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)]</span>
+                <span class="n">x_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_new</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">x_new</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">x_new</span> <span class="o">=</span> <span class="n">x_new</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_func</span><span class="p">(</span><span class="n">x_new</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_func</span><span class="p">(</span>
+                    <span class="o">*</span><span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">args</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)],</span>
+                    <span class="o">*</span><span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">args</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)],</span>
+                    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">old_shape</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">postcompute_func</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">result</span>
+
+        <span class="k">return</span> <span class="n">bdims</span><span class="p">,</span> <span class="n">func</span></div>
+
+
+<div class="viewcode-block" id="EasyScienceDataarrayAccessor.generate_points">
+<a class="viewcode-back" href="../../../reference/base.html#easyscience.Datasets.xarray.EasyScienceDataarrayAccessor.generate_points">[docs]</a>
+    <span class="k">def</span> <span class="nf">generate_points</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate an expanded DataArray of points which corresponds to broadcasted dimensions (`all_x`) which have been</span>
+<span class="sd">        concatenated along the second axis (`fit_dim`).</span>
+
+<span class="sd">        :return: Broadcasted and concatenated coordinates</span>
+<span class="sd">        :rtype: xarray.DataArray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">coords</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">da</span><span class="p">]</span> <span class="k">for</span> <span class="n">da</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">dims</span><span class="p">]</span>
+        <span class="n">c_array</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">n_array</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">da</span> <span class="ow">in</span> <span class="n">xr</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="o">*</span><span class="n">coords</span><span class="p">):</span>
+            <span class="n">c_array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">da</span><span class="p">)</span>
+            <span class="n">n_array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">da</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">c_array</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="s1">&#39;fit_dim&#39;</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">all_x</span><span class="o">=</span><span class="n">n_array</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">f</span></div>
+
+
+<div class="viewcode-block" id="EasyScienceDataarrayAccessor.fit">
+<a class="viewcode-back" href="../../../reference/base.html#easyscience.Datasets.xarray.EasyScienceDataarrayAccessor.fit">[docs]</a>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">fitter</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="n">fit_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">fn_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">vectorize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">dask</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;forbidden&#39;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FitResults</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform a fit on the given DataArray. This fit utilises a given fitter from `EasyScience.fitting.Fitter`, though</span>
+<span class="sd">        there are a few differences to a standard EasyScience fit. In particular, key-word arguments to control the</span>
+<span class="sd">        optimisation algorithm go in the `fit_kwargs` dictionary, fit function key-word arguments go in the `fn_kwargs`</span>
+<span class="sd">        and given key-word arguments control the `xarray.apply_ufunc` function.</span>
+
+<span class="sd">        :param fitter: Fitting object which controls the fitting</span>
+<span class="sd">        :type fitter: EasyScience.fitting.Fitter</span>
+<span class="sd">        :param args: Arguments to go to the fit function</span>
+<span class="sd">        :type args: Any</span>
+<span class="sd">        :param dask: Dask control string. See `xarray.apply_ufunc` documentation</span>
+<span class="sd">        :type dask: str</span>
+<span class="sd">        :param fit_kwargs: Dictionary of key-word arguments to be supplied to the Fitting control</span>
+<span class="sd">        :type fit_kwargs: dict</span>
+<span class="sd">        :param fn_kwargs: Dictionary of key-words to be supplied to the fit function</span>
+<span class="sd">        :type fn_kwargs: dict</span>
+<span class="sd">        :param vectorize: Should the fit function be given dependents in a single object or split</span>
+<span class="sd">        :type vectorize: bool</span>
+<span class="sd">        :param kwargs: Key-word arguments for `xarray.apply_ufunc`. See `xarray.apply_ufunc` documentation</span>
+<span class="sd">        :type kwargs: Any</span>
+<span class="sd">        :return: Results of the fit</span>
+<span class="sd">        :rtype: FitResults</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Deal with any kwargs which has been given</span>
+        <span class="k">if</span> <span class="n">fn_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fn_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">fit_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fit_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">old_fit_func</span> <span class="o">=</span> <span class="n">fitter</span><span class="o">.</span><span class="n">fit_function</span>
+
+        <span class="c1"># Wrap and broadcast</span>
+        <span class="n">bdims</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_prep</span><span class="p">(</span><span class="n">fitter</span><span class="o">.</span><span class="n">fit_function</span><span class="p">)</span>
+        <span class="n">dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">dims</span>
+
+        <span class="c1"># Find which coords we need</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">dims</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dims</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+        <span class="c1"># Wrap the wrap in a callable</span>
+        <span class="k">def</span> <span class="nf">local_fit_func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Function which will be called by the fitter. This will deal with sending the function the correct data.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;vectorize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vectorize</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">apply_ufunc</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">*</span><span class="n">bdims</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">dask</span><span class="o">=</span><span class="n">dask</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="n">fn_kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">dask</span> <span class="o">!=</span> <span class="s1">&#39;forbidden&#39;</span><span class="p">:</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">all_x</span><span class="o">=</span><span class="n">dims</span><span class="p">)</span>
+
+        <span class="c1"># Set the new callable to the fitter and initialize</span>
+        <span class="n">fitter</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">fitter</span><span class="o">.</span><span class="n">fit_object</span><span class="p">,</span> <span class="n">local_fit_func</span><span class="p">)</span>
+        <span class="c1"># Make EasyScience.fitting.Fitter compatible `x`</span>
+        <span class="n">x_for_fit</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">bdims</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="s1">&#39;fit_dim&#39;</span><span class="p">)</span>
+        <span class="n">x_for_fit</span> <span class="o">=</span> <span class="n">x_for_fit</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">all_x</span><span class="o">=</span><span class="p">[</span><span class="n">d</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">bdims</span><span class="p">])</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Deal with any sigmas if supplied</span>
+            <span class="k">if</span> <span class="n">fit_kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;weights&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">fit_kwargs</span><span class="p">[</span><span class="s1">&#39;weights&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">fit_kwargs</span><span class="p">[</span><span class="s1">&#39;weights&#39;</span><span class="p">]),</span>
+                    <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;all_x&#39;</span><span class="p">],</span>
+                    <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;all_x&#39;</span><span class="p">:</span> <span class="n">x_for_fit</span><span class="o">.</span><span class="n">all_x</span><span class="p">},</span>
+                <span class="p">)</span>
+            <span class="c1"># Try to perform a fit</span>
+            <span class="n">f_res</span> <span class="o">=</span> <span class="n">fitter</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x_for_fit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">all_x</span><span class="o">=</span><span class="n">dims</span><span class="p">),</span> <span class="o">**</span><span class="n">fit_kwargs</span><span class="p">)</span>
+            <span class="n">f_res</span> <span class="o">=</span> <span class="n">check_sanity_single</span><span class="p">(</span><span class="n">f_res</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="c1"># Reset the fit function on the fitter to the old fit function.</span>
+            <span class="n">fitter</span><span class="o">.</span><span class="n">fit_function</span> <span class="o">=</span> <span class="n">old_fit_func</span>
+        <span class="k">return</span> <span class="n">f_res</span></div>
+</div>
+
+
+
+<span class="k">def</span> <span class="nf">check_sanity_single</span><span class="p">(</span><span class="n">fit_results</span><span class="p">:</span> <span class="n">FitResults</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FitResults</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert the FitResults from a fitter compatible state to a recognizable DataArray state.</span>
+
+<span class="sd">    :param fit_results: Results of a fit to be modified</span>
+<span class="sd">    :type fit_results: FitResults</span>
+<span class="sd">    :return: Modified fit results</span>
+<span class="sd">    :rtype: FitResults</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;y_obs&#39;</span><span class="p">,</span> <span class="s1">&#39;y_calc&#39;</span><span class="p">,</span> <span class="s1">&#39;residual&#39;</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">fit_results</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">):</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">unstack</span><span class="p">()</span>
+            <span class="n">array</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">item</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">fit_results</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">array</span><span class="p">)</span>
+
+    <span class="n">x_array</span> <span class="o">=</span> <span class="n">fit_results</span><span class="o">.</span><span class="n">x</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x_array</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">):</span>
+        <span class="n">fit_results</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;axes_broadcast&#39;</span>
+        <span class="n">x_array</span> <span class="o">=</span> <span class="n">x_array</span><span class="o">.</span><span class="n">unstack</span><span class="p">()</span>
+        <span class="n">x_dataset</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">()</span>
+        <span class="n">dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">dims</span> <span class="k">for</span> <span class="n">dims</span> <span class="ow">in</span> <span class="n">x_array</span><span class="o">.</span><span class="n">dims</span> <span class="k">if</span> <span class="n">dims</span> <span class="o">!=</span> <span class="s1">&#39;fit_dim&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dims</span><span class="p">):</span>
+            <span class="n">x_dataset</span><span class="p">[</span><span class="n">dim</span> <span class="o">+</span> <span class="s1">&#39;_broadcast&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">x_array</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">x_dataset</span><span class="p">[</span><span class="n">dim</span> <span class="o">+</span> <span class="s1">&#39;_broadcast&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">dim</span> <span class="o">+</span> <span class="s1">&#39;_broadcast&#39;</span>
+        <span class="n">fit_results</span><span class="o">.</span><span class="n">x_matrices</span> <span class="o">=</span> <span class="n">x_dataset</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fit_results</span><span class="o">.</span><span class="n">x_matrices</span> <span class="o">=</span> <span class="n">x_array</span>
+    <span class="k">return</span> <span class="n">fit_results</span>
+
+
+<span class="k">def</span> <span class="nf">check_sanity_multiple</span><span class="p">(</span><span class="n">fit_results</span><span class="p">:</span> <span class="n">FitResults</span><span class="p">,</span> <span class="n">originals</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">FitResults</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert the multifit FitResults from a fitter compatible state to a list of recognizable DataArray states.</span>
+
+<span class="sd">    :param fit_results: Results of a fit to be modified</span>
+<span class="sd">    :type fit_results: FitResults</span>
+<span class="sd">    :param originals: List of DataArrays which were fitted against, so we can resize and re-chunk the results</span>
+<span class="sd">    :type originals: List[xr.DataArray]</span>
+<span class="sd">    :return: Modified fit results</span>
+<span class="sd">    :rtype: List[FitResults]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">return_results</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">originals</span><span class="p">:</span>
+        <span class="n">current_results</span> <span class="o">=</span> <span class="n">fit_results</span><span class="o">.</span><span class="vm">__class__</span><span class="p">()</span>
+        <span class="c1"># Fill out the basic stuff....</span>
+        <span class="n">current_results</span><span class="o">.</span><span class="n">engine_result</span> <span class="o">=</span> <span class="n">fit_results</span><span class="o">.</span><span class="n">engine_result</span>
+        <span class="n">current_results</span><span class="o">.</span><span class="n">minimizer_engine</span> <span class="o">=</span> <span class="n">fit_results</span><span class="o">.</span><span class="n">minimizer_engine</span>
+        <span class="n">current_results</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="n">fit_results</span><span class="o">.</span><span class="n">success</span>
+        <span class="n">current_results</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">fit_results</span><span class="o">.</span><span class="n">p</span>
+        <span class="n">current_results</span><span class="o">.</span><span class="n">p0</span> <span class="o">=</span> <span class="n">fit_results</span><span class="o">.</span><span class="n">p0</span>
+        <span class="c1"># now the tricky stuff</span>
+        <span class="n">current_results</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">EasyScience</span><span class="o">.</span><span class="n">generate_points</span><span class="p">()</span>
+        <span class="n">current_results</span><span class="o">.</span><span class="n">y_obs</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">current_results</span><span class="o">.</span><span class="n">y_obs</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">_obs&#39;</span>
+        <span class="n">current_results</span><span class="o">.</span><span class="n">y_calc</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span>
+            <span class="n">fit_results</span><span class="o">.</span><span class="n">y_calc</span><span class="p">[</span><span class="n">offset</span> <span class="p">:</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">item</span><span class="o">.</span><span class="n">size</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+            <span class="n">dims</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span>
+            <span class="n">coords</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">coords</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">_calc&#39;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">offset</span> <span class="o">+=</span> <span class="n">item</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">current_results</span><span class="o">.</span><span class="n">residual</span> <span class="o">=</span> <span class="n">current_results</span><span class="o">.</span><span class="n">y_calc</span> <span class="o">-</span> <span class="n">current_results</span><span class="o">.</span><span class="n">y_obs</span>
+        <span class="n">current_results</span><span class="o">.</span><span class="n">residual</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">_residual&#39;</span>
+        <span class="n">return_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_results</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">return_results</span>
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By EasyScience Contributors
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, EasyScience Contributors.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

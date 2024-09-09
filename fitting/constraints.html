@@ -1,0 +1,865 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Constraints &#8212; EasyScience  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'fitting/constraints';</script>
+    <link rel="icon" href="../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Subclassing Examples" href="../base_examples/index.html" />
+    <link rel="prev" title="Fitting in EasyScience" href="introduction.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/ec_sidebar_w.png" class="logo__image only-light" alt="EasyScience  documentation - Home"/>
+    <script>document.write(`<img src="../_static/ec_sidebar_w.png" class="logo__image only-dark" alt="EasyScience  documentation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/installation.html">Installation</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Base Classes</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../reference/base.html">Parameters and Objects</a></li>
+
+
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Fitting</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Fitting in EasyScience</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Constraints</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Example galleries</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../base_examples/index.html">Subclassing Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../base_examples/plot_baseclass1.html">Subclassing BaseObj - Simple Pendulum</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../fitting_examples/index.html">Fitting Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../fitting_examples/plot_constraints.html">Constraints example</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/fitting/constraints.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Constraints</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#anatomy-of-a-constraint">Anatomy of a constraint</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#constraints-on-parameters">Constraints on Parameters</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#constraints-on-fitting">Constraints on Fitting</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-constraints">Using constraints</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#constraint-reference">Constraint Reference</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#built-in-constraints">Built-in constraints</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.SelfConstraint"><code class="docutils literal notranslate"><span class="pre">SelfConstraint</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.SelfConstraint.enabled"><code class="docutils literal notranslate"><span class="pre">SelfConstraint.enabled</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.NumericConstraint"><code class="docutils literal notranslate"><span class="pre">NumericConstraint</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.NumericConstraint.enabled"><code class="docutils literal notranslate"><span class="pre">NumericConstraint.enabled</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.ObjConstraint"><code class="docutils literal notranslate"><span class="pre">ObjConstraint</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.ObjConstraint.enabled"><code class="docutils literal notranslate"><span class="pre">ObjConstraint.enabled</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.FunctionalConstraint"><code class="docutils literal notranslate"><span class="pre">FunctionalConstraint</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.FunctionalConstraint.enabled"><code class="docutils literal notranslate"><span class="pre">FunctionalConstraint.enabled</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.MultiObjConstraint"><code class="docutils literal notranslate"><span class="pre">MultiObjConstraint</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.MultiObjConstraint.enabled"><code class="docutils literal notranslate"><span class="pre">MultiObjConstraint.enabled</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#user-created-constraints">User created constraints</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.ConstraintBase"><code class="docutils literal notranslate"><span class="pre">ConstraintBase</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.ConstraintBase.__repr__"><code class="docutils literal notranslate"><span class="pre">ConstraintBase.__repr__()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.ConstraintBase._parse_operator"><code class="docutils literal notranslate"><span class="pre">ConstraintBase._parse_operator()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.ConstraintBase.enabled"><code class="docutils literal notranslate"><span class="pre">ConstraintBase.enabled</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.ConstraintBase.get_obj"><code class="docutils literal notranslate"><span class="pre">ConstraintBase.get_obj()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="constraints">
+<h1>Constraints<a class="headerlink" href="#constraints" title="Link to this heading">#</a></h1>
+<p>Constraints are a fundamental component in non-trivial fitting operations. They can also be used to affirm the minimum/maximum of a parameter or tie parameters together in a model.</p>
+<section id="anatomy-of-a-constraint">
+<h2>Anatomy of a constraint<a class="headerlink" href="#anatomy-of-a-constraint" title="Link to this heading">#</a></h2>
+<p>A constraint is a rule which is applied to a <strong>dependent</strong> variable. This rule can consist of a logical operation, relation to one or more <strong>independent</strong> variables or an arbitrary function.</p>
+<section id="constraints-on-parameters">
+<h3>Constraints on Parameters<a class="headerlink" href="#constraints-on-parameters" title="Link to this heading">#</a></h3>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">easyscience.Objects.Base.Parameter</span></code> has the properties <cite>builtin_constraints</cite> and <cite>user_constraints</cite>. These are dictionaries which correspond to constraints which are intrinsic and extrinsic to the Parameter. This means that on the value change of the Parameter firstly the <cite>builtin_constraints</cite> are evaluated, followed by the <cite>user_constraints</cite>.</p>
+</section>
+<section id="constraints-on-fitting">
+<h3>Constraints on Fitting<a class="headerlink" href="#constraints-on-fitting" title="Link to this heading">#</a></h3>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">easyscience.fitting.Fitter</span></code> has the ability to evaluate user supplied constraints which effect the value of both fixed and non-fixed parameters. A good example of one such use case would be the ratio between two parameters, where you would create a <a class="reference internal" href="#easyscience.fitting.Constraints.ObjConstraint" title="easyscience.fitting.Constraints.ObjConstraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">easyscience.fitting.Constraints.ObjConstraint</span></code></a>.</p>
+</section>
+</section>
+<section id="using-constraints">
+<h2>Using constraints<a class="headerlink" href="#using-constraints" title="Link to this heading">#</a></h2>
+<p>A constraint can be used in one of three ways; Assignment to a parameter, assignment to fitting or on demand. The first two are covered and on demand is shown below.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">easyscience.fitting.Constraints</span> <span class="kn">import</span> <span class="n">NumericConstraint</span>
+<span class="kn">from</span> <span class="nn">easyscience.Objects.Base</span> <span class="kn">import</span> <span class="n">Parameter</span>
+<span class="c1"># Create an `a &lt; 1` constraint</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="n">constraint</span> <span class="o">=</span> <span class="n">NumericConstraint</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s1">&#39;&lt;=&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="c1"># Evaluate the constraint on demand</span>
+<span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mf">5.0</span>
+<span class="n">constraint</span><span class="p">()</span>
+<span class="c1"># A will now equal 1</span>
+</pre></div>
+</div>
+</section>
+<section id="constraint-reference">
+<h2>Constraint Reference<a class="headerlink" href="#constraint-reference" title="Link to this heading">#</a></h2>
+<section id="built-in-constraints">
+<h3>Built-in constraints<a class="headerlink" href="#built-in-constraints" title="Link to this heading">#</a></h3>
+<p>These are the built in constraints which you can use</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="easyscience.fitting.Constraints.SelfConstraint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">easyscience.fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">SelfConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyscience/fitting/Constraints.html#SelfConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyscience.fitting.Constraints.SelfConstraint" title="Link to this definition">#</a></dt>
+<dd><p>A <cite>SelfConstraint</cite> is a constraint which tests a logical constraint on a property of itself, similar to
+a <cite>NumericConstraint</cite>. i.e. a &gt; a.min.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dependent_obj</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <a class="reference internal" href="../reference/base.html#easyscience.Objects.Variable.Descriptor" title="easyscience.Objects.Variable.Descriptor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code></a>)</span>) – Dependent Parameter</p></li>
+<li><p><strong>operator</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Relation to between the parameter and the values. e.g. <code class="docutils literal notranslate"><span class="pre">=</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code></p></li>
+<li><p><strong>value</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Name of attribute to be compared against</p></li>
+</ul>
+</dd>
+<dt class="field-even">Example<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">easyscience.fitting.Constraints</span> <span class="kn">import</span> <span class="n">SelfConstraint</span>
+<span class="kn">from</span> <span class="nn">easyscience.Objects.Base</span> <span class="kn">import</span> <span class="n">Parameter</span>
+<span class="c1"># Create an `a &lt; a.max` constraint</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">constraint</span> <span class="o">=</span> <span class="n">SelfConstraint</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s1">&#39;&lt;=&#39;</span><span class="p">,</span> <span class="s1">&#39;max&#39;</span><span class="p">)</span>
+<span class="n">a</span><span class="o">.</span><span class="n">user_constraints</span><span class="p">[</span><span class="s1">&#39;MAX&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">constraint</span>
+<span class="c1"># This works</span>
+<span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mf">0.85</span>
+<span class="c1"># This triggers the constraint</span>
+<span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mf">2.0</span>
+<span class="c1"># `a` is set to the maximum of the constraint (`a = 1`)</span>
+</pre></div>
+</div>
+<dl class="py property">
+<dt class="sig sig-object py" id="easyscience.fitting.Constraints.SelfConstraint.enabled">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyscience.fitting.Constraints.SelfConstraint.enabled" title="Link to this definition">#</a></dt>
+<dd><p>Is the current constraint enabled.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Logical answer to if the constraint is enabled.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="easyscience.fitting.Constraints.NumericConstraint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">easyscience.fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">NumericConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyscience/fitting/Constraints.html#NumericConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyscience.fitting.Constraints.NumericConstraint" title="Link to this definition">#</a></dt>
+<dd><p>A <cite>NumericConstraint</cite> is a constraint whereby a dependent parameters value is something of an independent
+parameters value. I.e. a &lt; 1, a &gt; 5</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dependent_obj</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <a class="reference internal" href="../reference/base.html#easyscience.Objects.Variable.Descriptor" title="easyscience.Objects.Variable.Descriptor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code></a>)</span>) – Dependent Parameter</p></li>
+<li><p><strong>operator</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Relation to between the parameter and the values. e.g. <code class="docutils literal notranslate"><span class="pre">=</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code></p></li>
+<li><p><strong>value</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Number" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Number</span></code></a></span>) – What the parameters value should be compared against.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Example<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">easyscience.fitting.Constraints</span> <span class="kn">import</span> <span class="n">NumericConstraint</span>
+<span class="kn">from</span> <span class="nn">easyscience.Objects.Base</span> <span class="kn">import</span> <span class="n">Parameter</span>
+<span class="c1"># Create an `a &lt; 1` constraint</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>
+<span class="n">constraint</span> <span class="o">=</span> <span class="n">NumericConstraint</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s1">&#39;&lt;=&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">a</span><span class="o">.</span><span class="n">user_constraints</span><span class="p">[</span><span class="s1">&#39;LEQ_1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">constraint</span>
+<span class="c1"># This works</span>
+<span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mf">0.85</span>
+<span class="c1"># This triggers the constraint</span>
+<span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mf">2.0</span>
+<span class="c1"># `a` is set to the maximum of the constraint (`a = 1`)</span>
+</pre></div>
+</div>
+<dl class="py property">
+<dt class="sig sig-object py" id="easyscience.fitting.Constraints.NumericConstraint.enabled">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyscience.fitting.Constraints.NumericConstraint.enabled" title="Link to this definition">#</a></dt>
+<dd><p>Is the current constraint enabled.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Logical answer to if the constraint is enabled.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="easyscience.fitting.Constraints.ObjConstraint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">easyscience.fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">ObjConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">independent_obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyscience/fitting/Constraints.html#ObjConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyscience.fitting.Constraints.ObjConstraint" title="Link to this definition">#</a></dt>
+<dd><p>A <cite>ObjConstraint</cite> is a constraint whereby a dependent parameter is something of an independent parameter
+value. E.g. a (Dependent Parameter) &lt; b (Independent Parameter)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dependent_obj</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <a class="reference internal" href="../reference/base.html#easyscience.Objects.Variable.Descriptor" title="easyscience.Objects.Variable.Descriptor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code></a>)</span>) – Dependent Parameter</p></li>
+<li><p><strong>operator</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Relation to between the independent parameter and dependent parameter. e.g. <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">+</span></code></p></li>
+<li><p><strong>independent_obj</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <a class="reference internal" href="../reference/base.html#easyscience.Objects.Variable.Descriptor" title="easyscience.Objects.Variable.Descriptor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code></a>)</span>) – Independent Parameter</p></li>
+</ul>
+</dd>
+<dt class="field-even">Example<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">easyscience.fitting.Constraints</span> <span class="kn">import</span> <span class="n">ObjConstraint</span>
+<span class="kn">from</span> <span class="nn">easyscience.Objects.Base</span> <span class="kn">import</span> <span class="n">Parameter</span>
+<span class="c1"># Create an `a = 2 * b` constraint</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="n">constraint</span> <span class="o">=</span> <span class="n">ObjConstraint</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s1">&#39;2*&#39;</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="n">b</span><span class="o">.</span><span class="n">user_constraints</span><span class="p">[</span><span class="s1">&#39;SET_A&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">constraint</span>
+<span class="n">b</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="c1"># This triggers the constraint</span>
+<span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="c1"># Should equal 2</span>
+</pre></div>
+</div>
+<dl class="py property">
+<dt class="sig sig-object py" id="easyscience.fitting.Constraints.ObjConstraint.enabled">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyscience.fitting.Constraints.ObjConstraint.enabled" title="Link to this definition">#</a></dt>
+<dd><p>Is the current constraint enabled.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Logical answer to if the constraint is enabled.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="easyscience.fitting.Constraints.FunctionalConstraint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">easyscience.fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">FunctionalConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">independent_objs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyscience/fitting/Constraints.html#FunctionalConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyscience.fitting.Constraints.FunctionalConstraint" title="Link to this definition">#</a></dt>
+<dd><p>Functional constraints do not depend on other parameters and as such can be more complex.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dependent_obj</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <a class="reference internal" href="../reference/base.html#easyscience.Objects.Variable.Descriptor" title="easyscience.Objects.Variable.Descriptor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code></a>)</span>) – Dependent Parameter</p></li>
+<li><p><strong>func</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a></span>) – Function to be evaluated in the form <code class="docutils literal notranslate"><span class="pre">f(value,</span> <span class="pre">*args,</span> <span class="pre">**kwargs)</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Example<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">easyscience.fitting.Constraints</span> <span class="kn">import</span> <span class="n">FunctionalConstraint</span>
+<span class="kn">from</span> <span class="nn">easyscience.Objects.Base</span> <span class="kn">import</span> <span class="n">Parameter</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">constraint</span> <span class="o">=</span> <span class="n">FunctionalConstraint</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">)</span>
+
+<span class="n">a</span><span class="o">.</span><span class="n">user_constraints</span><span class="p">[</span><span class="s1">&#39;abs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">constraint</span>
+
+<span class="c1"># This triggers the constraint</span>
+<span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mf">0.85</span> <span class="c1"># `a` is set to 0.85</span>
+<span class="c1"># This triggers the constraint</span>
+<span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="c1"># `a` is set to 0.5</span>
+</pre></div>
+</div>
+<dl class="py property">
+<dt class="sig sig-object py" id="easyscience.fitting.Constraints.FunctionalConstraint.enabled">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyscience.fitting.Constraints.FunctionalConstraint.enabled" title="Link to this definition">#</a></dt>
+<dd><p>Is the current constraint enabled.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Logical answer to if the constraint is enabled.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="easyscience.fitting.Constraints.MultiObjConstraint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">easyscience.fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">MultiObjConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">independent_objs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyscience/fitting/Constraints.html#MultiObjConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyscience.fitting.Constraints.MultiObjConstraint" title="Link to this definition">#</a></dt>
+<dd><p>A <cite>MultiObjConstraint</cite> is similar to <code class="xref py py-class docutils literal notranslate"><span class="pre">EasyScience.fitting.Constraints.ObjConstraint</span></code> except that it relates
+to one or more independent objects.</p>
+<p>E.g.
+* a (Dependent Parameter) + b (Independent Parameter) = 1
+* a (Dependent Parameter) + b (Independent Parameter) - 2*c (Independent Parameter) = 0</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>independent_objs</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <a class="reference internal" href="../reference/base.html#easyscience.Objects.Variable.Descriptor" title="easyscience.Objects.Variable.Descriptor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code></a>)]</span>) – List of Independent Parameters</p></li>
+<li><p><strong>operator</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – List of operators operating on the Independent Parameters</p></li>
+<li><p><strong>dependent_obj</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <a class="reference internal" href="../reference/base.html#easyscience.Objects.Variable.Descriptor" title="easyscience.Objects.Variable.Descriptor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code></a>)</span>) – Dependent Parameter</p></li>
+<li><p><strong>value</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Number" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Number</span></code></a></span>) – Value of the expression</p></li>
+</ul>
+</dd>
+<dt class="field-even">Example<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+</dl>
+<p><strong>a + b = 1</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">easyscience.fitting.Constraints</span> <span class="kn">import</span> <span class="n">MultiObjConstraint</span>
+<span class="kn">from</span> <span class="nn">easyscience.Objects.Base</span> <span class="kn">import</span> <span class="n">Parameter</span>
+<span class="c1"># Create an `a + b = 1` constraint</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span>
+
+<span class="n">constraint</span> <span class="o">=</span> <span class="n">MultiObjConstraint</span><span class="p">([</span><span class="n">b</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;+&#39;</span><span class="p">],</span> <span class="n">a</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">b</span><span class="o">.</span><span class="n">user_constraints</span><span class="p">[</span><span class="s1">&#39;SET_A&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">constraint</span>
+<span class="n">b</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mf">0.4</span>
+<span class="c1"># This triggers the constraint</span>
+<span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="c1"># Should equal 0.6</span>
+</pre></div>
+</div>
+<p><strong>a + b - 2c = 0</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">easyscience.fitting.Constraints</span> <span class="kn">import</span> <span class="n">MultiObjConstraint</span>
+<span class="kn">from</span> <span class="nn">easyscience.Objects.Base</span> <span class="kn">import</span> <span class="n">Parameter</span>
+<span class="c1"># Create an `a + b - 2c = 0` constraint</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+
+<span class="n">constraint</span> <span class="o">=</span> <span class="n">MultiObjConstraint</span><span class="p">([</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;-2*&#39;</span><span class="p">],</span> <span class="n">a</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">b</span><span class="o">.</span><span class="n">user_constraints</span><span class="p">[</span><span class="s1">&#39;SET_A&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">constraint</span>
+<span class="n">c</span><span class="o">.</span><span class="n">user_constraints</span><span class="p">[</span><span class="s1">&#39;SET_A&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">constraint</span>
+<span class="n">b</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mf">0.4</span>
+<span class="c1"># This triggers the constraint. Or it could be triggered by changing the value of c</span>
+<span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="c1"># Should equal 0.2</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This constraint is evaluated as <code class="docutils literal notranslate"><span class="pre">dependent</span></code> = <code class="docutils literal notranslate"><span class="pre">value</span></code> - SUM(<code class="docutils literal notranslate"><span class="pre">operator_i</span></code> <code class="docutils literal notranslate"><span class="pre">independent_i</span></code>)</p>
+</div>
+<dl class="py property">
+<dt class="sig sig-object py" id="easyscience.fitting.Constraints.MultiObjConstraint.enabled">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyscience.fitting.Constraints.MultiObjConstraint.enabled" title="Link to this definition">#</a></dt>
+<dd><p>Is the current constraint enabled.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Logical answer to if the constraint is enabled.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="user-created-constraints">
+<h3>User created constraints<a class="headerlink" href="#user-created-constraints" title="Link to this heading">#</a></h3>
+<p>You can also make your own constraints by subclassing the <a class="reference internal" href="#easyscience.fitting.Constraints.ConstraintBase" title="easyscience.fitting.Constraints.ConstraintBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">easyscience.fitting.Constraints.ConstraintBase</span></code></a> class. For this at a minimum the abstract methods <code class="docutils literal notranslate"><span class="pre">_parse_operator</span></code> and <code class="docutils literal notranslate"><span class="pre">__repr__</span></code> need to be written.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="easyscience.fitting.Constraints.ConstraintBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">easyscience.fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">ConstraintBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">independent_obj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyscience/fitting/Constraints.html#ConstraintBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyscience.fitting.Constraints.ConstraintBase" title="Link to this definition">#</a></dt>
+<dd><p>A base class used to describe a constraint to be applied to EasyScience base objects.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="easyscience.fitting.Constraints.ConstraintBase.__repr__">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyscience/fitting/Constraints.html#ConstraintBase.__repr__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyscience.fitting.Constraints.ConstraintBase.__repr__" title="Link to this definition">#</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="easyscience.fitting.Constraints.ConstraintBase._parse_operator">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_parse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyscience/fitting/Constraints.html#ConstraintBase._parse_operator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyscience.fitting.Constraints.ConstraintBase._parse_operator" title="Link to this definition">#</a></dt>
+<dd><p>Abstract method which contains the constraint logic</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <a class="reference internal" href="../reference/base.html#easyscience.Objects.Variable.Descriptor" title="easyscience.Objects.Variable.Descriptor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code></a>)</span>) – The object/objects which the constraint will use</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Number" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Number</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A numeric result of the constraint logic</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="easyscience.fitting.Constraints.ConstraintBase.enabled">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyscience.fitting.Constraints.ConstraintBase.enabled" title="Link to this definition">#</a></dt>
+<dd><p>Is the current constraint enabled.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Logical answer to if the constraint is enabled.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="easyscience.fitting.Constraints.ConstraintBase.get_obj">
+<span class="sig-name descname"><span class="pre">get_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyscience/fitting/Constraints.html#ConstraintBase.get_obj"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyscience.fitting.Constraints.ConstraintBase.get_obj" title="Link to this definition">#</a></dt>
+<dd><p>Get an EasyScience object from its unique key</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – an EasyScience objects unique key</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <a class="reference internal" href="../reference/base.html#easyscience.Objects.Variable.Descriptor" title="easyscience.Objects.Variable.Descriptor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code></a>)</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>EasyScience object</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="introduction.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Fitting in EasyScience</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../base_examples/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Subclassing Examples</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#anatomy-of-a-constraint">Anatomy of a constraint</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#constraints-on-parameters">Constraints on Parameters</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#constraints-on-fitting">Constraints on Fitting</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-constraints">Using constraints</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#constraint-reference">Constraint Reference</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#built-in-constraints">Built-in constraints</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.SelfConstraint"><code class="docutils literal notranslate"><span class="pre">SelfConstraint</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.SelfConstraint.enabled"><code class="docutils literal notranslate"><span class="pre">SelfConstraint.enabled</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.NumericConstraint"><code class="docutils literal notranslate"><span class="pre">NumericConstraint</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.NumericConstraint.enabled"><code class="docutils literal notranslate"><span class="pre">NumericConstraint.enabled</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.ObjConstraint"><code class="docutils literal notranslate"><span class="pre">ObjConstraint</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.ObjConstraint.enabled"><code class="docutils literal notranslate"><span class="pre">ObjConstraint.enabled</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.FunctionalConstraint"><code class="docutils literal notranslate"><span class="pre">FunctionalConstraint</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.FunctionalConstraint.enabled"><code class="docutils literal notranslate"><span class="pre">FunctionalConstraint.enabled</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.MultiObjConstraint"><code class="docutils literal notranslate"><span class="pre">MultiObjConstraint</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.MultiObjConstraint.enabled"><code class="docutils literal notranslate"><span class="pre">MultiObjConstraint.enabled</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#user-created-constraints">User created constraints</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.ConstraintBase"><code class="docutils literal notranslate"><span class="pre">ConstraintBase</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.ConstraintBase.__repr__"><code class="docutils literal notranslate"><span class="pre">ConstraintBase.__repr__()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.ConstraintBase._parse_operator"><code class="docutils literal notranslate"><span class="pre">ConstraintBase._parse_operator()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.ConstraintBase.enabled"><code class="docutils literal notranslate"><span class="pre">ConstraintBase.enabled</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#easyscience.fitting.Constraints.ConstraintBase.get_obj"><code class="docutils literal notranslate"><span class="pre">ConstraintBase.get_obj()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By EasyScience Contributors
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, EasyScience Contributors.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

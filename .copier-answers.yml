@@ -1,0 +1,12 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: 1b51781
+_src_path: gh:/EasyScience/EasyProjectTemplate
+description: Core foundation of the EasyScience family of projects, providing the
+    building blocks for libraries and applications
+max_python: '3.12'
+min_python: '3.8'
+orgname: EasyScience
+packagename: easyscience
+prettyname: Easyscience
+projectname: EasyScience
+year: 2024
