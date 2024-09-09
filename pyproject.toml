@@ -55,9 +55,9 @@ docs = [
     "doc8",
     "readme-renderer",
 #    "Sphinx",
-    "sphinx-rtd-theme",
-    "sphinx-autodoc-typehints", 
-    "sphinx-gallery",
+    "sphinx_rtd_theme",
+    "sphinx_autodoc_typehints", 
+    "sphinx_gallery",
     "toml"
 ]
 
