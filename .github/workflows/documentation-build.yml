@@ -29,9 +29,9 @@ jobs:
     - name: Upgrade pip
       run: |
         python -m pip install --upgrade pip
-    - name: Force upgrade of sphinx-rtd-theme to build documentation, not compatible with docutils 0.20.1
-      run: |
-        pip install --upgrade --force-reinstall sphinx-rtd-theme
+#    - name: Force upgrade of sphinx-rtd-theme to build documentation, not compatible with docutils 0.20.1
+#      run: |
+#        pip install --upgrade --force-reinstall sphinx-rtd-theme
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -49,5 +49,4 @@ jobs:
       uses: ad-m/github-push-action@master
       continue-on-error: true
       with:
-        github_token: ${{ secrets.CORE_TOKEN }}
         branch: gh-pages
