@@ -20,6 +20,7 @@ import numpy as np
 # from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.Variable import Parameter
 
+from ..available_minimizers import AvailableMinimizers
 from ..Constraints import ObjConstraint
 from .utils import FitError
 from .utils import FitResults
@@ -38,13 +39,14 @@ class MinimizerBase(metaclass=ABCMeta):
         self,
         obj,  #: BaseObj,
         fit_function: Callable,
-        method: Optional[str] = None,
+        minimizer_enum: Optional[AvailableMinimizers] = None,
     ):  # todo after constraint changes, add type hint: obj: BaseObj  # noqa: E501
-        if method not in self.supported_methods():
-            raise FitError(f'Method {method} not available in {self.__class__}')
+        if minimizer_enum.method not in self.supported_methods():
+            raise FitError(f'Method {minimizer_enum.method} not available in {self.__class__}')
         self._object = obj
         self._original_fit_function = fit_function
-        self._method = method
+        self._minimizer_enum = minimizer_enum
+        self._method = minimizer_enum.method
         self._cached_pars: Dict[str, Parameter] = {}
         self._cached_pars_vals: Dict[str, Tuple[float]] = {}
         self._cached_model = None

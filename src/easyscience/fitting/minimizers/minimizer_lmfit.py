@@ -17,6 +17,7 @@ from lmfit.model import ModelResult
 # from easyscience.Objects.ObjectClasses import BaseObj
 from easyscience.Objects.Variable import Parameter
 
+from ..available_minimizers import AvailableMinimizers
 from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
 from .minimizer_base import MinimizerBase
 from .utils import FitError
@@ -35,7 +36,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         self,
         obj,  #: BaseObj,
         fit_function: Callable,
-        method: Optional[str] = None,
+        minimizer_enum: Optional[AvailableMinimizers] = None,
     ):  # todo after constraint changes, add type hint: obj: BaseObj  # noqa: E501
         """
         Initialize the minimizer with the `BaseObj` and the `fit_function` to be used.
@@ -47,7 +48,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         :param method: Method to be used by the minimizer
         :type method: str
         """
-        super().__init__(obj=obj, fit_function=fit_function, method=method)
+        super().__init__(obj=obj, fit_function=fit_function, minimizer_enum=minimizer_enum)
 
     @staticmethod
     def all_methods() -> List[str]:

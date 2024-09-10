@@ -1,6 +1,6 @@
 import warnings
+from dataclasses import dataclass
 from enum import Enum
-from enum import auto
 
 import pkg_resources
 
@@ -32,24 +32,31 @@ else:
     warnings.warn('DFO minimization is not available. Probably dfols has not been installed.', ImportWarning, stacklevel=2)
 
 
-class AvailableMinimizers(Enum):
+@dataclass
+class AvailableMinimizer:
+    package: str
+    method: str
+    enmu_id: int
+
+
+class AvailableMinimizers(AvailableMinimizer, Enum):
     if lmfit_engine_available:
-        LMFit = auto()
-        LMFit_leastsq = auto()
-        LMFit_powell = auto()
-        LMFit_cobyla = auto()
-        LMFit_differential_evolution = auto()
-        LMFit_scipy_least_squares = auto()
+        LMFit = 'lm', 'leastsq', 11
+        LMFit_leastsq = 'lm', 'leastsq', 12
+        LMFit_powell = 'lm', 'powell', 13
+        LMFit_cobyla = 'lm', 'cobyla', 14
+        LMFit_differential_evolution = 'lm', 'differential_evolution', 15
+        LMFit_scipy_least_squares = 'lm', 'least_squares', 16
 
     if bumps_engine_available:
-        Bumps = auto()
-        Bumps_simplex = auto()
-        Bumps_newton = auto()
-        Bumps_lm = auto()
+        Bumps = 'bumps', 'amoeba', 21
+        Bumps_simplex = 'bumps', 'amoeba', 22
+        Bumps_newton = 'bumps', 'newton', 23
+        Bumps_lm = 'bumps', 'lm', 24
 
     if dfo_engine_available:
-        DFO = auto()
-        DFO_leastsq = auto()
+        DFO = 'dfo', 'leastsq', 31
+        DFO_leastsq = 'dfo', 'leastsq', 32
 
 
 # Temporary solution to convert string to enum
