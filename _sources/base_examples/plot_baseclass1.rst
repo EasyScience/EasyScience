@@ -190,7 +190,7 @@ embedded rST text block:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 1.184 seconds)
+   **Total running time of the script:** (0 minutes 1.011 seconds)
 
 
 .. _sphx_glr_download_base_examples_plot_baseclass1.py:
