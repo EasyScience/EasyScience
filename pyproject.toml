@@ -61,8 +61,8 @@ docs = [
 ]
 
 [project.urls]
-homepage = "https://docs.easyscience.org"
-documentation = "https://docs.easyscience.org"
+homepage = "https://github.com/EasyScience/EasyScience"
+documentation = "https://easyscience.github.io/EasyScience/"
 
 [tool.hatch.version]
 path = "src/easyscience/__version__.py"
