@@ -57,6 +57,10 @@ class MinimizerBase(metaclass=ABCMeta):
     def all_constraints(self) -> List[ObjConstraint]:
         return [*self._constraints, *self._object._constraints]
 
+    @property
+    def name(self) -> str:
+        return self._minimizer_enum.name
+
     def fit_constraints(self) -> List[ObjConstraint]:
         return self._constraints
 
