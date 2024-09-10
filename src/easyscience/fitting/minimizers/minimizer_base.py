@@ -33,7 +33,7 @@ class MinimizerBase(metaclass=ABCMeta):
     This template class is the basis for all minimizer engines in `EasyScience`.
     """
 
-    wrapping: str = None
+    package: str = None
 
     def __init__(
         self,

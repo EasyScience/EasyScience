@@ -30,7 +30,7 @@ class LMFit(MinimizerBase):  # noqa: S101
     It allows for the lmfit fitting engine to use parameters declared in an `EasyScience.Objects.Base.BaseObj`.
     """
 
-    wrapping = 'lmfit'
+    package = 'lmfit'
 
     def __init__(
         self,

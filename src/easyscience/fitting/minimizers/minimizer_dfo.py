@@ -26,7 +26,7 @@ class DFO(MinimizerBase):
     This is a wrapper to Derivative Free Optimisation for Least Square: https://numericalalgorithmsgroup.github.io/dfols/
     """
 
-    wrapping = 'dfo'
+    package = 'dfo'
 
     def __init__(
         self,

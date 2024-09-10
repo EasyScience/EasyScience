@@ -22,7 +22,7 @@ class TestDFOFit():
 
     def test_init(self, minimizer: DFO) -> None:
         assert minimizer._p_0 == {}
-        assert minimizer.wrapping == 'dfo'
+        assert minimizer.package == 'dfo'
 
     def test_init_exception(self) -> None:
         with pytest.raises(FitError):

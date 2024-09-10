@@ -20,7 +20,7 @@ class TestLMFit():
         return minimizer
 
     def test_init(self, minimizer: LMFit) -> None:
-        assert minimizer.wrapping == 'lmfit'
+        assert minimizer.package == 'lmfit'
 
     def test_init_exception(self) -> None:
         with pytest.raises(FitError):

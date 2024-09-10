@@ -21,7 +21,7 @@ class TestBumpsFit():
 
     def test_init(self, minimizer: Bumps) -> None:
         assert minimizer._p_0 == {}
-        assert minimizer.wrapping == 'bumps'
+        assert minimizer.package == 'bumps'
 
     def test_init_exception(self) -> None:
         with pytest.raises(FitError):

@@ -35,7 +35,7 @@ class Bumps(MinimizerBase):
     It allows for the Bumps fitting engine to use parameters declared in an `EasyScience.Objects.Base.BaseObj`.
     """
 
-    wrapping = 'bumps'
+    package = 'bumps'
 
     def __init__(
         self,
