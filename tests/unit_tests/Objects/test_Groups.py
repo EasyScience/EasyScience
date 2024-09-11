@@ -12,28 +12,28 @@ import pytest
 import easyscience
 from easyscience.Objects.Groups import BaseCollection
 from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.ObjectClasses import Descriptor
-from easyscience.Objects.ObjectClasses import Parameter
+from easyscience.Objects.new_variable import DescriptorNumber
+from easyscience.Objects.new_variable import Parameter
 from easyscience import global_object
 
 test_dict = {
     "@module": "easyscience.Objects.Groups",
     "@class": "BaseCollection",
-    "@version": "0.1.0",
+    "@version": easyscience.__version__,
     "name": "testing",
     "data": [
         {
-            "@module": Descriptor.__module__,
-            "@class": Descriptor.__name__,
+            "@module": DescriptorNumber.__module__,
+            "@class": DescriptorNumber.__name__,
             "@version": easyscience.__version__,
             "name": "par1",
-            "value": 1,
-            "units": "dimensionless",
+            "value": 1.0,
+            "unit": "dimensionless",
+            "variance": None,
             "unique_name": "BaseCollection_0",
             "description": "",
             "url": "",
             "display_name": "par1",
-            "enabled": True,
         }
     ],
 }
@@ -51,9 +51,9 @@ def setup_pars():
     d = {
         "name": "test",
         "par1": Parameter("p1", 0.1, fixed=True),
-        "des1": Descriptor("d1", 0.1),
+        "des1": DescriptorNumber("d1", 0.1),
         "par2": Parameter("p2", 0.1),
-        "des2": Descriptor("d2", 0.1),
+        "des2": DescriptorNumber("d2", 0.1),
         "par3": Parameter("p3", 0.1),
     }
     return d
@@ -114,7 +114,7 @@ def test_baseCollection_create_fail(cls, setup_pars, value):
 def test_baseCollection_create_fail2(cls, setup_pars, key):
     name = setup_pars["name"]
     del setup_pars["name"]
-    setup_pars[key] = Descriptor("fail_name", 0)
+    setup_pars[key] = DescriptorNumber("fail_name", 0)
 
     with pytest.raises(AttributeError):
         coll = cls(name, **setup_pars)
@@ -299,7 +299,7 @@ def test_baseCollection_get_fit_parameters_nested(cls, setup_pars):
 @pytest.mark.parametrize("cls", class_constructors)
 def test_baseCollection_dir(cls):
     name = "testing"
-    kwargs = {"p1": Descriptor("par1", 1)}
+    kwargs = {"p1": DescriptorNumber("par1", 1)}
     obj = cls(name, **kwargs)
     d = set(dir(obj))
 
@@ -338,17 +338,13 @@ def test_baseCollection_dir(cls):
 @pytest.mark.parametrize("cls", class_constructors)
 def test_baseCollection_as_dict(cls):
     name = "testing"
-    kwargs = {"p1": Descriptor("par1", 1)}
+    kwargs = {"p1": DescriptorNumber("par1", 1)}
     obj = cls(name, **kwargs)
     d = obj.as_dict()
 
     def check_dict(dict_1: dict, dict_2: dict):
         keys_1 = list(dict_1.keys())
         keys_2 = list(dict_2.keys())
-        if "@id" in keys_1:
-            del keys_1[keys_1.index("@id")]
-        if "@id" in keys_2:
-            del keys_2[keys_2.index("@id")]
         if "unique_name" in keys_1:
             del keys_1[keys_1.index("unique_name")]
         if "unique_name" in keys_2:
@@ -364,6 +360,8 @@ def test_baseCollection_as_dict(cls):
                     testit(v1, v2)
             else:
                 if isinstance(item1, str) and isinstance(item2, str):
+                    assert item1 == item2
+                elif isinstance(item1, float) and isinstance(item2, float):
                     assert item1 == item2
                 else:
                     assert item1 is item2
@@ -384,7 +382,7 @@ def test_baseCollection_as_dict(cls):
 @pytest.mark.parametrize("cls", class_constructors)
 def test_baseCollection_from_dict(cls):
     name = "testing"
-    kwargs = {"p1": Descriptor("par1", 1)}
+    kwargs = {"p1": DescriptorNumber("par1", 1)}
     expected = cls.from_dict(test_dict)
     ref = cls(name, **kwargs)
 
@@ -453,7 +451,7 @@ def test_baseCollection_iterator_dict(cls):
     obj2 = cls.from_dict(d)
 
     for index, item in enumerate(obj2):
-        assert item.raw_value == l_object[index].raw_value
+        assert item.value == l_object[index].value
 
 
 @pytest.mark.parametrize("cls", class_constructors)
@@ -528,7 +526,7 @@ def test_baseCollection_sort(cls):
     v = [1, 4, 3, 2, 5]
     expected = [1, 2, 3, 4, 5]
     d = cls(name, *[Parameter(f"p{i}", v[i]) for i in range(len(v))])
-    d.sort(lambda x: x.raw_value)
+    d.sort(lambda x: x.value)
     for i, item in enumerate(d):
         assert item.value == expected[i]
 
@@ -540,9 +538,9 @@ def test_baseCollection_sort_reverse(cls):
     expected = [1, 2, 3, 4, 5]
     expected.reverse()
     d = cls(name, *[Parameter(f"p{i}", v[i]) for i in range(len(v))])
-    d.sort(lambda x: x.raw_value, reverse=True)
+    d.sort(lambda x: x.value, reverse=True)
     for i, item in enumerate(d):
-        assert item.raw_value == expected[i]
+        assert item.value == expected[i]
 
 
 class Beta(BaseObj):

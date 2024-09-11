@@ -18,6 +18,7 @@ from typing import Tuple
 from typing import Union
 
 from easyscience.global_object.undo_redo import NotarizedDict
+from easyscience.Objects.new_variable.descriptor_base import DescriptorBase
 from easyscience.Objects.ObjectClasses import BasedBase
 from easyscience.Objects.ObjectClasses import Descriptor
 
@@ -40,6 +41,7 @@ class BaseCollection(BasedBase, MutableSequence):
         name: str,
         *args: Union[B, V],
         interface: Optional[iF] = None,
+        unique_name: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -51,7 +53,7 @@ class BaseCollection(BasedBase, MutableSequence):
         :param _kwargs: Fields which this class should contain
         :type _kwargs: dict
         """
-        BasedBase.__init__(self, name)
+        BasedBase.__init__(self, name, unique_name=unique_name)
         kwargs = {key: kwargs[key] for key in kwargs.keys() if kwargs[key] is not None}
         _args = []
         for item in args:
@@ -67,7 +69,7 @@ class BaseCollection(BasedBase, MutableSequence):
                 _kwargs[key] = item
         kwargs = _kwargs
         for item in list(kwargs.values()) + _args:
-            if not issubclass(type(item), (Descriptor, BasedBase)):
+            if not issubclass(type(item), (Descriptor, DescriptorBase, BasedBase)):
                 raise AttributeError('A collection can only be formed from easyscience objects.')
         args = _args
         _kwargs = {}
@@ -104,7 +106,7 @@ class BaseCollection(BasedBase, MutableSequence):
         :rtype: None
         """
         t_ = type(value)
-        if issubclass(t_, (BasedBase, Descriptor)):
+        if issubclass(t_, (BasedBase, Descriptor, DescriptorBase)):
             update_key = list(self._kwargs.keys())
             values = list(self._kwargs.values())
             # Update the internal dict
@@ -165,7 +167,7 @@ class BaseCollection(BasedBase, MutableSequence):
         if isinstance(value, Number):  # noqa: S3827
             item = self.__getitem__(key)
             item.value = value
-        elif issubclass(type(value), BasedBase) or issubclass(type(value), Descriptor):
+        elif issubclass(type(value), (BasedBase, Descriptor, DescriptorBase)):
             update_key = list(self._kwargs.keys())
             values = list(self._kwargs.values())
             old_item = values[key]
