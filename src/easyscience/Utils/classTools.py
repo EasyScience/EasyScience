@@ -68,5 +68,5 @@ def generatePath(model_obj: B, skip_first: bool = False) -> Tuple[List[int], Lis
         objs = [getattr(global_object.map.get_item_by_key(r), 'name') for r in route]
         objs.reverse()
         names.append('.'.join(objs[start_idx:]))
-        ids.append(elem.int)
+        ids.append(elem)
     return ids, names
