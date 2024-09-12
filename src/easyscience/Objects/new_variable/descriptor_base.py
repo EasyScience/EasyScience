@@ -205,7 +205,6 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
 
     def __copy__(self) -> DescriptorBase:
         """Return a copy of the object."""
-        temp = self.as_dict()
-        temp['unique_name'] = None
+        temp = self.as_dict(skip=['unique_name'])
         new_obj = self.__class__.from_dict(temp)
         return new_obj
