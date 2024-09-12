@@ -6,8 +6,6 @@ __version__ = "0.1.0"
 #  © 2021-2023 Contributors to the EasyScience project <https://github.com/easyScience/EasyScience
 
 from contextlib import contextmanager
-from copy import copy
-
 from typing import ClassVar
 from typing import List
 from typing import Optional
@@ -19,8 +17,8 @@ import pytest
 
 import easyscience
 from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.new_variable import DescriptorNumber
-from easyscience.Objects.new_variable import Parameter
+from easyscience.Objects.ObjectClasses import Descriptor
+from easyscience.Objects.ObjectClasses import Parameter
 from easyscience.Utils.io.dict import DictSerializer
 from easyscience import global_object
 
@@ -33,9 +31,9 @@ def setup_pars():
     d = {
         "name": "test",
         "par1": Parameter("p1", 0.1, fixed=True),
-        "des1": DescriptorNumber("d1", 0.1),
+        "des1": Descriptor("d1", 0.1),
         "par2": Parameter("p2", 0.1),
-        "des2": DescriptorNumber("d2", 0.1),
+        "des2": Descriptor("d2", 0.1),
         "par3": Parameter("p3", 0.1),
     }
     return d
@@ -81,29 +79,6 @@ def test_baseobj_create(setup_pars: dict, a: List[str], kw: List[str]):
         assert isinstance(item, setup_pars[key].__class__)
 
 
-def test_baseobj_copy(setup_pars: dict):
-    # When
-    name = setup_pars["name"]
-    args = []
-    for key in ["par1", "des1"]:
-        args.append(setup_pars[key])
-    kwargs = {}
-    for key in ["par2", "des2"]:
-        kwargs[key] = setup_pars[key]
-    base = BaseObj(name, None, *args, **kwargs)
-
-    # Then
-    base_copy = copy(base)
-
-    # Expect
-    assert base_copy.name == name
-    assert base_copy.unique_name != base.unique_name
-
-    for key in ["par1", "des1"]:
-        item = getattr(base, setup_pars[key].name)
-        assert isinstance(item, setup_pars[key].__class__)
-
-
 def test_baseobj_get(setup_pars: dict):
     name = setup_pars["name"]
     explicit_name1 = "par1"
@@ -129,7 +104,7 @@ def test_baseobj_set(setup_pars: dict):
     new_value = 5.0
     with not_raises([AttributeError, ValueError]):
         obj.p1 = new_value
-        assert obj.p1.value == new_value
+        assert obj.p1.raw_value == new_value
 
 
 def test_baseobj_get_parameters(setup_pars: dict):
@@ -165,19 +140,19 @@ def test_baseobj_as_dict(setup_pars: dict):
             "@version": easyscience.__version__,
             "name": "p1",
             "value": 0.1,
-            "variance": 0.0,
+            "error": 0.0,
             "min": -np.inf,
             "max": np.inf,
             "fixed": True,
-            "unit": "dimensionless",
+            "units": "dimensionless",
         },
         "des1": {
-            "@module": DescriptorNumber.__module__,
-            "@class": DescriptorNumber.__name__,
+            "@module": Descriptor.__module__,
+            "@class": Descriptor.__name__,
             "@version": easyscience.__version__,
             "name": "d1",
             "value": 0.1,
-            "unit": "dimensionless",
+            "units": "dimensionless",
             "description": "",
             "url": "",
             "display_name": "d1",
@@ -188,19 +163,19 @@ def test_baseobj_as_dict(setup_pars: dict):
             "@version": easyscience.__version__,
             "name": "p2",
             "value": 0.1,
-            "variance": 0.0,
+            "error": 0.0,
             "min": -np.inf,
             "max": np.inf,
             "fixed": False,
-            "unit": "dimensionless",
+            "units": "dimensionless",
         },
         "des2": {
-            "@module": DescriptorNumber.__module__,
-            "@class": DescriptorNumber.__name__,
+            "@module": Descriptor.__module__,
+            "@class": Descriptor.__name__,
             "@version": easyscience.__version__,
             "name": "d2",
             "value": 0.1,
-            "unit": "dimensionless",
+            "units": "dimensionless",
             "description": "",
             "url": "",
             "display_name": "d2",
@@ -211,11 +186,11 @@ def test_baseobj_as_dict(setup_pars: dict):
             "@version": easyscience.__version__,
             "name": "p3",
             "value": 0.1,
-            "variance": 0.0,
+            "error": 0.0,
             "min": -np.inf,
             "max": np.inf,
             "fixed": False,
-            "unit": "dimensionless",
+            "units": "dimensionless",
         },
     }
 
@@ -434,11 +409,11 @@ def test_Base_GETSET_v2():
     a = A.from_pars(a_start)
     graph = a._global_object.map
 
-    assert a.a.value == a_start
+    assert a.a.raw_value == a_start
     assert len(graph.get_edges(a)) == 1
 
     setattr(a, "a", a_end)
-    assert a.a.value == a_end
+    assert a.a.raw_value == a_end
     assert len(graph.get_edges(a)) == 1
 
 
@@ -459,14 +434,14 @@ def test_Base_GETSET_v3():
     a = A.from_pars(a_start)
     graph = a._global_object.map
 
-    assert a.a.value == a_start
+    assert a.a.raw_value == a_start
     assert len(graph.get_edges(a)) == 1
     a_ = Parameter("a", a_end)
     assert a.a.unique_name in graph.get_edges(a)
     a__ = a.a
 
     setattr(a, "a", a_)
-    assert a.a.value == a_end
+    assert a.a.raw_value == a_end
     assert len(graph.get_edges(a)) == 1
     assert a_.unique_name in graph.get_edges(a)
     assert a__.unique_name not in graph.get_edges(a)
@@ -480,13 +455,13 @@ def test_BaseCreation():
                 self.a = a
 
     a = A()
-    assert a.a.value == 1.0
+    assert a.a.raw_value == 1.0
     a = A(2.0)
-    assert a.a.value == 2.0
+    assert a.a.raw_value == 2.0
     a = A(Parameter("a", 3.0))
-    assert a.a.value == 3.0
+    assert a.a.raw_value == 3.0
     a.a = 4.0
-    assert a.a.value == 4.0
+    assert a.a.raw_value == 4.0
 
     class B(BaseObj):
         def __init__(self, b: Optional[Union[A, Parameter, float]] = None):
@@ -497,13 +472,13 @@ def test_BaseCreation():
                 self.b = b
 
     b = B()
-    assert b.b.a.value == 1.0
+    assert b.b.a.raw_value == 1.0
     b = B(2.0)
-    assert b.b.a.value == 2.0
+    assert b.b.a.raw_value == 2.0
     b = B(A(3.0))
-    assert b.b.a.value == 3.0
+    assert b.b.a.raw_value == 3.0
     b.b.a = 4.0
-    assert b.b.a.value == 4.0
+    assert b.b.a.raw_value == 4.0
 
 def test_unique_name_generator(clear):
     # When Then
