@@ -69,7 +69,7 @@ class BaseCollection(BasedBase, MutableSequence):
                 _kwargs[key] = item
         kwargs = _kwargs
         for item in list(kwargs.values()) + _args:
-            if item and not issubclass(type(item), (Descriptor, DescriptorBase, BasedBase)):
+            if not issubclass(type(item), (Descriptor, DescriptorBase, BasedBase)):
                 raise AttributeError('A collection can only be formed from easyscience objects.')
         args = _args
         _kwargs = {}

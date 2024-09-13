@@ -36,7 +36,7 @@ else:
 class AvailableMinimizer:
     package: str
     method: str
-    enmu_id: int
+    enum_id: int
 
 
 class AvailableMinimizers(AvailableMinimizer, Enum):
