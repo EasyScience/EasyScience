@@ -69,7 +69,7 @@ class BaseCollection(BasedBase, MutableSequence):
                 _kwargs[key] = item
         kwargs = _kwargs
         for item in list(kwargs.values()) + _args:
-            if not issubclass(type(item), (Descriptor, DescriptorBase, BasedBase)):
+            if item and not issubclass(type(item), (Descriptor, DescriptorBase, BasedBase)):
                 raise AttributeError('A collection can only be formed from easyscience objects.')
         args = _args
         _kwargs = {}
@@ -85,10 +85,11 @@ class BaseCollection(BasedBase, MutableSequence):
         for key in kwargs.keys():
             if key in self.__dict__.keys() or key in self.__slots__:
                 raise AttributeError(f'Given kwarg: `{key}`, is an internal attribute. Please rename.')
-            self._global_object.map.add_edge(self, kwargs[key])
-            self._global_object.map.reset_type(kwargs[key], 'created_internal')
-            if interface is not None:
-                kwargs[key].interface = interface
+            if kwargs[key]:  # Might be an empty tuple
+                self._global_object.map.add_edge(self, kwargs[key])
+                self._global_object.map.reset_type(kwargs[key], 'created_internal')
+                if interface is not None:
+                    kwargs[key].interface = interface
             # TODO wrap getter and setter in Logger
         if interface is not None:
             self.interface = interface
