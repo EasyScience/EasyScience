@@ -103,7 +103,7 @@ class DescriptorNumber(DescriptorBase):
     def full_value(self, full_value: Variable) -> None:
         raise AttributeError(
             f'Full_value is read-only. Change the value and variance seperately. Or create a new {self.__class__.__name__}.'
-        )  # noqa: E501
+        )
 
     @property
     def value(self) -> numbers.Number:

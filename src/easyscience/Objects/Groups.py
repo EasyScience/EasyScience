@@ -85,7 +85,7 @@ class BaseCollection(BasedBase, MutableSequence):
         for key in kwargs.keys():
             if key in self.__dict__.keys() or key in self.__slots__:
                 raise AttributeError(f'Given kwarg: `{key}`, is an internal attribute. Please rename.')
-            if kwargs[key]:  # Might be an empty tuple
+            if kwargs[key]:  # Might be None (empty tuple or list)
                 self._global_object.map.add_edge(self, kwargs[key])
                 self._global_object.map.reset_type(kwargs[key], 'created_internal')
                 if interface is not None:
