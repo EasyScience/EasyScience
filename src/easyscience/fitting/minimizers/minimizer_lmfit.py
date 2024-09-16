@@ -12,6 +12,7 @@ from lmfit import Model as LMModel
 from lmfit import Parameter as LMParameter
 from lmfit import Parameters as LMParameters
 from lmfit.model import ModelResult
+from lmfit import report_fit
 
 # causes circular import when Parameter is imported
 # from easyscience.Objects.ObjectClasses import BaseObj
@@ -135,6 +136,8 @@ class LMFit(MinimizerBase):  # noqa: S101
                 model = self._make_model()
 
             model_results = model.fit(y, x=x, weights=weights, **method_dict, **minimizer_kwargs, **kwargs)
+            report_fit(model_results)
+
             self._set_parameter_fit_result(model_results, stack_status)
             results = self._gen_fit_results(model_results)
         except Exception as e:
