@@ -27,7 +27,7 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
     # Used by serializer
     _REDIRECT = {'parent': None}
 
-    _global_object = global_object
+    #    _global_object = global_object
 
     def __init__(
         self,
@@ -55,7 +55,7 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
         """
 
         if unique_name is None:
-            unique_name = self._global_object.generate_unique_name(self.__class__.__name__)
+            unique_name = global_object.generate_unique_name(self.__class__.__name__)
         self._unique_name = unique_name
 
         if not isinstance(name, str):
@@ -80,10 +80,10 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
 
         # Let the collective know we've been assimilated
         self._parent = parent
-        self._global_object.map.add_vertex(self, obj_type='created')
+        global_object.map.add_vertex(self, obj_type='created')
         # Make the connection between self and parent
         if parent is not None:
-            self._global_object.map.add_edge(parent, self)
+            global_object.map.add_edge(parent, self)
 
     @property
     def name(self) -> str:
@@ -187,7 +187,7 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
         if not isinstance(new_unique_name, str):
             raise TypeError('Unique name has to be a string.')
         self._unique_name = new_unique_name
-        self._global_object.map.add_vertex(self)
+        global_object.map.add_vertex(self)
 
     @property
     @abc.abstractmethod

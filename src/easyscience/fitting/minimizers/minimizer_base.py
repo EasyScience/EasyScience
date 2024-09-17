@@ -16,12 +16,13 @@ from typing import Union
 
 import numpy as np
 
+from easyscience.Constraints import ObjConstraint
+
 # causes circular import when Parameter is imported
 # from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.Variable import Parameter
+from easyscience.Objects.new_variable import Parameter
 
 from ..available_minimizers import AvailableMinimizers
-from ..Constraints import ObjConstraint
 from .utils import FitError
 from .utils import FitResults
 
@@ -184,14 +185,11 @@ class MinimizerBase(metaclass=ABCMeta):
         """
         pars = self._cached_pars
 
-        # TODO clean when full move to new_variable
-        from easyscience.Objects.new_variable import Parameter as NewParameter
-
         for name, item in pars.items():
             parameter_name = MINIMIZER_PARAMETER_PREFIX + str(name)
             if parameter_name not in parameters.keys():
                 # TODO clean when full move to new_variable
-                if isinstance(item, NewParameter):
+                if isinstance(item, Parameter):
                     parameters[parameter_name] = item.value
                 else:
                     parameters[parameter_name] = item.raw_value
@@ -227,8 +225,6 @@ class MinimizerBase(metaclass=ABCMeta):
             """
             # Update the `Parameter` values and the callback if needed
             # TODO THIS IS NOT THREAD SAFE :-(
-            # TODO clean when full move to new_variable
-            from easyscience.Objects.new_variable import Parameter
 
             for name, value in kwargs.items():
                 par_name = name[1:]
@@ -265,12 +261,9 @@ class MinimizerBase(metaclass=ABCMeta):
         wrapped_parameters = []
         wrapped_parameters.append(InspectParameter('x', InspectParameter.POSITIONAL_OR_KEYWORD, annotation=_empty))
 
-        ## TODO clean when full move to new_variable
-        from easyscience.Objects.new_variable import Parameter as NewParameter
-
         for name, parameter in parameters.items():
             ## TODO clean when full move to new_variable
-            if isinstance(parameter, NewParameter):
+            if isinstance(parameter, Parameter):
                 default_value = parameter.value
             else:
                 default_value = parameter.raw_value

@@ -16,7 +16,7 @@ from bumps.parameter import Parameter as BumpsParameter
 
 # causes circular import when Parameter is imported
 # from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.Variable import Parameter
+from easyscience.Objects.new_variable import Parameter
 
 from ..available_minimizers import AvailableMinimizers
 from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
@@ -117,8 +117,6 @@ class Bumps(MinimizerBase):
         self._cached_model = model
 
         ## TODO clean when full move to new_variable
-        from easyscience.Objects.new_variable import Parameter
-
         if isinstance(self._cached_pars[list(self._cached_pars.keys())[0]], Parameter):
             self._p_0 = {f'p{key}': self._cached_pars[key].value for key in self._cached_pars.keys()}
         else:
@@ -167,8 +165,6 @@ class Bumps(MinimizerBase):
         """
 
         ## TODO clean when full move to new_variable
-        from easyscience.Objects.new_variable import Parameter
-
         if isinstance(obj, Parameter):
             value = obj.value
         else:
@@ -252,8 +248,6 @@ class Bumps(MinimizerBase):
             dict_name = name[len(MINIMIZER_PARAMETER_PREFIX) :]
 
             ## TODO clean when full move to new_variable
-            from easyscience.Objects.new_variable import Parameter
-
             if isinstance(pars[dict_name], Parameter):
                 item[name] = pars[dict_name].value
             else:

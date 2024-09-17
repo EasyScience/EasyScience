@@ -28,7 +28,7 @@ from .Variable import Descriptor
 from .Variable import Parameter
 
 if TYPE_CHECKING:
-    from easyscience.fitting.Constraints import C
+    from easyscience.Constraints import C
     from easyscience.Objects.Inferface import iF
     from easyscience.Objects.Variable import V
 

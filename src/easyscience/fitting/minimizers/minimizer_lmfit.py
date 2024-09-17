@@ -15,7 +15,7 @@ from lmfit.model import ModelResult
 
 # causes circular import when Parameter is imported
 # from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.Variable import Parameter
+from easyscience.Objects.new_variable import Parameter
 
 from ..available_minimizers import AvailableMinimizers
 from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
@@ -165,9 +165,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         :rtype: LMParameter
         """
         ## TODO clean when full move to
-        from easyscience.Objects.new_variable import Parameter as NewParameter
-
-        if isinstance(parameter, NewParameter):
+        if isinstance(parameter, Parameter):
             value = parameter.value
         else:
             value = parameter.raw_value
@@ -208,8 +206,6 @@ class LMFit(MinimizerBase):  # noqa: S101
                 value = item.value
             else:
                 ## TODO clean when full move to new_variable
-                from easyscience.Objects.new_variable import Parameter
-
                 if isinstance(item, Parameter):
                     value = item.value
                 else:

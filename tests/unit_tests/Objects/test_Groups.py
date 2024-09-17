@@ -399,7 +399,7 @@ def test_baseCollection_constraints(cls):
     p1 = Parameter("p1", 1)
     p2 = Parameter("p2", 2)
 
-    from easyscience.fitting.Constraints import ObjConstraint
+    from easyscience.Constraints import ObjConstraint
 
     p2.user_constraints["testing"] = ObjConstraint(p2, "2*", p1)
 
