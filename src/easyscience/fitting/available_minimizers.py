@@ -4,7 +4,7 @@ from enum import Enum
 
 import pkg_resources
 
-installed_packages = {pkg.key for pkg in pkg_resources.working_set}
+installed_packages = {pkg.key.lower() for pkg in pkg_resources.working_set}
 
 # Change to importlib.metadata when Python 3.10 is the minimum version
 # import importlib.metadata
@@ -30,6 +30,11 @@ if 'dfo-ls' in installed_packages:
 else:
     # TODO make this a proper message (use logging?)
     warnings.warn('DFO minimization is not available. Probably dfols has not been installed.', ImportWarning, stacklevel=2)
+
+
+lmfit_engine_available = True
+bumps_engine_available = True
+dfo_engine_available = True
 
 
 @dataclass
