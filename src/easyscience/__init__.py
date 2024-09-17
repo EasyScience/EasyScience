@@ -12,11 +12,11 @@ global_object.stack.enabled = False
 
 
 from .__version__ import __version__ as __version__  # noqa: E402
-from .fitting.available_minimizers import AvailableMinimizer  # noqa: E402
+from .fitting.available_minimizers import AvailableMinimizers  # noqa: E402
 
 __all__ = [
     __version__,
-    AvailableMinimizer,
+    AvailableMinimizers,
     global_object,
 ]
 
