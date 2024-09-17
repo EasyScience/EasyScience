@@ -1,6 +1,7 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
+import numpy as np
 from copy import deepcopy
 from typing import Type
 
@@ -38,8 +39,8 @@ dp_param_dict = {
                 "unit": "km",
                 "value": 1.0,
                 "variance": 0.0,
-                "min": -easyscience.np.inf,
-                "max": easyscience.np.inf,
+                "min": -np.inf,
+                "max": np.inf,
                 "fixed": False,
                 "url": "https://www.boo.com",
                 "description": "",
