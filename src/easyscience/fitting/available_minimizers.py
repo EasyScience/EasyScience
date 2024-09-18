@@ -11,30 +11,28 @@ installed_packages = {pkg.key.lower() for pkg in pkg_resources.working_set}
 # installed_packages = [x.name for x in importlib.metadata.distributions()]
 
 lmfit_engine_available = False
-if 'lmfit' in installed_packages:
+try:
+    import lmfit  # noqa: F401
     lmfit_engine_available = True
-else:
+except ImportError:
     # TODO make this a proper message (use logging?)
     warnings.warn('LMFit minimization is not available. Probably lmfit has not been installed.', ImportWarning, stacklevel=2)
 
 bumps_engine_available = False
-if 'bumps' in installed_packages:
+try:
+    import bumps  # noqa: F401
     bumps_engine_available = True
-else:
+except ImportError:
     # TODO make this a proper message (use logging?)
     warnings.warn('Bumps minimization is not available. Probably bumps has not been installed.', ImportWarning, stacklevel=2)
 
 dfo_engine_available = False
-if 'dfo-ls' in installed_packages:
+try:
+    import dfols  # noqa: F401
     dfo_engine_available = True
-else:
+except ImportError:
     # TODO make this a proper message (use logging?)
     warnings.warn('DFO minimization is not available. Probably dfols has not been installed.', ImportWarning, stacklevel=2)
-
-
-lmfit_engine_available = True
-bumps_engine_available = True
-dfo_engine_available = True
 
 
 @dataclass
