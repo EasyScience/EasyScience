@@ -2,10 +2,6 @@ import warnings
 from dataclasses import dataclass
 from enum import Enum
 
-import pkg_resources
-
-installed_packages = {pkg.key.lower() for pkg in pkg_resources.working_set}
-
 # Change to importlib.metadata when Python 3.10 is the minimum version
 # import importlib.metadata
 # installed_packages = [x.name for x in importlib.metadata.distributions()]
@@ -13,6 +9,7 @@ installed_packages = {pkg.key.lower() for pkg in pkg_resources.working_set}
 lmfit_engine_available = False
 try:
     import lmfit  # noqa: F401
+
     lmfit_engine_available = True
 except ImportError:
     # TODO make this a proper message (use logging?)
@@ -21,6 +18,7 @@ except ImportError:
 bumps_engine_available = False
 try:
     import bumps  # noqa: F401
+
     bumps_engine_available = True
 except ImportError:
     # TODO make this a proper message (use logging?)
@@ -29,6 +27,7 @@ except ImportError:
 dfo_engine_available = False
 try:
     import dfols  # noqa: F401
+
     dfo_engine_available = True
 except ImportError:
     # TODO make this a proper message (use logging?)
