@@ -62,10 +62,9 @@ def generatePath(model_obj: B, skip_first: bool = False) -> Tuple[List[int], Lis
     unique_names = []
     names = []
     for par in pars:
-        par_unique_name = par.unique_name
-        route = global_object.map.reverse_route(par_unique_name, model_obj.unique_name)
+        route = global_object.map.reverse_route(par.unique_name, model_obj.unique_name)
         objs = [getattr(global_object.map.get_item_by_key(r), 'name') for r in route]
         objs.reverse()
         names.append('.'.join(objs[start_idx:]))
-        unique_names.append(par_unique_name)
+        unique_names.append(par.unique_name)
     return unique_names, names
