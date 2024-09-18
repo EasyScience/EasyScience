@@ -9,9 +9,9 @@ from typing import Type
 import pytest
 
 from easyscience.Utils.io.xml import XMLSerializer
+from easyscience.Objects.new_variable import DescriptorNumber
 
 from .test_core import A
-from .test_core import Descriptor
 from .test_core import dp_param_dict
 from .test_core import skip_dict
 from easyscience import global_object
@@ -45,7 +45,7 @@ def recursive_test(testing_obj, reference_obj):
 ########################################################################################################################
 @pytest.mark.parametrize(**skip_dict)
 @pytest.mark.parametrize(**dp_param_dict)
-def test_variable_XMLDictSerializer(dp_kwargs: dict, dp_cls: Type[Descriptor], skip):
+def test_variable_XMLDictSerializer(dp_kwargs: dict, dp_cls: Type[DescriptorNumber], skip):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
     obj = dp_cls(**data_dict)
@@ -69,7 +69,7 @@ def test_variable_XMLDictSerializer(dp_kwargs: dict, dp_cls: Type[Descriptor], s
 @pytest.mark.parametrize(**skip_dict)
 @pytest.mark.parametrize(**dp_param_dict)
 def test_custom_class_XMLDictSerializer_encode(
-    dp_kwargs: dict, dp_cls: Type[Descriptor], skip
+    dp_kwargs: dict, dp_cls: Type[DescriptorNumber], skip
 ):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
@@ -102,14 +102,10 @@ def test_custom_class_XMLDictSerializer_encode(
 # # TESTING DECODING
 # ########################################################################################################################
 @pytest.mark.parametrize(**dp_param_dict)
-def test_variable_XMLDictSerializer_decode(dp_kwargs: dict, dp_cls: Type[Descriptor]):
+def test_variable_XMLDictSerializer_decode(dp_kwargs: dict, dp_cls: Type[DescriptorNumber]):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
     obj = dp_cls(**data_dict)
-    if "units" in data_dict.keys():
-        data_dict["unit"] = data_dict.pop("units")
-    if "value" in data_dict.keys():
-        data_dict["raw_value"] = data_dict.pop("value")
 
     enc = obj.encode(encoder=XMLSerializer)
     assert isinstance(enc, str)

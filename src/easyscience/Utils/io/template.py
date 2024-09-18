@@ -222,8 +222,8 @@ class BaseEncoderDecoder:
             d.update({'value': runner(obj.value)})  # pylint: disable=E1101
         if hasattr(obj, '_convert_to_dict'):
             d = obj._convert_to_dict(d, self, skip=skip, **kwargs)
-        if hasattr(obj, '_global_object') and '@id' not in d:
-            d['@id'] = obj.unique_name
+        if hasattr(obj, '_global_object') and 'unique_name' not in d and 'unique_name' not in skip:
+            d['unique_name'] = obj.unique_name
         return d
 
     @staticmethod
@@ -257,7 +257,11 @@ class BaseEncoderDecoder:
                 mod = __import__(modname, globals(), locals(), [classname], 0)
                 if hasattr(mod, classname):
                     cls_ = getattr(mod, classname)
-                    data = {k: BaseEncoderDecoder._convert_from_dict(v) for k, v in d.items() if not k.startswith('@')}
+                    data = {
+                        k: BaseEncoderDecoder._convert_from_dict(v)
+                        for k, v in d.items()
+                        if not (k.startswith('@') or k == 'unique_name')
+                    }
                     return cls_(**data)
             elif np is not None and modname == 'numpy' and classname == 'array':
                 if d['dtype'].startswith('complex'):

@@ -10,11 +10,11 @@ from importlib import metadata
 
 from easyscience.Utils.io.dict import DataDictSerializer
 from easyscience.Utils.io.dict import DictSerializer
+from easyscience.Objects.new_variable import DescriptorNumber
+from easyscience.Objects.ObjectClasses import BaseObj
 
 from .test_core import A
 from .test_core import B
-from .test_core import BaseObj
-from .test_core import Descriptor
 from .test_core import check_dict
 from .test_core import dp_param_dict
 from .test_core import skip_dict
@@ -42,7 +42,7 @@ def recursive_remove(d, remove_keys: list) -> dict:
 ########################################################################################################################
 @pytest.mark.parametrize(**skip_dict)
 @pytest.mark.parametrize(**dp_param_dict)
-def test_variable_DictSerializer(dp_kwargs: dict, dp_cls: Type[Descriptor], skip):
+def test_variable_DictSerializer(dp_kwargs: dict, dp_cls: Type[DescriptorNumber], skip):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
     obj = dp_cls(**data_dict)
@@ -69,7 +69,7 @@ def test_variable_DictSerializer(dp_kwargs: dict, dp_cls: Type[Descriptor], skip
 
 @pytest.mark.parametrize(**skip_dict)
 @pytest.mark.parametrize(**dp_param_dict)
-def test_variable_DataDictSerializer(dp_kwargs: dict, dp_cls: Type[Descriptor], skip):
+def test_variable_DataDictSerializer(dp_kwargs: dict, dp_cls: Type[DescriptorNumber], skip):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
     obj = dp_cls(**data_dict)
@@ -97,7 +97,7 @@ def test_variable_DataDictSerializer(dp_kwargs: dict, dp_cls: Type[Descriptor], 
 )
 @pytest.mark.parametrize(**skip_dict)
 @pytest.mark.parametrize(**dp_param_dict)
-def test_variable_encode_data(dp_kwargs: dict, dp_cls: Type[Descriptor], skip, encoder):
+def test_variable_encode_data(dp_kwargs: dict, dp_cls: Type[DescriptorNumber], skip, encoder):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
     obj = dp_cls(**data_dict)
@@ -123,7 +123,7 @@ def test_variable_encode_data(dp_kwargs: dict, dp_cls: Type[Descriptor], skip, e
 @pytest.mark.parametrize(**skip_dict)
 @pytest.mark.parametrize(**dp_param_dict)
 def test_custom_class_DictSerializer_encode(
-    dp_kwargs: dict, dp_cls: Type[Descriptor], skip
+    dp_kwargs: dict, dp_cls: Type[DescriptorNumber], skip
 ):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
@@ -158,7 +158,7 @@ def test_custom_class_DictSerializer_encode(
 @pytest.mark.parametrize(**skip_dict)
 @pytest.mark.parametrize(**dp_param_dict)
 def test_custom_class_DataDictSerializer(
-    dp_kwargs: dict, dp_cls: Type[Descriptor], skip
+    dp_kwargs: dict, dp_cls: Type[DescriptorNumber], skip
 ):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
@@ -185,7 +185,7 @@ def test_custom_class_DataDictSerializer(
     "encoder", [None, DataDictSerializer], ids=["Default", "DataDictSerializer"]
 )
 @pytest.mark.parametrize(**dp_param_dict)
-def test_custom_class_encode_data(dp_kwargs: dict, dp_cls: Type[Descriptor], encoder):
+def test_custom_class_encode_data(dp_kwargs: dict, dp_cls: Type[DescriptorNumber], encoder):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
     a_kw = {data_dict["name"]: dp_cls(**data_dict)}
@@ -216,12 +216,13 @@ def test_custom_class_full_encode_with_numpy():
     except metadata.PackageNotFoundError:
         version = '0.0.0'
 
-    obj = B(Descriptor("a", 1.0, unique_name="a"), np.array([1.0, 2.0, 3.0]))
+    obj = B(DescriptorNumber("a", 1.0, unique_name="a"), np.array([1.0, 2.0, 3.0]))
     full_enc = obj.encode(encoder=DictSerializer, full_encode=True)
     expected = {
         "@module": "tests.unit_tests.utils.io_tests.test_dict",
         "@class": "B",
         "@version": None,
+        "unique_name": "B_0",
         "b": {
             "@module": "numpy",
             "@class": "array",
@@ -229,15 +230,15 @@ def test_custom_class_full_encode_with_numpy():
             "data": [1.0, 2.0, 3.0],
         },
         "a": {
-            "@module": "easyscience.Objects.Variable",
-            "@class": "Descriptor",
+            "@module": "easyscience.Objects.new_variable.descriptor_number",
+            "@class": "DescriptorNumber",
             "@version": version,
             "description": "",
-            "units": "dimensionless",
+            "unit": "dimensionless",
             "display_name": "a",
             "name": "a",
-            "enabled": True,
             "value": 1.0,
+            "variance": None,
             "unique_name": "a",
             "url": "",
         },
@@ -246,13 +247,14 @@ def test_custom_class_full_encode_with_numpy():
 
 
 def test_custom_class_full_decode_with_numpy():
-
-    obj = B(Descriptor("a", 1.0), np.array([1.0, 2.0, 3.0]))
+    global_object.map._clear()
+    obj = B(DescriptorNumber("a", 1.0), np.array([1.0, 2.0, 3.0]))
     full_enc = obj.encode(encoder=DictSerializer, full_encode=True)
     global_object.map._clear()
     obj2 = B.decode(full_enc, decoder=DictSerializer)
     assert obj.name == obj2.name
-    assert obj.a.raw_value == obj2.a.raw_value
+    assert obj.unique_name == obj2.unique_name
+    assert obj.a.value == obj2.a.value
     assert np.all(obj.b == obj2.b)
 
 
@@ -260,14 +262,10 @@ def test_custom_class_full_decode_with_numpy():
 # TESTING DECODING
 ########################################################################################################################
 @pytest.mark.parametrize(**dp_param_dict)
-def test_variable_DictSerializer_decode(dp_kwargs: dict, dp_cls: Type[Descriptor]):
+def test_variable_DictSerializer_decode(dp_kwargs: dict, dp_cls: Type[DescriptorNumber]):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
     obj = dp_cls(**data_dict)
-    if "units" in data_dict.keys():
-        data_dict["unit"] = data_dict.pop("units")
-    if "value" in data_dict.keys():
-        data_dict["raw_value"] = data_dict.pop("value")
 
     enc = obj.encode(encoder=DictSerializer)
     global_object.map._clear()
@@ -281,14 +279,10 @@ def test_variable_DictSerializer_decode(dp_kwargs: dict, dp_cls: Type[Descriptor
 
 
 @pytest.mark.parametrize(**dp_param_dict)
-def test_variable_DictSerializer_from_dict(dp_kwargs: dict, dp_cls: Type[Descriptor]):
+def test_variable_DictSerializer_from_dict(dp_kwargs: dict, dp_cls: Type[DescriptorNumber]):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
     obj = dp_cls(**data_dict)
-    if "units" in data_dict.keys():
-        data_dict["unit"] = data_dict.pop("units")
-    if "value" in data_dict.keys():
-        data_dict["raw_value"] = data_dict.pop("value")
 
     enc = obj.encode(encoder=DictSerializer)
     global_object.map._clear()
@@ -302,14 +296,10 @@ def test_variable_DictSerializer_from_dict(dp_kwargs: dict, dp_cls: Type[Descrip
 
 
 @pytest.mark.parametrize(**dp_param_dict)
-def test_variable_DataDictSerializer_decode(dp_kwargs: dict, dp_cls: Type[Descriptor]):
+def test_variable_DataDictSerializer_decode(dp_kwargs: dict, dp_cls: Type[DescriptorNumber]):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
     obj = dp_cls(**data_dict)
-    if "units" in data_dict.keys():
-        data_dict["unit"] = data_dict.pop("units")
-    if "value" in data_dict.keys():
-        data_dict["raw_value"] = data_dict.pop("value")
 
     enc = obj.encode(encoder=DataDictSerializer)
     with pytest.raises(NotImplementedError):
@@ -317,8 +307,8 @@ def test_variable_DataDictSerializer_decode(dp_kwargs: dict, dp_cls: Type[Descri
 
 
 def test_group_encode():
-    d0 = Descriptor("a", 0)
-    d1 = Descriptor("b", 1)
+    d0 = DescriptorNumber("a", 0)
+    d1 = DescriptorNumber("b", 1)
 
     from easyscience.Objects.Groups import BaseCollection
 
@@ -328,8 +318,8 @@ def test_group_encode():
 
 
 def test_group_encode2():
-    d0 = Descriptor("a", 0)
-    d1 = Descriptor("b", 1)
+    d0 = DescriptorNumber("a", 0)
+    d1 = DescriptorNumber("b", 1)
 
     from easyscience.Objects.Groups import BaseCollection
 

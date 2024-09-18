@@ -1,6 +1,7 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
+import numpy as np
 from copy import deepcopy
 from typing import Type
 
@@ -8,26 +9,26 @@ import pytest
 
 import easyscience
 from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.ObjectClasses import Descriptor
-from easyscience.Objects.ObjectClasses import Parameter
+from easyscience.Objects.new_variable import DescriptorNumber
+from easyscience.Objects.new_variable import Parameter
 
 dp_param_dict = {
     "argnames": "dp_kwargs, dp_cls",
     "argvalues": (
         [
             {
-                "@module": Descriptor.__module__,
-                "@class": Descriptor.__name__,
+                "@module": DescriptorNumber.__module__,
+                "@class": DescriptorNumber.__name__,
                 "@version": easyscience.__version__,
                 "name": "test",
-                "value": 1,
-                "units": "dimensionless",
+                "value": 1.0,
+                "variance": None,
+                "unit": "dimensionless",
                 "description": "",
                 "url": "",
                 "display_name": "test",
-                "enabled": True,
             },
-            Descriptor,
+            DescriptorNumber,
         ],
         [
             {
@@ -35,11 +36,11 @@ dp_param_dict = {
                 "@class": Parameter.__name__,
                 "@version": easyscience.__version__,
                 "name": "test",
-                "units": "kilometer",
+                "unit": "km",
                 "value": 1.0,
-                "error": 0.0,
-                "min": -easyscience.np.inf,
-                "max": easyscience.np.inf,
+                "variance": 0.0,
+                "min": -np.inf,
+                "max": np.inf,
                 "fixed": False,
                 "url": "https://www.boo.com",
                 "description": "",
@@ -49,7 +50,7 @@ dp_param_dict = {
             Parameter,
         ],
     ),
-    "ids": ["Descriptor", "Parameter"],
+    "ids": ["DescriptorNumber", "Parameter"],
 }
 
 _skip_opt = [[], None] + [
@@ -65,8 +66,6 @@ skip_dict = {
 def check_dict(check, item):
     if isinstance(check, dict) and isinstance(item, dict):
         for key in check.keys():
-            if key == "@id":
-                continue
             assert key in item.keys()
             check_dict(check[key], item[key])
     else:
@@ -76,7 +75,7 @@ def check_dict(check, item):
 
 @pytest.mark.parametrize(**skip_dict)
 @pytest.mark.parametrize(**dp_param_dict)
-def test_variable_as_dict_methods(dp_kwargs: dict, dp_cls: Type[Descriptor], skip):
+def test_variable_as_dict_methods(dp_kwargs: dict, dp_cls: Type[DescriptorNumber], skip):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
     obj = dp_cls(**data_dict)
@@ -103,7 +102,7 @@ def test_variable_as_dict_methods(dp_kwargs: dict, dp_cls: Type[Descriptor], ski
 
 @pytest.mark.parametrize(**skip_dict)
 @pytest.mark.parametrize(**dp_param_dict)
-def test_variable_as_data_dict_methods(dp_kwargs: dict, dp_cls: Type[Descriptor], skip):
+def test_variable_as_data_dict_methods(dp_kwargs: dict, dp_cls: Type[DescriptorNumber], skip):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
     obj = dp_cls(**data_dict)
@@ -138,7 +137,7 @@ class B(BaseObj):
 
 
 @pytest.mark.parametrize(**dp_param_dict)
-def test_custom_class_as_dict_methods(dp_kwargs: dict, dp_cls: Type[Descriptor]):
+def test_custom_class_as_dict_methods(dp_kwargs: dict, dp_cls: Type[DescriptorNumber]):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
     a_kw = {data_dict["name"]: dp_cls(**data_dict)}
@@ -165,7 +164,7 @@ def test_custom_class_as_dict_methods(dp_kwargs: dict, dp_cls: Type[Descriptor])
 
 
 @pytest.mark.parametrize(**dp_param_dict)
-def test_custom_class_as_data_dict_methods(dp_kwargs: dict, dp_cls: Type[Descriptor]):
+def test_custom_class_as_data_dict_methods(dp_kwargs: dict, dp_cls: Type[DescriptorNumber]):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
     a_kw = {data_dict["name"]: dp_cls(**data_dict)}

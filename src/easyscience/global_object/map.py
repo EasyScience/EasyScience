@@ -9,6 +9,7 @@ import gc
 import sys
 import weakref
 from typing import List
+from typing import Optional
 
 
 class _EntryList(list):
@@ -183,16 +184,9 @@ class Map:
                 isolated += [vertex]
         return isolated
 
-    def find_path(self, start_obj, end_obj, path=[]) -> list:
+    def find_path(self, start_vertex: str, end_vertex: str, path=[]) -> list:
         """find a path from start_vertex to end_vertex
         in map"""
-
-        try:
-            start_vertex = start_obj.unique_name
-            end_vertex = end_obj.unique_name
-        except AttributeError:
-            start_vertex = start_obj
-            end_vertex = end_obj
 
         graph = self.__type_dict
         path = path + [start_vertex]
@@ -207,12 +201,9 @@ class Map:
                     return extended_path
         return []
 
-    def find_all_paths(self, start_obj, end_obj, path=[]) -> list:
+    def find_all_paths(self, start_vertex: str, end_vertex: str, path=[]) -> list:
         """find all paths from start_vertex to
         end_vertex in map"""
-
-        start_vertex = start_obj.unique_name
-        end_vertex = end_obj.unique_name
 
         graph = self.__type_dict
         path = path + [start_vertex]
@@ -228,7 +219,7 @@ class Map:
                     paths.append(p)
         return paths
 
-    def reverse_route(self, end_obj, start_obj=None) -> List:
+    def reverse_route(self, end_vertex: str, start_vertex: Optional[str] = None) -> List:
         """
         In this case we have an object and want to know the connections to get to another in reverse.
         We might not know the start_object. In which case we follow the shortest path to a base vertex.
@@ -239,11 +230,9 @@ class Map:
         :return:
         :rtype:
         """
-        end_vertex = end_obj.unique_name
-
         path_length = sys.maxsize
         optimum_path = []
-        if start_obj is None:
+        if start_vertex is None:
             # We now have to find where to begin.....
             for possible_start, vertices in self.__type_dict.items():
                 if end_vertex in vertices:
@@ -252,7 +241,7 @@ class Map:
                         path_length = len(temp_path)
                         optimum_path = temp_path
         else:
-            optimum_path = self.find_path(start_obj, end_obj)
+            optimum_path = self.find_path(start_vertex, end_vertex)
         optimum_path.reverse()
         return optimum_path
 

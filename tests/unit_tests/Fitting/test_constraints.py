@@ -11,8 +11,8 @@ from typing import Tuple
 import pytest
 from unittest.mock import MagicMock
 
-from easyscience.fitting.Constraints import NumericConstraint
-from easyscience.fitting.Constraints import ObjConstraint
+from easyscience.Constraints import NumericConstraint
+from easyscience.Constraints import ObjConstraint
 from easyscience.Objects.new_variable.parameter import Parameter
 
 

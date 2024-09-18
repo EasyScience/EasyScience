@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 import numpy as np
 
 import easyscience.fitting.minimizers.minimizer_bumps
-from easyscience.Objects.new_variable import Parameter
 
 from easyscience.fitting.minimizers.minimizer_bumps import Bumps
 from easyscience.fitting.minimizers.utils import FitError
@@ -16,20 +15,20 @@ class TestBumpsFit():
         minimizer = Bumps(
             obj='obj',
             fit_function='fit_function', 
-            method='scipy.leastsq'
+            minimizer_enum=MagicMock(package='bumps', method='amoeba')
         )
         return minimizer
 
     def test_init(self, minimizer: Bumps) -> None:
         assert minimizer._p_0 == {}
-        assert minimizer.wrapping == 'bumps'
+        assert minimizer.package == 'bumps'
 
     def test_init_exception(self) -> None:
         with pytest.raises(FitError):
             Bumps(
                 obj='obj',
                 fit_function='fit_function', 
-                method='not_leastsq'
+                minimizer_enum=MagicMock(package='bumps', method='not_amoeba')
             )
 
     def test_all_methods(self, minimizer: Bumps) -> None:
@@ -67,7 +66,7 @@ class TestBumpsFit():
 
         # Expect
         assert result == 'gen_fit_results'
-        mock_bumps_fit.assert_called_once_with('fit_problem', method='scipy.leastsq')
+        mock_bumps_fit.assert_called_once_with('fit_problem', method='amoeba')
         minimizer._make_model.assert_called_once_with(parameters=None)
         minimizer._set_parameter_fit_result.assert_called_once_with('fit', False)
         minimizer._gen_fit_results.assert_called_once_with('fit')
