@@ -1,55 +1,64 @@
 import warnings
+from dataclasses import dataclass
 from enum import Enum
-from enum import auto
-
-import pkg_resources
-
-installed_packages = {pkg.key for pkg in pkg_resources.working_set}
 
 # Change to importlib.metadata when Python 3.10 is the minimum version
 # import importlib.metadata
 # installed_packages = [x.name for x in importlib.metadata.distributions()]
 
 lmfit_engine_available = False
-if 'lmfit' in installed_packages:
+try:
+    import lmfit  # noqa: F401
+
     lmfit_engine_available = True
-else:
+except ImportError:
     # TODO make this a proper message (use logging?)
     warnings.warn('LMFit minimization is not available. Probably lmfit has not been installed.', ImportWarning, stacklevel=2)
 
 bumps_engine_available = False
-if 'bumps' in installed_packages:
+try:
+    import bumps  # noqa: F401
+
     bumps_engine_available = True
-else:
+except ImportError:
     # TODO make this a proper message (use logging?)
     warnings.warn('Bumps minimization is not available. Probably bumps has not been installed.', ImportWarning, stacklevel=2)
 
 dfo_engine_available = False
-if 'dfo-ls' in installed_packages:
+try:
+    import dfols  # noqa: F401
+
     dfo_engine_available = True
-else:
+except ImportError:
     # TODO make this a proper message (use logging?)
     warnings.warn('DFO minimization is not available. Probably dfols has not been installed.', ImportWarning, stacklevel=2)
 
 
-class AvailableMinimizers(Enum):
+@dataclass
+class AvailableMinimizer:
+    package: str
+    method: str
+    enum_id: int
+
+
+class AvailableMinimizers(AvailableMinimizer, Enum):
     if lmfit_engine_available:
-        LMFit = auto()
-        LMFit_leastsq = auto()
-        LMFit_powell = auto()
-        LMFit_cobyla = auto()
-        LMFit_differential_evolution = auto()
-        LMFit_scipy_least_squares = auto()
+        LMFit = 'lm', 'leastsq', 11
+        LMFit_leastsq = 'lm', 'leastsq', 12
+        LMFit_powell = 'lm', 'powell', 13
+        LMFit_cobyla = 'lm', 'cobyla', 14
+        LMFit_differential_evolution = 'lm', 'differential_evolution', 15
+        LMFit_scipy_least_squares = 'lm', 'least_squares', 16
 
     if bumps_engine_available:
-        Bumps = auto()
-        Bumps_simplex = auto()
-        Bumps_newton = auto()
-        Bumps_lm = auto()
+        Bumps = 'bumps', 'amoeba', 21
+        Bumps_simplex = 'bumps', 'amoeba', 22
+        Bumps_newton = 'bumps', 'newton', 23
+        Bumps_lm = 'bumps', 'lm', 24
 
     if dfo_engine_available:
-        DFO = auto()
-        DFO_leastsq = auto()
+        DFO = 'dfo', 'leastsq', 31
+        DFO_leastsq = 'dfo', 'leastsq', 32
 
 
 # Temporary solution to convert string to enum

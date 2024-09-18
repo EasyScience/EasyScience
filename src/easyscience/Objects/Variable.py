@@ -30,14 +30,14 @@ import numpy as np
 from easyscience import global_object
 from easyscience import pint
 from easyscience import ureg
-from easyscience.fitting.Constraints import SelfConstraint
+from easyscience.Constraints import SelfConstraint
 from easyscience.global_object.undo_redo import property_stack_deco
 from easyscience.Objects.core import ComponentSerializer
 from easyscience.Utils.classTools import addProp
 from easyscience.Utils.Exceptions import CoreSetException
 
 if TYPE_CHECKING:
-    from easyscience.fitting.Constraints import C
+    from easyscience.Constraints import C
 
 Q_ = ureg.Quantity
 M_ = ureg.Measurement

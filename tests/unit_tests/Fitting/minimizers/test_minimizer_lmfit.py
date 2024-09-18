@@ -15,19 +15,19 @@ class TestLMFit():
         minimizer = LMFit(
             obj='obj',
             fit_function='fit_function', 
-            method='leastsq'
+            minimizer_enum=MagicMock(package='lm', method='leastsq')
         )
         return minimizer
 
     def test_init(self, minimizer: LMFit) -> None:
-        assert minimizer.wrapping == 'lmfit'
+        assert minimizer.package == 'lmfit'
 
     def test_init_exception(self) -> None:
         with pytest.raises(FitError):
             LMFit(
                 obj='obj',
                 fit_function='fit_function', 
-                method='method'
+                minimizer_enum=MagicMock(package='dfo', method='not_leastsq')
             )
 
     def test_make_model(self, minimizer: LMFit, monkeypatch) -> None:

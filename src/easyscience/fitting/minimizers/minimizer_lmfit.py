@@ -15,8 +15,9 @@ from lmfit.model import ModelResult
 
 # causes circular import when Parameter is imported
 # from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.Variable import Parameter
+from easyscience.Objects.new_variable import Parameter
 
+from ..available_minimizers import AvailableMinimizers
 from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
 from .minimizer_base import MinimizerBase
 from .utils import FitError
@@ -29,13 +30,13 @@ class LMFit(MinimizerBase):  # noqa: S101
     It allows for the lmfit fitting engine to use parameters declared in an `EasyScience.Objects.Base.BaseObj`.
     """
 
-    wrapping = 'lmfit'
+    package = 'lmfit'
 
     def __init__(
         self,
         obj,  #: BaseObj,
         fit_function: Callable,
-        method: Optional[str] = None,
+        minimizer_enum: Optional[AvailableMinimizers] = None,
     ):  # todo after constraint changes, add type hint: obj: BaseObj  # noqa: E501
         """
         Initialize the minimizer with the `BaseObj` and the `fit_function` to be used.
@@ -47,7 +48,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         :param method: Method to be used by the minimizer
         :type method: str
         """
-        super().__init__(obj=obj, fit_function=fit_function, method=method)
+        super().__init__(obj=obj, fit_function=fit_function, minimizer_enum=minimizer_enum)
 
     @staticmethod
     def all_methods() -> List[str]:
@@ -164,9 +165,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         :rtype: LMParameter
         """
         ## TODO clean when full move to
-        from easyscience.Objects.new_variable import Parameter as NewParameter
-
-        if isinstance(parameter, NewParameter):
+        if isinstance(parameter, Parameter):
             value = parameter.value
         else:
             value = parameter.raw_value
@@ -207,8 +206,6 @@ class LMFit(MinimizerBase):  # noqa: S101
                 value = item.value
             else:
                 ## TODO clean when full move to new_variable
-                from easyscience.Objects.new_variable import Parameter
-
                 if isinstance(item, Parameter):
                     value = item.value
                 else:

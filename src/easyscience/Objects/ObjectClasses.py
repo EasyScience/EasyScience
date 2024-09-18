@@ -28,7 +28,7 @@ from .Variable import Descriptor
 from .Variable import Parameter
 
 if TYPE_CHECKING:
-    from easyscience.fitting.Constraints import C
+    from easyscience.Constraints import C
     from easyscience.Objects.Inferface import iF
     from easyscience.Objects.Variable import V
 
@@ -186,7 +186,7 @@ class BasedBase(ComponentSerializer):
         for key, item in self._kwargs.items():
             if hasattr(item, '_get_linkable_attributes'):
                 item_list = [*item_list, *item._get_linkable_attributes()]
-            elif issubclass(type(item), Descriptor) or issubclass(type(item), DescriptorBase):
+            elif issubclass(type(item), (Descriptor, DescriptorBase)):
                 item_list.append(item)
         return item_list
 
@@ -214,6 +214,12 @@ class BasedBase(ComponentSerializer):
         """
         new_class_objs = list(k for k in dir(self.__class__) if not k.startswith('_'))
         return sorted(new_class_objs)
+
+    def __copy__(self) -> BasedBase:
+        """Return a copy of the object."""
+        temp = self.as_dict(skip=['unique_name'])
+        new_obj = self.__class__.from_dict(temp)
+        return new_obj
 
 
 if TYPE_CHECKING:
@@ -346,7 +352,9 @@ class BaseObj(BasedBase):
     @staticmethod
     def __setter(key: str) -> Callable[[BV], None]:
         def setter(obj: BV, value: float) -> None:
-            if issubclass(obj._kwargs[key].__class__, Descriptor) and not issubclass(value.__class__, Descriptor):
+            if issubclass(obj._kwargs[key].__class__, (Descriptor, DescriptorBase)) and not issubclass(
+                value.__class__, (Descriptor, DescriptorBase)
+            ):
                 obj._kwargs[key].value = value
             else:
                 obj._kwargs[key] = value

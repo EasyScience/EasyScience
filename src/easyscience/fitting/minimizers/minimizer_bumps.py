@@ -16,8 +16,9 @@ from bumps.parameter import Parameter as BumpsParameter
 
 # causes circular import when Parameter is imported
 # from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.Variable import Parameter
+from easyscience.Objects.new_variable import Parameter
 
+from ..available_minimizers import AvailableMinimizers
 from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
 from .minimizer_base import MinimizerBase
 from .utils import FitError
@@ -34,13 +35,13 @@ class Bumps(MinimizerBase):
     It allows for the Bumps fitting engine to use parameters declared in an `EasyScience.Objects.Base.BaseObj`.
     """
 
-    wrapping = 'bumps'
+    package = 'bumps'
 
     def __init__(
         self,
         obj,  #: BaseObj,
         fit_function: Callable,
-        method: Optional[str] = None,
+        minimizer_enum: Optional[AvailableMinimizers] = None,
     ):  # todo after constraint changes, add type hint: obj: BaseObj  # noqa: E501
         """
         Initialize the fitting engine with a `BaseObj` and an arbitrary fitting function.
@@ -52,7 +53,7 @@ class Bumps(MinimizerBase):
                             keyword/value pairs
         :type fit_function: Callable
         """
-        super().__init__(obj=obj, fit_function=fit_function, method=method)
+        super().__init__(obj=obj, fit_function=fit_function, minimizer_enum=minimizer_enum)
         self._p_0 = {}
 
     @staticmethod
@@ -116,8 +117,6 @@ class Bumps(MinimizerBase):
         self._cached_model = model
 
         ## TODO clean when full move to new_variable
-        from easyscience.Objects.new_variable import Parameter
-
         if isinstance(self._cached_pars[list(self._cached_pars.keys())[0]], Parameter):
             self._p_0 = {f'p{key}': self._cached_pars[key].value for key in self._cached_pars.keys()}
         else:
@@ -166,8 +165,6 @@ class Bumps(MinimizerBase):
         """
 
         ## TODO clean when full move to new_variable
-        from easyscience.Objects.new_variable import Parameter
-
         if isinstance(obj, Parameter):
             value = obj.value
         else:
@@ -251,8 +248,6 @@ class Bumps(MinimizerBase):
             dict_name = name[len(MINIMIZER_PARAMETER_PREFIX) :]
 
             ## TODO clean when full move to new_variable
-            from easyscience.Objects.new_variable import Parameter
-
             if isinstance(pars[dict_name], Parameter):
                 item[name] = pars[dict_name].value
             else:

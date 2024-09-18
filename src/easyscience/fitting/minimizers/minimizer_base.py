@@ -16,11 +16,13 @@ from typing import Union
 
 import numpy as np
 
+from easyscience.Constraints import ObjConstraint
+
 # causes circular import when Parameter is imported
 # from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.Variable import Parameter
+from easyscience.Objects.new_variable import Parameter
 
-from ..Constraints import ObjConstraint
+from ..available_minimizers import AvailableMinimizers
 from .utils import FitError
 from .utils import FitResults
 
@@ -32,19 +34,20 @@ class MinimizerBase(metaclass=ABCMeta):
     This template class is the basis for all minimizer engines in `EasyScience`.
     """
 
-    wrapping: str = None
+    package: str = None
 
     def __init__(
         self,
         obj,  #: BaseObj,
         fit_function: Callable,
-        method: Optional[str] = None,
+        minimizer_enum: Optional[AvailableMinimizers] = None,
     ):  # todo after constraint changes, add type hint: obj: BaseObj  # noqa: E501
-        if method not in self.supported_methods():
-            raise FitError(f'Method {method} not available in {self.__class__}')
+        if minimizer_enum.method not in self.supported_methods():
+            raise FitError(f'Method {minimizer_enum.method} not available in {self.__class__}')
         self._object = obj
         self._original_fit_function = fit_function
-        self._method = method
+        self._minimizer_enum = minimizer_enum
+        self._method = minimizer_enum.method
         self._cached_pars: Dict[str, Parameter] = {}
         self._cached_pars_vals: Dict[str, Tuple[float]] = {}
         self._cached_model = None
@@ -54,6 +57,10 @@ class MinimizerBase(metaclass=ABCMeta):
     @property
     def all_constraints(self) -> List[ObjConstraint]:
         return [*self._constraints, *self._object._constraints]
+
+    @property
+    def name(self) -> str:
+        return self._minimizer_enum.name
 
     def fit_constraints(self) -> List[ObjConstraint]:
         return self._constraints
@@ -178,14 +185,11 @@ class MinimizerBase(metaclass=ABCMeta):
         """
         pars = self._cached_pars
 
-        # TODO clean when full move to new_variable
-        from easyscience.Objects.new_variable import Parameter as NewParameter
-
         for name, item in pars.items():
             parameter_name = MINIMIZER_PARAMETER_PREFIX + str(name)
             if parameter_name not in parameters.keys():
                 # TODO clean when full move to new_variable
-                if isinstance(item, NewParameter):
+                if isinstance(item, Parameter):
                     parameters[parameter_name] = item.value
                 else:
                     parameters[parameter_name] = item.raw_value
@@ -221,8 +225,6 @@ class MinimizerBase(metaclass=ABCMeta):
             """
             # Update the `Parameter` values and the callback if needed
             # TODO THIS IS NOT THREAD SAFE :-(
-            # TODO clean when full move to new_variable
-            from easyscience.Objects.new_variable import Parameter
 
             for name, value in kwargs.items():
                 par_name = name[1:]
@@ -259,12 +261,9 @@ class MinimizerBase(metaclass=ABCMeta):
         wrapped_parameters = []
         wrapped_parameters.append(InspectParameter('x', InspectParameter.POSITIONAL_OR_KEYWORD, annotation=_empty))
 
-        ## TODO clean when full move to new_variable
-        from easyscience.Objects.new_variable import Parameter as NewParameter
-
         for name, parameter in parameters.items():
             ## TODO clean when full move to new_variable
-            if isinstance(parameter, NewParameter):
+            if isinstance(parameter, Parameter):
                 default_value = parameter.value
             else:
                 default_value = parameter.raw_value

@@ -8,7 +8,7 @@ __version__ = "0.0.1"
 import pytest
 
 import numpy as np
-from easyscience.fitting.Constraints import ObjConstraint
+from easyscience.Constraints import ObjConstraint
 from easyscience.fitting.fitter import Fitter
 from easyscience.fitting.minimizers import FitError
 from easyscience.fitting.available_minimizers import AvailableMinimizers
@@ -103,7 +103,7 @@ def test_basic_fit(fit_engine: AvailableMinimizers, with_errors):
     result = f.fit(*args, **kwargs)
 
     if fit_engine is not None:
-        assert result.minimizer_engine.wrapping == fit_engine.name.lower() # Special case where minimizer matches wrapping
+        assert result.minimizer_engine.package == fit_engine.name.lower() # Special case where minimizer matches package
     assert sp_sin.phase.value == pytest.approx(ref_sin.phase.value, rel=1e-3)
     assert sp_sin.offset.value == pytest.approx(ref_sin.offset.value, rel=1e-3)
 

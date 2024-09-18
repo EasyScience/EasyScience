@@ -19,8 +19,8 @@ class TestMinimizerBase():
 
         minimizer = MinimizerBase(
             obj='obj',
-            fit_function='fit_function', 
-            method='method'
+            fit_function='fit_function',
+            minimizer_enum=MagicMock(package='package', method='method')
         )
         return minimizer
     
@@ -34,7 +34,7 @@ class TestMinimizerBase():
             MinimizerBase(
                 obj='obj',
                 fit_function='fit_function', 
-                method='not_a_method'
+                minimizer_enum=MagicMock(package='package', method='not_a_method')
             )
 
     def test_init(self, minimizer: MinimizerBase):

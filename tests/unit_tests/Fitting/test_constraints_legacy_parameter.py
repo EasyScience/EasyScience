@@ -10,8 +10,8 @@ from typing import Tuple
 
 import pytest
 
-from easyscience.fitting.Constraints import NumericConstraint
-from easyscience.fitting.Constraints import ObjConstraint
+from easyscience.Constraints import NumericConstraint
+from easyscience.Constraints import ObjConstraint
 from easyscience.Objects.Variable import Parameter
 
 

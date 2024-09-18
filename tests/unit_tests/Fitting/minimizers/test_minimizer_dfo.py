@@ -16,20 +16,20 @@ class TestDFOFit():
         minimizer = DFO(
             obj='obj',
             fit_function='fit_function', 
-            method='leastsq'
+            minimizer_enum=MagicMock(package='dfo', method='leastsq')
         )
         return minimizer
 
     def test_init(self, minimizer: DFO) -> None:
         assert minimizer._p_0 == {}
-        assert minimizer.wrapping == 'dfo'
+        assert minimizer.package == 'dfo'
 
     def test_init_exception(self) -> None:
         with pytest.raises(FitError):
             DFO(
                 obj='obj',
                 fit_function='fit_function', 
-                method='not_leastsq'
+                minimizer_enum=MagicMock(package='dfo', method='not_leastsq')
             )
 
     def test_supported_methods(self, minimizer: DFO) -> None:

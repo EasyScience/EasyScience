@@ -16,19 +16,19 @@ class TestFactory:
     def test_factory_lm_fit(self, minimizer_method, minimizer_enum):
         minimizer = self.pull_minminizer(minimizer_enum)
         assert minimizer._method == minimizer_method
-        assert minimizer.wrapping == 'lmfit'
+        assert minimizer.package == 'lmfit'
 
     @pytest.mark.parametrize('minimizer_method,minimizer_enum', [('amoeba', AvailableMinimizers.Bumps), ('amoeba', AvailableMinimizers.Bumps_simplex), ('newton', AvailableMinimizers.Bumps_newton), ('lm', AvailableMinimizers.Bumps_lm)])
     def test_factory_bumps_fit(self, minimizer_method, minimizer_enum):
         minimizer = self.pull_minminizer(minimizer_enum)
         assert minimizer._method == minimizer_method
-        assert minimizer.wrapping == 'bumps'
+        assert minimizer.package == 'bumps'
 
     @pytest.mark.parametrize('minimizer_method,minimizer_enum', [('leastsq', AvailableMinimizers.DFO), ('leastsq', AvailableMinimizers.DFO_leastsq)])
     def test_factory_dfo_fit(self, minimizer_method, minimizer_enum):
         minimizer = self.pull_minminizer(minimizer_enum)
         assert minimizer._method == minimizer_method
-        assert minimizer.wrapping == 'dfo'
+        assert minimizer.package == 'dfo'
 
 
 @pytest.mark.parametrize('minimizer_name,expected', [('LMFit', AvailableMinimizers.LMFit), ('LMFit_leastsq', AvailableMinimizers.LMFit_leastsq), ('LMFit_powell', AvailableMinimizers.LMFit_powell), ('LMFit_cobyla', AvailableMinimizers.LMFit_cobyla), ('LMFit_differential_evolution', AvailableMinimizers.LMFit_differential_evolution), ('LMFit_scipy_least_squares', AvailableMinimizers.LMFit_scipy_least_squares) ])

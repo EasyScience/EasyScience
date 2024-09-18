@@ -9,9 +9,9 @@ import pytest
 
 from easyscience.Utils.io.json import JsonDataSerializer
 from easyscience.Utils.io.json import JsonSerializer
+from easyscience.Objects.new_variable import DescriptorNumber
 
 from .test_core import A
-from .test_core import Descriptor
 from .test_core import check_dict
 from .test_core import dp_param_dict
 from .test_core import skip_dict
@@ -39,7 +39,7 @@ def recursive_remove(d, remove_keys: list) -> dict:
 ########################################################################################################################
 @pytest.mark.parametrize(**skip_dict)
 @pytest.mark.parametrize(**dp_param_dict)
-def test_variable_DictSerializer(dp_kwargs: dict, dp_cls: Type[Descriptor], skip):
+def test_variable_DictSerializer(dp_kwargs: dict, dp_cls: Type[DescriptorNumber], skip):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
     obj = dp_cls(**data_dict)
@@ -69,7 +69,7 @@ def test_variable_DictSerializer(dp_kwargs: dict, dp_cls: Type[Descriptor], skip
 
 @pytest.mark.parametrize(**skip_dict)
 @pytest.mark.parametrize(**dp_param_dict)
-def test_variable_DataDictSerializer(dp_kwargs: dict, dp_cls: Type[Descriptor], skip):
+def test_variable_DataDictSerializer(dp_kwargs: dict, dp_cls: Type[DescriptorNumber], skip):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
     obj = dp_cls(**data_dict)
@@ -97,7 +97,7 @@ def test_variable_DataDictSerializer(dp_kwargs: dict, dp_cls: Type[Descriptor], 
 @pytest.mark.parametrize(**skip_dict)
 @pytest.mark.parametrize(**dp_param_dict)
 def test_custom_class_DictSerializer_encode(
-    dp_kwargs: dict, dp_cls: Type[Descriptor], skip
+    dp_kwargs: dict, dp_cls: Type[DescriptorNumber], skip
 ):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
@@ -137,7 +137,7 @@ def test_custom_class_DictSerializer_encode(
 @pytest.mark.parametrize(**skip_dict)
 @pytest.mark.parametrize(**dp_param_dict)
 def test_custom_class_DataDictSerializer(
-    dp_kwargs: dict, dp_cls: Type[Descriptor], skip
+    dp_kwargs: dict, dp_cls: Type[DescriptorNumber], skip
 ):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
@@ -169,14 +169,10 @@ def test_custom_class_DataDictSerializer(
 # # TESTING DECODING
 # ########################################################################################################################
 @pytest.mark.parametrize(**dp_param_dict)
-def test_variable_DictSerializer_decode(dp_kwargs: dict, dp_cls: Type[Descriptor]):
+def test_variable_DictSerializer_decode(dp_kwargs: dict, dp_cls: Type[DescriptorNumber]):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
     obj = dp_cls(**data_dict)
-    if "units" in data_dict.keys():
-        data_dict["unit"] = data_dict.pop("units")
-    if "value" in data_dict.keys():
-        data_dict["raw_value"] = data_dict.pop("value")
 
     enc = obj.encode(encoder=JsonSerializer)
     global_object.map._clear()
@@ -191,14 +187,10 @@ def test_variable_DictSerializer_decode(dp_kwargs: dict, dp_cls: Type[Descriptor
 
 
 @pytest.mark.parametrize(**dp_param_dict)
-def test_variable_DataDictSerializer_decode(dp_kwargs: dict, dp_cls: Type[Descriptor]):
+def test_variable_DataDictSerializer_decode(dp_kwargs: dict, dp_cls: Type[DescriptorNumber]):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
     obj = dp_cls(**data_dict)
-    if "units" in data_dict.keys():
-        data_dict["unit"] = data_dict.pop("units")
-    if "value" in data_dict.keys():
-        data_dict["raw_value"] = data_dict.pop("value")
 
     enc = obj.encode(encoder=JsonDataSerializer)
     global_object.map._clear()
