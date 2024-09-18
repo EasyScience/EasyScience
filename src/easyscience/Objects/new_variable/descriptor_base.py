@@ -27,7 +27,6 @@ class DescriptorBase(ComponentSerializer, metaclass=abc.ABCMeta):
     # Used by serializer
     _REDIRECT = {'parent': None}
 
-    #    _global_object = global_object
 
     def __init__(
         self,
