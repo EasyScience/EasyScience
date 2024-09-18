@@ -1410,7 +1410,7 @@ any nested keys, and then performing a hash on the resulting object</p>
 <h2>Collections<a class="headerlink" href="#collections" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="easyscience.Objects.Groups.BaseCollection">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">easyscience.Objects.Groups.</span></span><span class="sig-name descname"><span class="pre">BaseCollection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyscience/Objects/Groups.html#BaseCollection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyscience.Objects.Groups.BaseCollection" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">easyscience.Objects.Groups.</span></span><span class="sig-name descname"><span class="pre">BaseCollection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyscience/Objects/Groups.html#BaseCollection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyscience.Objects.Groups.BaseCollection" title="Link to this definition">#</a></dt>
 <dd><p>Set up the base collection class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1796,7 +1796,7 @@ and given key-word arguments control the <cite>xarray.apply_ufunc</cite> functio
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>func_in</strong> (<em>Callable</em>) – Function to be wrapped and made xarray fitting compatible.</p></li>
-<li><p><strong>bdims</strong> (<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html#xarray.DataArray" title="(in xarray v2024.7.1.dev0)"><em>xarray.DataArray</em></a>) – Optional precomputed broadcasted dimensions.</p></li>
+<li><p><strong>bdims</strong> (<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html#xarray.DataArray" title="(in xarray v2024.9.1.dev0)"><em>xarray.DataArray</em></a>) – Optional precomputed broadcasted dimensions.</p></li>
 <li><p><strong>dask_chunks</strong> (<em>Tuple</em><em>[</em><em>int..</em><em>]</em>) – How to split the broadcasted dimensions for dask.</p></li>
 </ul>
 </dd>
@@ -1804,7 +1804,7 @@ and given key-word arguments control the <cite>xarray.apply_ufunc</cite> functio
 <dd class="field-even"><p>Tuple of broadcasted fit arrays and wrapped fit function.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html#xarray.DataArray" title="(in xarray v2024.7.1.dev0)">xarray.DataArray</a>, Callable</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html#xarray.DataArray" title="(in xarray v2024.9.1.dev0)">xarray.DataArray</a>, Callable</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1819,7 +1819,7 @@ concatenated along the second axis (<cite>fit_dim</cite>).</p>
 <dd class="field-odd"><p>Broadcasted and concatenated coordinates</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html#xarray.DataArray" title="(in xarray v2024.7.1.dev0)">xarray.DataArray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html#xarray.DataArray" title="(in xarray v2024.9.1.dev0)">xarray.DataArray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1861,7 +1861,7 @@ concatenated along the second axis (<cite>fit_dim</cite>).</p>
 have not been previously instantiated.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>xarray_obj</strong> (<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2024.7.1.dev0)"><em>xarray.Dataset</em></a>) – DataSet which is called by obj.EasyScience</p>
+<dd class="field-odd"><p><strong>xarray_obj</strong> (<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2024.9.1.dev0)"><em>xarray.Dataset</em></a>) – DataSet which is called by obj.EasyScience</p>
 </dd>
 </dl>
 <dl class="py method">
@@ -1972,7 +1972,7 @@ and given key-word arguments control the <cite>xarray.apply_ufunc</cite> functio
 <span class="sig-name descname"><span class="pre">generate_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyscience/Datasets/xarray.html#EasyScienceDatasetAccessor.generate_points"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyscience.Datasets.xarray.EasyScienceDatasetAccessor.generate_points" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html#xarray.DataArray" title="(in xarray v2024.7.1.dev0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataArray</span></code></a></span></p>
+<dd class="field-odd"><p><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html#xarray.DataArray" title="(in xarray v2024.9.1.dev0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataArray</span></code></a></span></p>
 <p>Generate an expanded DataArray of points which corresponds to broadcasted dimensions (<cite>all_x</cite>) which have been
 concatenated along the second axis (<cite>fit_dim</cite>).</p>
 </p>

@@ -27,7 +27,7 @@ This  example shows the usages of the different constraints.
 .. code-block:: Python
 
 
-    from easyscience.fitting import Constraints
+    from easyscience import Constraints
     from easyscience.Objects.ObjectClasses import Parameter
 
     p1 = Parameter('p1', 1)
