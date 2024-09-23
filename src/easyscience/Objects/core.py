@@ -32,6 +32,9 @@ class ComponentSerializer:
 
     _CORE = True
 
+    def __deepcopy__(self, memo):
+        return self.from_dict(self.as_dict())
+
     def encode(self, skip: Optional[List[str]] = None, encoder: Optional[EC] = None, **kwargs) -> Any:
         """
         Use an encoder to covert an EasyScience object into another format. Default is to a dictionary using `DictSerializer`.
@@ -41,7 +44,6 @@ class ComponentSerializer:
         :param kwargs: Any additional key word arguments to be passed to the encoder
         :return: encoded object containing all information to reform an EasyScience object.
         """
-
         if encoder is None:
             encoder = DictSerializer
         encoder_obj = encoder()
