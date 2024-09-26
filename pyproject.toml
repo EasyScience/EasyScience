@@ -33,7 +33,7 @@ dependencies = [
     "bumps",
     "DFO-LS",
     "lmfit",
-    "numpy==1.26",  
+    "numpy",  
     "uncertainties",
     "xarray",
     "pint",  
