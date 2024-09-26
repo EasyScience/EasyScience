@@ -207,8 +207,8 @@ def test_custom_class_encode_data(dp_kwargs: dict, dp_cls: Type[DescriptorNumber
 
 def test_custom_class_full_encode_with_numpy():
     class B(BaseObj):
-        def __init__(self, a, b):
-            super(B, self).__init__("B", a=a)
+        def __init__(self, a, b, unique_name):
+            super(B, self).__init__("B", a=a, unique_name=unique_name)
             self.b = b
     # Same as in __init__.py for easyscience
     try:
@@ -216,7 +216,7 @@ def test_custom_class_full_encode_with_numpy():
     except metadata.PackageNotFoundError:
         version = '0.0.0'
 
-    obj = B(DescriptorNumber("a", 1.0, unique_name="a"), np.array([1.0, 2.0, 3.0]))
+    obj = B(DescriptorNumber("a", 1.0, unique_name="a"), np.array([1.0, 2.0, 3.0]), unique_name="B_0")
     full_enc = obj.encode(encoder=DictSerializer, full_encode=True)
     expected = {
         "@module": "tests.unit_tests.utils.io_tests.test_dict",
@@ -248,7 +248,7 @@ def test_custom_class_full_encode_with_numpy():
 
 def test_custom_class_full_decode_with_numpy():
     global_object.map._clear()
-    obj = B(DescriptorNumber("a", 1.0), np.array([1.0, 2.0, 3.0]))
+    obj = B(DescriptorNumber("a", 1.0), np.array([1.0, 2.0, 3.0]), unique_name="B_0")
     full_enc = obj.encode(encoder=DictSerializer, full_encode=True)
     global_object.map._clear()
     obj2 = B.decode(full_enc, decoder=DictSerializer)

@@ -236,6 +236,23 @@ def test_baseobj_as_dict(setup_pars: dict):
     check_dict(expected, obtained)
 
 
+def test_baseobj_dict_roundtrip(clear, setup_pars: dict):
+    # When
+    name = setup_pars["name"]
+    del setup_pars["name"]
+    obj = BaseObj(name, **setup_pars, unique_name='special_name')
+    obj_dict = obj.as_dict()
+
+    global_object.map._clear()
+
+    # Then
+    new_obj = BaseObj.from_dict(obj_dict)
+
+    # Expect
+    new_obj_dict = new_obj.as_dict()
+    assert obj_dict == new_obj_dict
+
+
 def test_baseobj_dir(setup_pars):
     name = setup_pars["name"]
     del setup_pars["name"]
