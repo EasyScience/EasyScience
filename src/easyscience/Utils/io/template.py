@@ -257,11 +257,7 @@ class BaseEncoderDecoder:
                 mod = __import__(modname, globals(), locals(), [classname], 0)
                 if hasattr(mod, classname):
                     cls_ = getattr(mod, classname)
-                    data = {
-                        k: BaseEncoderDecoder._convert_from_dict(v)
-                        for k, v in d.items()
-                        if not (k.startswith('@') or k == 'unique_name')
-                    }
+                    data = {k: BaseEncoderDecoder._convert_from_dict(v) for k, v in d.items() if not k.startswith('@')}
                     return cls_(**data)
             elif np is not None and modname == 'numpy' and classname == 'array':
                 if d['dtype'].startswith('complex'):

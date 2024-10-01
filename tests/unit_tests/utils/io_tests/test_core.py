@@ -131,8 +131,8 @@ class A(BaseObj):
 
 
 class B(BaseObj):
-    def __init__(self, a, b):
-        super(B, self).__init__("B", a=a)
+    def __init__(self, a, b, unique_name):
+        super(B, self).__init__("B", a=a, unique_name=unique_name)
         self.b = b
 
 
