@@ -21,22 +21,21 @@ classifiers = [
     "Topic :: Scientific/Engineering",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Development Status :: 3 - Alpha"
 ]
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.10,<3.13"
 dependencies = [
     "asteval",
     "bumps",
     "DFO-LS",
     "lmfit",
-    "numpy==1.26",  # Should be updated to numpy 2.0
+    "numpy",  
     "uncertainties",
     "xarray",
-    "pint==0.23",  # Only to ensure that unit is reported as dimensionless rather than empty string
+    "pint",  
     "scipp"
 ]
 
@@ -128,10 +127,9 @@ force-single-line = true
 legacy_tox_ini = """
 [tox]
 isolated_build = True
-envlist = py{3.9,3.10,3.11,3.12}
+envlist = py{3.10,3.11,3.12}
 [gh-actions]
 python =
-        3.9: py39
         3.10: py310
         3.11: py311
         3.12: py312
