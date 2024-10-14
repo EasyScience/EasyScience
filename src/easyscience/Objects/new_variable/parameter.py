@@ -49,6 +49,7 @@ class Parameter(DescriptorNumber):
         min: Optional[numbers.Number] = -np.inf,
         max: Optional[numbers.Number] = np.inf,
         fixed: Optional[bool] = False,
+        free: Optional[bool] = True,
         unique_name: Optional[str] = None,
         description: Optional[str] = None,
         url: Optional[str] = None,
@@ -300,6 +301,14 @@ class Parameter(DescriptorNumber):
         if not isinstance(fixed, bool):
             raise ValueError(f'{fixed=} must be a boolean. Got {type(fixed)}')
         self._fixed = fixed
+
+    @property
+    def free(self) -> bool:
+        return not self.fixed
+
+    @free.setter
+    def free(self, value: bool) -> None:
+        self.fixed = not value
 
     @property
     def bounds(self) -> Tuple[numbers.Number, numbers.Number]:

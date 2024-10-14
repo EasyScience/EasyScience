@@ -503,6 +503,7 @@ class Parameter(Descriptor):
         min: Optional[numbers.Number] = -np.inf,
         max: Optional[numbers.Number] = np.inf,
         fixed: Optional[bool] = False,
+        free: Optional[bool] = True,
         **kwargs,
     ):
         """
@@ -720,6 +721,14 @@ class Parameter(Descriptor):
         if not isinstance(value, bool):
             raise ValueError
         self._fixed = value
+
+    @property
+    def free(self) -> bool:
+        return not self.fixed
+
+    @free.setter
+    def free(self, value: bool) -> None:
+        self.fixed = not value
 
     @property
     def error(self) -> float:
