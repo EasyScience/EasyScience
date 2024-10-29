@@ -65,8 +65,10 @@ class DFO(MinimizerBase):
         model: Optional[Callable] = None,
         parameters: Optional[List[Parameter]] = None,
         method: str = None,
-        xtol: float = 1e-6,
-        ftol: float = 1e-8,
+        tolerance: Optional[float] = None,
+        max_evaluations: Optional[int] = None,
+        # xtol: float = 1e-6,
+        # ftol: float = 1e-8,
         **kwargs,
     ) -> FitResults:
         """
@@ -111,7 +113,7 @@ class DFO(MinimizerBase):
         global_object.stack.enabled = False
 
         try:
-            model_results = self._dfo_fit(self._cached_pars, model, **kwargs)
+            model_results = self._dfo_fit(self._cached_pars, model, tolerance, max_evaluations, **kwargs)
             self._set_parameter_fit_result(model_results, stack_status)
             results = self._gen_fit_results(model_results, weights)
         except Exception as e:
@@ -239,7 +241,13 @@ class DFO(MinimizerBase):
         return results
 
     @staticmethod
-    def _dfo_fit(pars: Dict[str, Parameter], model: Callable, **kwargs):
+    def _dfo_fit(
+        pars: Dict[str, Parameter],
+        model: Callable,
+        tolerance: Optional[float] = None,
+        max_evaluations: Optional[int] = None,
+        **kwargs,
+    ):
         """
         Method to convert EasyScience styling to DFO-LS styling (yes, again)
 
@@ -262,10 +270,18 @@ class DFO(MinimizerBase):
         )
         # https://numericalalgorithmsgroup.github.io/dfols/build/html/userguide.html
         if np.isinf(bounds).any():
-            results = dfols.solve(model, pars_values, bounds=bounds, **kwargs)
+            if max_evaluations is not None:
+                results = dfols.solve(model, pars_values, maxfun=max_evaluations, **kwargs)
+            else:
+                results = dfols.solve(model, pars_values, bounds=bounds, **kwargs)
         else:
             # It is only possible to scale (normalize) variables if they are bound (different from inf)
-            results = dfols.solve(model, pars_values, bounds=bounds, scaling_within_bounds=True, **kwargs)
+            if max_evaluations is not None:
+                results = dfols.solve(
+                    model, pars_values, maxfun=max_evaluations, bounds=bounds, scaling_within_bounds=True, **kwargs
+                )
+            else:
+                results = dfols.solve(model, pars_values, bounds=bounds, scaling_within_bounds=True, **kwargs)
 
         if 'Success' not in results.msg:
             raise FitError(f'Fit failed with message: {results.msg}')

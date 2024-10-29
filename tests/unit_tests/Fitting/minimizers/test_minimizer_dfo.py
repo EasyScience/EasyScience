@@ -62,7 +62,7 @@ class TestDFOFit():
 
         # Expect
         assert result == 'gen_fit_results'
-        minimizer._dfo_fit.assert_called_once_with(cached_pars, mock_model)
+        minimizer._dfo_fit.assert_called_once_with(cached_pars, mock_model, None, None)
         minimizer._make_model.assert_called_once_with(parameters=None)
         minimizer._set_parameter_fit_result.assert_called_once_with('fit', False)
         minimizer._gen_fit_results.assert_called_once_with('fit', 1.4142135623730951)

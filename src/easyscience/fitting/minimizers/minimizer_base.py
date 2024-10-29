@@ -83,6 +83,8 @@ class MinimizerBase(metaclass=ABCMeta):
         model: Optional[Callable] = None,
         parameters: Optional[Parameter] = None,
         method: Optional[str] = None,
+        tolerance: Optional[float] = None,
+        max_evaluations: Optional[int] = None,
         **kwargs,
     ) -> FitResults:
         """

@@ -27,10 +27,28 @@ class Fitter:
         self._fit_object = fit_object
         self._fit_function = fit_function
         self._dependent_dims = None
+        self._tolerance = None
+        self._max_evaluations = None
 
         self._enum_current_minimizer = DEFAULT_MINIMIZER
         self._minimizer: MinimizerBase  # _minimizer is set in the create method
         self._update_minimizer(self._enum_current_minimizer)
+
+    def set_tolerance(self, tolerance: float) -> None:
+        """
+        Set the tolerance for the minimizer.
+
+        :param tolerance: Tolerance for the minimizer
+        """
+        self._tolerance = tolerance
+
+    def set_max_evaluations(self, max_evaluations: int) -> None:
+        """
+        Set the maximal number of evaluations for the minimizer.
+
+        :param max_evaluations: Maximal number of steps for the minimizer
+        """
+        self._max_evaluations = max_evaluations
 
     def fit_constraints(self) -> list:
         return self._minimizer.fit_constraints()
@@ -175,7 +193,7 @@ class Fitter:
         re-constitute the independent variables and once the fit is completed, reshape the inputs to those expected.
         """
 
-        @functools.wraps(self.minimizer.fit)
+        @functools.wraps(self._minimizer.fit)
         def inner_fit_callable(
             x: np.ndarray,
             y: np.ndarray,
@@ -202,7 +220,14 @@ class Fitter:
             constraints = self._minimizer.fit_constraints()
             self.fit_function = fit_fun_wrap
             self._minimizer.set_fit_constraint(constraints)
-            f_res = self.minimizer.fit(x_fit, y_new, weights=weights, **kwargs)
+            f_res = self._minimizer.fit(
+                x_fit,
+                y_new,
+                weights=weights,
+                tolerance=self._tolerance,
+                max_evaluations=self._max_evaluations,
+                **kwargs,
+            )
 
             # Postcompute
             fit_result = self._post_compute_reshaping(f_res, x, y)

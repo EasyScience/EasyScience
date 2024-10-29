@@ -85,6 +85,8 @@ class LMFit(MinimizerBase):  # noqa: S101
         model: Optional[LMModel] = None,
         parameters: Optional[LMParameters] = None,
         method: Optional[str] = None,
+        tolerance: Optional[float] = None,
+        max_evaluations: Optional[int] = None,
         minimizer_kwargs: Optional[dict] = None,
         engine_kwargs: Optional[dict] = None,
         **kwargs,
@@ -124,6 +126,9 @@ class LMFit(MinimizerBase):  # noqa: S101
             minimizer_kwargs = {'fit_kws': minimizer_kwargs}
         minimizer_kwargs.update(engine_kwargs)
 
+        if 'tol' not in minimizer_kwargs and tolerance is not None:
+            minimizer_kwargs['tol'] = tolerance
+
         # Why do we do this? Because a fitting template has to have global_object instantiated outside pre-runtime
         from easyscience import global_object
 
@@ -134,7 +139,15 @@ class LMFit(MinimizerBase):  # noqa: S101
             if model is None:
                 model = self._make_model()
 
-            model_results = model.fit(y, x=x, weights=weights, **method_dict, **minimizer_kwargs, **kwargs)
+            model_results = model.fit(
+                y,
+                x=x,
+                weights=weights,
+                max_nfev=max_evaluations,
+                **method_dict,
+                **minimizer_kwargs,
+                **kwargs,
+            )
             self._set_parameter_fit_result(model_results, stack_status)
             results = self._gen_fit_results(model_results)
         except Exception as e:

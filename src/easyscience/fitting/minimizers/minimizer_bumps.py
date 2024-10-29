@@ -74,6 +74,8 @@ class Bumps(MinimizerBase):
         model: Optional[Callable] = None,
         parameters: Optional[Parameter] = None,
         method: Optional[str] = None,
+        tolerance: Optional[float] = None,
+        max_evaluations: Optional[int] = None,
         minimizer_kwargs: Optional[dict] = None,
         engine_kwargs: Optional[dict] = None,
         **kwargs,
@@ -110,6 +112,11 @@ class Bumps(MinimizerBase):
         # else:
         #     minimizer_kwargs = {"fit_kws": minimizer_kwargs}
         minimizer_kwargs.update(engine_kwargs)
+
+        if 'ftol' not in minimizer_kwargs and tolerance is not None:
+            minimizer_kwargs['ftol'] = tolerance
+        if 'steps' not in minimizer_kwargs and max_evaluations is not None:
+            minimizer_kwargs['steps'] = max_evaluations
 
         if model is None:
             model_function = self._make_model(parameters=parameters)
