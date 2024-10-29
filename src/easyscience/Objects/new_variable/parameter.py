@@ -49,7 +49,6 @@ class Parameter(DescriptorNumber):
         min: Optional[numbers.Number] = -np.inf,
         max: Optional[numbers.Number] = np.inf,
         fixed: Optional[bool] = False,
-        free: Optional[bool] = True,
         unique_name: Optional[str] = None,
         description: Optional[str] = None,
         url: Optional[str] = None,

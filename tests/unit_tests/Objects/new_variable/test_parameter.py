@@ -328,7 +328,6 @@ class TestParameter:
             "min": 0,
             "max": 10,
             "fixed": False,
-            "free": True,
             "description": "description",
             "url": "url",
             "display_name": "display_name",

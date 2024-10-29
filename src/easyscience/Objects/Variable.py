@@ -503,7 +503,6 @@ class Parameter(Descriptor):
         min: Optional[numbers.Number] = -np.inf,
         max: Optional[numbers.Number] = np.inf,
         fixed: Optional[bool] = False,
-        free: Optional[bool] = True,
         **kwargs,
     ):
         """
