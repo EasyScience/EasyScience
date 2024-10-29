@@ -302,6 +302,14 @@ class Parameter(DescriptorNumber):
         self._fixed = fixed
 
     @property
+    def free(self) -> bool:
+        return not self.fixed
+
+    @free.setter
+    def free(self, value: bool) -> None:
+        self.fixed = not value
+
+    @property
     def bounds(self) -> Tuple[numbers.Number, numbers.Number]:
         """
         Get the bounds of the parameter.

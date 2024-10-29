@@ -722,6 +722,14 @@ class Parameter(Descriptor):
         self._fixed = value
 
     @property
+    def free(self) -> bool:
+        return not self.fixed
+
+    @free.setter
+    def free(self, value: bool) -> None:
+        self.fixed = not value
+
+    @property
     def error(self) -> float:
         """
         The error associated with the parameter.
