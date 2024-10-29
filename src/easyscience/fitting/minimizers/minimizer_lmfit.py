@@ -112,22 +112,14 @@ class LMFit(MinimizerBase):  # noqa: S101
         :return: Fit results
         :rtype: ModelResult
         """
-        method_dict = self._get_method_dict(method)
-
         if weights is None:
             weights = 1 / np.sqrt(np.abs(y))
 
         if engine_kwargs is None:
             engine_kwargs = {}
 
-        if minimizer_kwargs is None:
-            minimizer_kwargs = {}
-        else:
-            minimizer_kwargs = {'fit_kws': minimizer_kwargs}
-        minimizer_kwargs.update(engine_kwargs)
-
-        if 'tol' not in minimizer_kwargs and tolerance is not None:
-            minimizer_kwargs['tol'] = tolerance
+        method_kwargs = self._get_method_kwargs(method)
+        fit_kws_dict = self._get_fit_kws(method, tolerance, minimizer_kwargs)
 
         # Why do we do this? Because a fitting template has to have global_object instantiated outside pre-runtime
         from easyscience import global_object
@@ -144,8 +136,9 @@ class LMFit(MinimizerBase):  # noqa: S101
                 x=x,
                 weights=weights,
                 max_nfev=max_evaluations,
-                **method_dict,
-                **minimizer_kwargs,
+                fit_kws=fit_kws_dict,
+                **method_kwargs,
+                **engine_kwargs,
                 **kwargs,
             )
             self._set_parameter_fit_result(model_results, stack_status)
@@ -155,6 +148,21 @@ class LMFit(MinimizerBase):  # noqa: S101
                 self._cached_pars[key].value = self._cached_pars_vals[key][0]
             raise FitError(e)
         return results
+
+    def _get_fit_kws(
+        self,
+        method: str,
+        tolerance: float,
+        minimizer_kwargs: dict[str:str],
+    ) -> dict[str:str]:
+        if minimizer_kwargs is None:
+            minimizer_kwargs = {}
+        if tolerance is not None:
+            if method in [None, 'least_squares', 'leastsq']:
+                minimizer_kwargs['ftol'] = tolerance
+            if method in ['differential_evolution', 'powell', 'cobyla']:
+                minimizer_kwargs['tol'] = tolerance
+        return minimizer_kwargs
 
     def convert_to_pars_obj(self, parameters: Optional[List[Parameter]] = None) -> LMParameters:
         """

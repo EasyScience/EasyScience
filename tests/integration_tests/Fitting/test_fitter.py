@@ -170,6 +170,32 @@ def test_basic_max_evaluations(fit_engine):
         assert "Objective has been called MAXFUN times" in str(e)
 
 
+@pytest.mark.parametrize("fit_engine", [None, AvailableMinimizers.LMFit, AvailableMinimizers.Bumps, AvailableMinimizers.DFO])
+def test_basic_tolerance(fit_engine):
+    ref_sin = AbsSin(0.2, np.pi)
+    sp_sin = AbsSin(0.354, 3.05)
+
+    x = np.linspace(0, 5, 200)
+    y = ref_sin(x)
+
+    sp_sin.offset.fixed = False
+    sp_sin.phase.fixed = False
+
+    f = Fitter(sp_sin, sp_sin)
+    if fit_engine is not None:
+        try:
+            f.switch_minimizer(fit_engine)
+        except AttributeError:
+            pytest.skip(msg=f"{fit_engine} is not installed")
+    args = [x, y]
+    kwargs = {}
+    f.set_tolerance(10)
+    result = f.fit(*args, **kwargs)
+    # Result should not be the same as the reference
+    assert sp_sin.phase.value != pytest.approx(ref_sin.phase.value, rel=1e-3)
+    assert sp_sin.offset.value != pytest.approx(ref_sin.offset.value, rel=1e-3)
+
+
 @pytest.mark.parametrize("fit_method", ["leastsq", "powell", "cobyla"])
 def test_lmfit_methods(fit_method):
     ref_sin = AbsSin(0.2, np.pi)

@@ -131,7 +131,7 @@ class MinimizerBase(metaclass=ABCMeta):
 
         return self._fit_function(x, **minimizer_parameters, **kwargs)
 
-    def _get_method_dict(self, passed_method: Optional[str] = None) -> dict[str, str]:
+    def _get_method_kwargs(self, passed_method: Optional[str] = None) -> dict[str, str]:
         if passed_method is not None:
             if passed_method not in self.supported_methods():
                 raise FitError(f'Method {passed_method} not available in {self.__class__}')

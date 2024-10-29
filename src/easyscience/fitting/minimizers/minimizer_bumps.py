@@ -99,7 +99,7 @@ class Bumps(MinimizerBase):
         :return: Fit results
         :rtype: ModelResult
         """
-        method_dict = self._get_method_dict(method)
+        method_dict = self._get_method_kwargs(method)
 
         if weights is None:
             weights = np.sqrt(np.abs(y))
