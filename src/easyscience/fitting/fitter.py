@@ -26,13 +26,13 @@ class Fitter:
     def __init__(self, fit_object, fit_function: Callable):
         self._fit_object = fit_object
         self._fit_function = fit_function
-        self._dependent_dims = None
-        self._tolerance = None
-        self._max_evaluations = None
+        self._dependent_dims: int = None
+        self._tolerance: float = None
+        self._max_evaluations: int = None
 
-        self._enum_current_minimizer = DEFAULT_MINIMIZER
-        self._minimizer: MinimizerBase  # _minimizer is set in the create method
-        self._update_minimizer(self._enum_current_minimizer)
+        self._minimizer: MinimizerBase = None  # set in _update_minimizer
+        self._enum_current_minimizer: AvailableMinimizers = None  # set in _update_minimizer
+        self._update_minimizer(DEFAULT_MINIMIZER)
 
     def fit_constraints(self) -> list:
         return self._minimizer.fit_constraints()

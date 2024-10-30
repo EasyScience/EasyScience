@@ -40,7 +40,7 @@ class MinimizerBase(metaclass=ABCMeta):
         self,
         obj,  #: BaseObj,
         fit_function: Callable,
-        minimizer_enum: Optional[AvailableMinimizers] = None,
+        minimizer_enum: AvailableMinimizers,
     ):  # todo after constraint changes, add type hint: obj: BaseObj  # noqa: E501
         if minimizer_enum.method not in self.supported_methods():
             raise FitError(f'Method {minimizer_enum.method} not available in {self.__class__}')
@@ -57,6 +57,10 @@ class MinimizerBase(metaclass=ABCMeta):
     @property
     def all_constraints(self) -> List[ObjConstraint]:
         return [*self._constraints, *self._object._constraints]
+
+    @property
+    def enum(self) -> AvailableMinimizers:
+        return self._minimizer_enum
 
     @property
     def name(self) -> str:

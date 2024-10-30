@@ -17,10 +17,11 @@ class TestMinimizerBase():
         MinimizerBase.__abstractmethods__ = set()
         MinimizerBase.supported_methods = MagicMock(return_value=['method'])
 
+        self._mock_minimizer_enum = MagicMock(package='package', method='method') 
         minimizer = MinimizerBase(
             obj='obj',
             fit_function='fit_function',
-            minimizer_enum=MagicMock(package='package', method='method')
+            minimizer_enum=self._mock_minimizer_enum
         )
         return minimizer
     
@@ -47,6 +48,9 @@ class TestMinimizerBase():
         assert minimizer._fit_function == None
         assert minimizer._constraints == []
     
+    def test_enum(self, minimizer: MinimizerBase):
+        assert minimizer.enum == self._mock_minimizer_enum
+
     def test_evaluate(self, minimizer: MinimizerBase):
         # When
         minimizer._fit_function = MagicMock(return_value='fit_function_return')
