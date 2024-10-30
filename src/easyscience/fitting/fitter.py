@@ -34,22 +34,6 @@ class Fitter:
         self._minimizer: MinimizerBase  # _minimizer is set in the create method
         self._update_minimizer(self._enum_current_minimizer)
 
-    def set_tolerance(self, tolerance: float) -> None:
-        """
-        Set the tolerance for the minimizer.
-
-        :param tolerance: Tolerance for the minimizer
-        """
-        self._tolerance = tolerance
-
-    def set_max_evaluations(self, max_evaluations: int) -> None:
-        """
-        Set the maximal number of evaluations for the minimizer.
-
-        :param max_evaluations: Maximal number of steps for the minimizer
-        """
-        self._max_evaluations = max_evaluations
-
     def fit_constraints(self) -> list:
         return self._minimizer.fit_constraints()
 
@@ -127,6 +111,42 @@ class Fitter:
         :rtype: MinimizerBase
         """
         return self._minimizer
+
+    @property
+    def tolerance(self) -> float:
+        """
+        Get the tolerance for the minimizer.
+
+        :return: Tolerance for the minimizer
+        """
+        return self._tolerance
+
+    @tolerance.setter
+    def tolerance(self, tolerance: float) -> None:
+        """
+        Set the tolerance for the minimizer.
+
+        :param tolerance: Tolerance for the minimizer
+        """
+        self._tolerance = tolerance
+
+    @property
+    def max_evaluations(self) -> int:
+        """
+        Get the maximal number of evaluations for the minimizer.
+
+        :return: Maximal number of steps for the minimizer
+        """
+        return self._max_evaluations
+
+    @max_evaluations.setter
+    def max_evaluations(self, max_evaluations: int) -> None:
+        """
+        Set the maximal number of evaluations for the minimizer.
+
+        :param max_evaluations: Maximal number of steps for the minimizer
+        """
+        self._max_evaluations = max_evaluations
 
     @property
     def fit_function(self) -> Callable:

@@ -159,7 +159,7 @@ def test_basic_max_evaluations(fit_engine):
             pytest.skip(msg=f"{fit_engine} is not installed")
     args = [x, y]
     kwargs = {}
-    f.set_max_evaluations(3)
+    f.max_evaluations = 3
     try:
         result = f.fit(*args, **kwargs)
         # Result should not be the same as the reference
@@ -189,7 +189,7 @@ def test_basic_tolerance(fit_engine, tolerance):
             pytest.skip(msg=f"{fit_engine} is not installed")
     args = [x, y]
     kwargs = {}
-    f.set_tolerance(tolerance)
+    f.tolerance = tolerance
     result = f.fit(*args, **kwargs)
     # Result should not be the same as the reference
     assert sp_sin.phase.value != pytest.approx(ref_sin.phase.value, rel=1e-3)
