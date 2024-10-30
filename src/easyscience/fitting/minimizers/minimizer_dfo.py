@@ -53,9 +53,7 @@ class DFO(MinimizerBase):
 
     @staticmethod
     def all_methods() -> List[str]:
-        return [
-            'leastsq',
-        ]
+        return ['leastsq']
 
     def fit(
         self,
@@ -67,8 +65,6 @@ class DFO(MinimizerBase):
         method: str = None,
         tolerance: Optional[float] = None,
         max_evaluations: Optional[int] = None,
-        # xtol: float = 1e-6,
-        # ftol: float = 1e-8,
         **kwargs,
     ) -> FitResults:
         """
@@ -115,7 +111,6 @@ class DFO(MinimizerBase):
         kwargs = self._prepare_kwargs(tolerance, max_evaluations, **kwargs)
 
         try:
-            #            model_results = self._dfo_fit(self._cached_pars, model, tolerance, max_evaluations, **kwargs)
             model_results = self._dfo_fit(self._cached_pars, model, **kwargs)
             self._set_parameter_fit_result(model_results, stack_status)
             results = self._gen_fit_results(model_results, weights)
@@ -247,8 +242,6 @@ class DFO(MinimizerBase):
     def _dfo_fit(
         pars: Dict[str, Parameter],
         model: Callable,
-        #        tolerance: Optional[float] = None,
-        #        max_evaluations: Optional[int] = None,
         **kwargs,
     ):
         """

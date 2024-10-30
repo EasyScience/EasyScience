@@ -149,12 +149,7 @@ class LMFit(MinimizerBase):  # noqa: S101
             raise FitError(e)
         return results
 
-    def _get_fit_kws(
-        self,
-        method: str,
-        tolerance: float,
-        minimizer_kwargs: dict[str:str],
-    ) -> dict[str:str]:
+    def _get_fit_kws(self, method: str, tolerance: float, minimizer_kwargs: dict[str:str]) -> dict[str:str]:
         if minimizer_kwargs is None:
             minimizer_kwargs = {}
         if tolerance is not None:
