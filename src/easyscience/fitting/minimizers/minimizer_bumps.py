@@ -109,13 +109,14 @@ class Bumps(MinimizerBase):
 
         if minimizer_kwargs is None:
             minimizer_kwargs = {}
-        # else:
-        #     minimizer_kwargs = {"fit_kws": minimizer_kwargs}
         minimizer_kwargs.update(engine_kwargs)
 
-        if 'ftol' not in minimizer_kwargs and tolerance is not None:
-            minimizer_kwargs['ftol'] = tolerance
-        if 'steps' not in minimizer_kwargs and max_evaluations is not None:
+        if tolerance is not None:
+            if 0.1 < tolerance:
+                raise ValueError('Tolerance must be  equal or smaller than 0.1')
+            minimizer_kwargs['ftol'] = tolerance  # tolerance for change in function value
+            minimizer_kwargs['xtol'] = tolerance  # tolerance for change in parameter value
+        if max_evaluations is not None:
             minimizer_kwargs['steps'] = max_evaluations
 
         if model is None:

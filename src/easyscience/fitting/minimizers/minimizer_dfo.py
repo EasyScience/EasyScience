@@ -112,8 +112,11 @@ class DFO(MinimizerBase):
         stack_status = global_object.stack.enabled
         global_object.stack.enabled = False
 
+        kwargs = self._prepare_kwargs(tolerance, max_evaluations, **kwargs)
+
         try:
-            model_results = self._dfo_fit(self._cached_pars, model, tolerance, max_evaluations, **kwargs)
+            #            model_results = self._dfo_fit(self._cached_pars, model, tolerance, max_evaluations, **kwargs)
+            model_results = self._dfo_fit(self._cached_pars, model, **kwargs)
             self._set_parameter_fit_result(model_results, stack_status)
             results = self._gen_fit_results(model_results, weights)
         except Exception as e:
@@ -244,8 +247,8 @@ class DFO(MinimizerBase):
     def _dfo_fit(
         pars: Dict[str, Parameter],
         model: Callable,
-        tolerance: Optional[float] = None,
-        max_evaluations: Optional[int] = None,
+        #        tolerance: Optional[float] = None,
+        #        max_evaluations: Optional[int] = None,
         **kwargs,
     ):
         """
@@ -269,21 +272,23 @@ class DFO(MinimizerBase):
             np.array([par.max for par in pars.values()]),
         )
         # https://numericalalgorithmsgroup.github.io/dfols/build/html/userguide.html
-        if np.isinf(bounds).any():
-            if max_evaluations is not None:
-                results = dfols.solve(model, pars_values, maxfun=max_evaluations, **kwargs)
-            else:
-                results = dfols.solve(model, pars_values, bounds=bounds, **kwargs)
-        else:
+        if not np.isinf(bounds).any():
             # It is only possible to scale (normalize) variables if they are bound (different from inf)
-            if max_evaluations is not None:
-                results = dfols.solve(
-                    model, pars_values, maxfun=max_evaluations, bounds=bounds, scaling_within_bounds=True, **kwargs
-                )
-            else:
-                results = dfols.solve(model, pars_values, bounds=bounds, scaling_within_bounds=True, **kwargs)
+            kwargs['scaling_within_bounds'] = True
+
+        results = dfols.solve(model, pars_values, bounds=bounds, **kwargs)
 
         if 'Success' not in results.msg:
             raise FitError(f'Fit failed with message: {results.msg}')
 
         return results
+
+    @staticmethod
+    def _prepare_kwargs(tolerance: Optional[float] = None, max_evaluations: Optional[int] = None, **kwargs) -> dict[str:str]:
+        if max_evaluations is not None:
+            kwargs['maxfun'] = max_evaluations  # max number of function evaluations
+        if tolerance is not None:
+            if 0.1 < tolerance:
+                raise ValueError('Tolerance must be equal or smaller than 0.1')
+            kwargs['rhoend'] = tolerance  # size of the trust region
+        return kwargs
