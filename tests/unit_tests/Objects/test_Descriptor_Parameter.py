@@ -134,32 +134,19 @@ def test_Parameter_value_get(element, expected):
 def test_item_value_set(instance, enabled, debug):
     global_object.debug = debug
     set_value = 2
+
     d = instance("test", 1)
     if enabled is not None:
         d.enabled = enabled
-    else:
-        enabled = True
-    if enabled:
-        d.value = set_value
-        assert d.raw_value == set_value
-    else:
-        if debug:
-            with pytest.raises(CoreSetException):
-                d.value = set_value
+    d.value = set_value
+    assert d.raw_value == set_value
+
     d = instance("test", 1, units="kelvin")
     if enabled is not None:
         d.enabled = enabled
-    else:
-        enabled = True
-
-    if enabled:
-        d.value = set_value
-        assert d.raw_value == set_value
-        assert str(d.unit) == "kelvin"
-    else:
-        if debug:
-            with pytest.raises(CoreSetException):
-                d.value = set_value
+    d.value = set_value
+    assert d.raw_value == set_value
+    assert str(d.unit) == "kelvin"
 
 
 @pytest.mark.parametrize("instance", (Descriptor, Parameter), indirect=True)
