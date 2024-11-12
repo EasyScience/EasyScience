@@ -304,10 +304,6 @@ class Descriptor(ComponentSerializer):
         :param value: New value of self
         :return: None
         """
-        if not self.enabled:
-            if global_object.debug:
-                raise CoreSetException(f'{str(self)} is not enabled.')
-            return
         self.__deepValueSetter(value)
         if self._callback.fset is not None:
             try:
