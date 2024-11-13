@@ -112,8 +112,6 @@ class Bumps(MinimizerBase):
         minimizer_kwargs.update(engine_kwargs)
 
         if tolerance is not None:
-            if 0.1 < tolerance:
-                raise ValueError('Tolerance must be  equal or smaller than 0.1')
             minimizer_kwargs['ftol'] = tolerance  # tolerance for change in function value
             minimizer_kwargs['xtol'] = tolerance  # tolerance for change in parameter value, could be an independent value
         if max_evaluations is not None:

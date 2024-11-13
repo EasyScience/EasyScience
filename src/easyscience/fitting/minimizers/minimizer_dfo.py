@@ -281,7 +281,7 @@ class DFO(MinimizerBase):
         if max_evaluations is not None:
             kwargs['maxfun'] = max_evaluations  # max number of function evaluations
         if tolerance is not None:
-            if 0.1 < tolerance:
+            if 0.1 < tolerance:  # dfo module throws errer if larger value
                 raise ValueError('Tolerance must be equal or smaller than 0.1')
             kwargs['rhoend'] = tolerance  # size of the trust region
         return kwargs

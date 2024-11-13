@@ -170,7 +170,7 @@ def test_basic_max_evaluations(fit_engine):
         assert "Objective has been called MAXFUN times" in str(e)
 
 
-@pytest.mark.parametrize("fit_engine,tolerance", [(None, 10), (AvailableMinimizers.LMFit, 10), (AvailableMinimizers.Bumps, 0.1), (AvailableMinimizers.DFO, 0.1)])
+@pytest.mark.parametrize("fit_engine,tolerance", [(None, 10), (AvailableMinimizers.LMFit, 10), (AvailableMinimizers.Bumps, 10), (AvailableMinimizers.DFO, 0.1)])
 def test_basic_tolerance(fit_engine, tolerance):
     ref_sin = AbsSin(0.2, np.pi)
     sp_sin = AbsSin(0.354, 3.05)
