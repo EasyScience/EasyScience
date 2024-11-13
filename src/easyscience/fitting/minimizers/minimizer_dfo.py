@@ -53,9 +53,7 @@ class DFO(MinimizerBase):
 
     @staticmethod
     def all_methods() -> List[str]:
-        return [
-            'leastsq',
-        ]
+        return ['leastsq']
 
     def fit(
         self,
@@ -65,8 +63,8 @@ class DFO(MinimizerBase):
         model: Optional[Callable] = None,
         parameters: Optional[List[Parameter]] = None,
         method: str = None,
-        xtol: float = 1e-6,
-        ftol: float = 1e-8,
+        tolerance: Optional[float] = None,
+        max_evaluations: Optional[int] = None,
         **kwargs,
     ) -> FitResults:
         """
@@ -109,6 +107,8 @@ class DFO(MinimizerBase):
 
         stack_status = global_object.stack.enabled
         global_object.stack.enabled = False
+
+        kwargs = self._prepare_kwargs(tolerance, max_evaluations, **kwargs)
 
         try:
             model_results = self._dfo_fit(self._cached_pars, model, **kwargs)
@@ -239,7 +239,11 @@ class DFO(MinimizerBase):
         return results
 
     @staticmethod
-    def _dfo_fit(pars: Dict[str, Parameter], model: Callable, **kwargs):
+    def _dfo_fit(
+        pars: Dict[str, Parameter],
+        model: Callable,
+        **kwargs,
+    ):
         """
         Method to convert EasyScience styling to DFO-LS styling (yes, again)
 
@@ -261,13 +265,23 @@ class DFO(MinimizerBase):
             np.array([par.max for par in pars.values()]),
         )
         # https://numericalalgorithmsgroup.github.io/dfols/build/html/userguide.html
-        if np.isinf(bounds).any():
-            results = dfols.solve(model, pars_values, bounds=bounds, **kwargs)
-        else:
+        if not np.isinf(bounds).any():
             # It is only possible to scale (normalize) variables if they are bound (different from inf)
-            results = dfols.solve(model, pars_values, bounds=bounds, scaling_within_bounds=True, **kwargs)
+            kwargs['scaling_within_bounds'] = True
+
+        results = dfols.solve(model, pars_values, bounds=bounds, **kwargs)
 
         if 'Success' not in results.msg:
             raise FitError(f'Fit failed with message: {results.msg}')
 
         return results
+
+    @staticmethod
+    def _prepare_kwargs(tolerance: Optional[float] = None, max_evaluations: Optional[int] = None, **kwargs) -> dict[str:str]:
+        if max_evaluations is not None:
+            kwargs['maxfun'] = max_evaluations  # max number of function evaluations
+        if tolerance is not None:
+            if 0.1 < tolerance:  # dfo module throws errer if larger value
+                raise ValueError('Tolerance must be equal or smaller than 0.1')
+            kwargs['rhoend'] = tolerance  # size of the trust region
+        return kwargs

@@ -40,7 +40,7 @@ class MinimizerBase(metaclass=ABCMeta):
         self,
         obj,  #: BaseObj,
         fit_function: Callable,
-        minimizer_enum: Optional[AvailableMinimizers] = None,
+        minimizer_enum: AvailableMinimizers,
     ):  # todo after constraint changes, add type hint: obj: BaseObj  # noqa: E501
         if minimizer_enum.method not in self.supported_methods():
             raise FitError(f'Method {minimizer_enum.method} not available in {self.__class__}')
@@ -57,6 +57,10 @@ class MinimizerBase(metaclass=ABCMeta):
     @property
     def all_constraints(self) -> List[ObjConstraint]:
         return [*self._constraints, *self._object._constraints]
+
+    @property
+    def enum(self) -> AvailableMinimizers:
+        return self._minimizer_enum
 
     @property
     def name(self) -> str:
@@ -83,6 +87,8 @@ class MinimizerBase(metaclass=ABCMeta):
         model: Optional[Callable] = None,
         parameters: Optional[Parameter] = None,
         method: Optional[str] = None,
+        tolerance: Optional[float] = None,
+        max_evaluations: Optional[int] = None,
         **kwargs,
     ) -> FitResults:
         """
@@ -129,7 +135,7 @@ class MinimizerBase(metaclass=ABCMeta):
 
         return self._fit_function(x, **minimizer_parameters, **kwargs)
 
-    def _get_method_dict(self, passed_method: Optional[str] = None) -> dict[str, str]:
+    def _get_method_kwargs(self, passed_method: Optional[str] = None) -> dict[str, str]:
         if passed_method is not None:
             if passed_method not in self.supported_methods():
                 raise FitError(f'Method {passed_method} not available in {self.__class__}')

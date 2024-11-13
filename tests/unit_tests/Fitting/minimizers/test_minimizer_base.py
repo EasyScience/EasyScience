@@ -17,10 +17,11 @@ class TestMinimizerBase():
         MinimizerBase.__abstractmethods__ = set()
         MinimizerBase.supported_methods = MagicMock(return_value=['method'])
 
+        self._mock_minimizer_enum = MagicMock(package='package', method='method') 
         minimizer = MinimizerBase(
             obj='obj',
             fit_function='fit_function',
-            minimizer_enum=MagicMock(package='package', method='method')
+            minimizer_enum=self._mock_minimizer_enum
         )
         return minimizer
     
@@ -47,6 +48,9 @@ class TestMinimizerBase():
         assert minimizer._fit_function == None
         assert minimizer._constraints == []
     
+    def test_enum(self, minimizer: MinimizerBase):
+        assert minimizer.enum == self._mock_minimizer_enum
+
     def test_evaluate(self, minimizer: MinimizerBase):
         # When
         minimizer._fit_function = MagicMock(return_value='fit_function_return')
@@ -172,7 +176,7 @@ class TestMinimizerBase():
 
     def test_get_method_dict(self, minimizer: MinimizerBase) -> None:
         # When Then
-        result = minimizer._get_method_dict()
+        result = minimizer._get_method_kwargs()
 
         # Expect
         assert result == {'method': 'method'}
@@ -182,7 +186,7 @@ class TestMinimizerBase():
         minimizer._method = None
 
         # Then
-        result = minimizer._get_method_dict()
+        result = minimizer._get_method_kwargs()
 
         # Expect
         assert result == {}
@@ -192,7 +196,7 @@ class TestMinimizerBase():
         minimizer.supported_methods = MagicMock(return_value=['supported_method'])
 
         # Then
-        result = minimizer._get_method_dict('supported_method')
+        result = minimizer._get_method_kwargs('supported_method')
 
         # Expect
         assert result == {'method': 'supported_method'}
@@ -203,5 +207,5 @@ class TestMinimizerBase():
 
         # Then Expect
         with pytest.raises(FitError):
-            result = minimizer._get_method_dict('not_supported_method')
+            result = minimizer._get_method_kwargs('not_supported_method')
 
