@@ -20,7 +20,8 @@ class TestFitter():
         assert fitter._fit_object == self.mock_fit_object
         assert fitter._fit_function == self.mock_fit_function
         assert fitter._dependent_dims is None
-        assert fitter._enum_current_minimizer == AvailableMinimizers.LMFit_leastsq
+        assert fitter._enum_current_minimizer is None #== AvailableMinimizers.LMFit_leastsq
+        assert fitter._minimizer is None
         fitter._update_minimizer.assert_called_once_with(AvailableMinimizers.LMFit_leastsq)
 
     def test_fit_constraints(self, fitter: Fitter):

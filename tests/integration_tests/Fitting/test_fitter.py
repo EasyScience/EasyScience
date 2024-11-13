@@ -140,6 +140,62 @@ def test_fit_result(fit_engine):
     check_fit_results(result, sp_sin, ref_sin, x, sp_ref1=sp_ref1, sp_ref2=sp_ref2)
 
 
+@pytest.mark.parametrize("fit_engine", [None, AvailableMinimizers.LMFit, AvailableMinimizers.Bumps, AvailableMinimizers.DFO])
+def test_basic_max_evaluations(fit_engine):
+    ref_sin = AbsSin(0.2, np.pi)
+    sp_sin = AbsSin(0.354, 3.05)
+
+    x = np.linspace(0, 5, 200)
+    y = ref_sin(x)
+
+    sp_sin.offset.fixed = False
+    sp_sin.phase.fixed = False
+
+    f = Fitter(sp_sin, sp_sin)
+    if fit_engine is not None:
+        try:
+            f.switch_minimizer(fit_engine)
+        except AttributeError:
+            pytest.skip(msg=f"{fit_engine} is not installed")
+    args = [x, y]
+    kwargs = {}
+    f.max_evaluations = 3
+    try:
+        result = f.fit(*args, **kwargs)
+        # Result should not be the same as the reference
+        assert sp_sin.phase.value != pytest.approx(ref_sin.phase.value, rel=1e-3)
+        assert sp_sin.offset.value != pytest.approx(ref_sin.offset.value, rel=1e-3)
+    except FitError as e:
+        # DFO throws a different error
+        assert "Objective has been called MAXFUN times" in str(e)
+
+
+@pytest.mark.parametrize("fit_engine,tolerance", [(None, 10), (AvailableMinimizers.LMFit, 10), (AvailableMinimizers.Bumps, 10), (AvailableMinimizers.DFO, 0.1)])
+def test_basic_tolerance(fit_engine, tolerance):
+    ref_sin = AbsSin(0.2, np.pi)
+    sp_sin = AbsSin(0.354, 3.05)
+
+    x = np.linspace(0, 5, 200)
+    y = ref_sin(x)
+
+    sp_sin.offset.fixed = False
+    sp_sin.phase.fixed = False
+
+    f = Fitter(sp_sin, sp_sin)
+    if fit_engine is not None:
+        try:
+            f.switch_minimizer(fit_engine)
+        except AttributeError:
+            pytest.skip(msg=f"{fit_engine} is not installed")
+    args = [x, y]
+    kwargs = {}
+    f.tolerance = tolerance
+    result = f.fit(*args, **kwargs)
+    # Result should not be the same as the reference
+    assert sp_sin.phase.value != pytest.approx(ref_sin.phase.value, rel=1e-3)
+    assert sp_sin.offset.value != pytest.approx(ref_sin.offset.value, rel=1e-3)
+
+
 @pytest.mark.parametrize("fit_method", ["leastsq", "powell", "cobyla"])
 def test_lmfit_methods(fit_method):
     ref_sin = AbsSin(0.2, np.pi)

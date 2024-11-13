@@ -74,6 +74,8 @@ class Bumps(MinimizerBase):
         model: Optional[Callable] = None,
         parameters: Optional[Parameter] = None,
         method: Optional[str] = None,
+        tolerance: Optional[float] = None,
+        max_evaluations: Optional[int] = None,
         minimizer_kwargs: Optional[dict] = None,
         engine_kwargs: Optional[dict] = None,
         **kwargs,
@@ -97,7 +99,7 @@ class Bumps(MinimizerBase):
         :return: Fit results
         :rtype: ModelResult
         """
-        method_dict = self._get_method_dict(method)
+        method_dict = self._get_method_kwargs(method)
 
         if weights is None:
             weights = np.sqrt(np.abs(y))
@@ -107,9 +109,13 @@ class Bumps(MinimizerBase):
 
         if minimizer_kwargs is None:
             minimizer_kwargs = {}
-        # else:
-        #     minimizer_kwargs = {"fit_kws": minimizer_kwargs}
         minimizer_kwargs.update(engine_kwargs)
+
+        if tolerance is not None:
+            minimizer_kwargs['ftol'] = tolerance  # tolerance for change in function value
+            minimizer_kwargs['xtol'] = tolerance  # tolerance for change in parameter value, could be an independent value
+        if max_evaluations is not None:
+            minimizer_kwargs['steps'] = max_evaluations
 
         if model is None:
             model_function = self._make_model(parameters=parameters)
