@@ -228,7 +228,6 @@ class DescriptorNumber(DescriptorBase):
         string += obj_unit
         string += '>'
         return string
-        # return f"<{class_name} '{obj_name}': {obj_value:0.04f}{obj_unit}>"
 
     def as_dict(self, skip: Optional[List[str]] = None) -> Dict[str, Any]:
         raw_dict = super().as_dict(skip=skip)
