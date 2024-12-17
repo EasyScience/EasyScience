@@ -101,6 +101,8 @@ class TestParameter:
 
     def test_set_min(self, parameter: Parameter):
         # When Then 
+        self.mock_callback.fget.return_value = 1.0  # Ensure fget returns a scalar value
+
         parameter.min = 0.1
 
         # Expect
@@ -189,6 +191,7 @@ class TestParameter:
     
     def test_set_bounds(self, parameter: Parameter):
         # When 
+        self.mock_callback.fget.return_value = 1.0  # Ensure fget returns a scalar value
         parameter._enabled = False
         parameter._fixed = True
 
@@ -298,6 +301,7 @@ class TestParameter:
     
     def test_copy(self, parameter: Parameter):
         # When Then
+        self.mock_callback.fget.return_value = 1.0  # Ensure fget returns a scalar value
         parameter_copy = parameter.__copy__()
 
         # Expect
@@ -317,6 +321,7 @@ class TestParameter:
 
     def test_as_data_dict(self, clear, parameter: Parameter):
         # When Then
+        self.mock_callback.fget.return_value = 1.0  # Ensure fget returns a scalar value
         parameter_dict = parameter.as_data_dict()
 
         # Expect
