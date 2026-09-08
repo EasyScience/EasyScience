@@ -125,8 +125,6 @@ class DFO(MinimizerBase):
         ------
         FitError
             If the DFO fit fails.
-        ValueError
-            If the input shapes, weights, or tolerance are invalid.
         """
         x, y, weights = np.asarray(x), np.asarray(y), np.asarray(weights)
 

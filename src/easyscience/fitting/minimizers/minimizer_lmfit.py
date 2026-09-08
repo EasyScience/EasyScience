@@ -136,8 +136,6 @@ class LMFit(MinimizerBase):  # noqa: S101
         ------
         FitError
             If the LMFit optimization fails.
-        ValueError
-            If the input shapes or weights are invalid.
         """
         x, y, weights = np.asarray(x), np.asarray(y), np.asarray(weights)
 
