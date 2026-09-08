@@ -90,19 +90,6 @@ class TestBuildCurveProblem:
         assert self.mock_curve_cls.call_args.kwargs['palpha'] == 'converted-alpha'
         self.mock_problem_cls.assert_called_once_with('curve')
 
-    def test_explicit_parameters_override_cache(self):
-        engine = self._engine_with_cached_pars({'alpha': MagicMock(unique_name='alpha')})
-        explicit = MagicMock()
-        explicit.unique_name = 'beta'
-
-        build_curve_problem(
-            engine, np.array([1.0]), np.array([2.0]), np.array([4.0]), parameters=[explicit]
-        )
-
-        self.mock_convert.assert_called_once_with(explicit)
-        assert 'pbeta' in self.mock_curve_cls.call_args.kwargs
-        assert 'palpha' not in self.mock_curve_cls.call_args.kwargs
-
     def test_curve_receives_data_and_dy(self):
         """weights are converted to dy = 1 / weights."""
         engine = self._engine_with_cached_pars({})

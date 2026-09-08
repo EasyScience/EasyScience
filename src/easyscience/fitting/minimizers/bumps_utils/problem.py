@@ -54,13 +54,12 @@ def build_curve_problem(
     x: np.ndarray,
     y: np.ndarray,
     weights: np.ndarray,
-    parameters: list[Parameter] | None = None,
 ) -> tuple[FitProblem, EvalCounter, Curve]:
     """Build a BUMPS ``FitProblem`` around an engine's wrapped fit function.
 
     Wraps ``engine._generate_fit_function()`` in an :class:`EvalCounter`,
-    converts the engine's cached parameters (or the explicitly supplied
-    ``parameters``) via :func:`to_bumps_parameter`, and assembles
+    converts the engine's cached parameters via
+    :func:`to_bumps_parameter`, and assembles
     ``Curve(fit_func, x, y, dy=1/weights, **bumps_pars)`` into a
     ``FitProblem``.
 
@@ -75,9 +74,6 @@ def build_curve_problem(
         Dependent variable array.
     weights : np.ndarray
         Weight array; converted to ``dy = 1 / weights``.
-    parameters : list[Parameter] | None, default=None
-        Optional explicit EasyScience parameters to bind into the model
-        instead of the engine's cached parameters.
 
     Returns
     -------
@@ -89,13 +85,10 @@ def build_curve_problem(
     """
     fit_func = EvalCounter(engine._generate_fit_function())
 
-    bumps_pars = {}
-    if not parameters:
-        for name, par in engine._cached_pars.items():
-            bumps_pars[PARAMETER_PREFIX + str(name)] = to_bumps_parameter(par)
-    else:
-        for par in parameters:
-            bumps_pars[PARAMETER_PREFIX + par.unique_name] = to_bumps_parameter(par)
+    bumps_pars = {
+        PARAMETER_PREFIX + str(name): to_bumps_parameter(par)
+        for name, par in engine._cached_pars.items()
+    }
 
     curve = Curve(fit_func, x, y, dy=1 / weights, **bumps_pars)
     return FitProblem(curve), fit_func, curve

@@ -87,7 +87,6 @@ class LMFit(MinimizerBase):  # noqa: S101
         y: np.ndarray,
         weights: np.ndarray = None,
         model: LMModel | None = None,
-        parameters: LMParameters | None = None,
         method: str | None = None,
         tolerance: float | None = None,
         max_evaluations: int | None = None,
@@ -109,8 +108,6 @@ class LMFit(MinimizerBase):  # noqa: S101
             Weights for supplied measured points. By default, None.
         model : LMModel | None, default=None
             Optional Model which is being fitted to. By default, None.
-        parameters : LMParameters | None, default=None
-            Optional parameters for the fit. By default, None.
         method : str | None, default=None
             Minimizer method. By default, None.
         tolerance : float | None, default=None

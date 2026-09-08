@@ -80,7 +80,6 @@ class DFO(MinimizerBase):
         y: np.ndarray,
         weights: np.ndarray,
         model: Callable | None = None,
-        parameters: List[Parameter] | None = None,
         method: str | None = None,
         tolerance: float | None = None,
         max_evaluations: int | None = None,
@@ -101,8 +100,6 @@ class DFO(MinimizerBase):
             Weights for supplied measured points.
         model : Callable | None, default=None
             Optional Model which is being fitted to. By default, None.
-        parameters : List[Parameter] | None, default=None
-            Optional parameters for the fit. By default, None.
         method : str | None, default=None
             Method for minimization. By default, None.
         tolerance : float | None, default=None
@@ -140,15 +137,12 @@ class DFO(MinimizerBase):
             callback = self._make_progress_adapter(progress_callback)
 
         if model is None:
-            model_function = self._make_model(
-                parameters=parameters,
-                callback=callback,
-            )
+            model_function = self._make_model(callback=callback)
             model = model_function(x, y, weights)
         elif callback is not None:
             model = self._wrap_model_with_callback(
                 model,
-                self._get_callback_parameter_names(parameters),
+                self._get_callback_parameter_names(),
                 callback,
             )
         self._cached_model = model
@@ -186,7 +180,6 @@ class DFO(MinimizerBase):
 
     def _make_model(
         self,
-        parameters: List[Parameter] | None = None,
         callback: Callable[[DFOCallbackState], None] | None = None,
     ) -> Callable:
         """
@@ -196,8 +189,6 @@ class DFO(MinimizerBase):
 
         Parameters
         ----------
-        parameters : List[Parameter] | None, default=None
-            Optional parameter subset to include in the model.
         callback : Callable[[DFOCallbackState], None] | None, default=None
             Optional callback invoked on each objective evaluation.
 
@@ -211,13 +202,10 @@ class DFO(MinimizerBase):
         def _outer(obj: DFO):
 
             def _make_func(x, y, weights):
-                dfo_pars = {}
-                if not parameters:
-                    for name, par in obj._cached_pars.items():
-                        dfo_pars[PARAMETER_PREFIX + str(name)] = par.value
-                else:
-                    for par in parameters:
-                        dfo_pars[PARAMETER_PREFIX + par.unique_name] = par.value
+                dfo_pars = {
+                    PARAMETER_PREFIX + str(name): par.value
+                    for name, par in obj._cached_pars.items()
+                }
 
                 def _residuals(pars_values: List[float]) -> np.ndarray:
                     for idx, par_name in enumerate(dfo_pars.keys()):
@@ -234,11 +222,7 @@ class DFO(MinimizerBase):
 
         return _outer(self)
 
-    def _get_callback_parameter_names(
-        self, parameters: List[Parameter] | None = None
-    ) -> list[str]:
-        if parameters is not None:
-            return [PARAMETER_PREFIX + parameter.unique_name for parameter in parameters]
+    def _get_callback_parameter_names(self) -> list[str]:
         return [PARAMETER_PREFIX + name for name in self._cached_pars.keys()]
 
     @staticmethod

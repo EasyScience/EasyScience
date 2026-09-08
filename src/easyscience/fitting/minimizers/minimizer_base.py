@@ -52,7 +52,6 @@ class MinimizerBase(EngineBase):
         y: np.ndarray,
         weights: np.ndarray,
         model: Callable | None = None,
-        parameters: List[Parameter] | None = None,
         method: str | None = None,
         tolerance: float | None = None,
         max_evaluations: int | None = None,
@@ -72,8 +71,6 @@ class MinimizerBase(EngineBase):
             Weights for supplied measured points.
         model : Callable | None, default=None
             Optional Model which is being fitted to. By default, None.
-        parameters : List[Parameter] | None, default=None
-            Optional parameters for the fit. By default, None.
         method : str | None, default=None
             Method for the minimizer to use. By default, None.
         tolerance : float | None, default=None

@@ -87,7 +87,6 @@ class Bumps(MinimizerBase):
         y: np.ndarray,
         weights: np.ndarray,
         model: Callable | None = None,
-        parameters: list[Parameter] | None = None,
         method: str | None = None,
         tolerance: float | None = None,
         max_evaluations: int | None = None,
@@ -114,9 +113,6 @@ class Bumps(MinimizerBase):
             fit parameters. A supplied ``Curve`` must expose ``pars``,
             ``x``, ``y`` and ``dy``, since the results are assembled from
             them. By default, None.
-        parameters : list[Parameter] | None, default=None
-            Optional parameters for the fit. Ignored when ``model`` is
-            supplied. By default, None.
         method : str | None, default=None
             Method for minimization. By default, None.
         tolerance : float | None, default=None
@@ -217,9 +213,7 @@ class Bumps(MinimizerBase):
 
         if model is None:
             # The Curve comes back directly from the helper.
-            problem, self._eval_counter, model = build_curve_problem(
-                self, x, y, weights, parameters=parameters
-            )
+            problem, self._eval_counter, model = build_curve_problem(self, x, y, weights)
         else:
             # A caller-supplied model bypasses `build_curve_problem`, which is also
             # what populates the parameter cache that `_p_0`,
