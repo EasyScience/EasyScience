@@ -427,56 +427,6 @@ class TestLMFit:
         assert len(caplog.records) == 0
         assert result.success is True
 
-    def test_convert_to_pars_obj(self, minimizer: LMFit, monkeypatch) -> None:
-        # When
-        minimizer._object = MagicMock()
-        minimizer._object.get_fit_parameters = MagicMock(return_value=['parm_1', 'parm_2'])
-
-        minimizer.convert_to_par_object = MagicMock(return_value='convert_to_par_object')
-
-        mock_lm_parameter = MagicMock()
-        mock_lm_parameter.add_many = MagicMock(return_value='add_many')
-        mock_LMParameters = MagicMock(return_value=mock_lm_parameter)
-        monkeypatch.setattr(
-            easyscience.fitting.minimizers.minimizer_lmfit, 'LMParameters', mock_LMParameters
-        )
-
-        # Then
-        pars = minimizer.convert_to_pars_obj()
-
-        # Expect
-        assert pars == 'add_many'
-        assert minimizer.convert_to_par_object.call_count == 2
-        minimizer._object.get_fit_parameters.assert_called_once_with()
-        minimizer.convert_to_par_object.assert_called_with('parm_2')
-        mock_lm_parameter.add_many.assert_called_once_with([
-            'convert_to_par_object',
-            'convert_to_par_object',
-        ])
-
-    def test_convert_to_pars_obj_with_parameters(self, minimizer: LMFit, monkeypatch) -> None:
-        # When
-        minimizer.convert_to_par_object = MagicMock(return_value='convert_to_par_object')
-
-        mock_lm_parameter = MagicMock()
-        mock_lm_parameter.add_many = MagicMock(return_value='add_many')
-        mock_LMParameters = MagicMock(return_value=mock_lm_parameter)
-        monkeypatch.setattr(
-            easyscience.fitting.minimizers.minimizer_lmfit, 'LMParameters', mock_LMParameters
-        )
-
-        # Then
-        pars = minimizer.convert_to_pars_obj(['parm_1', 'parm_2'])
-
-        # Expect
-        assert pars == 'add_many'
-        assert minimizer.convert_to_par_object.call_count == 2
-        minimizer.convert_to_par_object.assert_called_with('parm_2')
-        mock_lm_parameter.add_many.assert_called_once_with([
-            'convert_to_par_object',
-            'convert_to_par_object',
-        ])
-
     def test_convert_to_par_object(self, minimizer: LMFit, monkeypatch) -> None:
         # When
         mock_lm_parameter = MagicMock()

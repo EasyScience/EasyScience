@@ -16,7 +16,8 @@ from lmfit.model import ModelResult
 from easyscience.variable import Parameter
 
 from ..available_minimizers import AvailableMinimizers
-from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
+from ..engine_base import PARAMETER_PREFIX
+from ..engine_base import validate_arrays
 from .minimizer_base import MinimizerBase
 from .utils import FitError
 from .utils import FitResults
@@ -143,17 +144,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         """
         x, y, weights = np.asarray(x), np.asarray(y), np.asarray(weights)
 
-        if y.shape != x.shape:
-            raise ValueError('x and y must have the same shape.')
-
-        if weights.shape != x.shape:
-            raise ValueError('Weights must have the same shape as x and y.')
-
-        if not np.isfinite(weights).all():
-            raise ValueError('Weights cannot be NaN or infinite.')
-
-        if (weights <= 0).any():
-            raise ValueError('Weights must be strictly positive and non-zero.')
+        validate_arrays(x, y, weights)
 
         if engine_kwargs is None:
             engine_kwargs = {}
@@ -219,12 +210,12 @@ class LMFit(MinimizerBase):  # noqa: S101
         reduced_chi2 = chi2 / degrees_of_freedom if degrees_of_freedom > 0 else chi2
 
         parameter_values = {
-            parameter_name[len(MINIMIZER_PARAMETER_PREFIX) :]: float(parameter.value)
+            parameter_name[len(PARAMETER_PREFIX) :]: float(parameter.value)
             for parameter_name, parameter in params.items()
-            if parameter_name.startswith(MINIMIZER_PARAMETER_PREFIX)
+            if parameter_name.startswith(PARAMETER_PREFIX)
         }
         for parameter_name, parameter in self._cached_pars.items():
-            lmfit_parameter_name = f'{MINIMIZER_PARAMETER_PREFIX}{parameter_name}'
+            lmfit_parameter_name = f'{PARAMETER_PREFIX}{parameter_name}'
             if lmfit_parameter_name not in params:
                 parameter_values[parameter_name] = float(parameter.value)
 
@@ -253,30 +244,6 @@ class LMFit(MinimizerBase):  # noqa: S101
                 minimizer_kwargs['tol'] = tolerance
         return minimizer_kwargs
 
-    def convert_to_pars_obj(self, parameters: List[Parameter] | None = None) -> LMParameters:
-        """
-        Create an lmfit compatible container with the ``Parameters``
-        converted from the base object.
-
-        Parameters
-        ----------
-        parameters : List[Parameter] | None, default=None
-            If only a single/selection of parameter is required. Specify
-            as a list. By default, None.
-
-        Returns
-        -------
-        LMParameters
-            Lmfit Parameters compatible object.
-        """
-        if parameters is None:
-            # Assume that we have a ObjBase for which we can obtain a list
-            parameters = self._object.get_fit_parameters()
-        lm_parameters = LMParameters().add_many([
-            self.convert_to_par_object(parameter) for parameter in parameters
-        ])
-        return lm_parameters
-
     @staticmethod
     def convert_to_par_object(parameter: Parameter) -> LMParameter:
         """
@@ -296,7 +263,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         value = parameter.value
 
         return LMParameter(
-            MINIMIZER_PARAMETER_PREFIX + parameter.unique_name,
+            PARAMETER_PREFIX + parameter.unique_name,
             value=value,
             vary=not parameter.fixed,
             min=parameter.min,
@@ -331,7 +298,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         model = LMModel(
             fit_func,
             independent_vars=['x'],
-            param_names=[MINIMIZER_PARAMETER_PREFIX + str(key) for key in pars.keys()],
+            param_names=[PARAMETER_PREFIX + str(key) for key in pars.keys()],
         )
         # Assign values from the `Parameter` to the model
         for name, item in pars.items():
@@ -341,7 +308,7 @@ class LMFit(MinimizerBase):  # noqa: S101
                 value = item.value
 
             model.set_param_hint(
-                MINIMIZER_PARAMETER_PREFIX + str(name),
+                PARAMETER_PREFIX + str(name),
                 value=value,
                 min=item.min,
                 max=item.max,
@@ -371,9 +338,9 @@ class LMFit(MinimizerBase):  # noqa: S101
             global_object.stack.enabled = True
             global_object.stack.beginMacro('Fitting routine')
         for name in pars.keys():
-            pars[name].value = fit_result.params[MINIMIZER_PARAMETER_PREFIX + str(name)].value
+            pars[name].value = fit_result.params[PARAMETER_PREFIX + str(name)].value
             if fit_result.errorbars:
-                pars[name].error = fit_result.params[MINIMIZER_PARAMETER_PREFIX + str(name)].stderr
+                pars[name].error = fit_result.params[PARAMETER_PREFIX + str(name)].stderr
             else:
                 # No covariance available (gradient-free method, aborted fit, or a
                 # parameter at a bound). None keeps that distinguishable from a

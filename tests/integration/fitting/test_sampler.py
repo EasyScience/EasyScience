@@ -224,7 +224,7 @@ class TestSampler:
     @pytest.mark.filterwarnings('ignore::UserWarning')
     def test_default_sampler_kwargs_merged(self, monkeypatch):
         """Constructor-level sampler_kwargs defaults are used; per-call kwargs win."""
-        from easyscience.fitting.samplers.sampler_dream import DreamSampler
+        from easyscience.fitting.samplers.sampler_bumps import DreamSampler
 
         f, _, x, y, weights = _fitter_and_data()
         sampler = Sampler(f, [x], [y], [weights], sampler_kwargs={'init': 'random'})

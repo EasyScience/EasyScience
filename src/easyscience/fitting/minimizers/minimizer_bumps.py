@@ -6,7 +6,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
-from typing import cast
 
 import numpy as np
 from bumps.fitters import FIT_AVAILABLE_IDS
@@ -21,14 +20,14 @@ from scipy.optimize import OptimizeResult
 from easyscience.variable import Parameter
 
 from ..available_minimizers import AvailableMinimizers
+from ..engine_base import PARAMETER_PREFIX
+from ..engine_base import validate_arrays
 from .bumps_utils import BumpsProgressMonitor
 from .bumps_utils import EvalCounter
 from .bumps_utils import build_curve_problem
 from .bumps_utils import parameter_names
 from .bumps_utils import parameter_snapshot
 from .bumps_utils import to_bumps_parameter
-from .bumps_utils import validate_arrays
-from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
 from .minimizer_base import MinimizerBase
 from .utils import FitError
 from .utils import FitResults
@@ -174,7 +173,7 @@ class Bumps(MinimizerBase):
 
         x, y, weights = np.asarray(x), np.asarray(y), np.asarray(weights)
 
-        validate_arrays(x, y, weights, check_finite_xy=False)
+        validate_arrays(x, y, weights)
 
         if progress_callback is not None and not callable(progress_callback):
             raise ValueError('progress_callback must be callable')
@@ -182,9 +181,6 @@ class Bumps(MinimizerBase):
         if engine_kwargs is None:
             engine_kwargs = {}
 
-        # Copy rather than mutate: `ftol`/`xtol`/`steps` are injected below, and a
-        # caller reusing the same mapping for a second fit would otherwise silently
-        # inherit the settings resolved for the first one.
         minimizer_kwargs = {} if minimizer_kwargs is None else dict(minimizer_kwargs)
         minimizer_kwargs.update(engine_kwargs)
 
@@ -214,11 +210,9 @@ class Bumps(MinimizerBase):
             )
         else:
             # Report the stricter of the two BUMPS defaults; nothing is written back.
-            tols = [
-                t
-                for t in (fitter_settings.get('ftol'), fitter_settings.get('xtol'))
-                if t is not None
-            ]
+            ftol = fitter_settings.get('ftol')
+            xtol = fitter_settings.get('xtol')
+            tols = [t for t in (ftol, xtol) if t is not None]
             tolerance = min(tols) if tols else None
 
         if model is None:
@@ -265,9 +259,6 @@ class Bumps(MinimizerBase):
             # Drive the fit through the local FitDriver instance so the supplied
             # `monitors` (including the optional progress callback monitor) are
             # invoked. `bumps.fitters.fit` constructs its own driver.
-            #
-            # Named `best_x` rather than `x` so the caller's independent-variable
-            # array stays intact for the rest of the method.
             best_x, fx = driver.fit()
 
             # BUMPS signals a failed optimization by returning `None` in place of a
@@ -283,7 +274,7 @@ class Bumps(MinimizerBase):
                 message = 'Fit aborted before convergence'
             else:
                 success = True
-                message = 'successful termination'
+                message = 'Fit converged successfully'
 
             # BUMPS' `MonitorRunner.history.step` is populated by the driver itself
             # (independently of any user-supplied monitors) and exposes the canonical
@@ -346,17 +337,13 @@ class Bumps(MinimizerBase):
         FitError
             If no registered fitter carries that id.
         """
-        # Built per call rather than cached at import time so that fitters
-        # registered into `FITTERS` after import are still resolvable.
-        fitclass = {fitclass.id: fitclass for fitclass in FITTERS}.get(method)
-        if fitclass is None:
-            raise FitError(f'Unknown BUMPS fitting method: {method}')
-        # BUMPS annotates `FITTERS` as `List[FitBase]`, but it holds the fitter
-        # *classes* — `FitDriver` instantiates them as `self.fitclass(problem)`.
-        return cast('type[FitBase]', fitclass)
+        for fitclass in FITTERS:
+            if fitclass.id == method:
+                return fitclass
+        raise FitError(f'Unknown BUMPS fitting method: {method}')
 
     def _build_progress_payload(
-        self, problem: FitProblem, iteration: int, point: np.ndarray, nllf: float
+        self, problem: FitProblem, iteration: int, point: np.ndarray | None, nllf: float
     ) -> dict:
         # Use the nllf already computed by the fitter to avoid a costly
         # model re-evaluation, and let BUMPS apply its own chisq scaling.
@@ -373,28 +360,6 @@ class Bumps(MinimizerBase):
             'refresh_plots': False,
             'finished': False,
         }
-
-    def convert_to_pars_obj(self, par_list: list[Parameter] | None = None) -> list[BumpsParameter]:
-        """
-        Create a container with the ``Parameters`` converted from the
-        base object.
-
-        Parameters
-        ----------
-        par_list : list[Parameter] | None, default=None
-            If only a single/selection of parameter is required. Specify
-            as a list. By default, None.
-
-        Returns
-        -------
-        list[BumpsParameter]
-            Bumps Parameters list.
-        """
-        if par_list is None:
-            # Assume that we have a ObjBase for which we can obtain a list
-            par_list = self._object.get_fit_parameters()
-        pars_obj = [self.convert_to_par_object(obj) for obj in par_list]
-        return pars_obj
 
     @staticmethod
     def convert_to_par_object(obj: Parameter) -> BumpsParameter:
@@ -432,16 +397,13 @@ class Bumps(MinimizerBase):
             Whether the undo stack was enabled.
         par_names : list[str]
             Cached-parameter names in BUMPS problem order, already
-            stripped of ``MINIMIZER_PARAMETER_PREFIX``. As seen in
+            stripped of ``PARAMETER_PREFIX``. As seen in
             :func:`~easyscience.fitting.minimizers.bumps_utils.parameter_names`.
         """
         from easyscience import global_object
 
         pars = self._cached_pars
         x_result = np.asarray(fit_result.x)
-        # Some BUMPS fitters cannot produce a covariance and hand back no errors;
-        # report those parameters as having no uncertainty rather than failing,
-        # matching what the LMFit minimizer does when `errorbars` is False.
         stderr = None if fit_result.dx is None else np.asarray(fit_result.dx)
 
         if stack_status:
@@ -451,7 +413,7 @@ class Bumps(MinimizerBase):
 
         for index, name in enumerate(par_names):
             pars[name].value = x_result[index]
-            pars[name].error = 0.0 if stderr is None else stderr[index]
+            pars[name].error = None if stderr is None else stderr[index]
         if stack_status:
             global_object.stack.endMacro()
 
@@ -512,24 +474,18 @@ class Bumps(MinimizerBase):
         pars = self._cached_pars
         item = {}
         for index, name in enumerate(self._cached_model.pars.keys()):
-            dict_name = name[len(MINIMIZER_PARAMETER_PREFIX) :]
+            dict_name = name[len(PARAMETER_PREFIX) :]
             item[name] = pars[dict_name].value
 
         results.p0 = self._p_0
         results.p = item
         results.x = self._cached_model.x
         results.y_obs = self._cached_model.y
-        # Costs one extra model evaluation beyond those the optimizer consumed, and
-        # deliberately so: it runs through the uncounted `self._fit_function`, keeping
-        # `n_evaluations` a faithful count of optimizer-driven objective calls.
-        results.y_calc = self.evaluate(results.x, minimizer_parameters=results.p)
+        results.y_calc = self.evaluate(results.x, parameters=results.p)
         results.y_err = self._cached_model.dy
         results.n_evaluations = n_evaluations
         results.iterations = n_steps_used
-        # A successful fit carries no message; anything else reports why it stopped.
-        results.message = (
-            '' if fit_results.success else (getattr(fit_results, 'message', '') or '')
-        )
+        results.message = '' if fit_results.success else fit_results.message
 
         if stopped_on_budget:
             from easyscience import global_object

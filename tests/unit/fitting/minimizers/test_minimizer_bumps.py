@@ -176,7 +176,8 @@ class TestBumpsFit:
 
     def test_set_parameter_fit_result_without_stderr(self, minimizer: Bumps):
         """Fitters that cannot produce a covariance hand back ``dx=None``;
-        those parameters get a zero error instead of raising."""
+        those parameters get ``error=None`` (no uncertainty information)
+        rather than a misleading ``0.0``."""
         minimizer._cached_pars = {'a': MagicMock()}
 
         mock_fit_result = MagicMock()
@@ -186,7 +187,7 @@ class TestBumpsFit:
         minimizer._set_parameter_fit_result(mock_fit_result, False, ['a'])
 
         assert minimizer._cached_pars['a'].value == 1.0
-        assert minimizer._cached_pars['a'].error == 0.0
+        assert minimizer._cached_pars['a'].error is None
 
     def test_gen_fit_results(
         self, minimizer: Bumps, monkeypatch, caplog: 'pytest.LogCaptureFixture'
@@ -251,7 +252,7 @@ class TestBumpsFit:
         assert domain_fit_results.fit_args is None
         assert domain_fit_results.engine_result == mock_fit_result
         minimizer.evaluate.assert_called_once_with(
-            'x', minimizer_parameters={'ppar_1': 'par_value_1', 'ppar_2': 'par_value_2'}
+            'x', parameters={'ppar_1': 'par_value_1', 'ppar_2': 'par_value_2'}
         )
 
     @pytest.mark.parametrize(
@@ -614,28 +615,6 @@ class TestBumpsFit:
             ((), {'nllf': 5.0, 'norm': True}),
         ]
 
-    @pytest.mark.parametrize('par_list', [None, [MagicMock(unique_name='alpha')]])
-    def test_convert_to_pars_obj_optional_parameter_list(
-        self, minimizer: Bumps, par_list, monkeypatch
-    ) -> None:
-        object_parameters = [MagicMock(unique_name='beta')]
-        minimizer._object = MagicMock()
-        minimizer._object.get_fit_parameters = MagicMock(return_value=object_parameters)
-        monkeypatch.setattr(
-            Bumps,
-            'convert_to_par_object',
-            staticmethod(lambda parameter: parameter.unique_name),
-        )
-
-        converted = minimizer.convert_to_pars_obj(par_list)
-
-        expected_parameters = object_parameters if par_list is None else par_list
-        assert converted == [parameter.unique_name for parameter in expected_parameters]
-        if par_list is None:
-            minimizer._object.get_fit_parameters.assert_called_once_with()
-        else:
-            minimizer._object.get_fit_parameters.assert_not_called()
-
     def test_bumps_progress_monitor_calls_callback(self, minimizer: Bumps) -> None:
         # When
         callback = MagicMock(return_value=True)
@@ -946,7 +925,7 @@ class TestFitUnsuccessfulOutcomes:
 
         passed = minimizer._gen_fit_results.call_args.args[0]
         assert passed.success is True
-        assert passed.message == 'successful termination'
+        assert passed.message == 'Fit converged successfully'
         assert passed.nit == 7
 
 

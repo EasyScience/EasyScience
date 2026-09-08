@@ -15,11 +15,11 @@ from bumps.fitters import FitDriver
 
 from ..engine_base import PARAMETER_PREFIX
 from ..engine_base import EngineBase
+from ..engine_base import validate_arrays
 from ..minimizers.bumps_utils import BumpsProgressMonitor
 from ..minimizers.bumps_utils import build_curve_problem
 from ..minimizers.bumps_utils import parameter_names
 from ..minimizers.bumps_utils import parameter_snapshot
-from ..minimizers.bumps_utils import validate_arrays
 from ..minimizers.bumps_utils import validate_run_settings
 from ..minimizers.utils import FitError
 
@@ -171,7 +171,7 @@ class DreamSampler(EngineBase):
         x, y, weights = np.asarray(x), np.asarray(y), np.asarray(weights)
 
         validate_run_settings(samples, burn, thin)
-        validate_arrays(x, y, weights, check_finite_xy=True)
+        validate_arrays(x, y, weights)
 
         # Build the BUMPS Curve model around the engine's wrapped fit function
         problem, _, _ = build_curve_problem(self, x, y, weights)
@@ -345,7 +345,12 @@ class DreamSampler(EngineBase):
         return -int(resume_state.Npop), 0
 
     def _build_sample_progress_payload(
-        self, problem, iteration: int, point: np.ndarray, nllf: float, total_steps: int
+        self,
+        problem: FitProblem,
+        iteration: int,
+        point: np.ndarray | None,
+        nllf: float,
+        total_steps: int,
     ) -> dict:
         """
         Build a progress payload for Bayesian DREAM sampling steps.

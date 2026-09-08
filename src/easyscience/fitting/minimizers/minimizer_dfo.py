@@ -15,7 +15,8 @@ import numpy as np
 from easyscience.variable import Parameter
 
 from ..available_minimizers import AvailableMinimizers
-from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
+from ..engine_base import PARAMETER_PREFIX
+from ..engine_base import validate_arrays
 from .minimizer_base import MinimizerBase
 from .utils import FitError
 from .utils import FitResults
@@ -132,17 +133,7 @@ class DFO(MinimizerBase):
         """
         x, y, weights = np.asarray(x), np.asarray(y), np.asarray(weights)
 
-        if y.shape != x.shape:
-            raise ValueError('x and y must have the same shape.')
-
-        if weights.shape != x.shape:
-            raise ValueError('Weights must have the same shape as x and y.')
-
-        if not np.isfinite(weights).all():
-            raise ValueError('Weights cannot be NaN or infinite.')
-
-        if (weights <= 0).any():
-            raise ValueError('Weights must be strictly positive and non-zero.')
+        validate_arrays(x, y, weights)
 
         # Bridge progress_callback into the DFO callback mechanism
         if progress_callback is not None and callback is None:
@@ -188,10 +179,6 @@ class DFO(MinimizerBase):
             global_object.stack.enabled = stack_status
         return results
 
-    def convert_to_pars_obj(self, par_list: List[Parameter] | None = None):
-        """Required by interface but not needed for DFO-LS."""
-        pass
-
     @staticmethod
     def convert_to_par_object(obj) -> None:
         """Required by interface but not needed for DFO-LS."""
@@ -227,10 +214,10 @@ class DFO(MinimizerBase):
                 dfo_pars = {}
                 if not parameters:
                     for name, par in obj._cached_pars.items():
-                        dfo_pars[MINIMIZER_PARAMETER_PREFIX + str(name)] = par.value
+                        dfo_pars[PARAMETER_PREFIX + str(name)] = par.value
                 else:
                     for par in parameters:
-                        dfo_pars[MINIMIZER_PARAMETER_PREFIX + par.unique_name] = par.value
+                        dfo_pars[PARAMETER_PREFIX + par.unique_name] = par.value
 
                 def _residuals(pars_values: List[float]) -> np.ndarray:
                     for idx, par_name in enumerate(dfo_pars.keys()):
@@ -251,8 +238,8 @@ class DFO(MinimizerBase):
         self, parameters: List[Parameter] | None = None
     ) -> list[str]:
         if parameters is not None:
-            return [MINIMIZER_PARAMETER_PREFIX + parameter.unique_name for parameter in parameters]
-        return [MINIMIZER_PARAMETER_PREFIX + name for name in self._cached_pars.keys()]
+            return [PARAMETER_PREFIX + parameter.unique_name for parameter in parameters]
+        return [PARAMETER_PREFIX + name for name in self._cached_pars.keys()]
 
     @staticmethod
     def _wrap_model_with_callback(
@@ -325,7 +312,7 @@ class DFO(MinimizerBase):
             dof = max(np.asarray(state.residuals).size - len(state.best_parameters), 1)
             reduced_chi2 = chi2 / dof if dof > 0 else chi2
             param_snapshot = {
-                name[len(MINIMIZER_PARAMETER_PREFIX) :]: float(val)
+                name[len(PARAMETER_PREFIX) :]: float(val)
                 for name, val in state.best_parameters.items()
             }
             payload = {
@@ -412,7 +399,7 @@ class DFO(MinimizerBase):
         results.p0 = self._p_0
         results.x = self._cached_model.x
         results.y_obs = self._cached_model.y
-        results.y_calc = self.evaluate(results.x, minimizer_parameters=results.p)
+        results.y_calc = self.evaluate(results.x, parameters=results.p)
         # `weights` here are 1/sigma (residuals are multiplied by them in `_make_model`).
         # `FitResults.chi2` divides residuals by `y_err`, so `y_err` must be sigma, not the weight.
         results.y_err = 1 / np.asarray(weights)

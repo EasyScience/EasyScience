@@ -168,6 +168,21 @@ class TestFitFunctionWrapper:
         expected = np.hstack([fit_objects[0](x[0]), fit_objects[1](x[1])])
         assert np.allclose(y, expected)
 
+    def test_explicit_dependent_dims_do_not_touch_fitter(self):
+        """Passing ``dependent_dims`` (as the ``Sampler`` does) slices the
+        combined output without writing ``_dependent_dims`` onto the fitter."""
+        fit_objects = [Line(1.0, 0.5), Line(2.0, 1.5)]
+        mf = MultiFitter(fit_objects, fit_objects)
+        assert mf._dependent_dims is None
+
+        x = [np.array([0.0, 1.0, 2.0]), np.array([0.0, 1.0])]
+        wrapped = mf._fit_function_wrapper(x, flatten=True, dependent_dims=[(3,), (2,)])
+
+        y = wrapped(np.zeros(5))
+        expected = np.hstack([fit_objects[0](x[0]), fit_objects[1](x[1])])
+        assert np.allclose(y, expected)
+        assert mf._dependent_dims is None
+
 
 # ===================================================================
 # MultiFitter._precompute_reshaping with weights=None

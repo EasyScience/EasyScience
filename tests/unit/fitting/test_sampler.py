@@ -17,7 +17,7 @@ from easyscience import ObjBase
 from easyscience import Parameter
 from easyscience.fitting import Sampler
 from easyscience.fitting import SamplingResults
-from easyscience.fitting.minimizers.minimizer_base import MINIMIZER_PARAMETER_PREFIX
+from easyscience.fitting.engine_base import PARAMETER_PREFIX
 from easyscience.fitting.multi_fitter import MultiFitter
 from easyscience.fitting.sampler import _data_fingerprint
 from easyscience.fitting.sampler import load_chain
@@ -328,7 +328,7 @@ class TestLoadChainSidecar:
         assert names == ['P0', 'P1']
 
     def test_fallback_strips_minimizer_prefix_from_labels(self, tmp_path):
-        self.state.labels = [f'{MINIMIZER_PARAMETER_PREFIX}a', f'{MINIMIZER_PARAMETER_PREFIX}b']
+        self.state.labels = [f'{PARAMETER_PREFIX}a', f'{PARAMETER_PREFIX}b']
         _, names, _ = load_chain(str(tmp_path / 'chain'))
         assert names == ['a', 'b']
 
@@ -407,7 +407,7 @@ class TestSamplerRunEngine:
 
     def test_run_stores_results_and_exposes_properties(self, monkeypatch):
         f, _, x, y, weights = _fitter_and_data()
-        from easyscience.fitting.samplers.sampler_dream import DreamSampler
+        from easyscience.fitting.samplers.sampler_bumps import DreamSampler
 
         canned = {
             'draws': np.arange(8.0).reshape(4, 2),
@@ -426,6 +426,7 @@ class TestSamplerRunEngine:
         sampler = Sampler(f, [x], [y], [weights], sampler_kwargs={'trim': False})
         original_func = f.fit_function
         minimizer_before = f.minimizer
+        dims_before = f._dependent_dims
         results = sampler.sample(samples=100, burn=10, thin=2, sampler_kwargs={'init': 'lhs'})
 
         assert isinstance(results, SamplingResults)
@@ -440,15 +441,18 @@ class TestSamplerRunEngine:
         assert captured['burn'] == 10
         assert captured['resume_state'] is None
         # The fitter is never mutated: a fresh engine gets the wrapped
-        # function directly, and the active (LMFit) minimizer stays put.
+        # function directly, the active (LMFit) minimizer stays put, and the
+        # reshaping bookkeeping is passed to the wrapper rather than written
+        # onto the fitter.
         assert f.fit_function is original_func
         assert f.minimizer is minimizer_before
+        assert f._dependent_dims is dims_before
 
     def test_run_works_with_non_bumps_minimizer(self, monkeypatch):
         """Sampling works with the default LMFit minimizer active — the
         engine is constructed independently of the fitter's minimizer."""
         f, _, x, y, weights = _fitter_and_data()
-        from easyscience.fitting.samplers.sampler_dream import DreamSampler
+        from easyscience.fitting.samplers.sampler_bumps import DreamSampler
 
         assert f.minimizer.package != 'bumps'  # default is LMFit
 

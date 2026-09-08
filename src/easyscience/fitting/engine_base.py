@@ -16,6 +16,42 @@ from easyscience.variable import Parameter
 PARAMETER_PREFIX = 'p'
 
 
+def validate_arrays(x: np.ndarray, y: np.ndarray, weights: np.ndarray) -> None:
+    """Validate the (x, y, weights) arrays handed to an engine.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Independent variable array.
+    y : np.ndarray
+        Dependent variable array.
+    weights : np.ndarray
+        Weight array.
+
+    Raises
+    ------
+    ValueError
+        If the shapes disagree, x or y contain NaN or infinite values, or
+        the weights are non-finite or non-positive.
+    """
+    if y.shape != x.shape:
+        raise ValueError('x and y must have the same shape.')
+
+    if not np.isfinite(x).all():
+        raise ValueError('x cannot contain NaN or infinite values.')
+    if not np.isfinite(y).all():
+        raise ValueError('y cannot contain NaN or infinite values.')
+
+    if weights.shape != x.shape:
+        raise ValueError('Weights must have the same shape as x and y.')
+
+    if not np.isfinite(weights).all():
+        raise ValueError('Weights cannot be NaN or infinite.')
+
+    if (weights <= 0).any():
+        raise ValueError('Weights must be strictly positive and non-zero.')
+
+
 class EngineBase(metaclass=ABCMeta):
     """
     Base for all evaluation engines: minimizers and samplers.
@@ -48,7 +84,7 @@ class EngineBase(metaclass=ABCMeta):
             self._cached_pars[key].error = self._cached_pars_vals[key][1]
 
     def evaluate(
-        self, x: np.ndarray, minimizer_parameters: dict[str, float] | None = None, **kwargs
+        self, x: np.ndarray, parameters: dict[str, float] | None = None, **kwargs
     ) -> np.ndarray:
         """
         Evaluate the fit function for values of x.
@@ -61,7 +97,7 @@ class EngineBase(metaclass=ABCMeta):
         ----------
         x : np.ndarray
             X values for which the fit function will be evaluated.
-        minimizer_parameters : dict[str, float] | None, default=None
+        parameters : dict[str, float] | None, default=None
             Dictionary of parameters which will be used in the fit
             function. They must be in a dictionary of {'parameter_name':
             parameter_value,...}. By default, None.
@@ -76,20 +112,20 @@ class EngineBase(metaclass=ABCMeta):
         Raises
         ------
         TypeError
-            If ``minimizer_parameters`` is not a dictionary.
+            If ``parameters`` is not a dictionary.
         """
-        if minimizer_parameters is None:
-            minimizer_parameters = {}
-        if not isinstance(minimizer_parameters, dict):
-            raise TypeError('minimizer_parameters must be a dictionary')
+        if parameters is None:
+            parameters = {}
+        if not isinstance(parameters, dict):
+            raise TypeError('parameters must be a dictionary')
 
         if self._fit_function is None:
             # This will also generate self._cached_pars
             self._fit_function = self._generate_fit_function()
 
-        minimizer_parameters = self._prepare_parameters(minimizer_parameters)
+        parameters = self._prepare_parameters(parameters)
 
-        return self._fit_function(x, **minimizer_parameters, **kwargs)
+        return self._fit_function(x, **parameters, **kwargs)
 
     def _prepare_parameters(self, parameters: dict[str, float]) -> dict[str, float]:
         """

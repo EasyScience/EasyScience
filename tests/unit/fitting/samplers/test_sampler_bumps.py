@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 EasyScience contributors <https://github.com/easyscience>
 # SPDX-License-Identifier: BSD-3-Clause
 """Unit tests for ``DreamSampler`` — mirrors
-``src/easyscience/fitting/samplers/sampler_dream.py``.
+``src/easyscience/fitting/samplers/sampler_bumps.py``.
 
 Ported from the former ``TestBumpsSample`` suite in
 ``tests/unit/fitting/minimizers/test_minimizer_bumps.py`` when the former
@@ -16,7 +16,7 @@ from unittest.mock import MagicMock
 import numpy as np
 import pytest
 
-import easyscience.fitting.samplers.sampler_dream
+import easyscience.fitting.samplers.sampler_bumps
 from easyscience.fitting.engine_base import EngineBase
 from easyscience.fitting.minimizers.bumps_utils import BumpsProgressMonitor
 from easyscience.fitting.minimizers.utils import FitError
@@ -52,7 +52,7 @@ class TestDreamSamplerRun:
     def _set_problem(monkeypatch, problem):
         """Point ``build_curve_problem`` at a canned (problem, counter, curve) triple."""
         monkeypatch.setattr(
-            easyscience.fitting.samplers.sampler_dream,
+            easyscience.fitting.samplers.sampler_bumps,
             'build_curve_problem',
             MagicMock(return_value=(problem, MagicMock(), MagicMock())),
         )
@@ -95,7 +95,7 @@ class TestDreamSamplerRun:
 
         mock_FitDriver = MagicMock(return_value=mock_driver)
         monkeypatch.setattr(
-            easyscience.fitting.samplers.sampler_dream, 'FitDriver', mock_FitDriver
+            easyscience.fitting.samplers.sampler_bumps, 'FitDriver', mock_FitDriver
         )
         return mock_FitDriver, mock_driver
 

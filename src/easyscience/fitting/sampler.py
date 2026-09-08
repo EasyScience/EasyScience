@@ -263,11 +263,9 @@ class Sampler:
     different data, create a new ``Sampler``.
 
     Construct directly with a configured ``Fitter`` (or ``MultiFitter``).
-    Sampling is independent of the fitter's minimizer — any minimizer (LMFit,
-    DFO, BUMPS) may stay active; the only requirement is an installed
-    ``bumps`` package. **Running a fit first is not required** — the
-    ``Fitter`` supplies the model and fit function, not a fit result, and
-    sampling from the initial parameter values works fine.
+    The only requirement is an installed ``bumps`` package. **Running a fit
+    first is not required**; sampling from the initial parameter values
+    works fine.
 
     It is often worth fitting first anyway. DREAM seeds its whole starting
     population inside a tiny ball around the parameters' *current* values
@@ -275,15 +273,11 @@ class Sampler:
     chain in the right region and shortens the burn-in needed to reach the
     typical set. From a poor initial guess, expect to burn for longer.
 
-    The sampler is BUMPS/DREAM-specific for now: the ``DreamSampler``
-    construction in ``_run()`` is the single line that knows a concrete
-    backend exists — the seam where a sampler factory would plug in.
-
     Parameters
     ----------
     fitter : Fitter
         A configured ``Fitter`` (or ``MultiFitter``) supplying the model and
-        fit function. Its active minimizer is irrelevant to sampling.
+        fit function.
     x : np.ndarray | list[np.ndarray]
         Independent variable array (or list of arrays for ``MultiFitter``).
     y : np.ndarray | list[np.ndarray]
@@ -483,26 +477,20 @@ class Sampler:
                 'Bayesian sampling requires the bumps package. '
                 'Install it with ``pip install bumps``.'
             )
-        from .samplers.sampler_dream import DreamSampler
+        from .samplers.sampler_bumps import DreamSampler
 
         x_fit, x_new, y_new, w_new, dims = self._fitter._precompute_reshaping(
             self._x, self._y, self._weights, self._vectorized
         )
-        # Required internal bookkeeping write: MultiFitter's
-        # ``_fit_function_wrapper`` reads ``_dependent_dims`` to reshape
-        # multi-dataset output. It is the only fitter attribute sampling
-        # modifies: the user-visible surface (fit_function, minimizer) is
-        # never mutated.
-        self._fitter._dependent_dims = dims
-        wrapped = self._fitter._fit_function_wrapper(x_new, flatten=True)
+        # The dims are passed explicitly so the fitter itself is never mutated.
+        wrapped = self._fitter._fit_function_wrapper(x_new, flatten=True, dependent_dims=dims)
 
         merged_kwargs = {**self._default_sampler_kwargs, **(sampler_kwargs or {})}
 
-        # A fresh engine per run is deliberate: it is cheap (the parameter
-        # cache is built lazily), and per-call construction guarantees the
-        # chain always sees the fitter's *current* fit function and
-        # parameter set. Chain continuity lives in ``resume_state``, not in
-        # engine.
+        # A fresh engine per run keeps the chain on the fitter's current fit
+        # function and parameters; chain continuity lives in ``resume_state``.
+        # This is where a sampler factory would plug in once there is more
+        # than one backend.
         engine = DreamSampler(obj=self._fitter.fit_object, fit_function=wrapped)
         result = engine.run(
             x=x_fit,

@@ -43,9 +43,6 @@ class Fitter:
     def evaluate(self, pars=None) -> np.ndarray:
         return self._minimizer.evaluate(pars)
 
-    def convert_to_pars_obj(self, pars) -> object:
-        return self._minimizer.convert_to_pars_obj(pars)
-
     # TODO: remove this method when we are ready to adjust the dependent products
     def initialize(self, fit_object: object, fit_function: Callable) -> None:
         """
@@ -232,7 +229,10 @@ class Fitter:
         self._update_minimizer(self._enum_current_minimizer)
 
     def _fit_function_wrapper(
-        self, real_x: Optional[np.ndarray] = None, flatten: bool = True
+        self,
+        real_x: Optional[np.ndarray] = None,
+        flatten: bool = True,
+        dependent_dims: Optional[list[tuple[int, ...]]] = None,
     ) -> Callable:
         """
         Simple fit function which injects the real X (independent)
@@ -246,6 +246,10 @@ class Fitter:
             Independent x parameters to be injected. By default, None.
         flatten : bool, default=True
             Should the result be a flat 1D array? By default, True.
+        dependent_dims : Optional[list[tuple[int, ...]]], default=None
+            Unused for a single dataset; accepted so that callers can
+            pass it uniformly to ``Fitter`` and ``MultiFitter``. By
+            default, None.
 
         Returns
         -------

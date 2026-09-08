@@ -13,15 +13,9 @@ import numpy as np
 from easyscience.variable import Parameter
 
 from ..available_minimizers import AvailableMinimizers
-from ..engine_base import PARAMETER_PREFIX
 from ..engine_base import EngineBase
 from .utils import FitError
 from .utils import FitResults
-
-# Back-compat alias: the canonical constant now lives in
-# ``easyscience.fitting.engine_base`` and is shared by minimizers and
-# samplers alike.
-MINIMIZER_PARAMETER_PREFIX = PARAMETER_PREFIX
 
 
 class MinimizerBase(EngineBase):
@@ -109,24 +103,6 @@ class MinimizerBase(EngineBase):
             return {'method': self._method}
 
         return {}
-
-    @abstractmethod
-    def convert_to_pars_obj(self, par_list: List[Parameter] | None = None) -> Any:
-        """
-        Create an engine compatible container with the ``Parameters``
-        converted from the base object.
-
-        Parameters
-        ----------
-        par_list : List[Parameter] | None, default=None
-            If only a single/selection of parameter is required. Specify
-            as a list. By default, None.
-
-        Returns
-        -------
-        Any
-            Engine Parameters compatible object.
-        """
 
     @staticmethod
     @abstractmethod

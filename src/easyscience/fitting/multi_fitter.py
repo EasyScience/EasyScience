@@ -35,7 +35,10 @@ class MultiFitter(Fitter):
         super().__init__(self._fit_objects, self._fit_functions[0])
 
     def _fit_function_wrapper(
-        self, real_x: list[np.ndarray] | None = None, flatten: bool = True
+        self,
+        real_x: list[np.ndarray] | None = None,
+        flatten: bool = True,
+        dependent_dims: list[tuple[int, ...]] | None = None,
     ) -> Callable:
         """
         Simple fit function which injects the N real X (independent)
@@ -50,6 +53,10 @@ class MultiFitter(Fitter):
             None.
         flatten : bool, default=True
             Should the result be a flat 1D array? By default, True.
+        dependent_dims : list[tuple[int, ...]] | None, default=None
+            Per-dataset dependent shapes used to slice the combined
+            output. When ``None``, ``self._dependent_dims`` (set by
+            ``fit``) is read at call time. By default, None.
 
         Returns
         -------
@@ -75,9 +82,10 @@ class MultiFitter(Fitter):
             # Generate an empty Y based on x
             y = np.zeros_like(x)
             i = 0
+            dims = self._dependent_dims if dependent_dims is None else dependent_dims
             # Iterate through wrapped functions, passing the WRONG x, the correct
             # x was injected in the step above.
-            for idx, dim in enumerate(self._dependent_dims):
+            for idx, dim in enumerate(dims):
                 ep = i + np.prod(dim)
                 y[i:ep] = wrapped_fns[idx](x, **kwargs)
                 i = ep
