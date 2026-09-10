@@ -86,7 +86,6 @@ class LMFit(MinimizerBase):  # noqa: S101
         x: np.ndarray,
         y: np.ndarray,
         weights: np.ndarray = None,
-        model: LMModel | None = None,
         method: str | None = None,
         tolerance: float | None = None,
         max_evaluations: int | None = None,
@@ -106,8 +105,6 @@ class LMFit(MinimizerBase):  # noqa: S101
             Measured points.
         weights : np.ndarray, default=None
             Weights for supplied measured points. By default, None.
-        model : LMModel | None, default=None
-            Optional Model which is being fitted to. By default, None.
         method : str | None, default=None
             Minimizer method. By default, None.
         tolerance : float | None, default=None
@@ -154,8 +151,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         global_object.stack.enabled = False
 
         try:
-            if model is None:
-                model = self._make_model()
+            model = self._make_model()
 
             self._last_iteration = None
             iter_cb = self._create_iter_callback(progress_callback)
@@ -238,34 +234,6 @@ class LMFit(MinimizerBase):  # noqa: S101
             if effective_method in ['differential_evolution', 'powell', 'cobyla']:
                 minimizer_kwargs['tol'] = tolerance
         return minimizer_kwargs
-
-    @staticmethod
-    def convert_to_par_object(parameter: Parameter) -> LMParameter:
-        """
-        Convert an EasyScience Parameter object to a lmfit Parameter
-        object.
-
-        Parameters
-        ----------
-        parameter : Parameter
-            EasyScience parameter to convert.
-
-        Returns
-        -------
-        LMParameter
-            Lmfit Parameter compatible object.
-        """
-        value = parameter.value
-
-        return LMParameter(
-            PARAMETER_PREFIX + parameter.unique_name,
-            value=value,
-            vary=not parameter.fixed,
-            min=parameter.min,
-            max=parameter.max,
-            expr=None,
-            brute_step=None,
-        )
 
     def _make_model(self, pars: LMParameters | None = None) -> LMModel:
         """

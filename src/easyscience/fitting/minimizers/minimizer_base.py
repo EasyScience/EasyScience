@@ -51,7 +51,6 @@ class MinimizerBase(EngineBase):
         x: np.ndarray,
         y: np.ndarray,
         weights: np.ndarray,
-        model: Callable | None = None,
         method: str | None = None,
         tolerance: float | None = None,
         max_evaluations: int | None = None,
@@ -69,8 +68,6 @@ class MinimizerBase(EngineBase):
             Measured points.
         weights : np.ndarray
             Weights for supplied measured points.
-        model : Callable | None, default=None
-            Optional Model which is being fitted to. By default, None.
         method : str | None, default=None
             Method for the minimizer to use. By default, None.
         tolerance : float | None, default=None
@@ -123,14 +120,6 @@ class MinimizerBase(EngineBase):
         -------
         List[str]
             List of all available methods.
-        """
-
-    @staticmethod
-    @abstractmethod
-    def convert_to_par_object(obj):  # todo after constraint changes, add type hint: obj: ObjBase
-        """
-        Convert an ``EasyScience.variable.Parameter`` object to an
-        engine Parameter object.
         """
 
     @staticmethod

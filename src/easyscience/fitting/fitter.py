@@ -4,7 +4,6 @@
 import functools
 from typing import Callable
 from typing import List
-from typing import Optional
 from typing import Union
 
 import numpy as np
@@ -230,9 +229,9 @@ class Fitter:
 
     def _fit_function_wrapper(
         self,
-        real_x: Optional[np.ndarray] = None,
+        real_x: np.ndarray | None = None,
         flatten: bool = True,
-        dependent_dims: Optional[list[tuple[int, ...]]] = None,
+        dependent_dims: list[tuple[int, ...]] | None = None,
     ) -> Callable:
         """
         Simple fit function which injects the real X (independent)
@@ -242,11 +241,11 @@ class Fitter:
 
         Parameters
         ----------
-        real_x : Optional[np.ndarray], default=None
+        real_x : np.ndarray | None, default=None
             Independent x parameters to be injected. By default, None.
         flatten : bool, default=True
             Should the result be a flat 1D array? By default, True.
-        dependent_dims : Optional[list[tuple[int, ...]]], default=None
+        dependent_dims : list[tuple[int, ...]] | None, default=None
             Unused for a single dataset; accepted so that callers can
             pass it uniformly to ``Fitter`` and ``MultiFitter``. By
             default, None.
@@ -285,7 +284,7 @@ class Fitter:
         def inner_fit_callable(
             x: np.ndarray,
             y: np.ndarray,
-            weights: Optional[np.ndarray] = None,
+            weights: np.ndarray | None = None,
             vectorized: bool = False,
             progress_callback: Callable[[dict], None] | None = None,
             **kwargs,
@@ -333,9 +332,9 @@ class Fitter:
     def _precompute_reshaping(
         x: np.ndarray,
         y: np.ndarray,
-        weights: Optional[np.ndarray],
+        weights: np.ndarray | None,
         vectorized: bool,
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, Optional[np.ndarray], tuple[int, ...]]:
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray | None, tuple[int, ...]]:
         """
         Check the dimensions of the inputs and reshape if necessary.
 
@@ -345,14 +344,14 @@ class Fitter:
             ND matrix of dependent points.
         y : np.ndarray
             N-1D matrix of independent points.
-        weights : Optional[np.ndarray]
+        weights : np.ndarray | None
             Optional weights for the fit.
         vectorized : bool
             Whether ``x`` already stores vectorized coordinates.
 
         Returns
         -------
-        tuple[np.ndarray, np.ndarray, np.ndarray, Optional[np.ndarray], tuple[int, ...]]
+        tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray | None, tuple[int, ...]]
             Reshaped x values, reshaped input data, flattened y values,
             flattened weights, and the original x shape.
 

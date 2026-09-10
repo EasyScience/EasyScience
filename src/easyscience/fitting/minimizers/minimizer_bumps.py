@@ -86,7 +86,6 @@ class Bumps(MinimizerBase):
         x: np.ndarray,
         y: np.ndarray,
         weights: np.ndarray,
-        model: Callable | None = None,
         method: str | None = None,
         tolerance: float | None = None,
         max_evaluations: int | None = None,
@@ -107,12 +106,6 @@ class Bumps(MinimizerBase):
             Measured points.
         weights : np.ndarray
             Weights for supplied measured points.
-        model : Callable | None, default=None
-            Optional BUMPS ``Curve`` which is being fitted to. When
-            omitted, one is built from ``fit_function`` and the object's
-            fit parameters. A supplied ``Curve`` must expose ``pars``,
-            ``x``, ``y`` and ``dy``, since the results are assembled from
-            them. By default, None.
         method : str | None, default=None
             Method for minimization. By default, None.
         tolerance : float | None, default=None
@@ -183,11 +176,6 @@ class Bumps(MinimizerBase):
         method_str = method_dict.get('method', self._method)
         fitclass = self._resolve_fitclass(method_str)
 
-        # Reset the per-fit evaluation counter. A caller-supplied `model` bypasses
-        # `build_curve_problem`, which is what installs the counter, so without this
-        # the results would carry the previous fit's objective-call count.
-        self._eval_counter = None
-
         # Only values the caller supplied explicitly are pushed back into
         # `minimizer_kwargs`. BUMPS pairs an independent `ftol`/`xtol` default per
         # fitter (`newton` combines ftol=1e-6 with xtol=1e-12, `amoeba` ftol=1e-8 with
@@ -211,18 +199,8 @@ class Bumps(MinimizerBase):
             tols = [t for t in (ftol, xtol) if t is not None]
             tolerance = min(tols) if tols else None
 
-        if model is None:
-            # The Curve comes back directly from the helper.
-            problem, self._eval_counter, model = build_curve_problem(self, x, y, weights)
-        else:
-            # A caller-supplied model bypasses `build_curve_problem`, which is also
-            # what populates the parameter cache that `_p_0`,
-            # `_set_parameter_fit_result` and `_gen_fit_results` all read. Build the
-            # wrapped fit function here purely for that side effect, so the cache
-            # describes the current object rather than being empty or left over from
-            # an earlier fit.
-            self._fit_function = self._generate_fit_function()
-            problem = FitProblem(model)
+        # The Curve comes back directly from the helper.
+        problem, self._eval_counter, model = build_curve_problem(self, x, y, weights)
         self._cached_model = model
 
         self._p_0 = {f'p{key}': self._cached_pars[key].value for key in self._cached_pars.keys()}
@@ -268,7 +246,7 @@ class Bumps(MinimizerBase):
                 message = 'Fit aborted before convergence'
             else:
                 success = True
-                message = 'Fit converged successfully'
+                message = 'Fit converged'
 
             # BUMPS' `MonitorRunner.history.step` is populated by the driver itself
             # (independently of any user-supplied monitors) and exposes the canonical
@@ -354,24 +332,6 @@ class Bumps(MinimizerBase):
             'refresh_plots': False,
             'finished': False,
         }
-
-    @staticmethod
-    def convert_to_par_object(obj: Parameter) -> BumpsParameter:
-        """
-        Convert an ``EasyScience.variable.Parameter`` object to a bumps
-        Parameter object.
-
-        Parameters
-        ----------
-        obj : Parameter
-            EasyScience parameter to convert.
-
-        Returns
-        -------
-        BumpsParameter
-            Bumps Parameter compatible object.
-        """
-        return to_bumps_parameter(obj)
 
     def _set_parameter_fit_result(
         self,

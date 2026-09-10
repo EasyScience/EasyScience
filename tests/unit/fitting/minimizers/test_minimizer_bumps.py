@@ -404,122 +404,6 @@ class TestBumpsFit:
         assert monitors[0]._callback is progress_callback
         assert monitors[0]._payload_builder == minimizer._build_progress_payload
 
-    def test_fit_uses_supplied_model_and_optional_kwargs(
-        self, minimizer: Bumps, monkeypatch
-    ) -> None:
-        from easyscience import global_object
-
-        global_object.stack.enabled = False
-
-        mock_driver_instance = MagicMock()
-        mock_driver_instance.clip = MagicMock()
-        mock_driver_instance.fit = MagicMock(return_value=(np.array([3.0]), 0.0))
-        mock_driver_instance.stderr = MagicMock(return_value=np.array([0.1]))
-        mock_driver_instance.monitor_runner.history.step = [0]
-        mock_FitDriver = MagicMock(return_value=mock_driver_instance)
-        monkeypatch.setattr(
-            easyscience.fitting.minimizers.minimizer_bumps, 'FitDriver', mock_FitDriver
-        )
-
-        mock_bumps_param = MagicMock()
-        mock_bumps_param.name = 'pmock_parm_1'
-        mock_problem = MagicMock()
-        mock_problem._parameters = [mock_bumps_param]
-        monkeypatch.setattr(
-            easyscience.fitting.minimizers.minimizer_bumps,
-            'FitProblem',
-            MagicMock(return_value=mock_problem),
-        )
-
-        mock_build = MagicMock()
-        monkeypatch.setattr(
-            easyscience.fitting.minimizers.minimizer_bumps, 'build_curve_problem', mock_build
-        )
-        minimizer._gen_fit_results = MagicMock(return_value='gen_fit_results')
-        minimizer._resolve_fitclass = MagicMock(return_value=MagicMock(id='amoeba'))
-        minimizer._set_parameter_fit_result = MagicMock()
-
-        # A supplied model bypasses build_curve_problem, so fit() must populate the
-        # parameter cache itself from the bound object rather than leaving it empty.
-        object_parameter = MagicMock(unique_name='mock_parm_1')
-        object_parameter.value = 1.0
-        object_parameter.error = 0.0
-        minimizer._object = MagicMock()
-        minimizer._object.get_fit_parameters = MagicMock(return_value=[object_parameter])
-
-        supplied_model = MagicMock()
-        minimizer_kwargs = {'existing_option': 'minimizer'}
-        engine_kwargs = {'engine_option': 'engine'}
-
-        result = minimizer.fit(
-            x=np.array([1.0]),
-            y=np.array([2.0]),
-            weights=np.array([1.0]),
-            model=supplied_model,
-            tolerance=0.25,
-            max_evaluations=7,
-            minimizer_kwargs=minimizer_kwargs,
-            engine_kwargs=engine_kwargs,
-        )
-
-        assert result == 'gen_fit_results'
-        mock_build.assert_not_called()
-        fit_driver_kwargs = mock_FitDriver.call_args.kwargs
-        assert fit_driver_kwargs['problem'] is mock_problem
-        assert fit_driver_kwargs['existing_option'] == 'minimizer'
-        assert fit_driver_kwargs['engine_option'] == 'engine'
-        assert fit_driver_kwargs['ftol'] == 0.25
-        assert fit_driver_kwargs['xtol'] == 0.25
-        assert fit_driver_kwargs['steps'] == 7
-        mock_driver_instance.fit.assert_called_once()
-        # The cache and the starting-point snapshot are built from the bound object
-        assert minimizer._cached_pars == {'mock_parm_1': object_parameter}
-        assert minimizer._p_0 == {'pmock_parm_1': 1.0}
-
-    def test_fit_with_supplied_model_resets_eval_counter(
-        self, minimizer: Bumps, monkeypatch
-    ) -> None:
-        """A supplied model installs no EvalCounter, so a counter left over
-        from a previous fit must not be reported as this fit's count."""
-        from easyscience import global_object
-
-        global_object.stack.enabled = False
-
-        mock_driver_instance = MagicMock()
-        mock_driver_instance.fit = MagicMock(return_value=(np.array([3.0]), 0.0))
-        mock_driver_instance.stderr = MagicMock(return_value=np.array([0.1]))
-        mock_driver_instance.monitor_runner.history.step = [0]
-        monkeypatch.setattr(
-            easyscience.fitting.minimizers.minimizer_bumps,
-            'FitDriver',
-            MagicMock(return_value=mock_driver_instance),
-        )
-        mock_problem = MagicMock()
-        mock_problem._parameters = []
-        monkeypatch.setattr(
-            easyscience.fitting.minimizers.minimizer_bumps,
-            'FitProblem',
-            MagicMock(return_value=mock_problem),
-        )
-
-        minimizer._gen_fit_results = MagicMock(return_value='gen_fit_results')
-        minimizer._resolve_fitclass = MagicMock(return_value=MagicMock(id='amoeba'))
-        minimizer._set_parameter_fit_result = MagicMock()
-        minimizer._object = MagicMock()
-        minimizer._object.get_fit_parameters = MagicMock(return_value=[])
-
-        # Stale counter from an earlier fit
-        minimizer._eval_counter = MagicMock(count=999)
-
-        minimizer.fit(
-            x=np.array([1.0]),
-            y=np.array([2.0]),
-            weights=np.array([1.0]),
-            model=MagicMock(),
-        )
-
-        assert minimizer._eval_counter is None
-
     def test_fit_rejects_non_callable_progress_callback(
         self, minimizer: Bumps, monkeypatch
     ) -> None:
@@ -535,7 +419,6 @@ class TestBumpsFit:
                 x=np.array([1.0]),
                 y=np.array([2.0]),
                 weights=np.array([1.0]),
-                model=MagicMock(),
                 progress_callback='not-callable',
             )
 
@@ -801,7 +684,7 @@ class TestFitToleranceAndBudgetDefaults:
         assert driver_kwargs['steps'] == 11
 
     def test_minimizer_kwargs_is_not_mutated(self, minimizer: Bumps, monkeypatch) -> None:
-        self._patch_driver_and_problem(minimizer, monkeypatch)
+        mock_FitDriver = self._patch_driver_and_problem(minimizer, monkeypatch)
 
         minimizer_kwargs = {'existing': 'value'}
         minimizer.fit(
@@ -814,8 +697,13 @@ class TestFitToleranceAndBudgetDefaults:
             engine_kwargs={'engine': 'option'},
         )
 
-        # The caller's mapping is untouched, so reusing it cannot leak settings
-        # from one fit into the next.
+        # Both mappings reach the driver...
+        driver_kwargs = mock_FitDriver.call_args.kwargs
+        assert driver_kwargs['existing'] == 'value'
+        assert driver_kwargs['engine'] == 'option'
+
+        # ...and the caller's mapping is untouched, so reusing it cannot leak
+        # settings from one fit into the next.
         assert minimizer_kwargs == {'existing': 'value'}
 
 
@@ -925,7 +813,7 @@ class TestFitUnsuccessfulOutcomes:
 
         passed = minimizer._gen_fit_results.call_args.args[0]
         assert passed.success is True
-        assert passed.message == 'Fit converged successfully'
+        assert passed.message == 'Fit converged'
         assert passed.nit == 7
 
 
@@ -964,38 +852,6 @@ class TestSetParameterFitResultWithStack:
         assert minimizer._cached_pars['b'].value == 2.0
         assert minimizer._cached_pars['b'].error == 0.2
         minimizer._restore_parameter_values.assert_called_once()
-
-
-# ===================================================================
-# convert_to_par_object
-# ===================================================================
-
-
-class TestConvertToParObject:
-    def test_convert_parameter_object(self) -> None:
-        from easyscience.variable import Parameter
-
-        param = Parameter('thickness', 42.0, min=0.0, max=100.0)
-        param.fixed = False
-
-        result = Bumps.convert_to_par_object(param)
-
-        # convert_to_par_object uses obj.unique_name which is auto-assigned
-        assert result.name.startswith('p')
-        assert result.value == 42.0
-        assert result.bounds == (0.0, 100.0)
-        assert result.fixed is False
-
-    def test_convert_fixed_parameter(self) -> None:
-        from easyscience.variable import Parameter
-
-        param = Parameter('roughness', 5.0, min=0.0, max=20.0)
-        param.fixed = True
-
-        result = Bumps.convert_to_par_object(param)
-
-        assert result.name.startswith('p')
-        assert result.fixed is True
 
 
 # ===================================================================

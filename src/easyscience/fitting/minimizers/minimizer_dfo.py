@@ -79,7 +79,6 @@ class DFO(MinimizerBase):
         x: np.ndarray,
         y: np.ndarray,
         weights: np.ndarray,
-        model: Callable | None = None,
         method: str | None = None,
         tolerance: float | None = None,
         max_evaluations: int | None = None,
@@ -98,8 +97,6 @@ class DFO(MinimizerBase):
             Measured points.
         weights : np.ndarray
             Weights for supplied measured points.
-        model : Callable | None, default=None
-            Optional Model which is being fitted to. By default, None.
         method : str | None, default=None
             Method for minimization. By default, None.
         tolerance : float | None, default=None
@@ -134,15 +131,8 @@ class DFO(MinimizerBase):
         if progress_callback is not None and callback is None:
             callback = self._make_progress_adapter(progress_callback)
 
-        if model is None:
-            model_function = self._make_model(callback=callback)
-            model = model_function(x, y, weights)
-        elif callback is not None:
-            model = self._wrap_model_with_callback(
-                model,
-                self._get_callback_parameter_names(),
-                callback,
-            )
+        model_function = self._make_model(callback=callback)
+        model = model_function(x, y, weights)
         self._cached_model = model
         self._cached_model.x = x
         self._cached_model.y = y
@@ -170,11 +160,6 @@ class DFO(MinimizerBase):
         finally:
             global_object.stack.enabled = stack_status
         return results
-
-    @staticmethod
-    def convert_to_par_object(obj) -> None:
-        """Required by interface but not needed for DFO-LS."""
-        pass
 
     def _make_model(
         self,
@@ -219,9 +204,6 @@ class DFO(MinimizerBase):
             return _make_func
 
         return _outer(self)
-
-    def _get_callback_parameter_names(self) -> list[str]:
-        return [PARAMETER_PREFIX + name for name in self._cached_pars.keys()]
 
     @staticmethod
     def _wrap_model_with_callback(
