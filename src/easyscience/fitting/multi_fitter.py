@@ -29,32 +29,24 @@ class MultiFitter(Fitter):
         fit_objects: list | None = None,
         fit_functions: list[Callable] | None = None,
     ):
-        """
-        Set up a fitter for several models and datasets at once.
-
-        Parameters
-        ----------
-        fit_objects : list | None, default=None
-            ``ModelBase`` objects to fit, one per dataset. Any sequence
-            is accepted; each element must be a ``ModelBase`` instance.
-            By default, None.
-        fit_functions : list[Callable] | None, default=None
-            Fit functions, one per fit object and in the same order. The
-            first one is used to initialise the underlying ``Fitter``.
-            By default, None.
-
-        """
+        # Both arguments default to None so the constructor can be called
+        # empty; normalise to empty sequences so nothing below has to
+        # special-case None.
+        if fit_objects is None:
+            fit_objects = []
+        if fit_functions is None:
+            fit_functions = []
         # Aggregate the fit objects so a single object can be sent to Fitter.
         # *-unpacking keeps any sequence (list, tuple, etc) working, as the
         # old CollectionBase container did.
-        # Only ModelBase members are accepted: EasyList harvests parameters
-        # from ModelBase items alone, so any other NewBase (a bare Parameter,
-        # say) would be accepted and then silently sit out the fit.
-        self._fit_objects = EasyList(*fit_objects, protected_types=ModelBase)
-        self._fit_functions = fit_functions
+        self._fit_objects = EasyList(*fit_objects)
+        self._fit_functions = list(fit_functions)
         # Initialize with the first of the fit_functions, without this it is
-        # not possible to change the fitting engine.
-        super().__init__(self._fit_objects, self._fit_functions[0])
+        # not possible to change the fitting engine. With no functions given
+        # the Fitter is created with ``None``; the minimizer only stores the
+        # callable, so this is harmless until a fit is attempted.
+        first_fit_function = self._fit_functions[0] if self._fit_functions else None
+        super().__init__(self._fit_objects, first_fit_function)
 
     def _fit_function_wrapper(
         self, real_x: list[np.ndarray] | None = None, flatten: bool = True

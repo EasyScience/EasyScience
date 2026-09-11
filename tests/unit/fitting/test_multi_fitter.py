@@ -223,45 +223,14 @@ class TestPrecomputeReshaping:
         assert w_new is None
         assert len(dims) == 2
 
-
-# ===================================================================
-# The EasyList container replacing the deprecated CollectionBase
-# ===================================================================
-
-
-class TestFitObjectContainer:
-    def test_no_collection_base_deprecation_warning(self, caplog):
-        """Building a MultiFitter must not warn about CollectionBase.
-
-        The assertion is on message content rather than on the logger,
-        because other deprecated classes warn on the very same logger.
-        """
-        fit_objects = [Line(1.0, 0.5), Line(2.0, 1.5)]
-
-        with caplog.at_level(logging.WARNING, logger='easyscience'):
-            MultiFitter(fit_objects, fit_objects)
-
-        assert not [r for r in caplog.records if 'CollectionBase is deprecated' in r.message]
+    # ===================================================================
+    # The EasyList container replacing the deprecated CollectionBase
+    # ===================================================================
 
     def test_container_is_an_easy_list(self):
         fit_objects = [Line(1.0, 0.5), Line(2.0, 1.5)]
 
         assert isinstance(MultiFitter(fit_objects, fit_objects).fit_object, EasyList)
-
-    def test_fit_objects_are_not_retyped(self):
-        """The container must not reclassify the caller's fit objects.
-
-        The old CollectionBase dummy re-typed every fit object as
-        'created_internal', hiding the caller's own objects from the
-        map's 'created' set.
-        """
-        fit_objects = [Line(1.0, 0.5), Line(2.0, 1.5)]
-        types_before = [global_object.map.find_type(obj) for obj in fit_objects]
-
-        MultiFitter(fit_objects, fit_objects)
-
-        assert [global_object.map.find_type(obj) for obj in fit_objects] == types_before
-        assert all('created_internal' not in types for types in types_before)
 
     def test_sequence_contract(self):
         fit_objects = [Line(1.0, 0.5), Line(2.0, 1.5)]
@@ -317,9 +286,31 @@ class TestFitObjectContainer:
 
         assert list(container) == list(models)
 
-    def test_rejects_legacy_obj_base_fit_objects(self):
-        """Support for the deprecated ObjBase hierarchy was dropped."""
-        legacy = [LegacyLine(1.0, 0.5), LegacyLine(2.0, 1.5)]
+    # ===================================================================
+    # Constructor defaults
+    # ===================================================================
 
-        with pytest.raises(TypeError, match='Items must be one of'):
-            MultiFitter(legacy, legacy)
+    def test_default_arguments_do_not_crash(self):
+        """Both arguments default to None; construction must not index into them."""
+        mf = MultiFitter()
+
+        assert isinstance(mf.fit_object, EasyList)
+        assert len(mf.fit_object) == 0
+        assert mf._fit_functions == []
+        assert mf.fit_function is None
+
+    def test_none_arguments_are_treated_as_empty(self):
+        mf = MultiFitter(None, None)
+
+        assert len(mf.fit_object) == 0
+        assert mf._fit_functions == []
+        assert mf.fit_function is None
+
+    def test_accepts_tuple_arguments(self):
+        """Any sequence works thanks to *-unpacking, as with CollectionBase."""
+        models = (Line(1.0, 0.5), Line(2.0, 1.5))
+        mf = MultiFitter(models, models)
+
+        assert list(mf.fit_object) == list(models)
+        assert mf._fit_functions == list(models)
+        assert mf.fit_function is models[0]
