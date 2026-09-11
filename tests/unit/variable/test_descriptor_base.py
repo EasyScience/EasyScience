@@ -4,6 +4,10 @@
 import pytest
 
 from easyscience import global_object
+from easyscience.base_classes import EasyList
+from easyscience.base_classes import NewBase
+from easyscience.io import SerializerComponent
+from easyscience.variable import DescriptorNumber
 from easyscience.variable.descriptor_base import DescriptorBase
 
 
@@ -19,7 +23,6 @@ class TestDesciptorBase:
             description='description',
             url='url',
             display_name='display_name',
-            parent=None,
         )
         return descriptor
 
@@ -40,7 +43,6 @@ class TestDesciptorBase:
                 description='description',
                 url='url',
                 display_name='display_name',
-                parent=None,
             )
 
     @pytest.mark.parametrize(
@@ -56,7 +58,6 @@ class TestDesciptorBase:
                 description='description',
                 url='url',
                 display_name=display_name,
-                parent=None,
             )
 
     @pytest.mark.parametrize(
@@ -72,7 +73,6 @@ class TestDesciptorBase:
                 description=description,
                 url='url',
                 display_name='display_name',
-                parent=None,
             )
 
     @pytest.mark.parametrize(
@@ -88,7 +88,6 @@ class TestDesciptorBase:
                 description='description',
                 url=url,
                 display_name='display_name',
-                parent=None,
             )
 
     def test_init(self, descriptor: DescriptorBase):

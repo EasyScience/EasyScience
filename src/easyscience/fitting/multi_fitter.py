@@ -6,6 +6,7 @@ from typing import Callable
 import numpy as np
 
 from ..base_classes import EasyList
+from ..base_classes import ModelBase
 from .fitter import Fitter
 from .minimizers import FitResults
 

@@ -65,7 +65,6 @@ class DescriptorNumber(DescriptorBase):
         description: Optional[str] = None,
         url: Optional[str] = None,
         display_name: Optional[str] = None,
-        parent: Optional[Any] = None,
         **kwargs: Any,  # Additional keyword arguments (used for (de)serialization)
     ):
         """
@@ -75,9 +74,9 @@ class DescriptorNumber(DescriptorBase):
         descriptor param unit: Unit of the descriptor param variance:
         Variance of the descriptor param description: Description of the
         descriptor param url: URL of the descriptor param display_name:
-        Display name of the descriptor param parent: Parent of the
-        descriptor .. note:: Undo/Redo functionality is implemented for
-        the attributes ``variance``, ``error``, ``unit`` and ``value``.
+        Display name of the descriptor .. note:: Undo/Redo functionality
+        is implemented for the attributes ``variance``, ``error``,
+        ``unit`` and ``value``.
         """
         self._observers: List[DescriptorNumber] = []
 
@@ -107,7 +106,6 @@ class DescriptorNumber(DescriptorBase):
             description=description,
             url=url,
             display_name=display_name,
-            parent=parent,
         )
 
         # Call convert_unit during initialization to ensure that the unit has no numbers in it, and to ensure unit consistency.
@@ -444,8 +442,8 @@ class DescriptorNumber(DescriptorBase):
         return string
         # return f"<{class_name} '{obj_name}': {obj_value:0.04f}{obj_unit}>"
 
-    def as_dict(self, skip: Optional[List[str]] = None) -> Dict[str, Any]:
-        raw_dict = super().as_dict(skip=skip)
+    def to_dict(self, skip: Optional[List[str]] = None) -> Dict[str, Any]:
+        raw_dict = super().to_dict(skip=skip)
         raw_dict['value'] = self._scalar.value
         raw_dict['unit'] = str(self._scalar.unit)
         raw_dict['variance'] = self._scalar.variance

@@ -29,7 +29,6 @@ class TestParameter:
             url='url',
             display_name='display_name',
             callback=self.mock_callback,
-            parent=None,
         )
         return parameter
 
@@ -96,7 +95,6 @@ class TestParameter:
                 url='url',
                 display_name='display_name',
                 callback=mock_callback,
-                parent=None,
             )
 
     def test_init_value_max_exception(self):
@@ -117,7 +115,6 @@ class TestParameter:
                 url='url',
                 display_name='display_name',
                 callback=mock_callback,
-                parent=None,
             )
 
     def test_make_dependent_on(self, normal_parameter: Parameter):

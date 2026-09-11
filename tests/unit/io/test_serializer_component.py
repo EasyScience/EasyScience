@@ -71,7 +71,7 @@ def check_dict(check, item):
 
 @pytest.mark.parametrize(**skip_dict)
 @pytest.mark.parametrize(**dp_param_dict)
-def test_variable_as_dict_methods(dp_kwargs: dict, dp_cls: Type[DescriptorNumber], skip):
+def test_variable_to_dict_methods(dp_kwargs: dict, dp_cls: Type[DescriptorNumber], skip):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != '@'}
 
     obj = dp_cls(**data_dict)
@@ -84,7 +84,7 @@ def test_variable_as_dict_methods(dp_kwargs: dict, dp_cls: Type[DescriptorNumber
     if not isinstance(skip, list):
         skip = [skip]
 
-    enc = obj.as_dict(skip=skip)
+    enc = obj.to_dict(skip=skip)
 
     expected_keys = set(dp_kwargs.keys())
     obtained_keys = set(enc.keys())

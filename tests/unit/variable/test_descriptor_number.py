@@ -20,7 +20,6 @@ class TestDescriptorNumber:
             description='description',
             url='url',
             display_name='display_name',
-            parent=None,
         )
         return descriptor
 
@@ -51,7 +50,6 @@ class TestDescriptorNumber:
             description='description',
             url='url',
             display_name='display_name',
-            parent=None,
         )
 
         # Expect
@@ -70,7 +68,6 @@ class TestDescriptorNumber:
                 description='description',
                 url='url',
                 display_name='display_name',
-                parent=None,
             )
 
     @pytest.mark.parametrize('value', [True, 'string'])
@@ -87,7 +84,6 @@ class TestDescriptorNumber:
                 description='description',
                 url='url',
                 display_name='display_name',
-                parent=None,
             )
 
     def test_init_variance_exception(self):
@@ -104,7 +100,6 @@ class TestDescriptorNumber:
                 description='description',
                 url='url',
                 display_name='display_name',
-                parent=None,
             )
 
     # test from_scipp

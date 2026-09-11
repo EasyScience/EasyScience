@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-from typing import Any
 from typing import Optional
 
 from easyscience.global_object.undo_redo import property_stack
@@ -22,7 +21,6 @@ class DescriptorBool(DescriptorBase):
         description: Optional[str] = None,
         url: Optional[str] = None,
         display_name: Optional[str] = None,
-        parent: Optional[Any] = None,
     ):
         if not isinstance(value, bool):
             raise ValueError(f'{value=} must be type bool')
@@ -32,7 +30,6 @@ class DescriptorBool(DescriptorBase):
             description=description,
             url=url,
             display_name=display_name,
-            parent=parent,
         )
         if not isinstance(value, bool):
             raise TypeError(f'{value=} must be type bool')

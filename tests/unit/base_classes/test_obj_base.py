@@ -141,11 +141,11 @@ def test_ObjBase_fit_objects(setup_pars: dict):
     pass
 
 
-def test_ObjBase_as_dict(clear, setup_pars: dict):
+def test_ObjBase_to_dict(clear, setup_pars: dict):
     name = setup_pars['name']
     del setup_pars['name']
     obj = ObjBase(name, **setup_pars)
-    obtained = obj.as_dict()
+    obtained = obj.to_dict()
     assert isinstance(obtained, dict)
     expected = {
         '@module': 'easyscience.legacy.obj_base',
@@ -238,7 +238,7 @@ def test_ObjBase_dict_roundtrip(clear, setup_pars: dict):
     name = setup_pars['name']
     del setup_pars['name']
     obj = ObjBase(name, **setup_pars, unique_name='special_name')
-    obj_dict = obj.as_dict()
+    obj_dict = obj.to_dict()
 
     global_object.map._clear()
 
@@ -246,7 +246,7 @@ def test_ObjBase_dict_roundtrip(clear, setup_pars: dict):
     new_obj = ObjBase.from_dict(obj_dict)
 
     # Expect
-    new_obj_dict = new_obj.as_dict()
+    new_obj_dict = new_obj.to_dict()
     assert obj_dict == new_obj_dict
 
 
@@ -257,7 +257,7 @@ def test_ObjBase_dir(setup_pars):
     expected = [
         'encode',
         'decode',
-        'as_dict',
+        'to_dict',
         'des1',
         'des2',
         'from_dict',

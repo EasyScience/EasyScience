@@ -215,13 +215,13 @@ class SerializerBase:
                                     err = False
                             if err:
                                 raise NotImplementedError(
-                                    'Unable to automatically determine as_dict '
+                                    'Unable to automatically determine to_dict '
                                     'format from class. MSONAble requires all '
                                     'args to be present as either self.argname or '
                                     'self._argname, and kwargs to be present under'
                                     'a self.kwargs variable to automatically '
                                     'determine the dict format. Alternatively, '
-                                    'you can implement both as_dict and from_dict.'
+                                    'you can implement both to_dict and from_dict.'
                                 )
                 d[c] = self._recursive_encoder(
                     a, skip=skip, encoder=self, full_encode=full_encode, **kwargs

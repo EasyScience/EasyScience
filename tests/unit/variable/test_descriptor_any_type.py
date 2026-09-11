@@ -17,7 +17,6 @@ class TestDescriptorAnyType:
             description='description',
             url='url',
             display_name='display_name',
-            parent=None,
         )
         return descriptor
 

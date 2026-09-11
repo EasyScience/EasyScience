@@ -52,7 +52,6 @@ class Parameter(DescriptorNumber):
         url: Optional[str] = None,
         display_name: Optional[str] = None,
         callback: property = property(),
-        parent: Optional[Any] = None,
         **kwargs: Any,  # Additional keyword arguments (used for (de)serialization)
     ):
         """
@@ -92,9 +91,6 @@ class Parameter(DescriptorNumber):
         callback : property, default=property()
             Callback used to synchronize the parameter with an external
             model.
-        parent : Optional[Any], default=None
-            The object which is the parent to this one. By default,
-            None.
         **kwargs : Any
             Additional keyword arguments used during serialization.
 
@@ -147,7 +143,6 @@ class Parameter(DescriptorNumber):
             description=description,
             url=url,
             display_name=display_name,
-            parent=parent,
             **kwargs,  # Additional keyword arguments (used for (de)serialization)
         )
 
@@ -903,11 +898,11 @@ class Parameter(DescriptorNumber):
     def free(self, value: bool) -> None:
         self.fixed = not value
 
-    def as_dict(self, skip: Optional[List[str]] = None) -> Dict[str, Any]:
+    def to_dict(self, skip: Optional[List[str]] = None) -> Dict[str, Any]:
         """
-        Overwrite the as_dict method to handle dependency information.
+        Overwrite the to_dict method to handle dependency information.
         """
-        raw_dict = super().as_dict(skip=skip)
+        raw_dict = super().to_dict(skip=skip)
 
         # Add dependency information for dependent parameters
         if not self._independent:

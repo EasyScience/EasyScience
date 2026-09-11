@@ -361,8 +361,8 @@ class TestGlobalObjectIntegration:
         original_vertex_count = len(global_obj.map.vertices())
 
         # When - Serialize objects
-        param_dict = param.as_dict()
-        obj_dict = obj.as_dict()
+        param_dict = param.to_dict()
+        obj_dict = obj.to_dict()
 
         # Clear global state
         global_obj.map._clear()
