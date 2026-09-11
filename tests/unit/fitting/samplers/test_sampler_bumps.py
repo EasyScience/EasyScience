@@ -152,9 +152,10 @@ class TestDreamSamplerRun:
             engine.run(**data, samples=10, burn=0, thin=1)
 
     def test_run_rejects_none_weights(self, engine: DreamSampler) -> None:
-        """weights=None gets a clear ValueError instead of a shape error
-        from ``np.asarray(None)`` (CR-5)."""
-        with pytest.raises(ValueError, match='weights must not be None'):
+        """weights are required; a None slipping past ``Sampler`` still gets a
+        clear ValueError from the dtype guard rather than an opaque numpy
+        TypeError out of ``np.isfinite`` (CR-5)."""
+        with pytest.raises(ValueError, match='weights must hold numeric values'):
             engine.run(
                 x=np.array([1.0]),
                 y=np.array([0.1]),

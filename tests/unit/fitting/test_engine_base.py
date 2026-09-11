@@ -5,7 +5,9 @@
 import numpy as np
 import pytest
 
-from easyscience.fitting.engine_base import validate_arrays
+from easyscience.fitting.engine_base import EngineBase
+
+validate_arrays = EngineBase.validate_arrays
 
 
 class TestValidateArrays:
@@ -30,6 +32,9 @@ class TestValidateArrays:
             ({'weights': np.array([1.0, np.inf])}, 'Weights cannot be NaN'),
             ({'weights': np.array([1.0, 0.0])}, 'Weights must be strictly positive'),
             ({'weights': np.array([1.0, -1.0])}, 'Weights must be strictly positive'),
+            ({'x': np.array([1.0, None], dtype=object)}, 'x must hold numeric values'),
+            ({'y': np.array(['a', 'b'])}, 'y must hold numeric values'),
+            ({'weights': np.asarray(None)}, 'weights must hold numeric values'),
         ],
     )
     def test_invalid_arrays_raise(self, overrides, match):

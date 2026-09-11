@@ -21,7 +21,6 @@ from easyscience.variable import Parameter
 
 from ..available_minimizers import AvailableMinimizers
 from ..engine_base import PARAMETER_PREFIX
-from ..engine_base import validate_arrays
 from .bumps_utils import BumpsProgressMonitor
 from .bumps_utils import EvalCounter
 from .bumps_utils import build_curve_problem
@@ -162,7 +161,7 @@ class Bumps(MinimizerBase):
 
         x, y, weights = np.asarray(x), np.asarray(y), np.asarray(weights)
 
-        validate_arrays(x, y, weights)
+        self.validate_arrays(x, y, weights)
 
         if progress_callback is not None and not callable(progress_callback):
             raise ValueError('progress_callback must be callable')

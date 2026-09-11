@@ -16,42 +16,6 @@ from easyscience.variable import Parameter
 PARAMETER_PREFIX = 'p'
 
 
-def validate_arrays(x: np.ndarray, y: np.ndarray, weights: np.ndarray) -> None:
-    """Validate the (x, y, weights) arrays handed to an engine.
-
-    Parameters
-    ----------
-    x : np.ndarray
-        Independent variable array.
-    y : np.ndarray
-        Dependent variable array.
-    weights : np.ndarray
-        Weight array.
-
-    Raises
-    ------
-    ValueError
-        If the shapes disagree, x or y contain NaN or infinite values, or
-        the weights are non-finite or non-positive.
-    """
-    if y.shape != x.shape:
-        raise ValueError('x and y must have the same shape.')
-
-    if not np.isfinite(x).all():
-        raise ValueError('x cannot contain NaN or infinite values.')
-    if not np.isfinite(y).all():
-        raise ValueError('y cannot contain NaN or infinite values.')
-
-    if weights.shape != x.shape:
-        raise ValueError('Weights must have the same shape as x and y.')
-
-    if not np.isfinite(weights).all():
-        raise ValueError('Weights cannot be NaN or infinite.')
-
-    if (weights <= 0).any():
-        raise ValueError('Weights must be strictly positive and non-zero.')
-
-
 class EngineBase(metaclass=ABCMeta):
     """
     Base for all evaluation engines: minimizers and samplers.
@@ -82,6 +46,50 @@ class EngineBase(metaclass=ABCMeta):
         for key in self._cached_pars.keys():
             self._cached_pars[key].value = self._cached_pars_vals[key][0]
             self._cached_pars[key].error = self._cached_pars_vals[key][1]
+
+    @staticmethod
+    def validate_arrays(x: np.ndarray, y: np.ndarray, weights: np.ndarray) -> None:
+        """Validate the (x, y, weights) arrays handed to an engine.
+
+        Parameters
+        ----------
+        x : np.ndarray
+            Independent variable array.
+        y : np.ndarray
+            Dependent variable array.
+        weights : np.ndarray
+            Weight array.
+
+        Raises
+        ------
+        ValueError
+            If any array is non-numeric, the shapes disagree, x or y contain
+            NaN or infinite values, or the weights are non-finite or
+            non-positive.
+        """
+        # A non-numeric dtype (an object array holding None, or a string
+        # array) would otherwise reach np.isfinite and raise an opaque numpy
+        # TypeError instead of the ValueError documented here.
+        for name, arr in (('x', x), ('y', y), ('weights', weights)):
+            if not np.issubdtype(arr.dtype, np.number):
+                raise ValueError(f'{name} must hold numeric values, got dtype {arr.dtype}.')
+
+        if y.shape != x.shape:
+            raise ValueError('x and y must have the same shape.')
+
+        if not np.isfinite(x).all():
+            raise ValueError('x cannot contain NaN or infinite values.')
+        if not np.isfinite(y).all():
+            raise ValueError('y cannot contain NaN or infinite values.')
+
+        if weights.shape != x.shape:
+            raise ValueError('Weights must have the same shape as x and y.')
+
+        if not np.isfinite(weights).all():
+            raise ValueError('Weights cannot be NaN or infinite.')
+
+        if (weights <= 0).any():
+            raise ValueError('Weights must be strictly positive and non-zero.')
 
     def evaluate(
         self, x: np.ndarray, parameters: dict[str, float] | None = None, **kwargs

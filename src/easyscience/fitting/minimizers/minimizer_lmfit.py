@@ -17,7 +17,6 @@ from easyscience.variable import Parameter
 
 from ..available_minimizers import AvailableMinimizers
 from ..engine_base import PARAMETER_PREFIX
-from ..engine_base import validate_arrays
 from .minimizer_base import MinimizerBase
 from .utils import FitError
 from .utils import FitResults
@@ -136,7 +135,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         """
         x, y, weights = np.asarray(x), np.asarray(y), np.asarray(weights)
 
-        validate_arrays(x, y, weights)
+        self.validate_arrays(x, y, weights)
 
         if engine_kwargs is None:
             engine_kwargs = {}

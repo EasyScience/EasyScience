@@ -51,7 +51,6 @@ def _data_fingerprint(
 def _validate_dataset_arrays(
     name: str,
     data: np.ndarray | list | tuple,
-    allow_none_entries: bool = False,
 ) -> None:
     """Check that ``data`` (an array or list of arrays) holds numeric,
     at-least-1-D, non-empty arrays.
@@ -67,9 +66,6 @@ def _validate_dataset_arrays(
         ``'weights'``).
     data : np.ndarray | list | tuple
         A single dataset array, or a list/tuple of dataset arrays.
-    allow_none_entries : bool, default=False
-        Accept ``None`` entries inside a list (used for per-dataset
-        optional weights).
 
     Raises
     ------
@@ -81,8 +77,6 @@ def _validate_dataset_arrays(
     is_multi = isinstance(data, (list, tuple))
     for i, entry in enumerate(data if is_multi else [data]):
         label = f'{name}[{i}]' if is_multi else name
-        if entry is None and allow_none_entries:
-            continue
         try:
             arr = np.asarray(entry)
         except Exception as exc:
@@ -108,8 +102,6 @@ def _copy_data(data):
     in-place mutation of the copies, so the chain and the ``save()``
     fingerprint always describe the data actually sampled.
     """
-    if data is None:
-        return None
     if isinstance(data, (list, tuple)):
         return [_copy_data(d) for d in data]
     arr = np.array(data, copy=True)
@@ -282,8 +274,10 @@ class Sampler:
         Independent variable array (or list of arrays for ``MultiFitter``).
     y : np.ndarray | list[np.ndarray]
         Dependent variable array (or list of arrays for ``MultiFitter``).
-    weights : np.ndarray | list[np.ndarray | None] | None, default=None
-        Weight array (or list of arrays for ``MultiFitter``).
+    weights : np.ndarray | list[np.ndarray]
+        Weight array (or list of arrays for ``MultiFitter``). Required:
+        sampling has no default weighting, so a missing weight array is
+        rejected here rather than deep inside the sampling engine.
     vectorized : bool, default=False
         When ``True``, each x array may be multi-dimensional (e.g. an
         ``(N, M, 2)`` grid for a 2D model) and is left as-is.
@@ -295,7 +289,7 @@ class Sampler:
     Raises
     ------
     TypeError
-        If ``fitter`` is not Fitter-shaped (no ``minimizer``/``fit_function``),
+        If ``fitter`` is not Fitter-shaped (no ``fit_function``),
         if any dataset in ``x``/``y``/``weights`` is not a numeric array
         (e.g. a string), or ``vectorized``/``sampler_kwargs`` have the wrong
         type.
@@ -349,11 +343,11 @@ class Sampler:
         fitter: 'Fitter',
         x: np.ndarray | list[np.ndarray],
         y: np.ndarray | list[np.ndarray],
-        weights: np.ndarray | list[np.ndarray | None] | None = None,
+        weights: np.ndarray | list[np.ndarray],
         vectorized: bool = False,
         sampler_kwargs: dict | None = None,
     ):
-        if not (hasattr(fitter, 'minimizer') and hasattr(fitter, 'fit_function')):
+        if not hasattr(fitter, 'fit_function'):
             raise TypeError(
                 f'fitter must be a configured Fitter or MultiFitter, got {type(fitter).__name__}.'
             )
@@ -364,20 +358,18 @@ class Sampler:
             raise ValueError(
                 f'x and y must hold the same number of datasets, got {len(x)} and {len(y)}.'
             )
-        if weights is not None:
-            if isinstance(weights, (list, tuple)) != x_is_multi:
-                raise ValueError(
-                    'weights must match the structure of x and y (array or list of arrays).'
-                )
-            if x_is_multi and len(weights) != len(x):
-                raise ValueError(
-                    f'weights must hold the same number of datasets as x and y, '
-                    f'got {len(weights)} and {len(x)}.'
-                )
+        if isinstance(weights, (list, tuple)) != x_is_multi:
+            raise ValueError(
+                'weights must match the structure of x and y (array or list of arrays).'
+            )
+        if x_is_multi and len(weights) != len(x):
+            raise ValueError(
+                f'weights must hold the same number of datasets as x and y, '
+                f'got {len(weights)} and {len(x)}.'
+            )
         _validate_dataset_arrays('x', x)
         _validate_dataset_arrays('y', y)
-        if weights is not None:
-            _validate_dataset_arrays('weights', weights, allow_none_entries=True)
+        _validate_dataset_arrays('weights', weights)
         if not isinstance(vectorized, bool):
             raise TypeError(f'vectorized must be a bool, got {type(vectorized).__name__}.')
         if sampler_kwargs is not None and not isinstance(sampler_kwargs, dict):
@@ -413,8 +405,8 @@ class Sampler:
         return list(self._y) if isinstance(self._y, list) else self._y
 
     @property
-    def weights(self) -> np.ndarray | list[np.ndarray | None] | None:
-        """The bound weight data (read-only copy, or None)."""
+    def weights(self) -> np.ndarray | list[np.ndarray]:
+        """The bound weight data (read-only copy)."""
         return list(self._weights) if isinstance(self._weights, list) else self._weights
 
     @property
@@ -446,12 +438,9 @@ class Sampler:
         """SHA-256 fingerprint of the bound (x, y, weights) data, or None."""
         x_list = list(self._x) if isinstance(self._x, (list, tuple)) else [self._x]
         y_list = list(self._y) if isinstance(self._y, (list, tuple)) else [self._y]
-        if self._weights is None:
-            w_list = []
-        elif isinstance(self._weights, (list, tuple)):
-            w_list = [w for w in self._weights if w is not None]
-        else:
-            w_list = [self._weights]
+        w_list = (
+            list(self._weights) if isinstance(self._weights, (list, tuple)) else [self._weights]
+        )
         return _data_fingerprint(x_list, y_list, w_list)
 
     def _run(

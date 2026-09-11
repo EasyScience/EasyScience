@@ -39,7 +39,6 @@ class AbsSin(ObjBase):
 class _StubFitter:
     """Duck-types the Fitter attributes checked by the Sampler constructor."""
 
-    minimizer = None
     fit_function = None
 
 
@@ -94,20 +93,27 @@ def _make_state(ngen=6, npop=5, nvar=2, seed=7):
 
 
 class TestSamplerConstructorValidation:
-    def test_rejects_fitter_without_minimizer(self):
+    def test_rejects_fitter_without_fit_function(self):
         x, y, w = _xyw()
         with pytest.raises(TypeError, match='fitter must be a configured Fitter'):
             Sampler(object(), [x], [y], [w])
 
+    def test_requires_weights(self):
+        """Sampling has no default weighting, so weights are a required
+        argument rather than a None that only blows up at sample()."""
+        x, y, _ = _xyw()
+        with pytest.raises(TypeError, match='weights'):
+            Sampler(_StubFitter(), [x], [y])
+
     def test_rejects_mixed_array_and_list(self):
         x, y, w = _xyw()
         with pytest.raises(ValueError, match='both be arrays or both be lists'):
-            Sampler(_StubFitter(), [x], y)
+            Sampler(_StubFitter(), [x], y, [w])
 
     def test_rejects_dataset_count_mismatch(self):
         x, y, w = _xyw()
         with pytest.raises(ValueError, match='same number of datasets'):
-            Sampler(_StubFitter(), [x, x], [y])
+            Sampler(_StubFitter(), [x, x], [y], [w, w])
 
     def test_rejects_weights_structure_mismatch(self):
         x, y, w = _xyw()
@@ -144,11 +150,6 @@ class TestSamplerDataBinding:
         np.testing.assert_array_equal(sampler.x[0], x)
         np.testing.assert_array_equal(sampler.y[0], y)
         np.testing.assert_array_equal(sampler.weights[0], w)
-
-    def test_weights_property_none_when_unset(self):
-        x, y, _ = _xyw()
-        sampler = Sampler(_StubFitter(), [x], [y])
-        assert sampler.weights is None
 
     def test_inputs_are_copied(self):
         """Mutating the caller's arrays after construction must not change the
@@ -353,51 +354,51 @@ class TestSamplerConstructorDataValidation:
     """Scalars, strings and empty/ragged data must be rejected at construction."""
 
     def test_rejects_scalar_x(self):
-        _, y, _ = _xyw()
+        _, y, w = _xyw()
         with pytest.raises(ValueError, match='x must be an array of values, got a scalar'):
-            Sampler(_StubFitter(), 5.0, y)
+            Sampler(_StubFitter(), 5.0, y, w)
 
     def test_rejects_scalar_dataset_in_list(self):
-        x, y, _ = _xyw()
+        x, y, w = _xyw()
         with pytest.raises(ValueError, match=r'y\[1\] must be an array of values'):
-            Sampler(_StubFitter(), [x, x], [y, 3.0])
+            Sampler(_StubFitter(), [x, x], [y, 3.0], [w, w])
 
     def test_rejects_string_data(self):
-        x, _, _ = _xyw()
+        x, _, w = _xyw()
         with pytest.raises(TypeError, match='y must hold numeric values'):
-            Sampler(_StubFitter(), x, 'abc')
+            Sampler(_StubFitter(), x, 'abc', w)
 
     def test_rejects_non_numeric_object_array(self):
         _, y, _ = _xyw()
         with pytest.raises(TypeError, match='x must hold numeric values'):
-            Sampler(_StubFitter(), np.array([{}, {}], dtype=object), y)
+            Sampler(_StubFitter(), np.array([{}, {}], dtype=object), y, np.ones(2))
 
     def test_rejects_empty_array(self):
         with pytest.raises(ValueError, match='x must not be empty'):
-            Sampler(_StubFitter(), np.array([]), np.array([]))
+            Sampler(_StubFitter(), np.array([]), np.array([]), np.array([]))
 
     def test_rejects_ragged_dataset(self):
         with pytest.raises(TypeError, match=r'x\[0\] could not be converted'):
-            Sampler(_StubFitter(), [[1.0, [2.0, 3.0]]], [np.zeros(3)])
+            Sampler(_StubFitter(), [[1.0, [2.0, 3.0]]], [np.zeros(3)], [np.ones(3)])
 
     def test_rejects_scalar_weights(self):
         x, y, _ = _xyw()
         with pytest.raises(ValueError, match='weights must be an array of values'):
             Sampler(_StubFitter(), x, y, 2.0)
 
-    def test_weights_list_may_hold_none_entries(self):
+    def test_rejects_none_weight_entry(self):
         x, y, w = _xyw()
-        sampler = Sampler(_StubFitter(), [x, x], [y, y], [w, None])
-        assert sampler.weights[1] is None
+        with pytest.raises(TypeError, match=r'weights\[1\] must hold numeric values'):
+            Sampler(_StubFitter(), [x, x], [y, y], [w, None])
 
 
 class TestDataFingerprint:
     def test_returns_none_on_unhashable_data(self):
         assert _data_fingerprint([object()], [], []) is None
 
-    def test_fingerprint_without_weights(self):
-        x, y, _ = _xyw()
-        sampler = Sampler(_StubFitter(), x, y)
+    def test_fingerprint_of_single_arrays(self):
+        x, y, w = _xyw()
+        sampler = Sampler(_StubFitter(), x, y, w)
         assert isinstance(sampler._fingerprint(), str)
 
 

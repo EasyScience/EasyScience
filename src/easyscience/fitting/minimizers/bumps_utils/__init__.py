@@ -7,4 +7,3 @@ from .problem import parameter_names
 from .problem import parameter_snapshot
 from .problem import to_bumps_parameter
 from .progress_monitor import BumpsProgressMonitor
-from .validation import validate_run_settings

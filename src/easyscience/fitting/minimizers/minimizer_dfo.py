@@ -16,7 +16,6 @@ from easyscience.variable import Parameter
 
 from ..available_minimizers import AvailableMinimizers
 from ..engine_base import PARAMETER_PREFIX
-from ..engine_base import validate_arrays
 from .minimizer_base import MinimizerBase
 from .utils import FitError
 from .utils import FitResults
@@ -125,7 +124,7 @@ class DFO(MinimizerBase):
         """
         x, y, weights = np.asarray(x), np.asarray(y), np.asarray(weights)
 
-        validate_arrays(x, y, weights)
+        self.validate_arrays(x, y, weights)
 
         # Bridge progress_callback into the DFO callback mechanism
         if progress_callback is not None and callback is None:

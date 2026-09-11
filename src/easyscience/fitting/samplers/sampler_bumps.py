@@ -15,13 +15,12 @@ from bumps.fitters import FitDriver
 
 from ..engine_base import PARAMETER_PREFIX
 from ..engine_base import EngineBase
-from ..engine_base import validate_arrays
 from ..minimizers.bumps_utils import BumpsProgressMonitor
 from ..minimizers.bumps_utils import build_curve_problem
 from ..minimizers.bumps_utils import parameter_names
 from ..minimizers.bumps_utils import parameter_snapshot
-from ..minimizers.bumps_utils import validate_run_settings
 from ..minimizers.utils import FitError
+from .validation import validate_run_settings
 
 if TYPE_CHECKING:
     from bumps.dream.state import MCMCDraw
@@ -65,7 +64,7 @@ class DreamSampler(EngineBase):
         self,
         x: np.ndarray,
         y: np.ndarray,
-        weights: np.ndarray | None,
+        weights: np.ndarray,
         samples: int = 10000,
         burn: int = 2000,
         thin: int = 10,
@@ -90,9 +89,10 @@ class DreamSampler(EngineBase):
             Flattened independent variable array.
         y : np.ndarray
             Flattened dependent variable array.
-        weights : np.ndarray | None
-            Flattened weight array. Must not be ``None``: sampling has
-            no default weighting; a clear ``ValueError`` is raised.
+        weights : np.ndarray
+            Flattened weight array. Sampling has no default weighting,
+            so weights are required; ``Sampler`` enforces this at
+            construction.
         samples : int, default=10000
             Number of raw samples to draw across all chains, before thinning.
             A guaranteed minimum, not an exact count: DREAM advances in
@@ -163,15 +163,10 @@ class DreamSampler(EngineBase):
         """
         from bumps.fitters import DreamFit
 
-        if weights is None:
-            raise ValueError(
-                'weights must not be None for Bayesian sampling. Pass '
-                'measurement weights (e.g. ``1 / sigma``) matching x and y.'
-            )
         x, y, weights = np.asarray(x), np.asarray(y), np.asarray(weights)
 
         validate_run_settings(samples, burn, thin)
-        validate_arrays(x, y, weights)
+        self.validate_arrays(x, y, weights)
 
         # Build the BUMPS Curve model around the engine's wrapped fit function
         problem, _, _ = build_curve_problem(self, x, y, weights)

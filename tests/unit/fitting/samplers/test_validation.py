@@ -4,7 +4,7 @@
 
 import pytest
 
-from easyscience.fitting.minimizers.bumps_utils import validate_run_settings
+from easyscience.fitting.samplers.validation import validate_run_settings
 
 
 class TestValidateRunSettings:
