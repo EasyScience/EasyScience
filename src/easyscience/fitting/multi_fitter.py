@@ -5,7 +5,7 @@ from typing import Callable
 
 import numpy as np
 
-from ..base_classes import CollectionBase
+from ..base_classes import EasyList
 from .fitter import Fitter
 from .minimizers import FitResults
 
@@ -20,6 +20,7 @@ class MultiFitter(Fitter):
     The inherited ``fit`` wrapper from ``Fitter`` is used unchanged,
     including support for forwarding progress callbacks to the active
     minimizer.
+
     """
 
     def __init__(
@@ -27,12 +28,24 @@ class MultiFitter(Fitter):
         fit_objects: list | None = None,
         fit_functions: list[Callable] | None = None,
     ):
-        # Create a dummy core object to hold all the fit objects.
-        self._fit_objects = CollectionBase('multi', *fit_objects)
-        self._fit_functions = fit_functions
+        # Both arguments default to None so the constructor can be called
+        # empty; normalise to empty sequences so nothing below has to
+        # special-case None.
+        if fit_objects is None:
+            fit_objects = []
+        if fit_functions is None:
+            fit_functions = []
+        # Aggregate the fit objects so a single object can be sent to Fitter.
+        # *-unpacking keeps any sequence (list, tuple, etc) working, as the
+        # old CollectionBase container did.
+        self._fit_objects = EasyList(*fit_objects)
+        self._fit_functions = list(fit_functions)
         # Initialize with the first of the fit_functions, without this it is
-        # not possible to change the fitting engine.
-        super().__init__(self._fit_objects, self._fit_functions[0])
+        # not possible to change the fitting engine. With no functions given
+        # the Fitter is created with ``None``; the minimizer only stores the
+        # callable, so this is harmless until a fit is attempted.
+        first_fit_function = self._fit_functions[0] if self._fit_functions else None
+        super().__init__(self._fit_objects, first_fit_function)
 
     def _fit_function_wrapper(
         self,
