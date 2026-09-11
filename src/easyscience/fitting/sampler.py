@@ -15,7 +15,7 @@ import numpy as np
 
 from easyscience import global_object
 
-from .minimizers.minimizer_base import MINIMIZER_PARAMETER_PREFIX
+from .engine_base import PARAMETER_PREFIX
 
 if TYPE_CHECKING:  # avoid import cycles; only needed for type hints
     from bumps.dream.state import MCMCDraw
@@ -51,7 +51,6 @@ def _data_fingerprint(
 def _validate_dataset_arrays(
     name: str,
     data: np.ndarray | list | tuple,
-    allow_none_entries: bool = False,
 ) -> None:
     """Check that ``data`` (an array or list of arrays) holds numeric,
     at-least-1-D, non-empty arrays.
@@ -67,9 +66,6 @@ def _validate_dataset_arrays(
         ``'weights'``).
     data : np.ndarray | list | tuple
         A single dataset array, or a list/tuple of dataset arrays.
-    allow_none_entries : bool, default=False
-        Accept ``None`` entries inside a list (used for per-dataset
-        optional weights).
 
     Raises
     ------
@@ -81,8 +77,6 @@ def _validate_dataset_arrays(
     is_multi = isinstance(data, (list, tuple))
     for i, entry in enumerate(data if is_multi else [data]):
         label = f'{name}[{i}]' if is_multi else name
-        if entry is None and allow_none_entries:
-            continue
         try:
             arr = np.asarray(entry)
         except Exception as exc:
@@ -108,8 +102,6 @@ def _copy_data(data):
     in-place mutation of the copies, so the chain and the ``save()``
     fingerprint always describe the data actually sampled.
     """
-    if data is None:
-        return None
     if isinstance(data, (list, tuple)):
         return [_copy_data(d) for d in data]
     arr = np.array(data, copy=True)
@@ -218,9 +210,7 @@ def load_chain(path: str | os.PathLike, skip: int = 0) -> tuple[MCMCDraw, list[s
         # save_state/load_state does not preserve labels, so a reloaded state
         # typically carries default labels like ['P0', 'P1', ...].
         param_names = [
-            lbl[len(MINIMIZER_PARAMETER_PREFIX) :]
-            if lbl.startswith(MINIMIZER_PARAMETER_PREFIX)
-            else lbl
+            lbl[len(PARAMETER_PREFIX) :] if lbl.startswith(PARAMETER_PREFIX) else lbl
             for lbl in state.labels
         ]
 
@@ -251,19 +241,9 @@ class SamplingResults:
     logp: np.ndarray
     state: MCMCDraw
 
-    def to_legacy_dict(self) -> dict:
-        """Return the legacy dict shape produced by the deprecated
-        ``mcmc_sample()`` APIs."""
-        return {
-            'draws': self.draws,
-            'param_names': self.param_names,
-            'internal_bumps_object': self.state,
-            'logp': self.logp,
-        }
-
 
 class Sampler:
-    """Bayesian MCMC sampler for one dataset, backed by a Fitter's BUMPS minimizer.
+    """Bayesian MCMC sampler for one dataset, backed by the BUMPS DREAM engine.
 
     One ``Sampler`` instance represents one chain over one ``(x, y, weights)``
     dataset. The data is bound at construction; ``sample()`` and ``extend()``
@@ -274,10 +254,9 @@ class Sampler:
     effect on the sampler, and there are deliberately no setters: to sample
     different data, create a new ``Sampler``.
 
-    Construct directly with a configured ``Fitter`` (or ``MultiFitter``) whose
-    minimizer has been switched to ``AvailableMinimizers.Bumps``. **Running a
-    fit first is not required** — the ``Fitter`` supplies the model and the
-    minimizer, not a fit result, and sampling from the initial parameter values
+    Construct directly with a configured ``Fitter`` (or ``MultiFitter``).
+    The only requirement is an installed ``bumps`` package. **Running a fit
+    first is not required**; sampling from the initial parameter values
     works fine.
 
     It is often worth fitting first anyway. DREAM seeds its whole starting
@@ -286,20 +265,19 @@ class Sampler:
     chain in the right region and shortens the burn-in needed to reach the
     typical set. From a poor initial guess, expect to burn for longer.
 
-    The sampler is BUMPS/DREAM-specific for now: the BUMPS check in ``_run()``
-    is the seam where another backend would plug in.
-
     Parameters
     ----------
     fitter : Fitter
-        A configured ``Fitter`` (or ``MultiFitter``) whose minimizer has been
-        switched to ``AvailableMinimizers.Bumps``.
+        A configured ``Fitter`` (or ``MultiFitter``) supplying the model and
+        fit function.
     x : np.ndarray | list[np.ndarray]
         Independent variable array (or list of arrays for ``MultiFitter``).
     y : np.ndarray | list[np.ndarray]
         Dependent variable array (or list of arrays for ``MultiFitter``).
-    weights : np.ndarray | list[np.ndarray | None] | None, default=None
-        Weight array (or list of arrays for ``MultiFitter``).
+    weights : np.ndarray | list[np.ndarray]
+        Weight array (or list of arrays for ``MultiFitter``). Required:
+        sampling has no default weighting, so a missing weight array is
+        rejected here rather than deep inside the sampling engine.
     vectorized : bool, default=False
         When ``True``, each x array may be multi-dimensional (e.g. an
         ``(N, M, 2)`` grid for a 2D model) and is left as-is.
@@ -311,7 +289,7 @@ class Sampler:
     Raises
     ------
     TypeError
-        If ``fitter`` is not Fitter-shaped (no ``minimizer``/``fit_function``),
+        If ``fitter`` is not Fitter-shaped (no ``fit_function``),
         if any dataset in ``x``/``y``/``weights`` is not a numeric array
         (e.g. a string), or ``vectorized``/``sampler_kwargs`` have the wrong
         type.
@@ -365,11 +343,11 @@ class Sampler:
         fitter: 'Fitter',
         x: np.ndarray | list[np.ndarray],
         y: np.ndarray | list[np.ndarray],
-        weights: np.ndarray | list[np.ndarray | None] | None = None,
+        weights: np.ndarray | list[np.ndarray],
         vectorized: bool = False,
         sampler_kwargs: dict | None = None,
     ):
-        if not (hasattr(fitter, 'minimizer') and hasattr(fitter, 'fit_function')):
+        if not hasattr(fitter, 'fit_function'):
             raise TypeError(
                 f'fitter must be a configured Fitter or MultiFitter, got {type(fitter).__name__}.'
             )
@@ -380,20 +358,18 @@ class Sampler:
             raise ValueError(
                 f'x and y must hold the same number of datasets, got {len(x)} and {len(y)}.'
             )
-        if weights is not None:
-            if isinstance(weights, (list, tuple)) != x_is_multi:
-                raise ValueError(
-                    'weights must match the structure of x and y (array or list of arrays).'
-                )
-            if x_is_multi and len(weights) != len(x):
-                raise ValueError(
-                    f'weights must hold the same number of datasets as x and y, '
-                    f'got {len(weights)} and {len(x)}.'
-                )
+        if isinstance(weights, (list, tuple)) != x_is_multi:
+            raise ValueError(
+                'weights must match the structure of x and y (array or list of arrays).'
+            )
+        if x_is_multi and len(weights) != len(x):
+            raise ValueError(
+                f'weights must hold the same number of datasets as x and y, '
+                f'got {len(weights)} and {len(x)}.'
+            )
         _validate_dataset_arrays('x', x)
         _validate_dataset_arrays('y', y)
-        if weights is not None:
-            _validate_dataset_arrays('weights', weights, allow_none_entries=True)
+        _validate_dataset_arrays('weights', weights)
         if not isinstance(vectorized, bool):
             raise TypeError(f'vectorized must be a bool, got {type(vectorized).__name__}.')
         if sampler_kwargs is not None and not isinstance(sampler_kwargs, dict):
@@ -429,8 +405,8 @@ class Sampler:
         return list(self._y) if isinstance(self._y, list) else self._y
 
     @property
-    def weights(self) -> np.ndarray | list[np.ndarray | None] | None:
-        """The bound weight data (read-only copy, or None)."""
+    def weights(self) -> np.ndarray | list[np.ndarray]:
+        """The bound weight data (read-only copy)."""
         return list(self._weights) if isinstance(self._weights, list) else self._weights
 
     @property
@@ -462,12 +438,9 @@ class Sampler:
         """SHA-256 fingerprint of the bound (x, y, weights) data, or None."""
         x_list = list(self._x) if isinstance(self._x, (list, tuple)) else [self._x]
         y_list = list(self._y) if isinstance(self._y, (list, tuple)) else [self._y]
-        if self._weights is None:
-            w_list = []
-        elif isinstance(self._weights, (list, tuple)):
-            w_list = [w for w in self._weights if w is not None]
-        else:
-            w_list = [self._weights]
+        w_list = (
+            list(self._weights) if isinstance(self._weights, (list, tuple)) else [self._weights]
+        )
         return _data_fingerprint(x_list, y_list, w_list)
 
     def _run(
@@ -478,52 +451,49 @@ class Sampler:
         population: int | None,
         resume_state: MCMCDraw | None,
         sampler_kwargs: dict | None,
-        progress_callback: Callable[[dict], bool | None] | None,
+        progress_callback: Callable[[dict], None] | None,
         abort_test: Callable[[], bool] | None,
     ) -> SamplingResults:
         """Shared sampling engine for ``sample()`` and ``extend()``.
 
         Argument validation for ``samples``/``burn``/``thin`` lives in
-        ``Bumps.mcmc_sample`` (single source of truth).
+        ``DreamSampler.run``.
         """
-        # Check the minimizer is BUMPS *before* mutating the fitter — a
-        # non-BUMPS fitter must not be needlessly rebuilt.
-        minimizer = self._fitter.minimizer
-        if not (hasattr(minimizer, 'package') and minimizer.package == 'bumps'):
+        from .available_minimizers import bumps_engine_available
+
+        if not bumps_engine_available:
             raise RuntimeError(
-                'Bayesian sampling requires a BUMPS minimizer. '
-                'Use ``fitter.switch_minimizer(AvailableMinimizers.Bumps)`` first.'
+                'Bayesian sampling requires the bumps package. '
+                'Install it with ``pip install bumps``.'
             )
+        from .samplers.sampler_bumps import DreamSampler
 
         x_fit, x_new, y_new, w_new, dims = self._fitter._precompute_reshaping(
             self._x, self._y, self._weights, self._vectorized
         )
-        self._fitter._dependent_dims = dims
-        wrapped = self._fitter._fit_function_wrapper(x_new, flatten=True)
+        # The dims are passed explicitly so the fitter itself is never mutated.
+        wrapped = self._fitter._fit_function_wrapper(x_new, flatten=True, dependent_dims=dims)
 
         merged_kwargs = {**self._default_sampler_kwargs, **(sampler_kwargs or {})}
 
-        original_fit_func = self._fitter.fit_function
-        # Assigning fit_function triggers _update_minimizer() and *rebuilds*
-        # the minimizer object — it must be re-fetched after this assignment.
-        self._fitter.fit_function = wrapped
-        try:
-            minimizer = self._fitter.minimizer
-            result = minimizer.mcmc_sample(
-                x=x_fit,
-                y=y_new,
-                weights=w_new,
-                samples=samples,
-                burn=burn,
-                thin=thin,
-                population=population,
-                resume_state=resume_state,
-                sampler_kwargs=merged_kwargs or None,
-                progress_callback=progress_callback,
-                abort_test=abort_test,
-            )
-        finally:
-            self._fitter.fit_function = original_fit_func
+        # A fresh engine per run keeps the chain on the fitter's current fit
+        # function and parameters; chain continuity lives in ``resume_state``.
+        # This is where a sampler factory would plug in once there is more
+        # than one backend.
+        engine = DreamSampler(obj=self._fitter.fit_object, fit_function=wrapped)
+        result = engine.run(
+            x=x_fit,
+            y=y_new,
+            weights=w_new,
+            samples=samples,
+            burn=burn,
+            thin=thin,
+            population=population,
+            resume_state=resume_state,
+            sampler_kwargs=merged_kwargs or None,
+            progress_callback=progress_callback,
+            abort_test=abort_test,
+        )
 
         results = SamplingResults(
             draws=result['draws'],
@@ -542,7 +512,7 @@ class Sampler:
         thin: int = 10,
         population: int | None = None,
         sampler_kwargs: dict | None = None,
-        progress_callback: Callable[[dict], bool | None] | None = None,
+        progress_callback: Callable[[dict], None] | None = None,
         abort_test: Callable[[], bool] | None = None,
     ) -> SamplingResults:
         """Run fresh Bayesian MCMC sampling on the bound data.
@@ -571,9 +541,10 @@ class Sampler:
         sampler_kwargs : dict | None, default=None
             Additional keyword arguments forwarded to the BUMPS DREAM
             sampler (merged over the instance defaults).
-        progress_callback : Callable[[dict], bool | None] | None, default=None
+        progress_callback : Callable[[dict], None] | None, default=None
             Optional callback invoked at each DREAM generation. The payload
-            dict includes ``iteration`` and ``sampling: True``.
+            dict includes ``iteration`` and ``sampling: True``. Any return
+            value is ignored.
         abort_test : Callable[[], bool] | None, default=None
             Optional callable that returns ``True`` to abort sampling early.
 
@@ -591,7 +562,7 @@ class Sampler:
 
         Exceptions propagate from the sampling engine: ``ValueError`` if
         ``samples``, ``burn``, or ``thin`` are invalid, and ``RuntimeError``
-        if the active minimizer is not a BUMPS instance.
+        if the ``bumps`` package is not installed.
         """
         if self._state is not None:
             global_object.log.getLogger('fitting').warning(
@@ -615,7 +586,7 @@ class Sampler:
         thin: int = 10,
         total_samples: int | None = None,
         sampler_kwargs: dict | None = None,
-        progress_callback: Callable[[dict], bool | None] | None = None,
+        progress_callback: Callable[[dict], None] | None = None,
         abort_test: Callable[[], bool] | None = None,
     ) -> SamplingResults:
         """Continue the existing chain with additional samples.
@@ -646,8 +617,9 @@ class Sampler:
         sampler_kwargs : dict | None, default=None
             Additional keyword arguments forwarded to the BUMPS DREAM
             sampler (merged over the instance defaults).
-        progress_callback : Callable[[dict], bool | None] | None, default=None
-            Optional callback invoked at each DREAM generation.
+        progress_callback : Callable[[dict], None] | None, default=None
+            Optional callback invoked at each DREAM generation. Any return
+            value is ignored.
         abort_test : Callable[[], bool] | None, default=None
             Optional callable that returns ``True`` to abort sampling early.
 
@@ -660,7 +632,8 @@ class Sampler:
         ------
         RuntimeError
             If there is no chain to extend (call ``sample()`` or
-            ``load_state()`` first), or the minimizer is not BUMPS.
+            ``load_state()`` first), or the ``bumps`` package is not
+            installed.
 
         Notes
         -----

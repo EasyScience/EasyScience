@@ -138,24 +138,6 @@ class TestLMFit:
         minimizer._set_parameter_fit_result.assert_called_once_with('fit', False)
         minimizer._gen_fit_results.assert_called_once_with('fit', iterations=None)
 
-    def test_fit_model(self, minimizer: LMFit) -> None:
-        # When
-        mock_model = MagicMock()
-        mock_model.fit = MagicMock(return_value='fit')
-        minimizer._make_model = MagicMock(return_value=mock_model)
-        minimizer._set_parameter_fit_result = MagicMock()
-        minimizer._gen_fit_results = MagicMock(return_value='gen_fit_results')
-
-        # Then
-        minimizer.fit(x=1.0, y=2.0, weights=1, model=mock_model)
-
-        # Expect
-        mock_model.fit.assert_called_once_with(
-            2.0, x=1.0, weights=1, max_nfev=None, iter_cb=ANY, fit_kws={}, method='leastsq'
-        )
-        assert callable(mock_model.fit.call_args.kwargs['iter_cb'])
-        minimizer._make_model.assert_not_called()
-
     def test_fit_method(self, minimizer: LMFit) -> None:
         # When
         mock_model = MagicMock()
@@ -212,6 +194,48 @@ class TestLMFit:
         )
         assert callable(mock_model.fit.call_args.kwargs['iter_cb'])
 
+    @pytest.mark.parametrize(
+        'minimizer_method, passed_method, expected',
+        [
+            ('leastsq', None, {'ftol': 0.1}),
+            ('least_squares', None, {'ftol': 0.1}),
+            ('powell', None, {'tol': 0.1}),
+            ('differential_evolution', None, {'tol': 0.1}),
+            ('cobyla', None, {'tol': 0.1}),
+            ('leastsq', 'powell', {'tol': 0.1}),
+            ('powell', 'leastsq', {'ftol': 0.1}),
+            ('nelder', None, {}),
+        ],
+        ids=[
+            'leastsq',
+            'least_squares',
+            'powell',
+            'differential_evolution',
+            'cobyla',
+            'explicit_method_overrides',
+            'explicit_leastsq_overrides',
+            'unmapped_method',
+        ],
+    )
+    def test_get_fit_kws_tolerance(
+        self, minimizer: LMFit, minimizer_method, passed_method, expected
+    ) -> None:
+        # When
+        minimizer._method = minimizer_method
+
+        # Then
+        fit_kws = minimizer._get_fit_kws(passed_method, 0.1, None)
+
+        # Expect
+        assert fit_kws == expected
+
+    def test_get_fit_kws_no_tolerance(self, minimizer: LMFit) -> None:
+        # When Then
+        fit_kws = minimizer._get_fit_kws(None, None, {'existing': 'kwarg'})
+
+        # Expect
+        assert fit_kws == {'existing': 'kwarg'}
+
     def test_fit_progress_callback(self, minimizer: LMFit) -> None:
         # When
         progress_callback = MagicMock(return_value=True)
@@ -229,9 +253,7 @@ class TestLMFit:
         iter_cb = mock_model.fit.call_args.kwargs['iter_cb']
         assert callable(iter_cb)
 
-    def test_fit_progress_callback_with_supplied_model_uses_iter_params(
-        self, minimizer: LMFit
-    ) -> None:
+    def test_fit_progress_callback_uses_iter_params(self, minimizer: LMFit) -> None:
         progress_callback = MagicMock(return_value=True)
         mock_model = MagicMock()
         mock_param_alpha = MagicMock()
@@ -252,12 +274,10 @@ class TestLMFit:
             x=np.array([1.0, 2.0]),
             y=np.array([1.0, 2.0]),
             weights=np.array([1.0, 1.0]),
-            model=mock_model,
             progress_callback=progress_callback,
         )
 
         assert result == 'gen_fit_results'
-        minimizer._make_model.assert_not_called()
         payload = progress_callback.call_args[0][0]
         assert payload['parameter_values'] == {'alpha': 1.0}
         assert payload['chi2'] == 25.0
@@ -385,86 +405,6 @@ class TestLMFit:
         assert len(caplog.records) == 0
         assert result.success is True
 
-    def test_convert_to_pars_obj(self, minimizer: LMFit, monkeypatch) -> None:
-        # When
-        minimizer._object = MagicMock()
-        minimizer._object.get_fit_parameters = MagicMock(return_value=['parm_1', 'parm_2'])
-
-        minimizer.convert_to_par_object = MagicMock(return_value='convert_to_par_object')
-
-        mock_lm_parameter = MagicMock()
-        mock_lm_parameter.add_many = MagicMock(return_value='add_many')
-        mock_LMParameters = MagicMock(return_value=mock_lm_parameter)
-        monkeypatch.setattr(
-            easyscience.fitting.minimizers.minimizer_lmfit, 'LMParameters', mock_LMParameters
-        )
-
-        # Then
-        pars = minimizer.convert_to_pars_obj()
-
-        # Expect
-        assert pars == 'add_many'
-        assert minimizer.convert_to_par_object.call_count == 2
-        minimizer._object.get_fit_parameters.assert_called_once_with()
-        minimizer.convert_to_par_object.assert_called_with('parm_2')
-        mock_lm_parameter.add_many.assert_called_once_with([
-            'convert_to_par_object',
-            'convert_to_par_object',
-        ])
-
-    def test_convert_to_pars_obj_with_parameters(self, minimizer: LMFit, monkeypatch) -> None:
-        # When
-        minimizer.convert_to_par_object = MagicMock(return_value='convert_to_par_object')
-
-        mock_lm_parameter = MagicMock()
-        mock_lm_parameter.add_many = MagicMock(return_value='add_many')
-        mock_LMParameters = MagicMock(return_value=mock_lm_parameter)
-        monkeypatch.setattr(
-            easyscience.fitting.minimizers.minimizer_lmfit, 'LMParameters', mock_LMParameters
-        )
-
-        # Then
-        pars = minimizer.convert_to_pars_obj(['parm_1', 'parm_2'])
-
-        # Expect
-        assert pars == 'add_many'
-        assert minimizer.convert_to_par_object.call_count == 2
-        minimizer.convert_to_par_object.assert_called_with('parm_2')
-        mock_lm_parameter.add_many.assert_called_once_with([
-            'convert_to_par_object',
-            'convert_to_par_object',
-        ])
-
-    def test_convert_to_par_object(self, minimizer: LMFit, monkeypatch) -> None:
-        # When
-        mock_lm_parameter = MagicMock()
-        mock_LMParameter = MagicMock(return_value=mock_lm_parameter)
-        monkeypatch.setattr(
-            easyscience.fitting.minimizers.minimizer_lmfit, 'LMParameter', mock_LMParameter
-        )
-
-        mock_parm = MagicMock(Parameter)
-        mock_parm.value = 1.0
-        mock_parm.fixed = True
-        mock_parm.min = -10.0
-        mock_parm.max = 10.0
-        mock_parm.unique_name = 'key_converted'
-
-        # Then
-        par = minimizer.convert_to_par_object(mock_parm)
-
-        # Expect
-        assert par == mock_lm_parameter
-        mock_LMParameter.assert_called_once_with(
-            'pkey_converted',
-            value=1.0,
-            vary=False,
-            min=-10.0,
-            max=10.0,
-            expr=None,
-            brute_step=None,
-        )
-
     def test_set_parameter_fit_result_no_stack_status(self, minimizer: LMFit) -> None:
         # When
         minimizer._cached_pars = {
@@ -517,9 +457,9 @@ class TestLMFit:
 
         # Expect
         assert minimizer._cached_pars['a'].value == 1.0
-        assert minimizer._cached_pars['a'].error == 0.0
+        assert minimizer._cached_pars['a'].error is None
         assert minimizer._cached_pars['b'].value == 2.0
-        assert minimizer._cached_pars['b'].error == 0.0
+        assert minimizer._cached_pars['b'].error is None
 
     def test_gen_fit_results(self, minimizer: LMFit, monkeypatch) -> None:
         # When

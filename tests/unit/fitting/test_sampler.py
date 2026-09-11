@@ -17,7 +17,7 @@ from easyscience import ObjBase
 from easyscience import Parameter
 from easyscience.fitting import Sampler
 from easyscience.fitting import SamplingResults
-from easyscience.fitting.minimizers.minimizer_base import MINIMIZER_PARAMETER_PREFIX
+from easyscience.fitting.engine_base import PARAMETER_PREFIX
 from easyscience.fitting.multi_fitter import MultiFitter
 from easyscience.fitting.sampler import _data_fingerprint
 from easyscience.fitting.sampler import load_chain
@@ -39,7 +39,6 @@ class AbsSin(ObjBase):
 class _StubFitter:
     """Duck-types the Fitter attributes checked by the Sampler constructor."""
 
-    minimizer = None
     fit_function = None
 
 
@@ -50,8 +49,13 @@ class _StubState:
         self.labels = list(labels)
 
 
-def _bumps_fitter_and_data():
-    """Build a 2-parameter BUMPS MultiFitter over a small sine model."""
+def _fitter_and_data():
+    """Build a 2-parameter MultiFitter over a small sine model.
+
+    The fitter keeps its default (LMFit) minimizer: sampling no longer
+    requires switching to BUMPS, only an installed ``bumps`` package.
+    """
+    pytest.importorskip('bumps')
     ref_sin = AbsSin(0.2, np.pi)
     sp = AbsSin(0.354, 3.05)
     sp.offset.fixed = False
@@ -60,10 +64,6 @@ def _bumps_fitter_and_data():
     y = ref_sin(x)
     weights = np.ones_like(x)
     f = MultiFitter([sp], [sp])
-    try:
-        f.switch_minimizer('Bumps')
-    except AttributeError:
-        pytest.skip('BUMPS is not installed')
     return f, sp, x, y, weights
 
 
@@ -93,20 +93,27 @@ def _make_state(ngen=6, npop=5, nvar=2, seed=7):
 
 
 class TestSamplerConstructorValidation:
-    def test_rejects_fitter_without_minimizer(self):
+    def test_rejects_fitter_without_fit_function(self):
         x, y, w = _xyw()
         with pytest.raises(TypeError, match='fitter must be a configured Fitter'):
             Sampler(object(), [x], [y], [w])
 
+    def test_requires_weights(self):
+        """Sampling has no default weighting, so weights are a required
+        argument rather than a None that only blows up at sample()."""
+        x, y, _ = _xyw()
+        with pytest.raises(TypeError, match='weights'):
+            Sampler(_StubFitter(), [x], [y])
+
     def test_rejects_mixed_array_and_list(self):
         x, y, w = _xyw()
         with pytest.raises(ValueError, match='both be arrays or both be lists'):
-            Sampler(_StubFitter(), [x], y)
+            Sampler(_StubFitter(), [x], y, [w])
 
     def test_rejects_dataset_count_mismatch(self):
         x, y, w = _xyw()
         with pytest.raises(ValueError, match='same number of datasets'):
-            Sampler(_StubFitter(), [x, x], [y])
+            Sampler(_StubFitter(), [x, x], [y], [w, w])
 
     def test_rejects_weights_structure_mismatch(self):
         x, y, w = _xyw()
@@ -143,11 +150,6 @@ class TestSamplerDataBinding:
         np.testing.assert_array_equal(sampler.x[0], x)
         np.testing.assert_array_equal(sampler.y[0], y)
         np.testing.assert_array_equal(sampler.weights[0], w)
-
-    def test_weights_property_none_when_unset(self):
-        x, y, _ = _xyw()
-        sampler = Sampler(_StubFitter(), [x], [y])
-        assert sampler.weights is None
 
     def test_inputs_are_copied(self):
         """Mutating the caller's arrays after construction must not change the
@@ -209,31 +211,38 @@ class TestSamplerPathValidation:
 
 
 class TestSamplerErrorPaths:
-    def test_sample_requires_bumps(self):
-        """sample() must raise RuntimeError if the minimizer is not BUMPS —
-        and must not mutate the fitter (no needless minimizer rebuild)."""
+    def test_sample_requires_bumps_package(self, monkeypatch):
+        """sample() must raise RuntimeError when the bumps package is not
+        installed — regardless of the active minimizer — and must not touch
+        the fitter."""
         sp = AbsSin(0.354, 3.05)
         f = MultiFitter([sp], [sp])
 
         x, y, w = _xyw()
         sampler = Sampler(f, [x], [y], [w])
         minimizer_before = f.minimizer
-        with pytest.raises(RuntimeError, match='Bayesian sampling requires a BUMPS minimizer'):
+        monkeypatch.setattr(
+            'easyscience.fitting.available_minimizers.bumps_engine_available', False
+        )
+        with pytest.raises(RuntimeError, match='requires the bumps package'):
             sampler.sample(samples=10, burn=5, thin=1)
         assert f.minimizer is minimizer_before
 
-    def test_fit_function_restored_on_error(self):
-        """fit_function must be restored even when the minimizer raises."""
-        f, _, x, y, weights = _bumps_fitter_and_data()
+    def test_fitter_untouched_on_error(self):
+        """The fitter is never mutated by sampling, even when the engine
+        raises."""
+        f, _, x, y, weights = _fitter_and_data()
         sampler = Sampler(f, [x], [y], [weights])
         original_func = f.fit_function
+        minimizer_before = f.minimizer
 
-        # Invalid `samples` is rejected by the minimizer (single source of
-        # validation) *after* the fitter has been mutated for sampling.
+        # Invalid `samples` is rejected by the engine (single source of
+        # validation).
         with pytest.raises(ValueError, match='samples must be a positive integer'):
             sampler.sample(samples=-1, burn=5, thin=1)
 
         assert f.fit_function is original_func
+        assert f.minimizer is minimizer_before
 
     def test_extend_requires_existing_state(self):
         """extend() before sample()/load_state() raises RuntimeError."""
@@ -320,7 +329,7 @@ class TestLoadChainSidecar:
         assert names == ['P0', 'P1']
 
     def test_fallback_strips_minimizer_prefix_from_labels(self, tmp_path):
-        self.state.labels = [f'{MINIMIZER_PARAMETER_PREFIX}a', f'{MINIMIZER_PARAMETER_PREFIX}b']
+        self.state.labels = [f'{PARAMETER_PREFIX}a', f'{PARAMETER_PREFIX}b']
         _, names, _ = load_chain(str(tmp_path / 'chain'))
         assert names == ['a', 'b']
 
@@ -345,74 +354,61 @@ class TestSamplerConstructorDataValidation:
     """Scalars, strings and empty/ragged data must be rejected at construction."""
 
     def test_rejects_scalar_x(self):
-        _, y, _ = _xyw()
+        _, y, w = _xyw()
         with pytest.raises(ValueError, match='x must be an array of values, got a scalar'):
-            Sampler(_StubFitter(), 5.0, y)
+            Sampler(_StubFitter(), 5.0, y, w)
 
     def test_rejects_scalar_dataset_in_list(self):
-        x, y, _ = _xyw()
+        x, y, w = _xyw()
         with pytest.raises(ValueError, match=r'y\[1\] must be an array of values'):
-            Sampler(_StubFitter(), [x, x], [y, 3.0])
+            Sampler(_StubFitter(), [x, x], [y, 3.0], [w, w])
 
     def test_rejects_string_data(self):
-        x, _, _ = _xyw()
+        x, _, w = _xyw()
         with pytest.raises(TypeError, match='y must hold numeric values'):
-            Sampler(_StubFitter(), x, 'abc')
+            Sampler(_StubFitter(), x, 'abc', w)
 
     def test_rejects_non_numeric_object_array(self):
         _, y, _ = _xyw()
         with pytest.raises(TypeError, match='x must hold numeric values'):
-            Sampler(_StubFitter(), np.array([{}, {}], dtype=object), y)
+            Sampler(_StubFitter(), np.array([{}, {}], dtype=object), y, np.ones(2))
 
     def test_rejects_empty_array(self):
         with pytest.raises(ValueError, match='x must not be empty'):
-            Sampler(_StubFitter(), np.array([]), np.array([]))
+            Sampler(_StubFitter(), np.array([]), np.array([]), np.array([]))
 
     def test_rejects_ragged_dataset(self):
         with pytest.raises(TypeError, match=r'x\[0\] could not be converted'):
-            Sampler(_StubFitter(), [[1.0, [2.0, 3.0]]], [np.zeros(3)])
+            Sampler(_StubFitter(), [[1.0, [2.0, 3.0]]], [np.zeros(3)], [np.ones(3)])
 
     def test_rejects_scalar_weights(self):
         x, y, _ = _xyw()
         with pytest.raises(ValueError, match='weights must be an array of values'):
             Sampler(_StubFitter(), x, y, 2.0)
 
-    def test_weights_list_may_hold_none_entries(self):
+    def test_rejects_none_weight_entry(self):
         x, y, w = _xyw()
-        sampler = Sampler(_StubFitter(), [x, x], [y, y], [w, None])
-        assert sampler.weights[1] is None
+        with pytest.raises(TypeError, match=r'weights\[1\] must hold numeric values'):
+            Sampler(_StubFitter(), [x, x], [y, y], [w, None])
 
 
 class TestDataFingerprint:
     def test_returns_none_on_unhashable_data(self):
         assert _data_fingerprint([object()], [], []) is None
 
-    def test_fingerprint_without_weights(self):
-        x, y, _ = _xyw()
-        sampler = Sampler(_StubFitter(), x, y)
+    def test_fingerprint_of_single_arrays(self):
+        x, y, w = _xyw()
+        sampler = Sampler(_StubFitter(), x, y, w)
         assert isinstance(sampler._fingerprint(), str)
-
-
-class TestSamplingResultsLegacyDict:
-    def test_to_legacy_dict_maps_fields(self):
-        state = object()
-        results = SamplingResults(
-            draws=np.ones((2, 1)), param_names=['p'], logp=np.zeros(2), state=state
-        )
-        legacy = results.to_legacy_dict()
-        assert legacy['internal_bumps_object'] is state
-        assert legacy['param_names'] == ['p']
-        np.testing.assert_array_equal(legacy['draws'], results.draws)
-        np.testing.assert_array_equal(legacy['logp'], results.logp)
 
 
 class TestSamplerRunEngine:
     """The ``_run`` tail: results construction, storage, and kwarg merging,
-    with the minimizer's sampling entry point stubbed out."""
+    with the ``DreamSampler`` engine stubbed out."""
 
     def test_run_stores_results_and_exposes_properties(self, monkeypatch):
-        f, _, x, y, weights = _bumps_fitter_and_data()
-        from easyscience.fitting.minimizers.minimizer_bumps import Bumps
+        f, _, x, y, weights = _fitter_and_data()
+        from easyscience.fitting.samplers.sampler_bumps import DreamSampler
 
         canned = {
             'draws': np.arange(8.0).reshape(4, 2),
@@ -422,14 +418,16 @@ class TestSamplerRunEngine:
         }
         captured = {}
 
-        def fake_mcmc_sample(self, **kwargs):
+        def fake_run(self, **kwargs):
             captured.update(kwargs)
             return dict(canned)
 
-        monkeypatch.setattr(Bumps, 'mcmc_sample', fake_mcmc_sample)
+        monkeypatch.setattr(DreamSampler, 'run', fake_run)
 
         sampler = Sampler(f, [x], [y], [weights], sampler_kwargs={'trim': False})
         original_func = f.fit_function
+        minimizer_before = f.minimizer
+        dims_before = f._dependent_dims
         results = sampler.sample(samples=100, burn=10, thin=2, sampler_kwargs={'init': 'lhs'})
 
         assert isinstance(results, SamplingResults)
@@ -443,8 +441,47 @@ class TestSamplerRunEngine:
         assert captured['samples'] == 100
         assert captured['burn'] == 10
         assert captured['resume_state'] is None
-        # The fitter's fit function is restored after the run.
+        # The fitter is never mutated: a fresh engine gets the wrapped
+        # function directly, the active (LMFit) minimizer stays put, and the
+        # reshaping bookkeeping is passed to the wrapper rather than written
+        # onto the fitter.
         assert f.fit_function is original_func
+        assert f.minimizer is minimizer_before
+        assert f._dependent_dims is dims_before
+
+    def test_run_works_with_non_bumps_minimizer(self, monkeypatch):
+        """Sampling works with the default LMFit minimizer active — the
+        engine is constructed independently of the fitter's minimizer."""
+        f, _, x, y, weights = _fitter_and_data()
+        from easyscience.fitting.samplers.sampler_bumps import DreamSampler
+
+        assert f.minimizer.package != 'bumps'  # default is LMFit
+
+        constructed = {}
+        original_init = DreamSampler.__init__
+
+        def spy_init(self, obj, fit_function):
+            constructed['obj'] = obj
+            constructed['fit_function'] = fit_function
+            original_init(self, obj, fit_function)
+
+        canned = {
+            'draws': np.zeros((2, 2)),
+            'param_names': ['offset', 'phase'],
+            'logp': np.zeros(2),
+            'internal_bumps_object': object(),
+        }
+        monkeypatch.setattr(DreamSampler, '__init__', spy_init)
+        monkeypatch.setattr(DreamSampler, 'run', lambda self, **kwargs: dict(canned))
+
+        sampler = Sampler(f, [x], [y], [weights])
+        results = sampler.sample(samples=10, burn=0, thin=1)
+
+        assert results.param_names == ['offset', 'phase']
+        # The engine is bound to the fitter's model object and a wrapped
+        # fit function, not to the minimizer.
+        assert constructed['obj'] is f.fit_object
+        assert callable(constructed['fit_function'])
 
 
 class TestSamplerExtendArithmetic:

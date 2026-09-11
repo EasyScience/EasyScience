@@ -15,7 +15,7 @@ import numpy as np
 from easyscience.variable import Parameter
 
 from ..available_minimizers import AvailableMinimizers
-from .minimizer_base import MINIMIZER_PARAMETER_PREFIX
+from ..engine_base import PARAMETER_PREFIX
 from .minimizer_base import MinimizerBase
 from .utils import FitError
 from .utils import FitResults
@@ -78,12 +78,10 @@ class DFO(MinimizerBase):
         x: np.ndarray,
         y: np.ndarray,
         weights: np.ndarray,
-        model: Callable | None = None,
-        parameters: List[Parameter] | None = None,
         method: str | None = None,
         tolerance: float | None = None,
         max_evaluations: int | None = None,
-        progress_callback: Callable[[dict], bool | None] | None = None,
+        progress_callback: Callable[[dict], None] | None = None,
         callback: Callable[[DFOCallbackState], None] | None = None,
         **kwargs,
     ) -> FitResults:
@@ -98,18 +96,15 @@ class DFO(MinimizerBase):
             Measured points.
         weights : np.ndarray
             Weights for supplied measured points.
-        model : Callable | None, default=None
-            Optional Model which is being fitted to. By default, None.
-        parameters : List[Parameter] | None, default=None
-            Optional parameters for the fit. By default, None.
         method : str | None, default=None
             Method for minimization. By default, None.
         tolerance : float | None, default=None
             Requested optimizer tolerance. By default, None.
         max_evaluations : int | None, default=None
             Maximum number of evaluations. By default, None.
-        progress_callback : Callable[[dict], bool | None] | None, default=None
-            Optional callback receiving normalized progress payloads.
+        progress_callback : Callable[[dict], None] | None, default=None
+            Optional callback receiving normalized progress payloads. Its
+            return value is ignored.
         callback : Callable[[DFOCallbackState], None] | None, default=None
             Optional native DFO callback.
         **kwargs :
@@ -126,39 +121,17 @@ class DFO(MinimizerBase):
         ------
         FitError
             If the DFO fit fails.
-        ValueError
-            If the input shapes, weights, or tolerance are invalid.
         """
         x, y, weights = np.asarray(x), np.asarray(y), np.asarray(weights)
 
-        if y.shape != x.shape:
-            raise ValueError('x and y must have the same shape.')
-
-        if weights.shape != x.shape:
-            raise ValueError('Weights must have the same shape as x and y.')
-
-        if not np.isfinite(weights).all():
-            raise ValueError('Weights cannot be NaN or infinite.')
-
-        if (weights <= 0).any():
-            raise ValueError('Weights must be strictly positive and non-zero.')
+        self.validate_arrays(x, y, weights)
 
         # Bridge progress_callback into the DFO callback mechanism
         if progress_callback is not None and callback is None:
             callback = self._make_progress_adapter(progress_callback)
 
-        if model is None:
-            model_function = self._make_model(
-                parameters=parameters,
-                callback=callback,
-            )
-            model = model_function(x, y, weights)
-        elif callback is not None:
-            model = self._wrap_model_with_callback(
-                model,
-                self._get_callback_parameter_names(parameters),
-                callback,
-            )
+        model_function = self._make_model(callback=callback)
+        model = model_function(x, y, weights)
         self._cached_model = model
         self._cached_model.x = x
         self._cached_model.y = y
@@ -187,18 +160,8 @@ class DFO(MinimizerBase):
             global_object.stack.enabled = stack_status
         return results
 
-    def convert_to_pars_obj(self, par_list: List[Parameter] | None = None):
-        """Required by interface but not needed for DFO-LS."""
-        pass
-
-    @staticmethod
-    def convert_to_par_object(obj) -> None:
-        """Required by interface but not needed for DFO-LS."""
-        pass
-
     def _make_model(
         self,
-        parameters: List[Parameter] | None = None,
         callback: Callable[[DFOCallbackState], None] | None = None,
     ) -> Callable:
         """
@@ -208,8 +171,6 @@ class DFO(MinimizerBase):
 
         Parameters
         ----------
-        parameters : List[Parameter] | None, default=None
-            Optional parameter subset to include in the model.
         callback : Callable[[DFOCallbackState], None] | None, default=None
             Optional callback invoked on each objective evaluation.
 
@@ -223,13 +184,10 @@ class DFO(MinimizerBase):
         def _outer(obj: DFO):
 
             def _make_func(x, y, weights):
-                dfo_pars = {}
-                if not parameters:
-                    for name, par in obj._cached_pars.items():
-                        dfo_pars[MINIMIZER_PARAMETER_PREFIX + str(name)] = par.value
-                else:
-                    for par in parameters:
-                        dfo_pars[MINIMIZER_PARAMETER_PREFIX + par.unique_name] = par.value
+                dfo_pars = {
+                    PARAMETER_PREFIX + str(name): par.value
+                    for name, par in obj._cached_pars.items()
+                }
 
                 def _residuals(pars_values: List[float]) -> np.ndarray:
                     for idx, par_name in enumerate(dfo_pars.keys()):
@@ -245,13 +203,6 @@ class DFO(MinimizerBase):
             return _make_func
 
         return _outer(self)
-
-    def _get_callback_parameter_names(
-        self, parameters: List[Parameter] | None = None
-    ) -> list[str]:
-        if parameters is not None:
-            return [MINIMIZER_PARAMETER_PREFIX + parameter.unique_name for parameter in parameters]
-        return [MINIMIZER_PARAMETER_PREFIX + name for name in self._cached_pars.keys()]
 
     @staticmethod
     def _wrap_model_with_callback(
@@ -302,7 +253,7 @@ class DFO(MinimizerBase):
 
     @staticmethod
     def _make_progress_adapter(
-        progress_callback: Callable[[dict], bool | None],
+        progress_callback: Callable[[dict], None],
     ) -> Callable[['DFOCallbackState'], None]:
         """
         Create a DFO callback that translates DFOCallbackState into the
@@ -310,8 +261,8 @@ class DFO(MinimizerBase):
 
         Parameters
         ----------
-        progress_callback : Callable[[dict], bool | None]
-            Standard progress callback (dict -> bool|None).
+        progress_callback : Callable[[dict], None]
+            Standard progress callback (dict -> None).
 
         Returns
         -------
@@ -324,7 +275,7 @@ class DFO(MinimizerBase):
             dof = max(np.asarray(state.residuals).size - len(state.best_parameters), 1)
             reduced_chi2 = chi2 / dof if dof > 0 else chi2
             param_snapshot = {
-                name[len(MINIMIZER_PARAMETER_PREFIX) :]: float(val)
+                name[len(PARAMETER_PREFIX) :]: float(val)
                 for name, val in state.best_parameters.items()
             }
             payload = {
@@ -411,7 +362,7 @@ class DFO(MinimizerBase):
         results.p0 = self._p_0
         results.x = self._cached_model.x
         results.y_obs = self._cached_model.y
-        results.y_calc = self.evaluate(results.x, minimizer_parameters=results.p)
+        results.y_calc = self.evaluate(results.x, parameters=results.p)
         # `weights` here are 1/sigma (residuals are multiplied by them in `_make_model`).
         # `FitResults.chi2` divides residuals by `y_err`, so `y_err` must be sigma, not the weight.
         results.y_err = 1 / np.asarray(weights)

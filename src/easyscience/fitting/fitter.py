@@ -4,7 +4,6 @@
 import functools
 from typing import Callable
 from typing import List
-from typing import Optional
 from typing import Union
 
 import numpy as np
@@ -42,9 +41,6 @@ class Fitter:
 
     def evaluate(self, pars=None) -> np.ndarray:
         return self._minimizer.evaluate(pars)
-
-    def convert_to_pars_obj(self, pars) -> object:
-        return self._minimizer.convert_to_pars_obj(pars)
 
     # TODO: remove this method when we are ready to adjust the dependent products
     def initialize(self, fit_object: object, fit_function: Callable) -> None:
@@ -232,7 +228,10 @@ class Fitter:
         self._update_minimizer(self._enum_current_minimizer)
 
     def _fit_function_wrapper(
-        self, real_x: Optional[np.ndarray] = None, flatten: bool = True
+        self,
+        real_x: np.ndarray | None = None,
+        flatten: bool = True,
+        dependent_dims: list[tuple[int, ...]] | None = None,
     ) -> Callable:
         """
         Simple fit function which injects the real X (independent)
@@ -242,10 +241,14 @@ class Fitter:
 
         Parameters
         ----------
-        real_x : Optional[np.ndarray], default=None
+        real_x : np.ndarray | None, default=None
             Independent x parameters to be injected. By default, None.
         flatten : bool, default=True
             Should the result be a flat 1D array? By default, True.
+        dependent_dims : list[tuple[int, ...]] | None, default=None
+            Unused for a single dataset; accepted so that callers can
+            pass it uniformly to ``Fitter`` and ``MultiFitter``. By
+            default, None.
 
         Returns
         -------
@@ -281,9 +284,9 @@ class Fitter:
         def inner_fit_callable(
             x: np.ndarray,
             y: np.ndarray,
-            weights: Optional[np.ndarray] = None,
+            weights: np.ndarray | None = None,
             vectorized: bool = False,
-            progress_callback: Callable[[dict], bool | None] | None = None,
+            progress_callback: Callable[[dict], None] | None = None,
             **kwargs,
         ) -> FitResults:
             """
@@ -329,9 +332,9 @@ class Fitter:
     def _precompute_reshaping(
         x: np.ndarray,
         y: np.ndarray,
-        weights: Optional[np.ndarray],
+        weights: np.ndarray | None,
         vectorized: bool,
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, Optional[np.ndarray], tuple[int, ...]]:
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray | None, tuple[int, ...]]:
         """
         Check the dimensions of the inputs and reshape if necessary.
 
@@ -341,14 +344,14 @@ class Fitter:
             ND matrix of dependent points.
         y : np.ndarray
             N-1D matrix of independent points.
-        weights : Optional[np.ndarray]
+        weights : np.ndarray | None
             Optional weights for the fit.
         vectorized : bool
             Whether ``x`` already stores vectorized coordinates.
 
         Returns
         -------
-        tuple[np.ndarray, np.ndarray, np.ndarray, Optional[np.ndarray], tuple[int, ...]]
+        tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray | None, tuple[int, ...]]
             Reshaped x values, reshaped input data, flattened y values,
             flattened weights, and the original x shape.
 
@@ -418,112 +421,3 @@ class Fitter:
         fit_result.y_calc = np.reshape(fit_result.y_calc, y.shape)
         fit_result.y_err = np.reshape(fit_result.y_err, y.shape)
         return fit_result
-
-    def mcmc_sample(
-        self,
-        x: np.ndarray,
-        y: np.ndarray,
-        weights: np.ndarray,
-        samples: int = 10000,
-        burn: int = 2000,
-        thin: int = 10,
-        population: Optional[int] = None,
-        vectorized: bool = False,
-        sampler_kwargs: Optional[dict] = None,
-        progress_callback: Optional[Callable[[dict], Optional[bool]]] = None,
-        abort_test: Optional[Callable[[], bool]] = None,
-    ) -> dict:
-        """
-        Run Bayesian MCMC sampling using the BUMPS DREAM sampler.
-
-        Works with both a plain ``Fitter`` (single dataset) and a
-        ``MultiFitter`` (multiple datasets) via polymorphic dispatch:
-        ``_precompute_reshaping`` and ``_fit_function_wrapper`` are
-        resolved on the concrete subclass at call time, so multi-dataset
-        flattening is handled automatically when called on a
-        ``MultiFitter`` instance.
-
-        Parameters
-        ----------
-        x : np.ndarray
-            Independent variable array (or list of arrays for
-            ``MultiFitter``).
-        y : np.ndarray
-            Dependent variable array (or list of arrays for
-            ``MultiFitter``).
-        weights : np.ndarray
-            Weight array (or list of arrays for ``MultiFitter``).
-        samples : int, default=10000
-            Number of retained DREAM samples requested from BUMPS.
-        burn : int, default=2000
-            Burn-in steps to discard before collecting samples.
-        thin : int, default=10
-            Thinning interval — only every ``thin``-th sample is kept,
-            which reduces autocorrelation between consecutive draws.
-        population : Optional[int], default=None
-            BUMPS DREAM population count (number of parallel chains).
-        vectorized : bool, default=False
-            When ``True``, each x array may be multi-dimensional (e.g.
-            an ``(N, M, 2)`` grid for a 2D model) and is left as-is.
-            When ``False`` (default), each x array is expected to be
-            1-D.
-        sampler_kwargs : Optional[dict], default=None
-            Additional keyword arguments forwarded to the BUMPS DREAM
-            sampler.
-        progress_callback : Optional[Callable[[dict], Optional[bool]]], default=None
-            Optional callback invoked at each DREAM generation.  The
-            payload dict includes ``iteration`` and ``sampling: True``.
-        abort_test : Optional[Callable[[], bool]], default=None
-            Optional callable that returns ``True`` to abort sampling
-            early.
-
-        Returns
-        -------
-        dict
-            Dictionary with keys ``'draws'``, ``'param_names'``,
-            ``'internal_bumps_object'``, and ``'logp'``.
-
-        Raises
-        ------
-        ValueError
-            If ``samples``, ``burn``, or ``thin`` are invalid.
-        RuntimeError
-            If the active minimizer is not a BUMPS instance.
-        """
-        if not isinstance(samples, int) or samples <= 0:
-            raise ValueError('samples must be a positive integer.')
-        if not isinstance(burn, int) or burn < 0:
-            raise ValueError('burn must be a non-negative integer.')
-        if not isinstance(thin, int) or thin < 1:
-            raise ValueError('thin must be a positive integer.')
-
-        x_fit, x_new, y_new, w_new, dims = self._precompute_reshaping(x, y, weights, vectorized)
-        self._dependent_dims = dims
-
-        original_fit_func = self._fit_function
-        self.fit_function = self._fit_function_wrapper(x_new, flatten=True)
-
-        try:
-            minimizer = self.minimizer
-            if not (hasattr(minimizer, 'package') and minimizer.package == 'bumps'):
-                raise RuntimeError(
-                    'Bayesian sampling requires a BUMPS minimizer. '
-                    'Use ``fitter.switch_minimizer(AvailableMinimizers.Bumps)`` first.'
-                )
-
-            result = minimizer.mcmc_sample(
-                x=x_fit,
-                y=y_new,
-                weights=w_new,
-                samples=samples,
-                burn=burn,
-                thin=thin,
-                population=population,
-                sampler_kwargs=sampler_kwargs,
-                progress_callback=progress_callback,
-                abort_test=abort_test,
-            )
-        finally:
-            self.fit_function = original_fit_func
-
-        return result
