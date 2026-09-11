@@ -26,7 +26,7 @@ class SerializerComponent:
     """
 
     def __deepcopy__(self, memo):
-        return self.from_dict(self.as_dict())
+        return self.from_dict(self.to_dict())
 
     def encode(
         self, skip: Optional[List[str]] = None, encoder: Optional[SerializerBase] = None, **kwargs
@@ -82,7 +82,7 @@ class SerializerComponent:
             decoder = SerializerDict
         return decoder.decode(obj)
 
-    def as_dict(self, skip: Optional[List[str]] = None) -> Dict[str, Any]:
+    def to_dict(self, skip: Optional[List[str]] = None) -> Dict[str, Any]:
         """
         Convert an EasyScience object into a full dictionary using
         ``SerializerDict``. This is a shortcut for

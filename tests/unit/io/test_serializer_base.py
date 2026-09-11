@@ -471,7 +471,7 @@ class TestSerializerBase:
 
         obj = MockObjMissingAttrs('test')
 
-        with pytest.raises(NotImplementedError, match='Unable to automatically determine as_dict'):
+        with pytest.raises(NotImplementedError, match='Unable to automatically determine to_dict'):
             serializer._convert_to_dict(obj)
 
     def test_convert_to_dict_with_kwargs_attribute(self, serializer, clear):

@@ -106,7 +106,7 @@ def test_group_encode():
     from easyscience.base_classes import CollectionBase
 
     b = CollectionBase('test', d0, d1)
-    d = b.as_dict()
+    d = b.to_dict()
     assert isinstance(d['data'], list)
 
 
@@ -117,5 +117,5 @@ def test_group_encode2():
     from easyscience.base_classes import CollectionBase
 
     b = ObjBase('outer', b=CollectionBase('test', d0, d1))
-    d = b.as_dict()
+    d = b.to_dict()
     assert isinstance(d['b'], dict)

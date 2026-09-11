@@ -18,6 +18,6 @@ class TheoreticalModelBase(ObjBase):
     def __str__(self):
         raise NotImplementedError('Copy not implemented')
 
-    def as_dict(self, skip: list = []) -> dict:
-        this_dict = super().as_dict(skip=skip)
+    def to_dict(self, skip: list = []) -> dict:
+        this_dict = super().to_dict(skip=skip)
         return this_dict

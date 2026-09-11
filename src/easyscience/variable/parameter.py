@@ -52,7 +52,6 @@ class Parameter(DescriptorNumber):
         url: Optional[str] = None,
         display_name: Optional[str] = None,
         callback: property = property(),
-        parent: Optional[Any] = None,
         **kwargs: Any,  # Additional keyword arguments (used for (de)serialization)
     ):
         """
@@ -92,9 +91,6 @@ class Parameter(DescriptorNumber):
         callback : property, default=property()
             Callback used to synchronize the parameter with an external
             model.
-        parent : Optional[Any], default=None
-            The object which is the parent to this one. By default,
-            None.
         **kwargs : Any
             Additional keyword arguments used during serialization.
 
@@ -147,7 +143,6 @@ class Parameter(DescriptorNumber):
             description=description,
             url=url,
             display_name=display_name,
-            parent=parent,
             **kwargs,  # Additional keyword arguments (used for (de)serialization)
         )
 

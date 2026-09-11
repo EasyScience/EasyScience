@@ -305,7 +305,7 @@ def test_CollectionBase_dir(cls):
         'append',
         'unique_name',
         'index',
-        'as_dict',
+        'to_dict',
         'clear',
         'extend',
         'encode',
@@ -327,11 +327,11 @@ def test_CollectionBase_dir(cls):
 
 
 @pytest.mark.parametrize('cls', class_constructors)
-def test_CollectionBase_as_dict(cls):
+def test_CollectionBase_to_dict(cls):
     name = 'testing'
     kwargs = {'p1': DescriptorNumber('par1', 1)}
     obj = cls(name, **kwargs)
-    d = obj.as_dict()
+    d = obj.to_dict()
 
     def check_dict(dict_1: dict, dict_2: dict):
         keys_1 = list(dict_1.keys())
@@ -423,7 +423,7 @@ def test_CollectionBase_iterator_dict(cls):
     l_object = [p1, p2, p3, p4]
 
     obj = cls(name, *l_object)
-    d = obj.as_dict()
+    d = obj.to_dict()
     global_object.map._clear()
     obj2 = cls.from_dict(d)
 

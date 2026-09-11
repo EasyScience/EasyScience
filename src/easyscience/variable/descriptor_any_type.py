@@ -34,7 +34,6 @@ class DescriptorAnyType(DescriptorBase):
         description: Optional[str] = None,
         url: Optional[str] = None,
         display_name: Optional[str] = None,
-        parent: Optional[Any] = None,
     ):
         """
         Constructor for the DescriptorAnyType class.
@@ -42,9 +41,9 @@ class DescriptorAnyType(DescriptorBase):
         param name: Name of the descriptor param value: Value of the
         descriptor param description: Description of the descriptor
         param url: URL of the descriptor param display_name: Display
-        name of the descriptor param parent: Parent of the descriptor ..
-        note:: Undo/Redo functionality is implemented for the attributes
-        ``variance``, ``error``, ``unit`` and ``value``.
+        name of the descriptor .. note:: Undo/Redo functionality is
+        implemented for the attributes ``variance``, ``error``,
+        ``unit`` and ``value``.
         """
 
         self._value = value
@@ -55,7 +54,6 @@ class DescriptorAnyType(DescriptorBase):
             description=description,
             url=url,
             display_name=display_name,
-            parent=parent,
         )
 
     @property

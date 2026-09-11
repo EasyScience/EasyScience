@@ -40,7 +40,7 @@ class TestParameterDependencySerialization:
         param = Parameter(name='test', value=5.0, unit='m', min=0, max=10)
 
         # Serialize
-        serialized = param.as_dict()
+        serialized = param.to_dict()
 
         # Should not contain dependency fields
         assert '_dependency_string' not in serialized
@@ -68,7 +68,7 @@ class TestParameterDependencySerialization:
         )
 
         # Serialize dependent parameter
-        serialized = b.as_dict()
+        serialized = b.to_dict()
 
         # Should contain dependency information
         assert serialized['_dependency_string'] == '2 * a'
@@ -106,7 +106,7 @@ class TestParameterDependencySerialization:
         assert c.value == 5.0  # 2 + 3
 
         # Serialize all parameters
-        params_data = {'a': a.as_dict(), 'b': b.as_dict(), 'c': c.as_dict()}
+        params_data = {'a': a.to_dict(), 'b': b.to_dict(), 'c': c.to_dict()}
 
         # Clear and deserialize (manual approach)
         global_object.map._clear()
@@ -151,7 +151,7 @@ class TestParameterDependencySerialization:
         assert c.unit == 'cm'
 
         # Serialize all parameters
-        params_data = {'a': a.as_dict(), 'b': b.as_dict(), 'c': c.as_dict()}
+        params_data = {'a': a.to_dict(), 'b': b.to_dict(), 'c': c.to_dict()}
 
         # Clear and deserialize (manual approach)
         global_object.map._clear()
@@ -192,8 +192,8 @@ class TestParameterDependencySerialization:
         )
 
         # Serialize both parameters
-        a_serialized = a.as_dict()
-        b_serialized = b.as_dict()
+        a_serialized = a.to_dict()
+        b_serialized = b.to_dict()
 
         # Should contain unique name mapping
         assert b_serialized['_dependency_string'] == '2 * __Parameter_0__'
@@ -237,9 +237,9 @@ class TestParameterDependencySerialization:
 
         # Serialize to JSON
         params_data = {
-            'length': length.as_dict(),
-            'width': width.as_dict(),
-            'area': area.as_dict(),
+            'length': length.to_dict(),
+            'width': width.to_dict(),
+            'area': area.to_dict(),
         }
         json_str = json.dumps(params_data, default=str)
 
@@ -281,7 +281,7 @@ class TestParameterDependencySerialization:
         assert z.value == 6.0  # 4 + 2
 
         # Serialize all
-        params_data = {'x': x.as_dict(), 'y': y.as_dict(), 'z': z.as_dict()}
+        params_data = {'x': x.to_dict(), 'y': y.to_dict(), 'z': z.to_dict()}
 
         # Deserialize and resolve
         global_object.map._clear()
@@ -319,7 +319,7 @@ class TestParameterDependencySerialization:
 
         # Then
         # Serialize all
-        params_data = {'x': x.as_dict(), 'y': y.as_dict(), 'z': z.as_dict()}
+        params_data = {'x': x.to_dict(), 'y': y.to_dict(), 'z': z.to_dict()}
         # Deserialize and resolve
         global_object.map._clear()
         new_params = {}
@@ -350,7 +350,7 @@ class TestParameterDependencySerialization:
         )
 
         # Serialize and deserialize
-        params_data = {'a': a.as_dict(), 'b': b.as_dict()}
+        params_data = {'a': a.to_dict(), 'b': b.to_dict()}
         global_object.map._clear()
         new_params = {}
         for name, data in params_data.items():
@@ -376,7 +376,7 @@ class TestParameterDependencySerialization:
         )
 
         # Serialize b but not a
-        b_data = b.as_dict()
+        b_data = b.to_dict()
 
         # Deserialize without a in the global map
         global_object.map._clear()
@@ -440,7 +440,7 @@ class TestParameterDependencySerialization:
         y_dep_id = y._DescriptorNumber__serializer_id
 
         # Serialize all parameters
-        params_data = {'x': x.as_dict(), 'y': y.as_dict(), 'z': z.as_dict()}
+        params_data = {'x': x.to_dict(), 'y': y.to_dict(), 'z': z.to_dict()}
 
         # Verify dependency IDs are in serialized data
         assert params_data['x']['__serializer_id'] == x_dep_id
@@ -492,7 +492,7 @@ class TestParameterDependencySerialization:
         assert c.value == 5.0  # 2 + 3
 
         # Serialize all parameters
-        params_data = {'a': a.as_dict(), 'b': b.as_dict(), 'c': c.as_dict()}
+        params_data = {'a': a.to_dict(), 'b': b.to_dict(), 'c': c.to_dict()}
 
         # Clear global map
         global_object.map._clear()

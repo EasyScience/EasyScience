@@ -9,8 +9,7 @@ available in EasyScience.
 
 - [base_classes](base_classes.md) – Core abstract and helper base
   classes used to build EasyScience objects (e.g. `NewBase`,
-  `ModelBase`, `EasyList`; the legacy `ObjBase` and `CollectionBase` are
-  deprecated).
+  `ModelBase`, `EasyList`).
 - [fitting](fitting.md) – Fitting utilities and interfaces, including
   `Fitter` and available minimizers.
 - [global_object](global_object.md) – Global singleton providing shared

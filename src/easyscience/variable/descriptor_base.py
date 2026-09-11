@@ -27,27 +27,11 @@ class DescriptorBase(NewBase, metaclass=abc.ABCMeta):
     A ``Descriptor`` is typically something which describes part of a
     model and is non-fittable and generally changes the state of an
     object.
-
-    ``DescriptorBase`` is a ``NewBase`` object. As such every descriptor
-    is registered in the global object map under its ``unique_name``,
-    has an optional ``display_name`` and is serialized with
-    ``to_dict``/``from_dict``. Descriptors and parameters can
-    therefore be held directly by an ``EasyList``.
-
-    Following the ``NewBase`` design, a ``unique_name`` that was
-    generated automatically is *not* written by ``to_dict``; a
-    deserialized descriptor is simply assigned a fresh one. Only a
-    ``unique_name`` passed explicitly to the constructor is serialized.
-
-    Descriptors no longer provide the ``SerializerComponent`` methods
-    ``encode``, ``decode`` and ``encode_data``. Use a serializer
-    directly instead, e.g. ``SerializerDict().encode(descriptor)`` and
-    ``SerializerDict.decode(data)``.
     """
 
     _global_object = global_object
     # Used by serializer
-    _REDIRECT = {'parent': None}
+    _REDIRECT = {}
 
     def __init__(
         self,
@@ -56,7 +40,6 @@ class DescriptorBase(NewBase, metaclass=abc.ABCMeta):
         description: Optional[str] = None,
         url: Optional[str] = None,
         display_name: Optional[str] = None,
-        parent: Optional[Any] = None,
     ):
         """
         This is the base of variables for models.
@@ -81,9 +64,6 @@ class DescriptorBase(NewBase, metaclass=abc.ABCMeta):
             Lookup url for documentation/information. By default, None.
         display_name : Optional[str], default=None
             A pretty name for the object. By default, None.
-        parent : Optional[Any], default=None
-            The object which this descriptor is attached to. By default,
-            None.
 
         Raises
         ------
@@ -95,8 +75,6 @@ class DescriptorBase(NewBase, metaclass=abc.ABCMeta):
         if not isinstance(name, str):
             raise TypeError('Name must be a string')
 
-        # Registers the descriptor with the global object map and takes
-        # care of `unique_name` and `display_name`.
         super().__init__(unique_name=unique_name, display_name=display_name)
 
         self._name: str = name
@@ -112,11 +90,6 @@ class DescriptorBase(NewBase, metaclass=abc.ABCMeta):
         if url is None:
             url = ''
         self._url: str = url
-
-        self._parent = parent
-        # Make the connection between self and parent
-        if parent is not None:
-            global_object.map.add_edge(parent, self)
 
     @property
     def name(self) -> str:
@@ -263,21 +236,3 @@ class DescriptorBase(NewBase, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def __repr__(self) -> str:
         """Return printable representation of the object."""
-
-    def as_dict(self, skip: Optional[List[str]] = None) -> Dict[str, Any]:
-        """
-        Alias of ``NewBase.to_dict``, kept for backwards compatibility.
-
-        Parameters
-        ----------
-        skip : Optional[List[str]], default=None
-            List of field names as strings to skip when forming the
-            dictionary. By default, None.
-
-        Returns
-        -------
-        Dict[str, Any]
-            Encoded object containing all information to reform the
-            descriptor.
-        """
-        return self.to_dict(skip=skip)

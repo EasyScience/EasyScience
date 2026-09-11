@@ -239,11 +239,11 @@ class BasedBase(SerializerComponent):
 
     def __copy__(self) -> BasedBase:
         """Return a copy of the object."""
-        temp = self.as_dict(skip=['unique_name'])
+        temp = self.to_dict(skip=['unique_name'])
         new_obj = self.__class__.from_dict(temp)
         return new_obj
 
-    def as_dict(self, skip: Optional[List[str]] = None) -> Dict[str, Any]:
+    def to_dict(self, skip: Optional[List[str]] = None) -> Dict[str, Any]:
         """
         Convert an object into a full dictionary using
         ``SerializerDict``. This is a shortcut for
@@ -266,4 +266,4 @@ class BasedBase(SerializerComponent):
             skip = []
         if 'unique_name' not in skip:
             skip.append('unique_name')
-        return super().as_dict(skip=skip)
+        return super().to_dict(skip=skip)
