@@ -1,5 +1,6 @@
 import numbers
 import warnings
+from collections.abc import Callable
 
 import numpy as np
 import scipp as sc
@@ -11,6 +12,172 @@ import scipp as sc
 from easyscience.variable.descriptor_array import DescriptorArray
 from easyscience.variable.descriptor_number import DescriptorNumber
 from easyscience.variable.parameter import Parameter
+
+# Define type aliases for readability if preferred, or use inline Callable
+# np_func takes a NumPy array and returns a NumPy array
+NumPyMathFunc = Callable[[np.ndarray], np.ndarray]
+# sc_func takes a Scipp Variable and returns a Scipp Variable
+ScippMathFunc = Callable[[sc.Variable], sc.Variable]
+
+
+def sin(argument: Parameter | numbers.Number) -> Parameter:
+    """
+    Calculates the trigonometric sine of the given parameter.
+
+    This function safely wraps the Scipp sine execution to guarantee correct
+    error propagation and unit conversions. It automatically calculates new
+    fitting bounds using a grid-based evaluation to properly account for the
+    non-monotonic nature of the sine function.
+
+    Parameters
+    ----------
+    argument : Parameter | numbers.Number
+        The input parameter or numerical value to be evaluated. It should
+        have angular units (e.g., 'rad', 'deg').
+
+    Returns
+    -------
+    Parameter
+        A new parameter object containing the calculated sine value,
+        propagated variance, mapped bounds, and a dimensionless unit.
+
+    Raises
+    ------
+    TypeError
+        If the input argument is not of type ``Parameter`` or a number.
+    ValueError
+        If the fitting bounds of the input parameter are infinite.
+
+    Notes
+    -----
+    Fitting bounds are mapped non-monotonically. The new ``min`` and ``max``
+    are derived by evaluating the sine function across the original interval.
+    """
+    return _apply_math_operation(argument, sc.sin, np.sin, 'sin')
+
+
+def cos(argument: Parameter | numbers.Number) -> Parameter:
+    """
+    Calculates the trigonometric cosine of the given parameter.
+
+    This function safely wraps the Scipp cosine execution to guarantee correct
+    error propagation and unit conversions. It automatically calculates new
+    fitting bounds using a grid-based evaluation to properly account for the
+    non-monotonic nature of the cosine function.
+
+    Parameters
+    ----------
+    argument : Parameter | numbers.Number
+        The input parameter or numerical value to be evaluated. It should
+        have angular units (e.g., 'rad', 'deg').
+
+    Returns
+    -------
+    Parameter
+        A new parameter object containing the calculated cosine value,
+        propagated variance, mapped bounds, and a dimensionless unit.
+
+    Raises
+    ------
+    TypeError
+        If the input argument is not of type ``Parameter`` or a number.
+    ValueError
+        If the fitting bounds of the input parameter are infinite.
+
+    Notes
+    -----
+    Fitting bounds are mapped non-monotonically. The new ``min`` and ``max``
+    are derived by evaluating the cosine function across the original interval.
+    """
+    return _apply_math_operation(argument, sc.cos, np.cos, 'cos')
+
+
+def tan(argument: Parameter | numbers.Number) -> Parameter:
+    """
+    Calculates the trigonometric tangent of the given parameter.
+
+    This function safely wraps the Scipp tangent execution to guarantee correct
+    error propagation and unit conversions. It implements strict numerical
+    and statistical guardrails around asymptotes (pi/2 + n*pi) to prevent
+    optimization crashes and physically invalid variances during fitting.
+
+    Parameters
+    ----------
+    argument : Parameter | numbers.Number
+        The input parameter or numerical value to be evaluated. It should
+        have angular units (e.g., 'rad', 'deg').
+
+    Returns
+    -------
+    Parameter
+        A new parameter object containing the calculated tangent value,
+        propagated variance, mapped bounds, and a dimensionless unit.
+
+    Raises
+    ------
+    TypeError
+        If the input argument is not of type ``Parameter`` or a number.
+    ValueError
+        If the fitting bounds are infinite, if the value touches an asymptote,
+        or if the bounds straddle an asymptote.
+
+    Notes
+    -----
+    Because Scipp uses the Delta Method (first-order Taylor expansion) for
+    error propagation, a ``UserWarning`` will be raised if the parameter's
+    variance places its 3-sigma confidence interval across an asymptote. In
+    this scenario, the linear error propagation reported is highly inaccurate.
+    """
+
+    # TODO(): check these cases:
+    # 1. if `value` is very close to pi/2 -> tan goes to inf.
+    # 2. if `value` is close to pi/2 AND `value +/- sigma` crosses
+    #    the point pi/2 -> tan AND propegated sigma go to inf.
+    # 3. if `value` AND either bounds are very close to pi/2
+    #    -> tan AND propegated bounds go to inf.
+    # 4. if the `variance` places `value` closer to pi/2 than, e.g.,
+    #    a 3-sigma CI  -> either bounds might go to inf.
+
+    return _apply_math_operation(argument, sc.tan, np.tan, 'tan')
+
+
+###############################################################################
+## Helpers
+###############################################################################
+
+
+def _apply_math_operation(
+    argument: Parameter | numbers.Number,
+    sc_func: ScippMathFunc,
+    np_func: NumPyMathFunc,
+    operation_name: str,
+) -> Parameter:
+    """
+    Universal wrapper that routes bounds logic internally
+    and handles Scipp execution.
+    """
+    _validate_parameter(argument)
+
+    # Route to the correct bounds derivation logic
+    if operation_name == 'tan':
+        new_min, new_max = _derive_tan_bounds(argument, np_func)
+    else:
+        new_min, new_max = _derive_grid_bounds(argument, np_func)
+
+    # Pass values to Scipp for strict execution and error propagation
+    scipp_object = sc_func(
+        sc.scalar(value=argument.value, variance=argument.variance, unit=argument.unit)
+    )
+
+    return Parameter.from_scipp(
+        name=f'{operation_name}({argument.name})',
+        full_value=scipp_object,
+        min=new_min,
+        max=new_max,
+    )
+
+
+###############################################################################
 
 
 def _validate_parameter(argument):
@@ -24,14 +191,21 @@ def _validate_parameter(argument):
         )
 
 
-def _derive_grid_bounds(argument, np_func, grid_size=100):
+def _derive_grid_bounds(
+    argument: Parameter, np_func: NumPyMathFunc, grid_size: int = 100
+) -> tuple[float, float]:
     """Derives bounds for non-monotonic functions (sin, cos) using interval evaluation."""
     grid = np.linspace(argument.min, argument.max, grid_size)
     mapped_grid = np_func(grid)
     return float(np.min(mapped_grid)), float(np.max(mapped_grid))
 
 
-def _derive_tan_bounds(argument, np_func, num_tolerance=1e-7, sigma_threshold=3.0):
+def _derive_tan_bounds(
+    argument: Parameter,
+    np_func: NumPyMathFunc,
+    num_tolerance: float = 1e-7,
+    sigma_threshold: float = 3.0,
+) -> tuple[float, float]:
     """
     Derives bounds for tangent, enforcing both a numerical keep-out zone
     and a statistical keep-out zone around asymptotes.
@@ -78,54 +252,3 @@ def _derive_tan_bounds(argument, np_func, num_tolerance=1e-7, sigma_threshold=3.
         raise ValueError('Tangent bounds cross an asymptote. Fitting is unstable.')
 
     return float(np_func(min_rad)), float(np_func(max_rad))
-
-
-def _apply_math_operation(argument, sc_func, np_func, operation_name):
-    """
-    Universal wrapper that routes bounds logic internally
-    and handles Scipp execution.
-    """
-    _validate_parameter(argument)
-
-    # Route to the correct bounds derivation logic
-    if operation_name == 'tan':
-        new_min, new_max = _derive_tan_bounds(argument, np_func)
-    else:
-        new_min, new_max = _derive_grid_bounds(argument, np_func)
-
-    # Pass values to Scipp for strict execution and error propagation
-    scipp_object = sc_func(
-        sc.scalar(value=argument.value, variance=argument.variance, unit=argument.unit)
-    )
-
-    return Parameter.from_scipp(
-        name=f'{operation_name}({argument.name})',
-        full_value=scipp_object,
-        min=new_min,
-        max=new_max,
-    )
-
-
-def sin(argument: Parameter | numbers.Number):
-    """EasyScience sine wrapper."""
-    return _apply_math_operation(argument, sc.sin, np.sin, 'sin')
-
-
-def cos(argument: Parameter | numbers.Number):
-    """EasyScience cosine wrapper."""
-    return _apply_math_operation(argument, sc.cos, np.cos, 'cos')
-
-
-def tan(argument: Parameter | numbers.Number):
-    """EasyScience tangent wrapper."""
-
-    # TODO(): check these cases:
-    # 1. if `value` is very close to pi/2 -> tan goes to inf.
-    # 2. if `value` is close to pi/2 AND `value +/- sigma` crosses
-    #    the point pi/2 -> tan AND propegated sigma go to inf.
-    # 3. if `value` AND either bounds are very close to pi/2
-    #    -> tan AND propegated bounds go to inf.
-    # 4. if the `variance` places `value` closer to pi/2 than, e.g.,
-    #    a 3-sigma CI  -> either bounds might go to inf.
-
-    return _apply_math_operation(argument, sc.tan, np.tan, 'tan')
