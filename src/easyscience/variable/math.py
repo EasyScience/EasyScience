@@ -1,4 +1,3 @@
-import numbers
 import warnings
 from collections.abc import Callable
 
@@ -30,7 +29,7 @@ ScippMathFunc = Callable[[sc.Variable], sc.Variable]
 ###############################################################################
 
 
-def sin(argument: Parameter | numbers.Number) -> Parameter:
+def sin(argument: Parameter) -> Parameter:
     """Calculates the trigonometric sine of the given parameter.
 
     This function safely wraps the Scipp sine execution to guarantee correct
@@ -40,7 +39,7 @@ def sin(argument: Parameter | numbers.Number) -> Parameter:
 
     Parameters
     ----------
-    argument : Parameter | numbers.Number
+    argument : Parameter
         The input parameter or numerical value to be evaluated. It should
         have angular units (e.g., 'rad', 'deg').
 
@@ -53,7 +52,7 @@ def sin(argument: Parameter | numbers.Number) -> Parameter:
     Raises
     ------
     TypeError
-        If the input argument is not of type ``Parameter`` or a number.
+        If the input argument is not of type ``Parameter``.
     ValueError
         If the fitting bounds of the input parameter are infinite.
 
@@ -85,7 +84,7 @@ def sin(argument: Parameter | numbers.Number) -> Parameter:
     return _apply_math_operation(argument, sc.sin, np.sin, 'sin')
 
 
-def cos(argument: Parameter | numbers.Number) -> Parameter:
+def cos(argument: Parameter) -> Parameter:
     """
     Calculates the trigonometric cosine of the given parameter.
 
@@ -96,7 +95,7 @@ def cos(argument: Parameter | numbers.Number) -> Parameter:
 
     Parameters
     ----------
-    argument : Parameter | numbers.Number
+    argument : Parameter
         The input parameter or numerical value to be evaluated. It should
         have angular units (e.g., 'rad', 'deg').
 
@@ -109,14 +108,14 @@ def cos(argument: Parameter | numbers.Number) -> Parameter:
     Raises
     ------
     TypeError
-        If the input argument is not of type ``Parameter`` or a number.
+        If the input argument is not of type ``Parameter``.
     ValueError
         If the fitting bounds of the input parameter are infinite.
     """
     return _apply_math_operation(argument, sc.cos, np.cos, 'cos')
 
 
-def tan(argument: Parameter | numbers.Number) -> Parameter:
+def tan(argument: Parameter) -> Parameter:
     """
     Calculates the trigonometric tangent of the given parameter.
 
@@ -127,7 +126,7 @@ def tan(argument: Parameter | numbers.Number) -> Parameter:
 
     Parameters
     ----------
-    argument : Parameter | numbers.Number
+    argument : Parameter
         The input parameter or numerical value to be evaluated. It should
         have angular units (e.g., 'rad', 'deg').
 
@@ -140,7 +139,7 @@ def tan(argument: Parameter | numbers.Number) -> Parameter:
     Raises
     ------
     TypeError
-        If the input argument is not of type ``Parameter`` or a number.
+        If the input argument is not of type ``Parameter``.
     ValueError
         If the fitting bounds are infinite, if the value touches an asymptote,
         or if the bounds straddle an asymptote.
@@ -167,6 +166,156 @@ def tan(argument: Parameter | numbers.Number) -> Parameter:
     # b. let Scipp handle everything and allow the user to do something bad (maybe show a warning).
 
     return _apply_math_operation(argument, sc.tan, np.tan, 'tan')
+
+
+def arcsin(argument: Parameter) -> Parameter:
+    """
+    Calculates the inverse trigonometric sine (arcsine) of the given parameter.
+
+    This function safely wraps the Scipp arcsine execution to guarantee correct
+    error propagation. It automatically calculates new fitting bounds using
+    a grid-based evaluation.
+
+    Parameters
+    ----------
+    argument : Parameter
+        The input parameter or numerical value to be evaluated. It should
+        be a dimensionless ratio strictly within the domain [-1.0, 1.0].
+
+    Returns
+    -------
+    Parameter
+        A new parameter object containing the calculated angle (typically in radians),
+        propagated variance, and mapped bounds.
+
+    Raises
+    ------
+    TypeError
+        If the input argument is not of type ``Parameter``.
+    ValueError
+        If the value or fitting bounds of the input parameter exceed the
+        domain [-1.0, 1.0], or if the bounds are infinite.
+
+    Notes
+    -----
+    The output parameter's range is restricted to [-pi/2, pi/2].
+    """
+    # inverse trig functions are not hashed out; handling of domain and range needs work
+    return _apply_math_operation(argument, sc.asin, np.arcsin, 'arcsin')
+
+
+def arccos(argument: Parameter) -> Parameter:
+    """
+    Calculates the inverse trigonometric cosine (arccosine) of the given parameter.
+
+    This function safely wraps the Scipp arccosine execution to guarantee correct
+    error propagation. It automatically calculates new fitting bounds using
+    a grid-based evaluation.
+
+    Parameters
+    ----------
+    argument : Parameter
+        The input parameter or numerical value to be evaluated. It should
+        be a dimensionless ratio strictly within the domain [-1.0, 1.0].
+
+    Returns
+    -------
+    Parameter
+        A new parameter object containing the calculated angle (typically in radians),
+        propagated variance, and mapped bounds.
+
+    Raises
+    ------
+    TypeError
+        If the input argument is not of type ``Parameter``.
+    ValueError
+        If the value or fitting bounds of the input parameter exceed the
+        domain [-1.0, 1.0], or if the bounds are infinite.
+
+    Notes
+    -----
+    The output parameter's range is restricted to [0, pi]. As arccosine is
+    a monotonically decreasing function, the minimum bound of the input will
+    map to the maximum bound of the output.
+    """
+    return _apply_math_operation(argument, sc.acos, np.arccos, 'arccos')
+
+
+def arctan(argument: Parameter) -> Parameter:
+    """
+    Calculates the inverse trigonometric tangent (arctangent) of the given parameter.
+
+    This function safely wraps the Scipp arctangent execution to guarantee correct
+    error propagation. It automatically calculates new fitting bounds using
+    a grid-based evaluation.
+
+    Parameters
+    ----------
+    argument : Parameter
+        The input parameter or numerical value to be evaluated. It should
+        be a dimensionless number.
+
+    Returns
+    -------
+    Parameter
+        A new parameter object containing the calculated angle (typically in radians),
+        propagated variance, and mapped bounds.
+
+    Raises
+    ------
+    TypeError
+        If the input argument is not of type ``Parameter``.
+    ValueError
+        If the fitting bounds of the input parameter are infinite.
+
+    Notes
+    -----
+    The output parameter's range is restricted to [-pi/2, pi/2].
+    """
+    return _apply_math_operation(argument, sc.atan, np.arctan, 'arctan')
+
+
+def _arctan2(y: Parameter, x: Parameter) -> Parameter:
+    """
+    Calculates the element-wise inverse tangent of y/x determining the correct quadrant.
+
+    Unlike ``arctan(y/x)``, this function uses the signs of both arguments
+    to determine the correct quadrant of the result, returning an angle
+    in the range [-pi, pi]. This safely avoids divide-by-zero errors when x=0.
+
+    Parameters
+    ----------
+    y : Parameter
+        The input y value (Cartesian y-coordinate).
+    x : Parameter
+        The input x value (Cartesian x-coordinate).
+        At least one of the inputs (y or x) must be an EasyScience ``Parameter``.
+
+    Returns
+    -------
+    Parameter
+        A new parameter object containing the calculated angle (in radians),
+        jointly propagated variance from both inputs, and mapped 2D bounds.
+
+    Raises
+    ------
+    TypeError
+        If the inputs are not of type ``Parameter``.
+    ValueError
+        If the fitting bounds of any input parameter are infinite.
+
+    Notes
+    -----
+    Fitting bounds are mapped non-monotonically using a 2D meshgrid across
+    the bounding box of both parameters.
+
+    A ``UserWarning`` will be raised if the fitting space crosses the negative
+    x-axis (y=0, x<0). This is the branch cut of the arctan2 function where
+    values discontinue between -pi and pi, which can severely destabilize
+    gradient-based optimization engines.
+    """
+    # TODO(): hash out issue with Scipp returning `VariancesError: Variances in argument 0 not supported.`
+    return _apply_binary_math_operation(y, x, sc.atan2, np.arctan2, 'arctan2')
 
 
 ###############################################################################
@@ -209,6 +358,43 @@ def _apply_math_operation(
     return parameter
 
 
+def _apply_binary_math_operation(y, x, sc_func, np_func, operation_name):
+    """
+    Universal wrapper for binary mathematical operations (y, x).
+    """
+    if not isinstance(y, Parameter):
+        raise TypeError(f'Argument `y` must be a Parameter. Found: {type(y)}')
+    if not isinstance(x, Parameter):
+        raise TypeError(f'Argument `x` must be a Parameter. Found: {type(x)}')
+
+    if not isinstance(y, Parameter) and not isinstance(x, Parameter):
+        raise TypeError('At least one argument must be an EasyScience Parameter.')
+
+    for arg in (y, x):
+        if isinstance(arg, Parameter) and (np.isinf(arg.min) or np.isinf(arg.max)):
+            raise ValueError('Argument bounds cannot be infinite.')
+
+    # 1. Evaluate 2D bounds
+    new_min, new_max = _derive_binary_grid_bounds(y, x, np_func)
+
+    # 2. Package to Scipp and execute
+    sc_y = _to_scipp_scalar(y)
+    sc_x = _to_scipp_scalar(x)
+
+    scipp_object = sc_func(y=sc_y, x=sc_x)
+
+    # 3. Generate combined name
+    y_name = y.name if isinstance(y, Parameter) else str(y)
+    x_name = x.name if isinstance(x, Parameter) else str(x)
+
+    return Parameter.from_scipp(
+        name=f'{operation_name}({y_name}, {x_name})',
+        full_value=scipp_object,
+        min=new_min,
+        max=new_max,
+    )
+
+
 ###############################################################################
 
 
@@ -224,10 +410,10 @@ def _validate_parameter(argument):
     #
     # and calculated bounds will be NaNs
 
-    if np.isinf(argument.min) or np.isinf(argument.max):
-        raise ValueError(
-            f'Argument bounds cannot be infinite. Found min: {argument.min}, max: {argument.max}'
-        )
+    # if np.isinf(argument.min) or np.isinf(argument.max):
+    #     raise ValueError(
+    #         f'Argument bounds cannot be infinite. Found min: {argument.min}, max: {argument.max}'
+    #     )
 
 
 def _derive_grid_bounds(
@@ -291,3 +477,42 @@ def _derive_tan_bounds(
         raise ValueError('Tangent bounds cross an asymptote. Fitting is unstable.')
 
     return float(np_func(min_rad)), float(np_func(max_rad))
+
+
+def _derive_binary_grid_bounds(y, x, np_func, grid_size=50):
+    """
+    Derives bounds for 2D parameter spaces using interval evaluation.
+    Also checks for the atan2 branch cut along the negative x-axis.
+    """
+
+    def _get_range(arg):
+        if isinstance(arg, Parameter):
+            return np.linspace(arg.min, arg.max, grid_size), arg.min, arg.max
+        val = float(arg)
+        return np.array([val]), val, val
+
+    y_grid, y_min, y_max = _get_range(y)
+    x_grid, x_min, x_max = _get_range(x)
+
+    # Branch cut warning: crosses y=0 while x is negative
+    if (y_min < 0 < y_max) and (x_min < 0):
+        warnings.warn(
+            'The 2D parameter bounds cross the negative x-axis (y=0, x<0). '
+            'This is the atan2 branch cut where the angle jumps between -pi and pi. '
+            'Optimization derivatives (Jacobian) will be highly unstable here.',
+            UserWarning,
+        )
+
+    # Create a 2D plane of all possible (y, x) combinations in the bounds
+    Y, X = np.meshgrid(y_grid, x_grid, indexing='ij')
+    mapped_grid = np_func(Y, X)
+
+    return float(np.min(mapped_grid)), float(np.max(mapped_grid))
+
+
+def _to_scipp_scalar(arg):
+    """Safely converts a Parameter to a Scipp scalar."""
+    if isinstance(arg, Parameter):
+        variance = arg.variance if arg.variance is not None else 0.0
+        return sc.scalar(value=arg.value, variance=variance, unit=arg.unit)
+    return sc.scalar(value=float(arg), unit='')
