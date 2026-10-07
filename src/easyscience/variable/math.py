@@ -23,6 +23,8 @@ ScippMathFunc = Callable[[sc.Variable], sc.Variable]
 ## Standard Maths Operations
 ###############################################################################
 
+# list: exp, log, log10, erf, erfc
+
 
 ###############################################################################
 ## Trigonometric Operations
@@ -200,7 +202,8 @@ def arcsin(argument: Parameter) -> Parameter:
     -----
     The output parameter's range is restricted to [-pi/2, pi/2].
     """
-    # inverse trig functions are not hashed out; handling of domain and range needs work
+
+    # TODO(): inverse trig functions are not hashed out; handling of domain and range needs work
     return _apply_math_operation(argument, sc.asin, np.arcsin, 'arcsin')
 
 
@@ -238,6 +241,7 @@ def arccos(argument: Parameter) -> Parameter:
     a monotonically decreasing function, the minimum bound of the input will
     map to the maximum bound of the output.
     """
+    # TODO(): inverse trig functions are not hashed out; handling of domain and range needs work
     return _apply_math_operation(argument, sc.acos, np.arccos, 'arccos')
 
 
@@ -272,6 +276,7 @@ def arctan(argument: Parameter) -> Parameter:
     -----
     The output parameter's range is restricted to [-pi/2, pi/2].
     """
+    # TODO(): inverse trig functions are not hashed out; handling of domain and range needs work
     return _apply_math_operation(argument, sc.atan, np.arctan, 'arctan')
 
 
@@ -314,9 +319,16 @@ def _arctan2(y: Parameter, x: Parameter) -> Parameter:
     values discontinue between -pi and pi, which can severely destabilize
     gradient-based optimization engines.
     """
+    # TODO(): inverse trig functions are not hashed out; handling of domain and range needs work
     # TODO(): hash out issue with Scipp returning `VariancesError: Variances in argument 0 not supported.`
     return _apply_binary_math_operation(y, x, sc.atan2, np.arctan2, 'arctan2')
 
+
+###############################################################################
+## Hyperbolic Trigonometric Operations
+###############################################################################
+
+# list: sinh, cosh, tanh, asinh, acosh, atanh
 
 ###############################################################################
 ## Helpers
