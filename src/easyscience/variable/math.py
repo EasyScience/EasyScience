@@ -20,9 +20,18 @@ NumPyMathFunc = Callable[[np.ndarray], np.ndarray]
 ScippMathFunc = Callable[[sc.Variable], sc.Variable]
 
 
+###############################################################################
+## Standard Maths Operations
+###############################################################################
+
+
+###############################################################################
+## Trigonometric Operations
+###############################################################################
+
+
 def sin(argument: Parameter | numbers.Number) -> Parameter:
-    """
-    Calculates the trigonometric sine of the given parameter.
+    """Calculates the trigonometric sine of the given parameter.
 
     This function safely wraps the Scipp sine execution to guarantee correct
     error propagation and unit conversions. It automatically calculates new
@@ -37,7 +46,7 @@ def sin(argument: Parameter | numbers.Number) -> Parameter:
 
     Returns
     -------
-    Parameter
+    : Same type as input
         A new parameter object containing the calculated sine value,
         propagated variance, mapped bounds, and a dimensionless unit.
 
@@ -48,10 +57,30 @@ def sin(argument: Parameter | numbers.Number) -> Parameter:
     ValueError
         If the fitting bounds of the input parameter are infinite.
 
-    Notes
-    -----
-    Fitting bounds are mapped non-monotonically. The new ``min`` and ``max``
-    are derived by evaluating the sine function across the original interval.
+    Examples
+    --------
+    Compute sine of angles in radians:
+
+      >>> import easyscience as es
+      >>> import numpy as np
+      >>> angle = es.Parameter(
+      ...     name='angle',
+      ...     value=np.pi / 4,
+      ...     min=0.0,
+      ...     max=1.0,
+      ...     fixed=False,
+      ...     unit='rad',
+      ... )
+      >>> es.sin(angle)
+     <Parameter 'sin(angle)': 0.7071, bounds=[0.0:0.8414709848078965]>
+
+    The input must have angle units (rad or deg):
+
+      >>> angle_deg = es.Parameter(
+      ...     name='angle_deg', value=45, min=0, max=90, fixed=False, unit='deg'
+      ... )
+      >>> es.sin(angle_deg)
+      <Parameter 'sin(angle_deg)': 0.7071, bounds=[-0.999981805600717:0.9998362543788631]>
     """
     return _apply_math_operation(argument, sc.sin, np.sin, 'sin')
 
@@ -83,11 +112,6 @@ def cos(argument: Parameter | numbers.Number) -> Parameter:
         If the input argument is not of type ``Parameter`` or a number.
     ValueError
         If the fitting bounds of the input parameter are infinite.
-
-    Notes
-    -----
-    Fitting bounds are mapped non-monotonically. The new ``min`` and ``max``
-    are derived by evaluating the cosine function across the original interval.
     """
     return _apply_math_operation(argument, sc.cos, np.cos, 'cos')
 
@@ -137,6 +161,10 @@ def tan(argument: Parameter | numbers.Number) -> Parameter:
     #    -> tan AND propegated bounds go to inf.
     # 4. if the `variance` places `value` closer to pi/2 than, e.g.,
     #    a 3-sigma CI  -> either bounds might go to inf.
+    #
+    # and make a ruling:
+    # a. use EasyScience guardrails and raise an error to prevent the user from doing something bad.
+    # b. let Scipp handle everything and allow the user to do something bad (maybe show a warning).
 
     return _apply_math_operation(argument, sc.tan, np.tan, 'tan')
 
@@ -147,7 +175,7 @@ def tan(argument: Parameter | numbers.Number) -> Parameter:
 
 
 def _apply_math_operation(
-    argument: Parameter | numbers.Number,
+    argument: Parameter,
     sc_func: ScippMathFunc,
     np_func: NumPyMathFunc,
     operation_name: str,
@@ -169,12 +197,16 @@ def _apply_math_operation(
         sc.scalar(value=argument.value, variance=argument.variance, unit=argument.unit)
     )
 
-    return Parameter.from_scipp(
+    parameter = Parameter.from_scipp(
         name=f'{operation_name}({argument.name})',
         full_value=scipp_object,
         min=new_min,
         max=new_max,
     )
+
+    # parameter.name = parameter.unique_name
+
+    return parameter
 
 
 ###############################################################################
@@ -184,6 +216,13 @@ def _validate_parameter(argument):
     """Enforces type and finite bound requirements."""
     if not isinstance(argument, Parameter):
         raise TypeError(f'Argument must be a `Parameter`. Found: {type(argument)}')
+
+    # Without the check below, defaylt inf bounds with result in numpy returning:
+    #
+    # `RuntimeWarning: invalid value encountered in multiply y *= step`
+    # `RuntimeWarning: invalid value encountered in add y += start`
+    #
+    # and calculated bounds will be NaNs
 
     if np.isinf(argument.min) or np.isinf(argument.max):
         raise ValueError(

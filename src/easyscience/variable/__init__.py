@@ -7,7 +7,9 @@ from .descriptor_base import DescriptorBase
 from .descriptor_bool import DescriptorBool
 from .descriptor_number import DescriptorNumber
 from .descriptor_str import DescriptorStr
-from .math import *
+from .math import cos
+from .math import sin
+from .math import tan
 from .parameter import Parameter
 
 __all__ = [
