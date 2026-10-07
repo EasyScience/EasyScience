@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import logging
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -9,6 +10,7 @@ from easyscience import global_object
 from easyscience.base_classes.easy_list import EasyList
 from easyscience.base_classes.model_base import ModelBase
 from easyscience.base_classes.new_base import NewBase
+from easyscience.io.serializer_base import SerializerBase
 from easyscience.variable import DescriptorNumber
 from easyscience.variable import Parameter
 
@@ -567,6 +569,58 @@ class TestEasyList:
         assert el2[0].unique_name == 'a1'
         assert el2[1].unique_name == 'a2'
         assert d == el2.to_dict()  # The dicts should be the same after round trip
+
+    def test_from_dict_round_trip_empty(self):
+        el = EasyList(unique_name='my_list', protected_types=Alpha)
+        d = el.to_dict()
+        # Clear the global map so deserialized objects can reuse the same unique names
+        global_object.map._clear()
+        el2 = EasyList.from_dict(d)
+        assert len(el2) == 0
+        assert d == el2.to_dict()  # The dicts should be the same after round trip
+
+    def test_from_dict_modelbase_round_trip(self, monkeypatch):
+        # When
+        model1 = MockModel(unique_name='m1', temperature=10, volume=5.0)
+        model1.__class__.__module__ = 'easyscience'  # Ensure mock class is seen as easyscience
+        model2 = MockModel(unique_name='m2', temperature=99, volume=1.5)
+        model2.__class__.__module__ = 'easyscience'  # Ensure mock class is seen as easyscience
+        el = EasyList(model1, model2, protected_types=ModelBase)
+        # Monkeypatch the imports to actually work with the test class
+        monkeypatch.setattr(
+            SerializerBase,
+            '_import_class',
+            MagicMock(
+                side_effect=lambda module_name, class_name: (
+                    MockModel
+                    if class_name == 'MockModel'
+                    else EasyList
+                    if class_name == 'EasyList'
+                    else Parameter
+                    if class_name == 'Parameter'
+                    else DescriptorNumber
+                )
+            ),
+        )
+        # Then
+        list_dict = el.to_dict()
+        # Clear the global map so deserialized objects can reuse the same unique names
+        global_object.map._clear()
+        el2 = EasyList.from_dict(list_dict)
+        # Expect
+        assert len(el2) == 2
+        assert el2[0].unique_name == 'm1'
+        assert el2[1].unique_name == 'm2'
+        assert list_dict == el2.to_dict()  # The dicts should be the same after round trip
+
+    def test_from_dict_missing_data_key(self):
+        el_dict = {
+            '@module': 'easyscience',
+            '@class': 'EasyList',
+            'protected_types': [{'@module': 'easyscience.base_classes', '@class': 'ModelBase'}]
+        }
+        with pytest.raises(ValueError, match='The provided dictionary does not represent an EasyList. Missing the "data" key.'):
+            EasyList.from_dict(el_dict)
 
     # --- get_all_variables ---
 
