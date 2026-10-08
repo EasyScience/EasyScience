@@ -10,6 +10,7 @@ from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Self
 from typing import Union
 
 import numpy as np
@@ -115,7 +116,7 @@ class DescriptorNumber(DescriptorBase):
             self._convert_unit(self._base_unit())
 
     @classmethod
-    def from_scipp(cls, name: str, full_value: Variable, **kwargs: Any) -> DescriptorNumber:
+    def from_scipp(cls, name: str, full_value: Variable, **kwargs: Any) -> Self:
         """
         Create a DescriptorNumber from a scipp constant.
 
