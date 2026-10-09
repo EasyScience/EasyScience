@@ -32,10 +32,13 @@ class Beta(NewBase):
 class MockModel(ModelBase):
     """A ModelBase subclass with a Parameter and a DescriptorNumber for testing get_all_variables."""
 
-    def __init__(self, unique_name=None, display_name=None, temperature=25, volume=1.0):
+    def __init__(self, unique_name=None, display_name=None, temperature=25, volume=1.0, items=None):
         super().__init__(unique_name=unique_name, display_name=display_name)
         self._temperature = Parameter(name='temperature', value=temperature)
         self._volume = DescriptorNumber(name='volume', value=volume)
+        if items is None:
+            items = EasyList()
+        self._items = items
 
     @property
     def temperature(self):
@@ -556,6 +559,29 @@ class TestEasyList:
         el = EasyList(a1, unique_name='my_list')
         d = el.to_dict()
         assert 'protected_types' not in d
+
+    def test_to_dict_as_attribute(self):
+        # When
+        el = EasyList(Alpha(unique_name='a1'), unique_name='my_list', protected_types=Alpha)
+        model = MockModel(unique_name='m1', temperature=10, volume=5.0, items=el)
+        # Then
+        d = model.to_dict()
+        assert 'items' in d
+        assert len(d['items']['data']) == 1
+        assert d['items']['protected_types'][0]['@class'] == 'Alpha'
+
+    def test_to_dict_as_attribute_with_skip(self):
+        # When
+        el = EasyList(Alpha(unique_name='a1'), unique_name='my_list', protected_types=Alpha)
+        model = MockModel(unique_name='m1', temperature=10, volume=5.0, items=el)
+        # Then
+        d = model.to_dict(skip=['unique_name'])
+        assert 'unique_name' not in d
+        assert 'items' in d
+        assert len(d['items']['data']) == 1
+        assert d['items']['protected_types'][0]['@class'] == 'Alpha'
+        assert 'unique_name' not in d['items']
+        assert 'unique_name' not in d['items']['data'][0]
 
     def test_from_dict_round_trip(self):
         a1 = Alpha(unique_name='a1')

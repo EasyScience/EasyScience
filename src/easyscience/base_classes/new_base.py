@@ -139,13 +139,14 @@ class NewBase:
             EasyScience object.
         """
         serializer = SerializerBase()
+        temp_dict = serializer._convert_to_dict(self, skip=skip, full_encode=False)
         if skip is None:
             skip = []
-        if self._default_unique_name and 'unique_name' not in skip:
-            skip.append('unique_name')
-        if self._display_name is None:
-            skip.append('display_name')
-        return serializer._convert_to_dict(self, skip=skip, full_encode=False)
+        if self._default_unique_name or 'unique_name' in skip:
+            temp_dict.pop('unique_name', None)
+        if self._display_name is None or 'display_name' in skip:
+            temp_dict.pop('display_name', None)
+        return temp_dict
 
     @classmethod
     def from_dict(cls, obj_dict: Dict[str, Any]) -> NewBase:

@@ -356,22 +356,31 @@ class EasyList(ModelBase, MutableSequence[ProtectedType_]):
 
     # Serialization support
 
-    def to_dict(self) -> dict:
+    def to_dict(self, skip: list[str] | None = None) -> dict:
         """
         Convert the EasyList to a dictionary for serialization.
+
+        Parameters
+        ----------
+        skip : list[str] | None, default=None
+            List of field names as strings to skip when forming the
+            dictionary.
 
         Returns
         -------
         dict
             Dictionary representation of the EasyList.
         """
-        dict_repr = super().to_dict()
+        skip = list(skip or [])
+        # protected_types holds classes, which the generic encoder
+        # cannot handle; they are encoded explicitly below.
+        dict_repr = super().to_dict(skip=[*skip, 'protected_types'])
         if self._protected_types != [NewBase]:
             dict_repr['protected_types'] = [
                 {'@module': cls_.__module__, '@class': cls_.__name__}
                 for cls_ in self._protected_types
             ]  # noqa: E501
-        dict_repr['data'] = [item.to_dict() for item in self._data]
+        dict_repr['data'] = [item.to_dict(skip=list(skip)) for item in self._data]
         return dict_repr
 
     @classmethod

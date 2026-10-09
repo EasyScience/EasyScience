@@ -434,7 +434,7 @@ class SerializerBase:
             ):  # strings have encode
                 return encoder._convert_to_dict(obj, skip, full_encode, **kwargs)
             elif hasattr(obj, 'to_dict') and obj.__class__.__module__.startswith('easy'):
-                return encoder._convert_to_dict(obj, skip, full_encode, **kwargs)
+                return obj.to_dict(skip=skip)
             else:
                 return [
                     self._recursive_encoder(it, skip, encoder, full_encode, **kwargs) for it in obj
@@ -449,5 +449,5 @@ class SerializerBase:
         ):  # strings have encode
             return encoder._convert_to_dict(obj, skip, full_encode, **kwargs)
         elif hasattr(obj, 'to_dict') and obj.__class__.__module__.startswith('easy'):
-            return encoder._convert_to_dict(obj, skip, full_encode, **kwargs)
+            return obj.to_dict(skip=skip)
         return obj
