@@ -70,6 +70,25 @@ def exp(x: Parameter) -> Parameter:
         If ``x`` is not dimensionless.
     ValueError
         If the result overflows (``x`` greater than about 709.78).
+
+    Examples
+    --------
+
+    Exponential of a dimensionless parameter, with its bounds:
+
+    >>> from easyscience import Parameter
+    >>> from easyscience.variable import exp
+    >>> x = Parameter('x', 1.0, min=0.0, max=2.0)
+    >>> result = exp(x)
+    >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
+    2.7183 in [1.0000, 7.3891]
+
+    The variance is propagated (first order):
+
+    >>> x = Parameter('x', 0.0, variance=0.01)
+    >>> result = exp(x)
+    >>> print(f'{result.value:.4f}, variance {result.variance:.4f}')
+    1.0000, variance 0.0100
     """
     return _apply(_EXP, x)
 
@@ -101,6 +120,25 @@ def log(x: Parameter) -> Parameter:
     -----
     Bounds below zero are clipped to the domain, so ``x`` in ``[-1, 5]``
     gives result bounds ``[-inf, log(5)]``.
+
+    Examples
+    --------
+
+    Natural logarithm, with its bounds:
+
+    >>> from easyscience import Parameter
+    >>> from easyscience.variable import log
+    >>> x = Parameter('x', 10.0, min=1.0, max=100.0)
+    >>> result = log(x)
+    >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
+    2.3026 in [0.0000, 4.6052]
+
+    Bounds below zero are clipped to the domain:
+
+    >>> x = Parameter('x', 2.0, min=-1.0, max=5.0)
+    >>> result = log(x)
+    >>> print(f'bounds [{result.min:.4f}, {result.max:.4f}]')
+    bounds [-inf, 1.6094]
     """
     return _apply(_LOG, x)
 
@@ -132,6 +170,25 @@ def log10(x: Parameter) -> Parameter:
     -----
     Bounds below zero are clipped to the domain, so ``x`` in ``[0, 100]``
     gives result bounds ``[-inf, 2]``.
+
+    Examples
+    --------
+
+    Base-10 logarithm, with its bounds:
+
+    >>> from easyscience import Parameter
+    >>> from easyscience.variable import log10
+    >>> x = Parameter('x', 100.0, min=10.0, max=1000.0)
+    >>> result = log10(x)
+    >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
+    2.0000 in [1.0000, 3.0000]
+
+    Bounds touching zero are clipped to the domain:
+
+    >>> x = Parameter('x', 10.0, min=0.0, max=100.0)
+    >>> result = log10(x)
+    >>> print(f'bounds [{result.min:.4f}, {result.max:.4f}]')
+    bounds [-inf, 2.0000]
     """
     return _apply(_LOG10, x)
 
@@ -166,6 +223,25 @@ def sqrt(x: Parameter) -> Parameter:
     -----
     Bounds below zero are clipped to the domain.
     EasyScience ``Parameter`` objects also support ``x ** 0.5``.
+
+    Examples
+    --------
+
+    Square root of a dimensionless parameter, with its bounds:
+
+    >>> from easyscience import Parameter
+    >>> from easyscience.variable import sqrt
+    >>> x = Parameter('x', 4.0, min=1.0, max=9.0)
+    >>> result = sqrt(x)
+    >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
+    2.0000 in [1.0000, 3.0000]
+
+    The unit is square-rooted too:
+
+    >>> area = Parameter('area', 9.0, unit='m**2')
+    >>> result = sqrt(area)
+    >>> print(result.value, result.unit)
+    3.0 m
     """
     return _apply(_SQRT, x)
 
@@ -195,6 +271,25 @@ def erf(x: Parameter) -> Parameter:
     -----
     Scipp does not propagate variances through ``erf``. EasyScience does it with
     the delta method, using ``d erf / dx = 2 / sqrt(pi) * exp(-x**2)``.
+
+    Examples
+    --------
+
+    Error function, with its bounds:
+
+    >>> from easyscience import Parameter
+    >>> from easyscience.variable import erf
+    >>> x = Parameter('x', 1.0, min=0.0, max=2.0)
+    >>> result = erf(x)
+    >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
+    0.8427 in [0.0000, 0.9953]
+
+    The variance is propagated, although Scipp cannot do it for erf:
+
+    >>> x = Parameter('x', 0.0, variance=0.01)
+    >>> result = erf(x)
+    >>> print(f'{result.value:.4f}, variance {result.variance:.4f}')
+    0.0000, variance 0.0127
     """
     return _apply(_ERF, x)
 
@@ -225,6 +320,25 @@ def erfc(x: Parameter) -> Parameter:
     Scipp does not propagate variances through ``erfc``. EasyScience does it with
     the delta method, using ``d erfc / dx = -2 / sqrt(pi) * exp(-x**2)``.
     The function is decreasing, so the bounds are swapped relative to the input.
+
+    Examples
+    --------
+
+    Complementary error function; it is decreasing, so the bounds swap:
+
+    >>> from easyscience import Parameter
+    >>> from easyscience.variable import erfc
+    >>> x = Parameter('x', 1.0, min=0.0, max=2.0)
+    >>> result = erfc(x)
+    >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
+    0.1573 in [0.0047, 1.0000]
+
+    The variance is propagated, although Scipp cannot do it for erfc:
+
+    >>> x = Parameter('x', 0.0, variance=0.01)
+    >>> result = erfc(x)
+    >>> print(f'{result.value:.4f}, variance {result.variance:.4f}')
+    1.0000, variance 0.0127
     """
     return _apply(_ERFC, x)
 
@@ -263,12 +377,23 @@ def sin(x: Parameter) -> Parameter:
 
     Examples
     --------
+
+    Angle in radians:
+
     >>> from easyscience import Parameter
     >>> from easyscience.variable import sin
-    >>> angle = Parameter('angle', 90.0, unit='deg', min=0.0, max=90.0)
+    >>> import numpy as np
+    >>> angle = Parameter('angle', np.pi / 2, unit='rad', min=0.0, max=np.pi)
     >>> result = sin(angle)
-    >>> result.value, result.min, result.max
-    (1.0, 0.0, 1.0)
+    >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
+    1.0000 in [0.0000, 1.0000]
+
+    Angle in degrees; the bounds are computed in radians internally:
+
+    >>> angle = Parameter('angle', 30.0, unit='deg', min=0.0, max=90.0)
+    >>> result = sin(angle)
+    >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
+    0.5000 in [0.0000, 1.0000]
     """
     return _apply(_SIN, x)
 
@@ -299,6 +424,28 @@ def cos(x: Parameter) -> Parameter:
     The bounds are exact: the endpoints and the interior maxima and minima
     (``n*pi``) are evaluated, in radians whatever the input unit. Infinite
     bounds, or bounds wider than one period, give ``[-1, 1]``.
+
+    Examples
+    --------
+
+    Angle in radians:
+
+    >>> from easyscience import Parameter
+    >>> from easyscience.variable import cos
+    >>> import numpy as np
+    >>> angle = Parameter(
+    ...     'angle', np.pi / 3, unit='rad', min=0.0, max=np.pi / 2
+    ... )
+    >>> result = cos(angle)
+    >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
+    0.5000 in [0.0000, 1.0000]
+
+    Angle in degrees:
+
+    >>> angle = Parameter('angle', 60.0, unit='deg', min=0.0, max=180.0)
+    >>> result = cos(angle)
+    >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
+    0.5000 in [-1.0000, 1.0000]
     """
     return _apply(_COS, x)
 
@@ -333,6 +480,28 @@ def tan(x: Parameter) -> Parameter:
     The *value* is guarded against asymptotes, but the *bounds* are allowed to cross
     them: if ``x.min`` and ``x.max`` lie on different branches of ``tan``, the result
     bounds are ``(-inf, inf)``.
+
+    Examples
+    --------
+
+    Angle in radians:
+
+    >>> from easyscience import Parameter
+    >>> from easyscience.variable import tan
+    >>> import numpy as np
+    >>> angle = Parameter(
+    ...     'angle', np.pi / 4, unit='rad', min=0.0, max=np.pi / 3
+    ... )
+    >>> result = tan(angle)
+    >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
+    1.0000 in [0.0000, 1.7321]
+
+    Angle in degrees; bounds that cross an asymptote (90 deg) become infinite:
+
+    >>> angle = Parameter('angle', 45.0, unit='deg', min=0.0, max=120.0)
+    >>> result = tan(angle)
+    >>> print(f'bounds [{result.min:.4f}, {result.max:.4f}]')
+    bounds [-inf, inf]
     """
     return _apply(_TAN, x)
 
@@ -364,6 +533,28 @@ def arcsin(x: Parameter) -> Parameter:
     Notes
     -----
     Bounds outside ``[-1, 1]`` are clipped to the domain.
+
+    Examples
+    --------
+
+    The result is an angle in radians:
+
+    >>> from easyscience import Parameter
+    >>> from easyscience.variable import arcsin
+    >>> x = Parameter('x', 0.5, min=0.0, max=1.0)
+    >>> result = arcsin(x)
+    >>> result.unit
+    'rad'
+
+    Convert the result to degrees; the bounds follow:
+
+    >>> x = Parameter('x', 0.5, min=0.0, max=1.0)
+    >>> result = arcsin(x)
+    >>> result.convert_unit('deg')
+    >>> print(
+    ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
+    ... )
+    30.0000 deg in [0.0000, 90.0000]
     """
     return _apply(_ARCSIN, x)
 
@@ -396,6 +587,30 @@ def arccos(x: Parameter) -> Parameter:
     -----
     Bounds outside ``[-1, 1]`` are clipped to the domain. The function is decreasing,
     so ``x.min`` maps to the result's maximum.
+
+    Examples
+    --------
+
+    The result is an angle in radians; the function is decreasing, so the bounds swap:
+
+    >>> from easyscience import Parameter
+    >>> from easyscience.variable import arccos
+    >>> x = Parameter('x', 0.5, min=0.0, max=1.0)
+    >>> result = arccos(x)
+    >>> print(
+    ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
+    ... )
+    1.0472 rad in [0.0000, 1.5708]
+
+    Convert the result to degrees:
+
+    >>> x = Parameter('x', 0.5, min=0.0, max=1.0)
+    >>> result = arccos(x)
+    >>> result.convert_unit('deg')
+    >>> print(
+    ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
+    ... )
+    60.0000 deg in [0.0000, 90.0000]
     """
     return _apply(_ARCCOS, x)
 
@@ -420,6 +635,30 @@ def arctan(x: Parameter) -> Parameter:
         If ``x`` is not a ``Parameter``.
     UnitError
         If ``x`` is not dimensionless.
+
+    Examples
+    --------
+
+    The result is an angle in radians:
+
+    >>> from easyscience import Parameter
+    >>> from easyscience.variable import arctan
+    >>> x = Parameter('x', 1.0, min=0.0, max=10.0)
+    >>> result = arctan(x)
+    >>> print(
+    ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
+    ... )
+    0.7854 rad in [0.0000, 1.4711]
+
+    Convert the result to degrees:
+
+    >>> x = Parameter('x', 1.0, min=0.0, max=10.0)
+    >>> result = arctan(x)
+    >>> result.convert_unit('deg')
+    >>> print(
+    ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
+    ... )
+    45.0000 deg in [0.0000, 84.2894]
     """
     return _apply(_ARCTAN, x)
 
@@ -461,6 +700,32 @@ def arctan2(y: Parameter, x: Parameter) -> Parameter:
     angle jumps between ``-pi`` and ``pi``; the bounds are then ``[-pi, pi]``, and a
     ``UserWarning`` is raised when all four bounds are finite, since gradient-based
     minimisers behave badly across the jump.
+
+    Examples
+    --------
+
+    The angle of the point (x, y) = (1, 1) m, in radians:
+
+    >>> from easyscience import Parameter
+    >>> from easyscience.variable import arctan2
+    >>> y = Parameter('y', 1.0, unit='m', min=0.5, max=2.0)
+    >>> x = Parameter('x', 1.0, unit='m', min=1.0, max=3.0)
+    >>> result = arctan2(y, x)
+    >>> print(
+    ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
+    ... )
+    0.7854 rad in [0.1651, 1.1071]
+
+    Convert the result to degrees:
+
+    >>> y = Parameter('y', 1.0, unit='m', min=0.5, max=2.0)
+    >>> x = Parameter('x', 1.0, unit='m', min=1.0, max=3.0)
+    >>> result = arctan2(y, x)
+    >>> result.convert_unit('deg')
+    >>> print(
+    ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
+    ... )
+    45.0000 deg in [9.4623, 63.4349]
     """
     return _apply(_ARCTAN2, y, x)
 
@@ -495,6 +760,27 @@ def sinc(x: Parameter) -> Parameter:
     The bounds are exact. The extrema of sinc lie at ``x = 0`` and at the roots of
     ``tan(x) = x``; the roots inside the interval are found numerically.
     The global minimum, about -0.2172, is at ``x`` of about 4.4934.
+
+    Examples
+    --------
+
+    Angle in radians:
+
+    >>> from easyscience import Parameter
+    >>> from easyscience.variable import sinc
+    >>> import numpy as np
+    >>> angle = Parameter('angle', np.pi / 2, unit='rad', min=0.0, max=10.0)
+    >>> result = sinc(angle)
+    >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
+    0.6366 in [-0.2172, 1.0000]
+
+    sinc does not accept degrees; convert an angle in degrees first:
+
+    >>> angle = Parameter('angle', 90.0, unit='deg')
+    >>> angle.convert_unit('rad')
+    >>> result = sinc(angle)
+    >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
+    0.6366 in [-0.2172, 1.0000]
     """
     return _apply(_SINC, x)
 
@@ -526,6 +812,25 @@ def sinh(x: Parameter) -> Parameter:
         If ``x`` is not dimensionless.
     ValueError
         If the result overflows (``|x|`` greater than about 710).
+
+    Examples
+    --------
+
+    Hyperbolic sine, with its bounds:
+
+    >>> from easyscience import Parameter
+    >>> from easyscience.variable import sinh
+    >>> x = Parameter('x', 1.0, min=0.0, max=2.0)
+    >>> result = sinh(x)
+    >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
+    1.1752 in [0.0000, 3.6269]
+
+    The variance is propagated (first order):
+
+    >>> x = Parameter('x', 0.0, variance=0.01)
+    >>> result = sinh(x)
+    >>> print(f'{result.value:.4f}, variance {result.variance:.4f}')
+    0.0000, variance 0.0100
     """
     return _apply(_SINH, x)
 
@@ -556,6 +861,25 @@ def cosh(x: Parameter) -> Parameter:
     Notes
     -----
     ``cosh`` is not monotonic: if the bounds contain 0, the lower result bound is 1.
+
+    Examples
+    --------
+
+    Hyperbolic cosine; the minimum, 1, is inside the bounds:
+
+    >>> from easyscience import Parameter
+    >>> from easyscience.variable import cosh
+    >>> x = Parameter('x', 0.5, min=-1.0, max=2.0)
+    >>> result = cosh(x)
+    >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
+    1.1276 in [1.0000, 3.7622]
+
+    Bounds on one side of zero: cosh is monotonic there:
+
+    >>> x = Parameter('x', 1.0, min=0.5, max=2.0)
+    >>> result = cosh(x)
+    >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
+    1.5431 in [1.1276, 3.7622]
     """
     return _apply(_COSH, x)
 
@@ -580,6 +904,25 @@ def tanh(x: Parameter) -> Parameter:
         If ``x`` is not a ``Parameter``.
     UnitError
         If ``x`` is not dimensionless.
+
+    Examples
+    --------
+
+    Hyperbolic tangent, with its bounds:
+
+    >>> from easyscience import Parameter
+    >>> from easyscience.variable import tanh
+    >>> x = Parameter('x', 0.5, min=0.0, max=2.0)
+    >>> result = tanh(x)
+    >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
+    0.4621 in [0.0000, 0.9640]
+
+    Without bounds the result is limited to [-1, 1]:
+
+    >>> x = Parameter('x', 0.5)
+    >>> result = tanh(x)
+    >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
+    0.4621 in [-1.0000, 1.0000]
     """
     return _apply(_TANH, x)
 
@@ -604,6 +947,25 @@ def arcsinh(x: Parameter) -> Parameter:
         If ``x`` is not a ``Parameter``.
     UnitError
         If ``x`` is not dimensionless.
+
+    Examples
+    --------
+
+    Inverse hyperbolic sine, with its bounds:
+
+    >>> from easyscience import Parameter
+    >>> from easyscience.variable import arcsinh
+    >>> x = Parameter('x', 1.0, min=0.0, max=10.0)
+    >>> result = arcsinh(x)
+    >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
+    0.8814 in [0.0000, 2.9982]
+
+    The variance is propagated (first order):
+
+    >>> x = Parameter('x', 0.0, variance=0.01)
+    >>> result = arcsinh(x)
+    >>> print(f'{result.value:.4f}, variance {result.variance:.4f}')
+    0.0000, variance 0.0100
     """
     return _apply(_ARCSINH, x)
 
@@ -635,6 +997,25 @@ def arccosh(x: Parameter) -> Parameter:
     Notes
     -----
     Bounds below 1 are clipped to the domain.
+
+    Examples
+    --------
+
+    Inverse hyperbolic cosine, with its bounds:
+
+    >>> from easyscience import Parameter
+    >>> from easyscience.variable import arccosh
+    >>> x = Parameter('x', 2.0, min=1.0, max=10.0)
+    >>> result = arccosh(x)
+    >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
+    1.3170 in [0.0000, 2.9932]
+
+    Bounds below 1 are clipped to the domain:
+
+    >>> x = Parameter('x', 2.0, min=-5.0, max=10.0)
+    >>> result = arccosh(x)
+    >>> print(f'bounds [{result.min:.4f}, {result.max:.4f}]')
+    bounds [0.0000, 2.9932]
     """
     return _apply(_ARCCOSH, x)
 
@@ -665,6 +1046,25 @@ def arctanh(x: Parameter) -> Parameter:
     Notes
     -----
     Bounds beyond +-1 are clipped to the domain, which makes the result bound infinite.
+
+    Examples
+    --------
+
+    Inverse hyperbolic tangent, with its bounds:
+
+    >>> from easyscience import Parameter
+    >>> from easyscience.variable import arctanh
+    >>> x = Parameter('x', 0.5, min=0.0, max=0.9)
+    >>> result = arctanh(x)
+    >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
+    0.5493 in [0.0000, 1.4722]
+
+    Bounds beyond +-1 are clipped, which makes the result bounds infinite:
+
+    >>> x = Parameter('x', 0.5, min=-2.0, max=2.0)
+    >>> result = arctanh(x)
+    >>> print(f'bounds [{result.min:.4f}, {result.max:.4f}]')
+    bounds [-inf, inf]
     """
     return _apply(_ARCTANH, x)
 
