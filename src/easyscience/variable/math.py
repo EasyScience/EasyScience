@@ -1,757 +1,1111 @@
+# SPDX-FileCopyrightText: 2026 EasyScience contributors <https://github.com/easyscience>
+# SPDX-License-Identifier: BSD-3-Clause
+
+"""
+Mathematical functions for EasyScience ``Parameter`` objects.
+
+Every public function takes one or more ``Parameter`` objects and returns a new
+``Parameter`` holding
+
+* the **value**, evaluated by Scipp (which also validates the units),
+* the propagated **variance** (first-order "delta method", uncorrelated inputs), and
+* the **fitting bounds**, i.e. the exact range the function can take when its
+  argument stays inside the argument's own bounds.
+
+Conventions:
+
+* *Values are validated strictly.* A value outside the function's domain, or a
+  non-finite result, raises ``ValueError``; such values would break a fit loop.
+* *Bounds are permissive.* They never raise: bounds outside the domain are
+  clipped to it, infinite bounds are accepted, and ``tan`` bounds that cross an
+  asymptote become ``(-inf, inf)``.
+
+Implementation: each function is described by a small, immutable ``_MathOp``
+specification (which Scipp function to call, which domain it accepts, how to
+derive its bounds, ...). A single dispatcher, ``_apply``, does the work for all of
+them, so adding a function means adding a specification, not new control flow.
+"""
+
+import math
 import warnings
 from collections.abc import Callable
+from dataclasses import dataclass
+from functools import lru_cache
 
 import numpy as np
 import scipp as sc
 
-from easyscience.variable.descriptor_array import DescriptorArray
-from easyscience.variable.descriptor_number import DescriptorNumber
 from easyscience.variable.parameter import Parameter
 
-# Define type aliases for readability if preferred, or use inline Callable
-# np_func takes a NumPy array and returns a NumPy array
-NumPyMathFunc = Callable[[np.ndarray], np.ndarray]
-# sc_func takes a Scipp Variable and returns a Scipp Variable
-ScippMathFunc = Callable[[sc.Variable], sc.Variable]
+# A closed interval ``(lo, hi)`` of an argument, in the unit the bounds strategy works in.
+Interval = tuple[float, float]
+# A bounds strategy maps one interval per argument to the ``(min, max)`` of the result.
+BoundsStrategy = Callable[..., tuple[float, float]]
 
 
 # ==========================================
-# Standard Maths Operations
+# Public functions: standard maths
 # ==========================================
 
 
 def exp(x: Parameter) -> Parameter:
-    return _call_scipp_func(sc.exp, np.exp, _derive_monotonic_bounds, 'exp', x)
-
-
-def log(x: Parameter) -> Parameter:
-    return _call_scipp_func(sc.log, np.log, _derive_monotonic_bounds, 'log', x)
-
-
-# ==========================================
-# Trigonometric Operations
-# ==========================================
-
-
-def sin(x: Parameter) -> Parameter:
-    return _call_scipp_func(sc.sin, np.sin, _derive_grid_bounds, 'sin', x)
-
-
-def cos(x: Parameter) -> Parameter:
-    return _call_scipp_func(sc.cos, np.cos, _derive_grid_bounds, 'cos', x)
-
-
-def tan(x: Parameter) -> Parameter:
-    """ """
-    return _call_scipp_func(sc.tan, np.tan, _derive_tan_bounds, 'tan', x)
-
-
-def arcsin(x: Parameter) -> Parameter:
-    return _call_scipp_func(sc.asin, np.arcsin, _derive_grid_bounds, 'arcsin', x)
-
-
-def arccos(x: Parameter) -> Parameter:
-    return _call_scipp_func(sc.acos, np.arccos, _derive_grid_bounds, 'arccos', x)
-
-
-def arctan(x: Parameter) -> Parameter:
-    return _call_scipp_func(sc.atan, np.arctan, _derive_grid_bounds, 'arctan', x)
-
-
-def arctan2(y: Parameter, x: Parameter) -> Parameter:
-    return _call_scipp_func(sc.atan2, np.arctan2, _derive_2d_bounds, 'arctan2', y, x)
-
-
-def sinc(argument: Parameter) -> Parameter:
     """
-    Calculates the unnormalized sinc function (sin(x)/x) of the given parameter.
-
-    This function safely wraps the Scipp sinc execution to guarantee correct
-    error propagation. It evaluates new fitting bounds using a grid-based
-    evaluation, accounting for the oscillating nature of the sinc curve.
+    Calculate the exponential, ``e**x``, of a dimensionless parameter.
 
     Parameters
     ----------
-    argument : Parameter
-        The input parameter to be evaluated. It should have angular units
-        (e.g., 'rad').
+    x : Parameter
+        Dimensionless input.
 
     Returns
     -------
     Parameter
-        A new parameter object containing the calculated sinc value,
-        propagated variance, and mapped bounds. The output is dimensionless.
+        ``exp(x)`` with propagated variance and bounds ``(exp(x.min), exp(x.max))``.
 
     Raises
     ------
     NotImplementedError
-        If the input argument is not of type ``Parameter``.
+        If ``x`` is not a ``Parameter``.
+    UnitError
+        If ``x`` is not dimensionless.
     ValueError
-        If the fitting bounds of the input parameter are infinite.
+        If the result overflows (``x`` greater than about 709.78).
+    """
+    return _apply(_EXP, x)
+
+
+def log(x: Parameter) -> Parameter:
+    """
+    Calculate the natural logarithm of a dimensionless parameter.
+
+    Parameters
+    ----------
+    x : Parameter
+        Dimensionless input. Its value must be strictly positive.
+
+    Returns
+    -------
+    Parameter
+        ``log(x)`` with propagated variance and bounds.
+
+    Raises
+    ------
+    NotImplementedError
+        If ``x`` is not a ``Parameter``.
+    UnitError
+        If ``x`` is not dimensionless.
+    ValueError
+        If the value of ``x`` is not strictly positive.
 
     Notes
     -----
-    This function computes the unnormalized sinc function, matching the
-    behavior of Scipp and standard mathematical definitions in physics,
-    rather than the normalized signal-processing sinc function used by NumPy.
-    The peak value is 1.0 at x=0.
+    Bounds below zero are clipped to the domain, so ``x`` in ``[-1, 5]``
+    gives result bounds ``[-inf, log(5)]``.
+    """
+    return _apply(_LOG, x)
+
+
+def log10(x: Parameter) -> Parameter:
+    """
+    Calculate the base-10 logarithm of a dimensionless parameter.
+
+    Parameters
+    ----------
+    x : Parameter
+        Dimensionless input. Its value must be strictly positive.
+
+    Returns
+    -------
+    Parameter
+        ``log10(x)`` with propagated variance and bounds.
+
+    Raises
+    ------
+    NotImplementedError
+        If ``x`` is not a ``Parameter``.
+    UnitError
+        If ``x`` is not dimensionless.
+    ValueError
+        If the value of ``x`` is not strictly positive.
+
+    Notes
+    -----
+    Bounds below zero are clipped to the domain, so ``x`` in ``[0, 100]``
+    gives result bounds ``[-inf, 2]``.
+    """
+    return _apply(_LOG10, x)
+
+
+def sqrt(x: Parameter) -> Parameter:
+    """
+    Calculate the square root of a parameter.
+
+    Parameters
+    ----------
+    x : Parameter
+        Input that is dimensionless, or whose unit is a perfect square (e.g. ``m**2``).
+        Its value must not be negative.
+
+    Returns
+    -------
+    Parameter
+        ``sqrt(x)`` with propagated variance and bounds. The unit is the square root
+        of the input unit (``m**2`` gives ``m``).
+
+    Raises
+    ------
+    NotImplementedError
+        If ``x`` is not a ``Parameter``.
+    UnitError
+        If the unit of ``x`` has no square root in Scipp (e.g. ``m``).
+    ValueError
+        If the value of ``x`` is negative, or if the result is not finite (for example a
+        non-zero variance at ``x == 0``, where the derivative is infinite).
+
+    Notes
+    -----
+    Bounds below zero are clipped to the domain.
+    EasyScience ``Parameter`` objects also support ``x ** 0.5``.
+    """
+    return _apply(_SQRT, x)
+
+
+def erf(x: Parameter) -> Parameter:
+    """
+    Calculate the error function of a dimensionless parameter.
+
+    Parameters
+    ----------
+    x : Parameter
+        Dimensionless input.
+
+    Returns
+    -------
+    Parameter
+        ``erf(x)`` with propagated variance and bounds in ``[-1, 1]``.
+
+    Raises
+    ------
+    NotImplementedError
+        If ``x`` is not a ``Parameter``.
+    UnitError
+        If ``x`` is not dimensionless.
+
+    Notes
+    -----
+    Scipp does not propagate variances through ``erf``. EasyScience does it with
+    the delta method, using ``d erf / dx = 2 / sqrt(pi) * exp(-x**2)``.
+    """
+    return _apply(_ERF, x)
+
+
+def erfc(x: Parameter) -> Parameter:
+    """
+    Calculate the complementary error function, ``1 - erf(x)``, of a dimensionless parameter.
+
+    Parameters
+    ----------
+    x : Parameter
+        Dimensionless input.
+
+    Returns
+    -------
+    Parameter
+        ``erfc(x)`` with propagated variance and bounds in ``[0, 2]``.
+
+    Raises
+    ------
+    NotImplementedError
+        If ``x`` is not a ``Parameter``.
+    UnitError
+        If ``x`` is not dimensionless.
+
+    Notes
+    -----
+    Scipp does not propagate variances through ``erfc``. EasyScience does it with
+    the delta method, using ``d erfc / dx = -2 / sqrt(pi) * exp(-x**2)``.
+    The function is decreasing, so the bounds are swapped relative to the input.
+    """
+    return _apply(_ERFC, x)
+
+
+# ==========================================
+# Public functions: trigonometric
+# ==========================================
+
+
+def sin(x: Parameter) -> Parameter:
+    """
+    Calculate the trigonometric sine of an angle parameter.
+
+    Parameters
+    ----------
+    x : Parameter
+        Angle, with unit ``rad`` or ``deg``.
+
+    Returns
+    -------
+    Parameter
+        Dimensionless ``sin(x)`` with propagated variance and exact bounds.
+
+    Raises
+    ------
+    NotImplementedError
+        If ``x`` is not a ``Parameter``.
+    UnitError
+        If the unit of ``x`` is not an angle.
+
+    Notes
+    -----
+    The bounds are exact: the endpoints and the interior maxima and minima
+    (``pi/2 + n*pi``) are evaluated, in radians whatever the input unit. Infinite
+    bounds, or bounds wider than one period, give ``[-1, 1]``.
 
     Examples
     --------
-    Compute the unnormalized sinc of a Parameter at the origin (x=0):
-
-      >>> import easyscience as es
-      >>> angle = es.Parameter(
-      ...     name='angle',
-      ...     value=0.0,
-      ...     variance=0.1,
-      ...     min=-np.pi,
-      ...     max=np.pi,
-      ...     fixed=False,
-      ...     unit='rad',
-      ... )
-      >>> es.sinc(angle)
-      <Parameter 'sinc(angle)': 1.0 ± 0.0, bounds=[-0.21723362821122166:1.0]>
-
-    Compute the unnormalized sinc at pi/2:
-
-      >>> angle_half_pi = es.Parameter(
-      ...     name='angle_half_pi',
-      ...     value=np.pi / 2,
-      ...     min=0.0,
-      ...     max=np.pi,
-      ...     fixed=False,
-      ...     unit='rad',
-      ... )
-      >>> es.sinc(angle_half_pi)
-      <Parameter 'sinc(angle_half_pi)': 0.6366197723675814 ± 0.0, bounds=[0.0:1.0]>
+    >>> from easyscience import Parameter
+    >>> from easyscience.variable import sin
+    >>> angle = Parameter('angle', 90.0, unit='deg', min=0.0, max=90.0)
+    >>> result = sin(angle)
+    >>> result.value, result.min, result.max
+    (1.0, 0.0, 1.0)
     """
-    return _call_scipp_func(sc.sinc, _unnormalized_np_sinc, _derive_grid_bounds, 'sinc', argument)
+    return _apply(_SIN, x)
+
+
+def cos(x: Parameter) -> Parameter:
+    """
+    Calculate the trigonometric cosine of an angle parameter.
+
+    Parameters
+    ----------
+    x : Parameter
+        Angle, with unit ``rad`` or ``deg``.
+
+    Returns
+    -------
+    Parameter
+        Dimensionless ``cos(x)`` with propagated variance and exact bounds.
+
+    Raises
+    ------
+    NotImplementedError
+        If ``x`` is not a ``Parameter``.
+    UnitError
+        If the unit of ``x`` is not an angle.
+
+    Notes
+    -----
+    The bounds are exact: the endpoints and the interior maxima and minima
+    (``n*pi``) are evaluated, in radians whatever the input unit. Infinite
+    bounds, or bounds wider than one period, give ``[-1, 1]``.
+    """
+    return _apply(_COS, x)
+
+
+def tan(x: Parameter) -> Parameter:
+    """
+    Calculate the trigonometric tangent of an angle parameter.
+
+    Parameters
+    ----------
+    x : Parameter
+        Angle, with unit ``rad`` or ``deg``.
+
+    Returns
+    -------
+    Parameter
+        Dimensionless ``tan(x)`` with propagated variance and bounds.
+
+    Raises
+    ------
+    NotImplementedError
+        If ``x`` is not a ``Parameter``.
+    UnitError
+        If the unit of ``x`` is not an angle.
+    ValueError
+        If the value of ``x`` is within 1e-7 rad, or one standard deviation if that is
+        larger, of an asymptote (``pi/2 + n*pi``), where the propagated variance
+        would explode.
+
+    Notes
+    -----
+    The *value* is guarded against asymptotes, but the *bounds* are allowed to cross
+    them: if ``x.min`` and ``x.max`` lie on different branches of ``tan``, the result
+    bounds are ``(-inf, inf)``.
+    """
+    return _apply(_TAN, x)
+
+
+def arcsin(x: Parameter) -> Parameter:
+    """
+    Calculate the inverse sine of a dimensionless parameter.
+
+    Parameters
+    ----------
+    x : Parameter
+        Dimensionless input; its value must be in ``[-1, 1]``.
+
+    Returns
+    -------
+    Parameter
+        Angle in ``rad``, in ``[-pi/2, pi/2]``, with propagated variance and bounds.
+
+    Raises
+    ------
+    NotImplementedError
+        If ``x`` is not a ``Parameter``.
+    UnitError
+        If ``x`` is not dimensionless.
+    ValueError
+        If the value of ``x`` is outside ``[-1, 1]``, or if the result is not finite
+        (a non-zero variance at ``x == +-1``, where the derivative is infinite).
+
+    Notes
+    -----
+    Bounds outside ``[-1, 1]`` are clipped to the domain.
+    """
+    return _apply(_ARCSIN, x)
+
+
+def arccos(x: Parameter) -> Parameter:
+    """
+    Calculate the inverse cosine of a dimensionless parameter.
+
+    Parameters
+    ----------
+    x : Parameter
+        Dimensionless input; its value must be in ``[-1, 1]``.
+
+    Returns
+    -------
+    Parameter
+        Angle in ``rad``, in ``[0, pi]``, with propagated variance and bounds.
+
+    Raises
+    ------
+    NotImplementedError
+        If ``x`` is not a ``Parameter``.
+    UnitError
+        If ``x`` is not dimensionless.
+    ValueError
+        If the value of ``x`` is outside ``[-1, 1]``, or if the result is not finite
+        (a non-zero variance at ``x == +-1``, where the derivative is infinite).
+
+    Notes
+    -----
+    Bounds outside ``[-1, 1]`` are clipped to the domain. The function is decreasing,
+    so ``x.min`` maps to the result's maximum.
+    """
+    return _apply(_ARCCOS, x)
+
+
+def arctan(x: Parameter) -> Parameter:
+    """
+    Calculate the inverse tangent of a dimensionless parameter.
+
+    Parameters
+    ----------
+    x : Parameter
+        Dimensionless input.
+
+    Returns
+    -------
+    Parameter
+        Angle in ``rad``, in ``[-pi/2, pi/2]``, with propagated variance and bounds.
+
+    Raises
+    ------
+    NotImplementedError
+        If ``x`` is not a ``Parameter``.
+    UnitError
+        If ``x`` is not dimensionless.
+    """
+    return _apply(_ARCTAN, x)
+
+
+def arctan2(y: Parameter, x: Parameter) -> Parameter:
+    """
+    Calculate the angle of the point ``(x, y)``, using both signs to find the quadrant.
+
+    Parameters
+    ----------
+    y : Parameter
+        Cartesian y-coordinate.
+    x : Parameter
+        Cartesian x-coordinate. Must have the same unit as ``y``.
+
+    Returns
+    -------
+    Parameter
+        Angle in ``rad``, in ``[-pi, pi]``, with propagated variance and bounds.
+
+    Raises
+    ------
+    NotImplementedError
+        If ``y`` or ``x`` is not a ``Parameter``.
+    UnitError
+        If ``y`` and ``x`` have different units.
+    ValueError
+        If an argument has a variance and the point ``(x, y)`` lies within one standard
+        deviation of the origin, where the angle is undefined, or if the result is not
+        finite.
+
+    Notes
+    -----
+    Scipp does not propagate variances through ``atan2``. EasyScience does it with the
+    delta method, assuming ``y`` and ``x`` are uncorrelated.
+
+    The bounds are the exact range of the angle over the box ``[y.min, y.max] x
+    [x.min, x.max]``. If the box touches the branch cut (``y = 0`` with ``x < 0``) the
+    angle jumps between ``-pi`` and ``pi``; the bounds are then ``[-pi, pi]``, and a
+    ``UserWarning`` is raised when all four bounds are finite, since gradient-based
+    minimisers behave badly across the jump.
+    """
+    return _apply(_ARCTAN2, y, x)
+
+
+def sinc(x: Parameter) -> Parameter:
+    """
+    Calculate the unnormalised sinc function, ``sin(x) / x``, of a parameter.
+
+    Parameters
+    ----------
+    x : Parameter
+        Input, with unit ``rad`` or dimensionless.
+
+    Returns
+    -------
+    Parameter
+        Dimensionless ``sinc(x)`` (equal to 1 at ``x = 0``) with propagated variance
+        and exact bounds.
+
+    Raises
+    ------
+    NotImplementedError
+        If ``x`` is not a ``Parameter``.
+    UnitError
+        If the unit of ``x`` is neither ``rad`` nor dimensionless.
+
+    Notes
+    -----
+    This matches Scipp and the physics convention, not the normalised
+    ``sin(pi x) / (pi x)`` of ``numpy.sinc``.
+
+    The bounds are exact. The extrema of sinc lie at ``x = 0`` and at the roots of
+    ``tan(x) = x``; the roots inside the interval are found numerically.
+    The global minimum, about -0.2172, is at ``x`` of about 4.4934.
+    """
+    return _apply(_SINC, x)
 
 
 # ==========================================
-# Helpers
+# Public functions: hyperbolic
 # ==========================================
 
 
-def _to_scipp_scalar(arg: Parameter, strip_variance: bool = False) -> sc.Variable:
-    """Converts a Parameter to a Scipp scalar, optionally stripping variance."""
-    kwargs = {'value': arg.value, 'unit': str(arg.unit) if arg.unit else ''}
-    if not strip_variance and arg.variance is not None and arg.variance > 0:
-        kwargs['variance'] = float(arg.variance)
-    return sc.scalar(**kwargs)
+def sinh(x: Parameter) -> Parameter:
+    """
+    Calculate the hyperbolic sine of a dimensionless parameter.
+
+    Parameters
+    ----------
+    x : Parameter
+        Dimensionless input.
+
+    Returns
+    -------
+    Parameter
+        ``sinh(x)`` with propagated variance and bounds.
+
+    Raises
+    ------
+    NotImplementedError
+        If ``x`` is not a ``Parameter``.
+    UnitError
+        If ``x`` is not dimensionless.
+    ValueError
+        If the result overflows (``|x|`` greater than about 710).
+    """
+    return _apply(_SINH, x)
 
 
-def _call_scipp_func(sc_func, np_func, bounds_deriver, op_name, *args) -> Parameter:
+def cosh(x: Parameter) -> Parameter:
     """
-    Central dispatcher for EasyScience math operations.
-    Strips EasyScience types, evaluates bounds, calls Scipp, and repacks.
+    Calculate the hyperbolic cosine of a dimensionless parameter.
+
+    Parameters
+    ----------
+    x : Parameter
+        Dimensionless input.
+
+    Returns
+    -------
+    Parameter
+        ``cosh(x)`` with propagated variance and bounds.
+
+    Raises
+    ------
+    NotImplementedError
+        If ``x`` is not a ``Parameter``.
+    UnitError
+        If ``x`` is not dimensionless.
+    ValueError
+        If the result overflows (``|x|`` greater than about 710).
+
+    Notes
+    -----
+    ``cosh`` is not monotonic: if the bounds contain 0, the lower result bound is 1.
     """
-    # 1. Strict EasyScience Caveats Enforced Here
-    for arg in args:
-        if not isinstance(arg, Parameter):
+    return _apply(_COSH, x)
+
+
+def tanh(x: Parameter) -> Parameter:
+    """
+    Calculate the hyperbolic tangent of a dimensionless parameter.
+
+    Parameters
+    ----------
+    x : Parameter
+        Dimensionless input.
+
+    Returns
+    -------
+    Parameter
+        ``tanh(x)`` with propagated variance and bounds in ``[-1, 1]``.
+
+    Raises
+    ------
+    NotImplementedError
+        If ``x`` is not a ``Parameter``.
+    UnitError
+        If ``x`` is not dimensionless.
+    """
+    return _apply(_TANH, x)
+
+
+def arcsinh(x: Parameter) -> Parameter:
+    """
+    Calculate the inverse hyperbolic sine of a dimensionless parameter.
+
+    Parameters
+    ----------
+    x : Parameter
+        Dimensionless input.
+
+    Returns
+    -------
+    Parameter
+        ``arcsinh(x)`` with propagated variance and bounds.
+
+    Raises
+    ------
+    NotImplementedError
+        If ``x`` is not a ``Parameter``.
+    UnitError
+        If ``x`` is not dimensionless.
+    """
+    return _apply(_ARCSINH, x)
+
+
+def arccosh(x: Parameter) -> Parameter:
+    """
+    Calculate the inverse hyperbolic cosine of a dimensionless parameter.
+
+    Parameters
+    ----------
+    x : Parameter
+        Dimensionless input; its value must be at least 1.
+
+    Returns
+    -------
+    Parameter
+        ``arccosh(x)`` (non-negative) with propagated variance and bounds.
+
+    Raises
+    ------
+    NotImplementedError
+        If ``x`` is not a ``Parameter``.
+    UnitError
+        If ``x`` is not dimensionless.
+    ValueError
+        If the value of ``x`` is below 1, or if the result is not finite (a non-zero
+        variance at ``x == 1``, where the derivative is infinite).
+
+    Notes
+    -----
+    Bounds below 1 are clipped to the domain.
+    """
+    return _apply(_ARCCOSH, x)
+
+
+def arctanh(x: Parameter) -> Parameter:
+    """
+    Calculate the inverse hyperbolic tangent of a dimensionless parameter.
+
+    Parameters
+    ----------
+    x : Parameter
+        Dimensionless input; its value must be strictly between -1 and 1.
+
+    Returns
+    -------
+    Parameter
+        ``arctanh(x)`` with propagated variance and bounds.
+
+    Raises
+    ------
+    NotImplementedError
+        If ``x`` is not a ``Parameter``.
+    UnitError
+        If ``x`` is not dimensionless.
+    ValueError
+        If the value of ``x`` is not strictly inside ``(-1, 1)``.
+
+    Notes
+    -----
+    Bounds beyond +-1 are clipped to the domain, which makes the result bound infinite.
+    """
+    return _apply(_ARCTANH, x)
+
+
+# ==========================================
+# Specification of a maths operation
+# ==========================================
+
+
+@dataclass(frozen=True)
+class _Domain:
+    """The set of argument values a function accepts: an interval, open or closed at each end."""
+
+    lo: float = -np.inf
+    hi: float = np.inf
+    open_lo: bool = False
+    open_hi: bool = False
+
+    def contains(self, value: float) -> bool:
+        above = value > self.lo if self.open_lo else value >= self.lo
+        below = value < self.hi if self.open_hi else value <= self.hi
+        return above and below
+
+    def clip(self, lo: float, hi: float) -> Interval:
+        """Restrict ``[lo, hi]`` to the domain (open ends clip to the edge: the limit)."""
+        return max(lo, self.lo), min(hi, self.hi)
+
+    def __str__(self) -> str:
+        left = '(' if self.open_lo else '['
+        right = ')' if self.open_hi else ']'
+        return f'{left}{self.lo}, {self.hi}{right}'
+
+
+@dataclass(frozen=True)
+class _MathOp:
+    """
+    Everything that makes one maths function different from another.
+
+    Attributes
+    ----------
+    name : str
+        Name used in error messages and in the name of the resulting ``Parameter``.
+    sc_func : Callable
+        The Scipp function (it validates units and propagates variance, if it can).
+    bounds : BoundsStrategy
+        Maps one ``(lo, hi)`` interval per argument to the ``(min, max)`` of the result.
+    domain : _Domain
+        Accepted argument values. Applies to every argument.
+    native_unit : str or None
+        If set, bounds are converted to this unit before ``bounds`` runs
+        (``'rad'`` for the trigonometric functions, whose numpy versions assume radians).
+    arg_names : tuple of str or None
+        If set, Scipp's function takes these keyword-only arguments (``atan2(y=, x=)``).
+    jacobian : Callable or None
+        Partial derivatives of the function, ``jacobian(*values) -> (df/dx1, df/dx2, ...)``.
+        Set it for functions whose variance Scipp cannot propagate; EasyScience then
+        applies the delta method itself.
+    guard : Callable or None
+        Extra check of the arguments' values, ``guard(*params)``, raising ``ValueError``
+        where the delta method breaks down (tan asymptotes, the arctan2 origin).
+    """
+
+    name: str
+    sc_func: Callable
+    bounds: BoundsStrategy
+    domain: _Domain = _Domain()
+    native_unit: str | None = None
+    arg_names: tuple[str, ...] | None = None
+    jacobian: Callable | None = None
+    guard: Callable[..., None] | None = None
+
+
+# ==========================================
+# The dispatcher
+# ==========================================
+
+
+def _apply(op: _MathOp, *params: Parameter) -> Parameter:
+    """
+    Evaluate ``op`` on ``params``: validate, call Scipp, derive bounds, repack.
+
+    Parameters
+    ----------
+    op : _MathOp
+        Specification of the function.
+    *params : Parameter
+        The arguments.
+
+    Returns
+    -------
+    Parameter
+        A new ``Parameter`` named ``'<op>(<arg names>)'``.
+
+    Raises
+    ------
+    NotImplementedError
+        If an argument is not a ``Parameter``.
+    UnitError
+        Raised by Scipp if a unit is not valid for the function.
+    ValueError
+        If an argument's value is outside the domain, or the result is not finite.
+    """
+    for param in params:
+        if not isinstance(param, Parameter):
             raise NotImplementedError(
                 f'EasyScience math functions currently only support `Parameter` objects. '
-                f'Raw numbers and arrays are not yet supported. Found: {type(arg)}'
+                f'Raw numbers and arrays are not yet supported. Found: {type(param)}'
             )
-        if op_name != 'arctan' and (np.isinf(arg.min) or np.isinf(arg.max)):
-            raise ValueError(f"Bounds for '{arg.name}' cannot be infinite.")
 
-    # 2. Derive new bounds based on the injected logic (Grid, Monotonic, 2D, etc.)
-    new_min, new_max = bounds_deriver(np_func, *args)
-
-    # 3. Convert to Scipp (Strip variances for atan2 due to missing C++ support)
-    is_atan2 = sc_func is sc.atan2
-    sc_args = {
-        f'arg{i}': _to_scipp_scalar(arg, strip_variance=is_atan2) for i, arg in enumerate(args)
-    }
-
-    # 4. Execute Scipp Operation
-    if is_atan2:
-        scipp_object = sc_func(y=sc_args['arg0'], x=sc_args['arg1'])
-        # Manual Delta Method for atan2
-        y_var, x_var = getattr(args[0], 'variance', 0) or 0, getattr(args[1], 'variance', 0) or 0
-        if y_var > 0 or x_var > 0:
-            y_val, x_val = args[0].value, args[1].value
-            scipp_object.variance = ((x_val**2) * y_var + (y_val**2) * x_var) / (
-                (x_val**2 + y_val**2) ** 2
-            )
+    # 1. Scipp first: it owns the unit rules, so a unit error is reported before anything else.
+    manual_variance = op.jacobian is not None
+    sc_args = [_to_scipp_scalar(param, strip_variance=manual_variance) for param in params]
+    if op.arg_names is None:
+        sc_result = op.sc_func(*sc_args)
     else:
-        scipp_object = sc_func(sc_args['arg0'])
+        sc_result = op.sc_func(**dict(zip(op.arg_names, sc_args, strict=True)))
 
-    # 5. Build dynamic name and return
-    arg_names = ', '.join(arg.name for arg in args)
+    # 2. Values are validated strictly: a bad value would break a fit loop.
+    for param in params:
+        if not op.domain.contains(param.value):
+            raise ValueError(
+                f"The value of '{param.name}' ({param.value}) is outside the domain "
+                f'{op.domain} of {op.name}().'
+            )
+    if op.guard is not None:
+        op.guard(*params)
+
+    # 3. Variance for functions Scipp cannot handle: the delta method.
+    if manual_variance:
+        variance = _delta_method_variance(op, params)
+        if variance is not None:
+            sc_result.variance = variance
+
+    arg_names = ', '.join(param.name for param in params)
+    if not _is_finite(sc_result.value) or not _is_finite(sc_result.variance):
+        raise ValueError(
+            f'{op.name}({arg_names}) is not finite: value={sc_result.value}, '
+            f'variance={sc_result.variance}. Check the value and variance of the argument(s).'
+        )
+
+    # 4. Bounds are permissive: clip to the domain, convert, and let the strategy decide.
+    intervals = [_native_interval(op, param) for param in params]
+    with np.errstate(all='ignore'):
+        new_min, new_max = op.bounds(*intervals)
+    # Guard against round-off at an extremum: the value is always inside its own bounds.
+    new_min, new_max = min(new_min, sc_result.value), max(new_max, sc_result.value)
 
     return Parameter.from_scipp(
-        name=f'{op_name}({arg_names})',
-        full_value=scipp_object,
+        name=f'{op.name}({arg_names})',
+        full_value=sc_result,
         min=new_min,
         max=new_max,
     )
 
 
-def _derive_monotonic_bounds(np_func, x):
-    """For monotonically increasing functions like exp."""
-    return float(np_func(x.min)), float(np_func(x.max))
+def _to_scipp_scalar(param: Parameter, strip_variance: bool = False) -> sc.Variable:
+    """Convert a Parameter to a Scipp scalar; a zero or missing variance is dropped."""
+    kwargs = {'value': float(param.value), 'unit': param.unit}
+    if not strip_variance and param.variance is not None and param.variance > 0:
+        kwargs['variance'] = float(param.variance)
+    return sc.scalar(**kwargs)
 
 
-def _derive_grid_bounds(np_func, x, grid_size=100):
-    """For non-monotonic unary functions like sin, cos."""
-    grid = np.linspace(x.min, x.max, grid_size)
-    mapped_grid = np_func(grid)
-    return float(np.min(mapped_grid)), float(np.max(mapped_grid))
+def _delta_method_variance(op: _MathOp, params: tuple[Parameter, ...]) -> float | None:
+    """
+    First-order error propagation, ``var(y) = sum_i (dy/dx_i)**2 * var(x_i)``.
+
+    Only arguments that have a variance contribute (this avoids ``0 * inf``).
+    Returns ``None`` if no argument has a variance.
+    """
+    variances = [p.variance if p.variance is not None and p.variance > 0 else 0.0 for p in params]
+    if not any(variances):
+        return None
+    with np.errstate(all='ignore'):
+        partials = op.jacobian(*(np.float64(p.value) for p in params))
+        return float(sum(j**2 * v for j, v in zip(partials, variances, strict=True) if v > 0))
 
 
-def _derive_2d_bounds(np_func, y, x, grid_size=50):
-    """For binary functions like arctan2."""
-    Y, X = np.meshgrid(
-        np.linspace(y.min, y.max, grid_size), np.linspace(x.min, x.max, grid_size), indexing='ij'
+def _is_finite(value: float | None) -> bool:
+    """Whether ``value`` is finite; a missing value (no variance) counts as fine."""
+    return value is None or bool(np.isfinite(value))
+
+
+@lru_cache(maxsize=None)
+def _native_factor(unit: str, native_unit: str) -> float:
+    """Factor converting ``unit`` to ``native_unit``, asked of Scipp once per unit pair."""
+    return float(sc.scalar(1.0, unit=unit).to(unit=native_unit).value)
+
+
+def _to_native(x: float, unit: str, native_unit: str | None) -> float:
+    """Convert a number from ``unit`` to ``native_unit`` (unit rules stay in Scipp)."""
+    unit = str(unit)
+    if native_unit is None or unit == native_unit:
+        return x
+    return x * _native_factor(unit, native_unit)
+
+
+def _native_interval(op: _MathOp, param: Parameter) -> Interval:
+    """The parameter's bounds, clipped to the domain and in the unit the strategy expects."""
+    lo, hi = op.domain.clip(float(param.min), float(param.max))
+    return _to_native(lo, param.unit, op.native_unit), _to_native(hi, param.unit, op.native_unit)
+
+
+# ==========================================
+# Bounds strategies
+# ==========================================
+# Each takes one (lo, hi) interval per argument and returns the exact (min, max) of the
+# function over that interval. They run inside ``np.errstate(all='ignore')``, so an edge
+# such as log(0) = -inf is returned instead of warning.
+
+
+def _monotonic(func: Callable) -> BoundsStrategy:
+    """Monotonic function (increasing or decreasing): the extremes sit at the endpoints."""
+
+    def bounds(interval: Interval) -> tuple[float, float]:
+        lo, hi = interval
+        at_lo, at_hi = float(func(lo)), float(func(hi))
+        return min(at_lo, at_hi), max(at_lo, at_hi)
+
+    return bounds
+
+
+def _extrema(func: Callable, critical_points: Callable[[float, float], np.ndarray]):
+    """
+    Non-monotonic function: the extremes sit at the endpoints or at critical points.
+
+    ``critical_points(lo, hi)`` returns the points inside ``[lo, hi]`` where the function
+    may have a local extremum. ``nan`` candidates, such as ``sin(inf)``, are ignored.
+    """
+
+    def bounds(interval: Interval) -> tuple[float, float]:
+        lo, hi = interval
+        candidates = np.concatenate(([lo, hi], critical_points(lo, hi)))
+        values = np.asarray(func(candidates), dtype=float)
+        return float(np.nanmin(values)), float(np.nanmax(values))
+
+    return bounds
+
+
+def _sin_critical_points(lo: float, hi: float) -> np.ndarray:
+    """Maxima and minima of sin: pi/2 + n*pi."""
+    if not (np.isfinite(lo) and np.isfinite(hi)) or hi - lo >= 2 * np.pi:
+        return np.array([np.pi / 2, -np.pi / 2])  # a whole period: sin reaches +1 and -1
+    n = np.arange(np.ceil((lo - np.pi / 2) / np.pi), np.floor((hi - np.pi / 2) / np.pi) + 1)
+    return np.pi / 2 + n * np.pi
+
+
+def _cos_critical_points(lo: float, hi: float) -> np.ndarray:
+    """Maxima and minima of cos: n*pi."""
+    if not (np.isfinite(lo) and np.isfinite(hi)) or hi - lo >= 2 * np.pi:
+        return np.array([0.0, np.pi])  # a whole period: cos reaches +1 and -1
+    n = np.arange(np.ceil(lo / np.pi), np.floor(hi / np.pi) + 1)
+    return n * np.pi
+
+
+def _cosh_critical_points(lo: float, hi: float) -> np.ndarray:
+    """The single minimum of cosh, at 0."""
+    return np.array([0.0]) if lo <= 0.0 <= hi else np.array([])
+
+
+def _unnormalized_sinc(x) -> np.ndarray:
+    """
+    sin(x)/x, with sinc(0) = 1 and the limit sinc(+-inf) = 0.
+
+    ``np.sinc`` is the *normalised* sin(pi x)/(pi x), so the argument is scaled by 1/pi.
+    """
+    x = np.asarray(x, dtype=float)
+    with np.errstate(all='ignore'):
+        return np.where(np.isinf(x), 0.0, np.sinc(x / np.pi))
+
+
+def _sinc_positive_extrema(lo: float, hi: float, count: int = 4) -> np.ndarray:
+    """
+    Stationary points of sinc on the positive axis inside ``[lo, hi]``, nearest to ``lo``.
+
+    They are the positive roots of ``tan(x) = x``, one in each ``(k*pi, k*pi + pi/2)``.
+    The heights of the lobes fall off like 1/x, so the largest maximum and the deepest
+    minimum in the interval are among the first few roots at or after ``lo``.
+
+    All ``count`` roots are refined at once with Newton's method on
+    ``g(x) = x cos(x) - sin(x)``, ``g'(x) = -x sin(x)``, with the vectorised update
+    ``x <- x - g(x) / g'(x)`` (no Python loop over the roots).
+    """
+    if hi <= 0.0:
+        return np.array([])
+    first = max(1, int(np.floor(max(lo, 0.0) / np.pi)))
+    k = np.arange(first, first + count)
+    x = (k + 0.5) * np.pi
+    x = x - 1.0 / x  # asymptotic first guess for the root of tan(x) = x
+    for _ in range(8):
+        x = x - (x * np.cos(x) - np.sin(x)) / (-x * np.sin(x))
+    return x[(x >= lo) & (x <= hi)]
+
+
+def _sinc_critical_points(lo: float, hi: float) -> np.ndarray:
+    """Stationary points of sinc: 0 (the global maximum) and the roots of tan(x) = x on both sides."""
+    points = [_sinc_positive_extrema(lo, hi), -_sinc_positive_extrema(-hi, -lo)]
+    if lo <= 0.0 <= hi:
+        points.append(np.array([0.0]))
+    return np.concatenate(points)
+
+
+def _tan_bounds(interval: Interval) -> tuple[float, float]:
+    """
+    Bounds of tan(x) for ``x`` in radians. tan is increasing between asymptotes
+    (``pi/2 + n*pi``); an interval that spans an asymptote covers all real numbers.
+    """
+    lo, hi = interval
+    if not (np.isfinite(lo) and np.isfinite(hi)):
+        return -np.inf, np.inf
+    branch_lo = np.floor((lo - np.pi / 2) / np.pi)
+    branch_hi = np.floor((hi - np.pi / 2) / np.pi)
+    if branch_lo != branch_hi:
+        return -np.inf, np.inf
+    return float(np.tan(lo)), float(np.tan(hi))
+
+
+def _std(param: Parameter) -> float:
+    """Standard deviation of a parameter; 0 if it has no variance."""
+    return (
+        float(np.sqrt(param.variance))
+        if param.variance is not None and param.variance > 0
+        else 0.0
     )
-    mapped_grid = np_func(Y, X)
-    return float(np.min(mapped_grid)), float(np.max(mapped_grid))
 
 
-def _derive_tan_bounds(np_func, x):
+def _tan_guard(param: Parameter) -> None:
     """
-    Derives bounds for tangent.
-    Guards the parameter value against asymptotes to prevent variance explosion,
-    but allows the fitting bounds to blow up to infinity if they cross an asymptote.
+    The value must keep clear of a tan asymptote, where the variance would explode.
+
+    The delta method is only meaningful if the asymptote lies more than one standard
+    deviation away, so that distance (never less than 1e-7 rad) is the limit.
     """
-    unit_str = str(x.unit) if x.unit else 'rad'
-
-    # 1. Guard the VALUE from blowing up
-    val_rad = x.value if unit_str == 'rad' else np.deg2rad(x.value)
-
-    # Asymptotes occur at pi/2 + n*pi. Modulo pi maps everything to [0, pi]
-    # We check if the value is dangerously close to pi/2
-    if np.isclose(val_rad % np.pi, np.pi / 2, atol=1e-7):
+    value = _to_native(float(param.value), param.unit, 'rad')
+    margin = max(1e-7, _to_native(_std(param), param.unit, 'rad'))
+    distance = abs(value % np.pi - np.pi / 2)
+    if distance <= margin:
         raise ValueError(
-            f'Parameter value {x.value} {unit_str} is dangerously close to a '
-            'tangent asymptote. This will cause the propagated variance to explode.'
+            f"The value of '{param.name}' ({param.value} {param.unit}) is within "
+            f'{margin:.3g} rad of a tan asymptote (pi/2 + n*pi); the propagated variance '
+            f'would explode.'
         )
 
-    # 2. Allow BOUNDS to blow up mathematically
-    if np.isinf(x.min) or np.isinf(x.max):
-        return -np.inf, np.inf
 
-    min_rad = x.min if unit_str == 'rad' else np.deg2rad(x.min)
-    max_rad = x.max if unit_str == 'rad' else np.deg2rad(x.max)
-
-    branch_min = np.floor((min_rad - np.pi / 2) / np.pi)
-    branch_max = np.floor((max_rad - np.pi / 2) / np.pi)
-
-    # If the min and max are on different branches, they crossed an asymptote.
-    # The bounds mathematically blow up to encompass all real numbers.
-    if branch_min != branch_max:
-        return -np.inf, np.inf
-
-    # Otherwise, map them normally
-    return float(np_func(min_rad)), float(np_func(max_rad))
-
-
-def _unnormalized_np_sinc(x):
+def _arctan2_guard(y: Parameter, x: Parameter) -> None:
     """
-    Evaluates the unnormalized sinc function (sin(x)/x).
-    Uses np.sinc (which is normalized) and scales by pi to safely
-    avoid divide-by-zero singularities at x=0.
+    The point ``(x, y)`` must keep clear of the origin, where the angle is undefined.
+
+    Only checked if an argument has a variance: the delta method then divides by
+    ``x**2 + y**2``. The point must lie more than one standard deviation from the origin.
     """
-    return np.sinc(x / np.pi)
-
-
-# def sin(argument: Parameter) -> Parameter:
-#     """Calculates the trigonometric sine of the given parameter.
-
-#     This function safely wraps the Scipp sine execution to guarantee correct
-#     error propagation and unit conversions. It automatically calculates new
-#     fitting bounds using a grid-based evaluation to properly account for the
-#     non-monotonic nature of the sine function.
-
-#     Parameters
-#     ----------
-#     argument : Parameter
-#         The input parameter or numerical value to be evaluated. It should
-#         have angular units (e.g., 'rad', 'deg').
-
-#     Returns
-#     -------
-#     : Same type as input
-#         A new parameter object containing the calculated sine value,
-#         propagated variance, mapped bounds, and a dimensionless unit.
-
-#     Raises
-#     ------
-#     TypeError
-#         If the input argument is not of type ``Parameter``.
-#     ValueError
-#         If the fitting bounds of the input parameter are infinite.
-
-#     Examples
-#     --------
-#     Compute sine of angles in radians:
-
-#       >>> import easyscience as es
-#       >>> import numpy as np
-#       >>> angle = es.Parameter(
-#       ...     name='angle',
-#       ...     value=np.pi / 4,
-#       ...     min=0.0,
-#       ...     max=1.0,
-#       ...     fixed=False,
-#       ...     unit='rad',
-#       ... )
-#       >>> es.sin(angle)
-#      <Parameter 'sin(angle)': 0.7071, bounds=[0.0:0.8414709848078965]>
-
-#     The input must have angle units (rad or deg):
-
-#       >>> angle_deg = es.Parameter(
-#       ...     name='angle_deg', value=45, min=0, max=90, fixed=False, unit='deg'
-#       ... )
-#       >>> es.sin(angle_deg)
-#       <Parameter 'sin(angle_deg)': 0.7071, bounds=[-0.999981805600717:0.9998362543788631]>
-#     """
-#     return _apply_math_operation(argument, sc.sin, np.sin, 'sin')
-
-
-# def cos(argument: Parameter) -> Parameter:
-#     """
-#     Calculates the trigonometric cosine of the given parameter.
-
-#     This function safely wraps the Scipp cosine execution to guarantee correct
-#     error propagation and unit conversions. It automatically calculates new
-#     fitting bounds using a grid-based evaluation to properly account for the
-#     non-monotonic nature of the cosine function.
-
-#     Parameters
-#     ----------
-#     argument : Parameter
-#         The input parameter or numerical value to be evaluated. It should
-#         have angular units (e.g., 'rad', 'deg').
-
-#     Returns
-#     -------
-#     Parameter
-#         A new parameter object containing the calculated cosine value,
-#         propagated variance, mapped bounds, and a dimensionless unit.
-
-#     Raises
-#     ------
-#     TypeError
-#         If the input argument is not of type ``Parameter``.
-#     ValueError
-#         If the fitting bounds of the input parameter are infinite.
-#     """
-#     return _apply_math_operation(argument, sc.cos, np.cos, 'cos')
-
-
-# def tan(argument: Parameter) -> Parameter:
-#     """
-#     Calculates the trigonometric tangent of the given parameter.
-
-#     This function safely wraps the Scipp tangent execution to guarantee correct
-#     error propagation and unit conversions. It implements strict numerical
-#     and statistical guardrails around asymptotes (pi/2 + n*pi) to prevent
-#     optimization crashes and physically invalid variances during fitting.
-
-#     Parameters
-#     ----------
-#     argument : Parameter
-#         The input parameter or numerical value to be evaluated. It should
-#         have angular units (e.g., 'rad', 'deg').
-
-#     Returns
-#     -------
-#     Parameter
-#         A new parameter object containing the calculated tangent value,
-#         propagated variance, mapped bounds, and a dimensionless unit.
-
-#     Raises
-#     ------
-#     TypeError
-#         If the input argument is not of type ``Parameter``.
-#     ValueError
-#         If the fitting bounds are infinite, if the value touches an asymptote,
-#         or if the bounds straddle an asymptote.
-
-#     Notes
-#     -----
-#     Because Scipp uses the Delta Method (first-order Taylor expansion) for
-#     error propagation, a ``UserWarning`` will be raised if the parameter's
-#     variance places its 3-sigma confidence interval across an asymptote. In
-#     this scenario, the linear error propagation reported is highly inaccurate.
-#     """
-
-#     # TODO(): check these cases:
-#     # 1. if `value` is very close to pi/2 -> tan goes to inf.
-#     # 2. if `value` is close to pi/2 AND `value +/- sigma` crosses
-#     #    the point pi/2 -> tan AND propegated sigma go to inf.
-#     # 3. if `value` AND either bounds are very close to pi/2
-#     #    -> tan AND propegated bounds go to inf.
-#     # 4. if the `variance` places `value` closer to pi/2 than, e.g.,
-#     #    a 3-sigma CI  -> either bounds might go to inf.
-#     #
-#     # and make a ruling:
-#     # a. use EasyScience guardrails and raise an error to prevent the user from doing something bad.
-#     # b. let Scipp handle everything and allow the user to do something bad (maybe show a warning).
-
-#     return _apply_math_operation(argument, sc.tan, np.tan, 'tan')
-
-
-# def arcsin(argument: Parameter) -> Parameter:
-#     """
-#     Calculates the inverse trigonometric sine (arcsine) of the given parameter.
-
-#     This function safely wraps the Scipp arcsine execution to guarantee correct
-#     error propagation. It automatically calculates new fitting bounds using
-#     a grid-based evaluation.
-
-#     Parameters
-#     ----------
-#     argument : Parameter
-#         The input parameter or numerical value to be evaluated. It should
-#         be a dimensionless ratio strictly within the domain [-1.0, 1.0].
-
-#     Returns
-#     -------
-#     Parameter
-#         A new parameter object containing the calculated angle (typically in radians),
-#         propagated variance, and mapped bounds.
-
-#     Raises
-#     ------
-#     TypeError
-#         If the input argument is not of type ``Parameter``.
-#     ValueError
-#         If the value or fitting bounds of the input parameter exceed the
-#         domain [-1.0, 1.0], or if the bounds are infinite.
-
-#     Notes
-#     -----
-#     The output parameter's range is restricted to [-pi/2, pi/2].
-#     """
-
-#     # TODO(): inverse trig functions are not hashed out; handling of domain and range needs work
-#     return _apply_math_operation(argument, sc.asin, np.arcsin, 'arcsin')
-
-
-# def arccos(argument: Parameter) -> Parameter:
-#     """
-#     Calculates the inverse trigonometric cosine (arccosine) of the given parameter.
-
-#     This function safely wraps the Scipp arccosine execution to guarantee correct
-#     error propagation. It automatically calculates new fitting bounds using
-#     a grid-based evaluation.
-
-#     Parameters
-#     ----------
-#     argument : Parameter
-#         The input parameter or numerical value to be evaluated. It should
-#         be a dimensionless ratio strictly within the domain [-1.0, 1.0].
-
-#     Returns
-#     -------
-#     Parameter
-#         A new parameter object containing the calculated angle (typically in radians),
-#         propagated variance, and mapped bounds.
-
-#     Raises
-#     ------
-#     TypeError
-#         If the input argument is not of type ``Parameter``.
-#     ValueError
-#         If the value or fitting bounds of the input parameter exceed the
-#         domain [-1.0, 1.0], or if the bounds are infinite.
-
-#     Notes
-#     -----
-#     The output parameter's range is restricted to [0, pi]. As arccosine is
-#     a monotonically decreasing function, the minimum bound of the input will
-#     map to the maximum bound of the output.
-#     """
-#     # TODO(): inverse trig functions are not hashed out; handling of domain and range needs work
-#     return _apply_math_operation(argument, sc.acos, np.arccos, 'arccos')
-
-
-# def arctan(argument: Parameter) -> Parameter:
-#     """
-#     Calculates the inverse trigonometric tangent (arctangent) of the given parameter.
-
-#     This function safely wraps the Scipp arctangent execution to guarantee correct
-#     error propagation. It automatically calculates new fitting bounds using
-#     a grid-based evaluation.
-
-#     Parameters
-#     ----------
-#     argument : Parameter
-#         The input parameter or numerical value to be evaluated. It should
-#         be a dimensionless number.
-
-#     Returns
-#     -------
-#     Parameter
-#         A new parameter object containing the calculated angle (typically in radians),
-#         propagated variance, and mapped bounds.
-
-#     Raises
-#     ------
-#     TypeError
-#         If the input argument is not of type ``Parameter``.
-#     ValueError
-#         If the fitting bounds of the input parameter are infinite.
-
-#     Notes
-#     -----
-#     The output parameter's range is restricted to [-pi/2, pi/2].
-#     """
-#     # TODO(): inverse trig functions are not hashed out; handling of domain and range needs work
-#     return _apply_math_operation(argument, sc.atan, np.arctan, 'arctan')
-
-
-# def arctan2(y: Parameter, x: Parameter) -> Parameter:
-#     """
-#     Calculates the element-wise inverse tangent of y/x determining the correct quadrant.
-
-#     Unlike ``arctan(y/x)``, this function uses the signs of both arguments
-#     to determine the correct quadrant of the result, returning an angle
-#     in the range [-pi, pi]. This safely avoids divide-by-zero errors when x=0.
-
-#     Parameters
-#     ----------
-#     y : Parameter
-#         The input y value (Cartesian y-coordinate).
-#     x : Parameter
-#         The input x value (Cartesian x-coordinate).
-#         At least one of the inputs (y or x) must be an EasyScience ``Parameter``.
-
-#     Returns
-#     -------
-#     Parameter
-#         A new parameter object containing the calculated angle (in radians),
-#         jointly propagated variance from both inputs, and mapped 2D bounds.
-
-#     Raises
-#     ------
-#     TypeError
-#         If the inputs are not of type ``Parameter``.
-#     ValueError
-#         If the fitting bounds of any input parameter are infinite.
-
-#     Notes
-#     -----
-#     Fitting bounds are mapped non-monotonically using a 2D meshgrid across
-#     the bounding box of both parameters.
-
-#     A ``UserWarning`` will be raised if the fitting space crosses the negative
-#     x-axis (y=0, x<0). This is the branch cut of the arctan2 function where
-#     values discontinue between -pi and pi, which can severely destabilize
-#     gradient-based optimization engines.
-#     """
-#     # TODO(): inverse trig functions are not hashed out; handling of domain and range needs work
-#     # TODO(): hash out issue with Scipp returning `VariancesError: Variances in argument 0 not supported.`
-#     return _apply_binary_math_operation(y, x, sc.atan2, np.arctan2, 'arctan2')
-
-
-# ###############################################################################
-# ## Hyperbolic Trigonometric Operations
-# ###############################################################################
-
-# # list: sinh, cosh, tanh, asinh, acosh, atanh
-
-# ###############################################################################
-# ## Helpers
-# ###############################################################################
-
-
-# def _apply_math_operation(
-#     argument: Parameter,
-#     sc_func: ScippMathFunc,
-#     np_func: NumPyMathFunc,
-#     operation_name: str,
-# ) -> Parameter:
-#     """
-#     Universal wrapper that routes bounds logic internally
-#     and handles Scipp execution.
-#     """
-#     _validate_parameter(argument)
-
-#     # Route to the correct bounds derivation logic
-#     if operation_name == 'tan':
-#         new_min, new_max = _derive_tan_bounds(argument, np_func)
-#     else:
-#         new_min, new_max = _derive_grid_bounds(argument, np_func)
-
-#     # Pass values to Scipp for strict execution and error propagation
-#     scipp_object = sc_func(
-#         sc.scalar(value=argument.value, variance=argument.variance, unit=argument.unit)
-#     )
-
-#     parameter = Parameter.from_scipp(
-#         name=f'{operation_name}({argument.name})',
-#         full_value=scipp_object,
-#         min=new_min,
-#         max=new_max,
-#     )
-
-#     # parameter.name = parameter.unique_name
-
-#     return parameter
-
-
-# def _apply_binary_math_operation(y, x, sc_func, np_func, operation_name):
-#     """
-#     Universal wrapper for binary mathematical operations (y, x).
-#     """
-#     if not isinstance(y, Parameter):
-#         raise TypeError(f'Argument `y` must be a Parameter. Found: {type(y)}')
-#     if not isinstance(x, Parameter):
-#         raise TypeError(f'Argument `x` must be a Parameter. Found: {type(x)}')
-
-#     if not isinstance(y, Parameter) and not isinstance(x, Parameter):
-#         raise TypeError('At least one argument must be an EasyScience Parameter.')
-
-#     # for arg in (y, x):
-#     #     if isinstance(arg, Parameter) and (np.isinf(arg.min) or np.isinf(arg.max)):
-#     #         raise ValueError('Argument bounds cannot be infinite.')
-
-#     # 1. Evaluate 2D bounds
-#     new_min, new_max = _derive_binary_grid_bounds(y, x, np_func)
-
-#     # 2. Package to Scipp and execute
-#     sc_y = _to_scipp_scalar(y)
-#     sc_x = _to_scipp_scalar(x)
-
-#     scipp_object = sc_func(y=sc_y, x=sc_x)
-
-#     # 3. Generate combined name
-#     y_name = y.name if isinstance(y, Parameter) else str(y)
-#     x_name = x.name if isinstance(x, Parameter) else str(x)
-
-#     return Parameter.from_scipp(
-#         name=f'{operation_name}({y_name}, {x_name})',
-#         full_value=scipp_object,
-#         min=new_min,
-#         max=new_max,
-#     )
-
-
-# ###############################################################################
-
-
-# def _validate_parameter(argument):
-#     """Enforces type and finite bound requirements."""
-#     if not isinstance(argument, Parameter):
-#         raise TypeError(f'Argument must be a `Parameter`. Found: {type(argument)}')
-
-#     # Without the check below, defaylt inf bounds with result in numpy returning:
-#     #
-#     # `RuntimeWarning: invalid value encountered in multiply y *= step`
-#     # `RuntimeWarning: invalid value encountered in add y += start`
-#     #
-#     # and calculated bounds will be NaNs
-
-#     # if np.isinf(argument.min) or np.isinf(argument.max):
-#     #     raise ValueError(
-#     #         f'Argument bounds cannot be infinite. Found min: {argument.min}, max: {argument.max}'
-#     #     )
-
-
-# def _derive_grid_bounds(
-#     argument: Parameter, np_func: NumPyMathFunc, grid_size: int = 100
-# ) -> tuple[float, float]:
-#     """Derives bounds for non-monotonic functions (sin, cos) using interval evaluation."""
-#     grid = np.linspace(argument.min, argument.max, grid_size)
-#     mapped_grid = np_func(grid)
-#     return float(np.min(mapped_grid)), float(np.max(mapped_grid))
-
-
-# def _derive_tan_bounds(
-#     argument: Parameter,
-#     np_func: NumPyMathFunc,
-#     num_tolerance: float = 1e-7,
-#     sigma_threshold: float = 3.0,
-# ) -> tuple[float, float]:
-#     """
-#     Derives bounds for tangent, enforcing both a numerical keep-out zone
-#     and a statistical keep-out zone around asymptotes.
-#     """
-#     unit_str = str(argument.unit) if argument.unit else 'rad'
-
-#     # Standardize to radians
-#     min_rad = argument.min if unit_str == 'rad' else np.deg2rad(argument.min)
-#     max_rad = argument.max if unit_str == 'rad' else np.deg2rad(argument.max)
-#     val_rad = argument.value if unit_str == 'rad' else np.deg2rad(argument.value)
-
-#     def _dist_to_asymptote(rad_val):
-#         dist = (rad_val - np.pi / 2) % np.pi
-#         return min(dist, np.pi - dist)
-
-#     # 1. Numerical check (prevents floating point explosions)
-#     if _dist_to_asymptote(val_rad) < num_tolerance:
-#         raise ValueError(
-#             f'Parameter value {argument.value} {unit_str} is too close to a tangent asymptote.'
-#         )
-
-#     # 2. Statistical check (prevents Delta Method breakdown)
-#     if argument.variance is not None and argument.variance > 0:
-#         std_dev = np.sqrt(argument.variance)
-#         std_rad = std_dev if unit_str == 'rad' else np.deg2rad(std_dev)
-
-#         # If the asymptote is within N standard deviations of the value
-#         if _dist_to_asymptote(val_rad) < (sigma_threshold * std_rad):
-#             warnings.warn(
-#                 f"The parameter '{argument.name}' is {argument.value}±{std_dev:.2f} {unit_str}. "
-#                 f'This means the {sigma_threshold}-sigma confidence interval crosses a tangent asymptote. '
-#                 'Linear error propagation (variance) reported by Scipp will be highly inaccurate.',
-#                 UserWarning,
-#             )
-
-#     # 3. Bounds check (same as before)
-#     if _dist_to_asymptote(min_rad) < num_tolerance or _dist_to_asymptote(max_rad) < num_tolerance:
-#         raise ValueError('Tangent bounds touch or encroach on an asymptote.')
-
-#     branch_min = np.floor((min_rad - np.pi / 2) / np.pi)
-#     branch_max = np.floor((max_rad - np.pi / 2) / np.pi)
-
-#     if branch_min != branch_max:
-#         raise ValueError('Tangent bounds cross an asymptote. Fitting is unstable.')
-
-#     return float(np_func(min_rad)), float(np_func(max_rad))
-
-
-# def _derive_binary_grid_bounds(y, x, np_func, grid_size=50):
-#     """
-#     Derives bounds for 2D parameter spaces using interval evaluation.
-#     Also checks for the atan2 branch cut along the negative x-axis.
-#     """
-
-#     def _get_range(arg):
-#         if isinstance(arg, Parameter):
-#             return np.linspace(arg.min, arg.max, grid_size), arg.min, arg.max
-#         val = float(arg)
-#         return np.array([val]), val, val
-
-#     y_grid, y_min, y_max = _get_range(y)
-#     x_grid, x_min, x_max = _get_range(x)
-
-#     # Branch cut warning: crosses y=0 while x is negative
-#     if (y_min < 0 < y_max) and (x_min < 0):
-#         warnings.warn(
-#             'The 2D parameter bounds cross the negative x-axis (y=0, x<0). '
-#             'This is the atan2 branch cut where the angle jumps between -pi and pi. '
-#             'Optimization derivatives (Jacobian) will be highly unstable here.',
-#             UserWarning,
-#         )
-
-#     # Create a 2D plane of all possible (y, x) combinations in the bounds
-#     Y, X = np.meshgrid(y_grid, x_grid, indexing='ij')
-#     mapped_grid = np_func(Y, X)
-
-#     return float(np.min(mapped_grid)), float(np.max(mapped_grid))
-
-
-# def _to_scipp_scalar(arg):
-#     """Safely converts a Parameter to a Scipp scalar."""
-#     if isinstance(arg, Parameter):
-#         variance = arg.variance if arg.variance is not None or 0.0
-#         return sc.scalar(value=arg.value, variance=variance, unit=arg.unit)
-#     return sc.scalar(value=float(arg), unit='')
+    margin = max(_std(y), _std(x))
+    if margin > 0 and np.hypot(float(y.value), float(x.value)) <= margin:
+        raise ValueError(
+            f"The point ('{x.name}', '{y.name}') = ({x.value}, {y.value}) is within one standard "
+            f'deviation ({margin:.3g}) of the origin, where the angle of arctan2() is undefined '
+            f'and its propagated variance would explode.'
+        )
+
+
+def _arctan2_bounds(y_interval: Interval, x_interval: Interval) -> tuple[float, float]:
+    """
+    Bounds of arctan2(y, x) over the box ``y_interval x x_interval``.
+
+    The angle is a harmonic function, so away from the branch cut its extremes sit on the
+    corners of the box. If the box touches the cut (``y = 0`` with ``x < 0``) the angle
+    jumps between -pi and pi and the range is the full ``[-pi, pi]``.
+    """
+    (y_lo, y_hi), (x_lo, x_hi) = y_interval, x_interval
+    if y_lo < 0.0 <= y_hi and x_lo < 0.0:
+        if all(np.isfinite([y_lo, y_hi, x_lo, x_hi])):
+            warnings.warn(
+                'The bounds of the arguments touch the arctan2 branch cut (y = 0, x < 0), where '
+                'the angle jumps between -pi and pi. Gradient-based minimisers behave badly '
+                'across such a jump.',
+                UserWarning,
+                stacklevel=4,
+            )
+        return -np.pi, np.pi
+    corners = [np.arctan2(y, x) for y in (y_lo, y_hi) for x in (x_lo, x_hi)]
+    return float(min(corners)), float(max(corners))
+
+
+# ==========================================
+# Jacobians (for variance Scipp cannot propagate)
+# ==========================================
+
+
+# NumPy scalars (not Python floats) are passed in: 0/0 then gives nan under ``np.errstate``
+# and is caught by the finiteness check, instead of raising ``ZeroDivisionError``.
+
+
+def _arctan2_jacobian(y: np.float64, x: np.float64) -> tuple[np.float64, np.float64]:
+    r2 = x**2 + y**2
+    return x / r2, -y / r2
+
+
+def _erf_jacobian(x: np.float64) -> tuple[np.float64]:
+    return (2.0 / np.sqrt(np.pi) * np.exp(-(x**2)),)
+
+
+def _erfc_jacobian(x: np.float64) -> tuple[np.float64]:
+    return (-2.0 / np.sqrt(np.pi) * np.exp(-(x**2)),)
+
+
+# ==========================================
+# The specifications
+# ==========================================
+
+_POSITIVE = _Domain(lo=0.0, open_lo=True)
+_NON_NEGATIVE = _Domain(lo=0.0)
+_AT_LEAST_ONE = _Domain(lo=1.0)
+_CLOSED_UNIT_INTERVAL = _Domain(lo=-1.0, hi=1.0)
+_OPEN_UNIT_INTERVAL = _Domain(lo=-1.0, hi=1.0, open_lo=True, open_hi=True)
+
+_EXP = _MathOp('exp', sc.exp, _monotonic(np.exp))
+_LOG = _MathOp('log', sc.log, _monotonic(np.log), domain=_POSITIVE)
+_LOG10 = _MathOp('log10', sc.log10, _monotonic(np.log10), domain=_POSITIVE)
+_SQRT = _MathOp('sqrt', sc.sqrt, _monotonic(np.sqrt), domain=_NON_NEGATIVE)
+_ERF = _MathOp('erf', sc.erf, _monotonic(math.erf), jacobian=_erf_jacobian)
+_ERFC = _MathOp('erfc', sc.erfc, _monotonic(math.erfc), jacobian=_erfc_jacobian)
+
+_SIN = _MathOp('sin', sc.sin, _extrema(np.sin, _sin_critical_points), native_unit='rad')
+_COS = _MathOp('cos', sc.cos, _extrema(np.cos, _cos_critical_points), native_unit='rad')
+_TAN = _MathOp('tan', sc.tan, _tan_bounds, native_unit='rad', guard=_tan_guard)
+_ARCSIN = _MathOp('arcsin', sc.asin, _monotonic(np.arcsin), domain=_CLOSED_UNIT_INTERVAL)
+_ARCCOS = _MathOp('arccos', sc.acos, _monotonic(np.arccos), domain=_CLOSED_UNIT_INTERVAL)
+_ARCTAN = _MathOp('arctan', sc.atan, _monotonic(np.arctan))
+_ARCTAN2 = _MathOp(
+    'arctan2',
+    sc.atan2,
+    _arctan2_bounds,
+    arg_names=('y', 'x'),
+    jacobian=_arctan2_jacobian,
+    guard=_arctan2_guard,
+)
+_SINC = _MathOp('sinc', sc.sinc, _extrema(_unnormalized_sinc, _sinc_critical_points))
+
+_SINH = _MathOp('sinh', sc.sinh, _monotonic(np.sinh))
+_COSH = _MathOp('cosh', sc.cosh, _extrema(np.cosh, _cosh_critical_points))
+_TANH = _MathOp('tanh', sc.tanh, _monotonic(np.tanh))
+_ARCSINH = _MathOp('arcsinh', sc.asinh, _monotonic(np.arcsinh))
+_ARCCOSH = _MathOp('arccosh', sc.acosh, _monotonic(np.arccosh), domain=_AT_LEAST_ONE)
+_ARCTANH = _MathOp('arctanh', sc.atanh, _monotonic(np.arctanh), domain=_OPEN_UNIT_INTERVAL)
