@@ -168,7 +168,7 @@ class TestValueAndVariance:
         result = fn(name)(x)
 
         # EXPECT
-        assert not result.variance
+        assert result.variance is None
 
     @pytest.mark.parametrize('name', UNARY_FUNCTIONS)
     def test_inputs_are_not_modified(self, name):
@@ -308,7 +308,7 @@ class TestBounds:
         assert result.value == pytest.approx(np.sqrt(0.5))
         assert_bounds(result, 0.0, 1.0)
 
-    def test_cos_with_degrees(self):
+    def test_cos_bounds_are_computed_in_radians_for_degree_input(self):
         # WHEN
         angle = make(30.0, 'deg', min=0.0, max=90.0)
 
@@ -348,6 +348,37 @@ class TestBounds:
 
         # EXPECT
         assert_bounds(result, SINC_GLOBAL_MIN, 1.0)
+
+    def test_sinc_negative_one_sided_infinite_bounds(self):
+        # WHEN
+        x = make(-150.0, 'rad', max=-100.0)
+
+        # THEN
+        result = es_math.sinc(x)
+
+        # EXPECT
+        true_min, true_max = dense_range(unnormalized_sinc, -1000.0, -100.0)
+        assert result.min <= true_min + 1e-12
+        assert result.max >= true_max - 1e-12
+        assert abs(result.min) < 0.01
+        assert 0 < result.max < 0.01
+
+    @pytest.mark.parametrize(
+        ('value', 'lo', 'hi'),
+        [(2e20, 1e20, INF), (-2e20, -INF, -1e20), (3e20, 1e20, 5e20)],
+    )
+    def test_sinc_with_huge_bounds_does_not_raise(self, value, lo, hi):
+        # WHEN
+        # Regression: int(floor(lo / pi)) overflowed numpy's integer range for lo >~ 5.8e19.
+        x = make(value, 'rad', min=lo, max=hi)
+
+        # THEN
+        result = es_math.sinc(x)
+
+        # EXPECT
+        # The lobes are below 1e-19 out here, so the bounds are essentially [0, 0].
+        assert abs(result.min) < 1e-19
+        assert abs(result.max) < 1e-19
 
     def test_sinc_one_sided_infinite_bounds(self):
         # WHEN
@@ -394,7 +425,7 @@ class TestValueGuard:
         x = make(value, unit)
 
         # EXPECT
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match='outside the domain'):
             fn(name)(x)
 
     @pytest.mark.parametrize('name', ['exp', 'sinh', 'cosh'])
@@ -403,7 +434,19 @@ class TestValueGuard:
         x = make(1000.0)
 
         # EXPECT
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match='not finite'):
+            fn(name)(x)
+
+    @pytest.mark.parametrize('name', ['exp', 'sinh', 'cosh'])
+    def test_overflowing_variance_raises_although_the_value_is_finite(self, name):
+        # WHEN THEN
+        # The value is finite at x=400, but the variance scales with exp(2x) and overflows.
+        x = make(400.0, variance=1.0)
+        with np.errstate(all='ignore'):
+            assert np.isfinite(getattr(np, name)(400.0))
+
+        # EXPECT
+        with pytest.raises(ValueError, match='not finite'):
             fn(name)(x)
 
     @pytest.mark.parametrize('name', ['sqrt', 'arcsin', 'arccos', 'arccosh'])
@@ -415,7 +458,7 @@ class TestValueGuard:
         x = make(edge, variance=0.01)
 
         # EXPECT
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match='not finite'):
             fn(name)(x)
 
     @pytest.mark.parametrize(
@@ -594,7 +637,7 @@ class TestTan:
         angle = make(value, unit)
 
         # EXPECT
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match='asymptote'):
             es_math.tan(angle)
 
     def test_value_within_one_sigma_of_asymptote_raises(self):
@@ -602,7 +645,7 @@ class TestTan:
         angle = make(np.pi / 2 - 1e-6, 'rad', variance=1e-4)
 
         # EXPECT
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match='asymptote'):
             es_math.tan(angle)
 
     def test_value_within_one_sigma_of_asymptote_in_degrees_raises(self):
@@ -610,7 +653,68 @@ class TestTan:
         angle = make(89.9, 'deg', variance=1.0)
 
         # EXPECT
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match='asymptote'):
+            es_math.tan(angle)
+
+    @pytest.mark.parametrize('value', [np.pi / 2 - 5e-8, np.pi / 2 + 5e-8])
+    def test_value_inside_the_numerical_floor_raises(self, value):
+        # WHEN THEN
+        # With no variance the margin is the 1e-7 rad floor.
+        angle = make(value, 'rad')
+
+        # EXPECT
+        with pytest.raises(ValueError, match='asymptote'):
+            es_math.tan(angle)
+
+    @pytest.mark.parametrize('value', [np.pi / 2 - 2e-7, np.pi / 2 + 2e-7])
+    def test_value_just_outside_the_numerical_floor_is_allowed(self, value):
+        # WHEN
+        angle = make(value, 'rad')
+
+        # THEN
+        result = es_math.tan(angle)
+
+        # EXPECT
+        assert np.isfinite(result.value)
+
+    def test_value_within_one_sigma_of_asymptote_raises_when_sigma_exceeds_the_floor(self):
+        # WHEN THEN
+        # variance=1e-4 -> sigma = 0.01 rad, far above the 1e-7 rad floor; 0.009 rad away.
+        angle = make(np.pi / 2 - 0.009, 'rad', variance=1e-4)
+
+        # EXPECT
+        with pytest.raises(ValueError, match='asymptote'):
+            es_math.tan(angle)
+
+    def test_value_just_beyond_one_sigma_of_asymptote_is_allowed(self):
+        # WHEN
+        # sigma = 0.01 rad; the asymptote is 0.011 rad away.
+        angle = make(np.pi / 2 - 0.011, 'rad', variance=1e-4)
+
+        # THEN
+        result = es_math.tan(angle)
+
+        # EXPECT
+        assert np.isfinite(result.variance)
+
+    @pytest.mark.parametrize(
+        ('value', 'unit'), [(3 * np.pi / 2, 'rad'), (270.0, 'deg'), (-3 * np.pi / 2, 'rad')]
+    )
+    def test_asymptotes_other_than_plus_minus_pi_over_two_raise(self, value, unit):
+        # WHEN THEN
+        angle = make(value, unit)
+
+        # EXPECT
+        with pytest.raises(ValueError, match='asymptote'):
+            es_math.tan(angle)
+
+    @pytest.mark.parametrize('variance', [0.0, None])
+    def test_missing_variance_is_guarded_like_zero_variance(self, variance):
+        # WHEN THEN
+        angle = make(np.pi / 2, 'rad', variance=variance)
+
+        # EXPECT
+        with pytest.raises(ValueError, match='asymptote'):
             es_math.tan(angle)
 
     def test_value_far_from_asymptote_in_sigma_is_allowed(self):
@@ -640,7 +744,7 @@ class TestTan:
 
 
 class TestArctan2:
-    def test_value_and_unit(self):
+    def test_value_is_the_angle_in_radians_and_unit_is_rad(self):
         # WHEN
         y = make(1.0, 'm', name='y')
         x = make(2.0, 'm', name='x')
@@ -653,7 +757,7 @@ class TestArctan2:
         assert result.unit == 'rad'
 
     @pytest.mark.parametrize(('y', 'x'), [(1.0, 2.0), (1.0, -2.0), (-1.0, -2.0), (-1.0, 2.0)])
-    def test_correct_quadrant(self, y, x):
+    def test_value_is_in_the_correct_quadrant(self, y, x):
         # WHEN
         y_param = make(y)
         x_param = make(x)
@@ -697,7 +801,7 @@ class TestArctan2:
         result = es_math.arctan2(y, x)
 
         # EXPECT
-        assert not result.variance
+        assert result.variance is None
 
     def test_variance_at_origin_raises(self):
         # WHEN THEN
@@ -705,8 +809,73 @@ class TestArctan2:
         x = make(0.0, variance=0.01)
 
         # EXPECT
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match='origin'):
             es_math.arctan2(y, x)
+
+    @pytest.mark.parametrize('var_y', [0.0, None])
+    @pytest.mark.parametrize('var_x', [0.0, None])
+    def test_zero_and_missing_variance_are_equivalent(self, var_y, var_x):
+        # WHEN
+        y = make(1.0, variance=var_y)
+        x = make(2.0, variance=var_x)
+
+        # THEN
+        result = es_math.arctan2(y, x)
+
+        # EXPECT
+        assert result.variance is None
+
+    def test_variance_with_only_x_uncertain(self):
+        # WHEN
+        y = make(1.0)
+        x = make(2.0, variance=0.09)
+
+        # THEN
+        result = es_math.arctan2(y, x)
+
+        # EXPECT
+        assert result.variance == pytest.approx(1.0**2 * 0.09 / (4.0 + 1.0) ** 2, rel=1e-12)
+
+    def test_variance_with_one_argument_none_and_the_other_uncertain(self):
+        # WHEN
+        y = make(1.0, variance=None)
+        x = make(2.0, variance=0.09)
+
+        # THEN
+        result = es_math.arctan2(y, x)
+
+        # EXPECT
+        assert result.variance == pytest.approx(0.09 / 25.0, rel=1e-12)
+
+    def test_only_x_uncertain_and_close_to_origin_raises(self):
+        # WHEN THEN
+        y = make(0.0)
+        x = make(0.01, variance=0.01)
+
+        # EXPECT
+        with pytest.raises(ValueError, match='origin'):
+            es_math.arctan2(y, x)
+
+    def test_point_exactly_one_sigma_from_origin_raises(self):
+        # WHEN THEN
+        # sigma = sqrt(0.25) = 0.5 exactly, and the point is exactly 0.5 from the origin.
+        y = make(0.0)
+        x = make(0.5, variance=0.25)
+
+        # EXPECT
+        with pytest.raises(ValueError, match='origin'):
+            es_math.arctan2(y, x)
+
+    def test_point_just_outside_one_sigma_from_origin_is_allowed(self):
+        # WHEN
+        y = make(0.0)
+        x = make(0.5 + 1e-6, variance=0.25)
+
+        # THEN
+        result = es_math.arctan2(y, x)
+
+        # EXPECT
+        assert np.isfinite(result.variance)
 
     def test_origin_without_variance_is_allowed(self):
         # WHEN
@@ -800,6 +969,20 @@ class TestArctan2:
 
         # THEN
         with pytest.warns(UserWarning):
+            result = es_math.arctan2(y, x)
+
+        # EXPECT
+        assert_bounds(result, -np.pi, np.pi)
+
+    def test_one_sided_infinite_bounds_span_full_range_without_warning(self):
+        # WHEN
+        # y crosses 0 while x extends to -inf: the warning is only for fully finite bounds.
+        y = make(0.3, min=-1.0, max=1.0)
+        x = make(-2.0, min=-INF, max=-1.0)
+
+        # THEN
+        with warnings.catch_warnings():
+            warnings.simplefilter('error')
             result = es_math.arctan2(y, x)
 
         # EXPECT
@@ -1014,6 +1197,10 @@ RANDOM_RANGES = {
 }
 
 
+# Array-capable references where VALUE_CASES holds a scalar-only one (math.erf).
+ARRAY_REFERENCE = {'erf': _erf, 'erfc': _erfc}
+
+
 class TestInvariants:
     @pytest.mark.parametrize('name', UNARY_FUNCTIONS)
     def test_value_lies_within_result_bounds_and_bounds_are_not_nan(self, name):
@@ -1034,6 +1221,31 @@ class TestInvariants:
             # EXPECT
             assert not np.isnan(result.min) and not np.isnan(result.max)
             assert result.min <= result.value <= result.max
+
+    @pytest.mark.parametrize('name', UNARY_FUNCTIONS)
+    def test_random_bounds_match_brute_force_range(self, name):
+        # WHEN
+        # Unlike the invariant above (which _apply enforces by widening the bounds), this
+        # compares against an independent dense evaluation, so a wrong strategy is caught.
+        (low, high), unit = RANDOM_RANGES[name]
+        reference = ARRAY_REFERENCE.get(name, VALUE_CASES[name][0])
+        rng = np.random.default_rng(seed=2024)
+        for _ in range(25):
+            value = rng.uniform(low, high)
+            lo, hi = rng.uniform(low, value), rng.uniform(value, high)
+            if hi - lo < 0.05:
+                continue
+            x = make(value, unit, min=lo, max=hi)
+
+            # THEN
+            result = fn(name)(x)
+
+            # EXPECT
+            true_min, true_max = dense_range(reference, lo, hi, n=20_001)
+            assert result.min <= true_min + 1e-9
+            assert result.max >= true_max - 1e-9
+            assert result.min >= true_min - 1e-3
+            assert result.max <= true_max + 1e-3
 
     def test_arctan2_value_lies_within_result_bounds(self):
         # WHEN
@@ -1091,3 +1303,55 @@ class TestPublicApi:
         assert all_are_strings
         for name in ALL_FUNCTIONS:
             assert name in exported_names
+
+
+# ----------------------------------------------------------------------
+# Known bug (deferred): collapsed result bounds
+# ----------------------------------------------------------------------
+
+COLLAPSED_BOUNDS_CASES = [
+    # (function, value, unit, min, max, why the result bounds collapse)
+    ('erf', 15.0, '', 10.0, 20.0, 'erf(10) == erf(20) == 1.0'),
+    ('erf', 5.5, '', 5.0, 6.0, 'erf(5) and erf(6) differ by 1.5e-12 (< rtol 1e-9)'),
+    ('tanh', 20.0, '', 15.0, 25.0, 'tanh saturates at 1.0'),
+    ('exp', -900.0, '', -1000.0, -800.0, 'both bounds underflow to 0.0'),
+    ('erfc', 35.0, '', 30.0, 40.0, 'both bounds underflow to 0.0'),
+    ('cos', 0.0, 'rad', -1e-5, 1e-5, 'cos is quadratic at its maximum: [1 - 5e-11, 1]'),
+    ('cosh', 0.0, '', -1e-5, 1e-5, 'cosh is quadratic at its minimum: [1, 1 + 5e-11]'),
+    ('sin', np.pi / 2, 'rad', np.pi / 2 - 1e-5, np.pi / 2 + 1e-5, 'quadratic at the maximum'),
+    ('arctan', 1e11, '', 1e10, 1e12, 'arctan saturates at pi/2'),
+]
+
+
+class TestCollapsedBoundsKnownBug:
+    """
+    ``Parameter`` rejects ``min`` and ``max`` that are equal or within ``rtol=1e-9``
+    ('The min and max bounds cannot be identical'). Valid inputs whose function saturates,
+    underflows or is quadratic at an extremum therefore make the maths functions raise,
+    which contradicts 'bounds never raise'.
+
+    Deferred on purpose: the right fix (pad the bounds, use the natural range, or something
+    else) needs manual inspection, see ``tests/manual/collapsed_bounds.ipynb``.
+    ``strict=True``: once the bug is fixed these tests XPASS and fail, which is the signal
+    to delete the ``xfail`` marker.
+    """
+
+    @pytest.mark.xfail(
+        strict=True,
+        raises=ValueError,
+        reason='Known bug: collapsed result bounds are rejected by Parameter (deferred).',
+    )
+    @pytest.mark.parametrize(
+        ('name', 'value', 'unit', 'lo', 'hi', 'why'),
+        COLLAPSED_BOUNDS_CASES,
+        ids=[f'{case[0]}[{case[3]:g},{case[4]:g}]' for case in COLLAPSED_BOUNDS_CASES],
+    )
+    def test_collapsed_bounds_do_not_raise(self, name, value, unit, lo, hi, why):
+        # WHEN
+        x = make(value, unit, min=lo, max=hi)
+
+        # THEN
+        result = fn(name)(x)
+
+        # EXPECT
+        assert result.min <= result.value <= result.max

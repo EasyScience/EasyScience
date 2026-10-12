@@ -30,7 +30,7 @@ import math
 import warnings
 from collections.abc import Callable
 from dataclasses import dataclass
-from functools import lru_cache
+from functools import cache
 
 import numpy as np
 import scipp as sc
@@ -38,9 +38,27 @@ import scipp as sc
 from easyscience.variable.parameter import Parameter
 
 # A closed interval ``(lo, hi)`` of an argument, in the unit the bounds strategy works in.
-Interval = tuple[float, float]
+_Interval = tuple[float, float]
 # A bounds strategy maps one interval per argument to the ``(min, max)`` of the result.
-BoundsStrategy = Callable[..., tuple[float, float]]
+_BoundsStrategy = Callable[..., tuple[float, float]]
+
+_HALF_PI = np.pi / 2
+_TWO_PI = 2 * np.pi
+
+# tan: a value closer than this (in rad) to an asymptote is rejected whatever its variance;
+# a larger standard deviation widens the margin.
+_TAN_ASYMPTOTE_TOLERANCE = 1e-7
+
+# sinc: the extrema are the roots of tan(x) = x. Two consecutive roots hold the largest
+# maximum and the deepest minimum of an interval and a root just below ``lo`` may be
+# filtered out, so four roots (one more than the three strictly needed) are refined.
+_SINC_ROOT_COUNT = 4
+# Newton's method converges quadratically from the asymptotic first guess; 8 steps is far
+# more than the ~4 needed to reach machine precision.
+_SINC_NEWTON_STEPS = 8
+# Beyond this the lobes of sinc are below 1e-15 (they fall off like 1/x), and the lobe index
+# would no longer fit numpy's integer range; the endpoints give the bounds to that precision.
+_SINC_NEGLIGIBLE_LOBES_FROM = 1e15
 
 
 # ==========================================
@@ -69,7 +87,9 @@ def exp(x: Parameter) -> Parameter:
     UnitError
         If ``x`` is not dimensionless.
     ValueError
-        If the result overflows (``x`` greater than about 709.78).
+        If the result overflows (``x`` greater than about 709.78) or, when ``x``
+        has a variance, if the propagated variance overflows. The variance scales
+        with ``exp(2x)``, so that happens from about 355 for a unit variance.
 
     Examples
     --------
@@ -89,7 +109,7 @@ def exp(x: Parameter) -> Parameter:
     >>> result = exp(x)
     >>> print(f'{result.value:.4f}, variance {result.variance:.4f}')
     1.0000, variance 0.0100
-    """
+    """  # noqa: DOC502 -- raised in _apply
     return _apply(_EXP, x)
 
 
@@ -139,7 +159,7 @@ def log(x: Parameter) -> Parameter:
     >>> result = log(x)
     >>> print(f'bounds [{result.min:.4f}, {result.max:.4f}]')
     bounds [-inf, 1.6094]
-    """
+    """  # noqa: DOC502 -- raised in _apply
     return _apply(_LOG, x)
 
 
@@ -189,7 +209,7 @@ def log10(x: Parameter) -> Parameter:
     >>> result = log10(x)
     >>> print(f'bounds [{result.min:.4f}, {result.max:.4f}]')
     bounds [-inf, 2.0000]
-    """
+    """  # noqa: DOC502 -- raised in _apply
     return _apply(_LOG10, x)
 
 
@@ -242,7 +262,7 @@ def sqrt(x: Parameter) -> Parameter:
     >>> result = sqrt(area)
     >>> print(result.value, result.unit)
     3.0 m
-    """
+    """  # noqa: DOC502 -- raised in _apply
     return _apply(_SQRT, x)
 
 
@@ -290,7 +310,7 @@ def erf(x: Parameter) -> Parameter:
     >>> result = erf(x)
     >>> print(f'{result.value:.4f}, variance {result.variance:.4f}')
     0.0000, variance 0.0127
-    """
+    """  # noqa: DOC502 -- raised in _apply
     return _apply(_ERF, x)
 
 
@@ -339,7 +359,7 @@ def erfc(x: Parameter) -> Parameter:
     >>> result = erfc(x)
     >>> print(f'{result.value:.4f}, variance {result.variance:.4f}')
     1.0000, variance 0.0127
-    """
+    """  # noqa: DOC502 -- raised in _apply
     return _apply(_ERFC, x)
 
 
@@ -394,7 +414,7 @@ def sin(x: Parameter) -> Parameter:
     >>> result = sin(angle)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     0.5000 in [0.0000, 1.0000]
-    """
+    """  # noqa: DOC502 -- raised in _apply
     return _apply(_SIN, x)
 
 
@@ -446,7 +466,7 @@ def cos(x: Parameter) -> Parameter:
     >>> result = cos(angle)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     0.5000 in [-1.0000, 1.0000]
-    """
+    """  # noqa: DOC502 -- raised in _apply
     return _apply(_COS, x)
 
 
@@ -502,7 +522,7 @@ def tan(x: Parameter) -> Parameter:
     >>> result = tan(angle)
     >>> print(f'bounds [{result.min:.4f}, {result.max:.4f}]')
     bounds [-inf, inf]
-    """
+    """  # noqa: DOC502 -- raised in _apply
     return _apply(_TAN, x)
 
 
@@ -555,7 +575,7 @@ def arcsin(x: Parameter) -> Parameter:
     ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
     ... )
     30.0000 deg in [0.0000, 90.0000]
-    """
+    """  # noqa: DOC502 -- raised in _apply
     return _apply(_ARCSIN, x)
 
 
@@ -611,7 +631,7 @@ def arccos(x: Parameter) -> Parameter:
     ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
     ... )
     60.0000 deg in [0.0000, 90.0000]
-    """
+    """  # noqa: DOC502 -- raised in _apply
     return _apply(_ARCCOS, x)
 
 
@@ -659,7 +679,7 @@ def arctan(x: Parameter) -> Parameter:
     ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
     ... )
     45.0000 deg in [0.0000, 84.2894]
-    """
+    """  # noqa: DOC502 -- raised in _apply
     return _apply(_ARCTAN, x)
 
 
@@ -686,9 +706,14 @@ def arctan2(y: Parameter, x: Parameter) -> Parameter:
     UnitError
         If ``y`` and ``x`` have different units.
     ValueError
-        If an argument has a variance and the point ``(x, y)`` lies within one standard
-        deviation of the origin, where the angle is undefined, or if the result is not
-        finite.
+        If an argument has a variance and the point ``(x, y)`` lies within the larger of
+        the two standard deviations of the origin, where the angle is undefined, or if
+        the result is not finite.
+
+    Warns
+    -----
+    UserWarning
+        If all four bounds are finite and the box they span touches the branch cut.
 
     Notes
     -----
@@ -726,7 +751,7 @@ def arctan2(y: Parameter, x: Parameter) -> Parameter:
     ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
     ... )
     45.0000 deg in [9.4623, 63.4349]
-    """
+    """  # noqa: DOC502 -- raised in _apply
     return _apply(_ARCTAN2, y, x)
 
 
@@ -781,7 +806,7 @@ def sinc(x: Parameter) -> Parameter:
     >>> result = sinc(angle)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     0.6366 in [-0.2172, 1.0000]
-    """
+    """  # noqa: DOC502 -- raised in _apply
     return _apply(_SINC, x)
 
 
@@ -811,7 +836,9 @@ def sinh(x: Parameter) -> Parameter:
     UnitError
         If ``x`` is not dimensionless.
     ValueError
-        If the result overflows (``|x|`` greater than about 710).
+        If the result overflows (``|x|`` greater than about 710) or, when ``x``
+        has a variance, if the propagated variance overflows (from ``|x|`` of
+        about 355 for a unit variance).
 
     Examples
     --------
@@ -831,7 +858,7 @@ def sinh(x: Parameter) -> Parameter:
     >>> result = sinh(x)
     >>> print(f'{result.value:.4f}, variance {result.variance:.4f}')
     0.0000, variance 0.0100
-    """
+    """  # noqa: DOC502 -- raised in _apply
     return _apply(_SINH, x)
 
 
@@ -856,7 +883,9 @@ def cosh(x: Parameter) -> Parameter:
     UnitError
         If ``x`` is not dimensionless.
     ValueError
-        If the result overflows (``|x|`` greater than about 710).
+        If the result overflows (``|x|`` greater than about 710) or, when ``x``
+        has a variance, if the propagated variance overflows (from ``|x|`` of
+        about 355 for a unit variance).
 
     Notes
     -----
@@ -880,7 +909,7 @@ def cosh(x: Parameter) -> Parameter:
     >>> result = cosh(x)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     1.5431 in [1.1276, 3.7622]
-    """
+    """  # noqa: DOC502 -- raised in _apply
     return _apply(_COSH, x)
 
 
@@ -923,7 +952,7 @@ def tanh(x: Parameter) -> Parameter:
     >>> result = tanh(x)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     0.4621 in [-1.0000, 1.0000]
-    """
+    """  # noqa: DOC502 -- raised in _apply
     return _apply(_TANH, x)
 
 
@@ -966,7 +995,7 @@ def arcsinh(x: Parameter) -> Parameter:
     >>> result = arcsinh(x)
     >>> print(f'{result.value:.4f}, variance {result.variance:.4f}')
     0.0000, variance 0.0100
-    """
+    """  # noqa: DOC502 -- raised in _apply
     return _apply(_ARCSINH, x)
 
 
@@ -1016,7 +1045,7 @@ def arccosh(x: Parameter) -> Parameter:
     >>> result = arccosh(x)
     >>> print(f'bounds [{result.min:.4f}, {result.max:.4f}]')
     bounds [0.0000, 2.9932]
-    """
+    """  # noqa: DOC502 -- raised in _apply
     return _apply(_ARCCOSH, x)
 
 
@@ -1065,7 +1094,7 @@ def arctanh(x: Parameter) -> Parameter:
     >>> result = arctanh(x)
     >>> print(f'bounds [{result.min:.4f}, {result.max:.4f}]')
     bounds [-inf, inf]
-    """
+    """  # noqa: DOC502 -- raised in _apply
     return _apply(_ARCTANH, x)
 
 
@@ -1088,7 +1117,7 @@ class _Domain:
         below = value < self.hi if self.open_hi else value <= self.hi
         return above and below
 
-    def clip(self, lo: float, hi: float) -> Interval:
+    def clip(self, lo: float, hi: float) -> _Interval:
         """Restrict ``[lo, hi]`` to the domain (open ends clip to the edge: the limit)."""
         return max(lo, self.lo), min(hi, self.hi)
 
@@ -1109,30 +1138,27 @@ class _MathOp:
         Name used in error messages and in the name of the resulting ``Parameter``.
     sc_func : Callable
         The Scipp function (it validates units and propagates variance, if it can).
-    bounds : BoundsStrategy
+    bounds : _BoundsStrategy
         Maps one ``(lo, hi)`` interval per argument to the ``(min, max)`` of the result.
-    domain : _Domain
+    domain : _Domain, default=_Domain()
         Accepted argument values. Applies to every argument.
-    native_unit : str or None
+    native_unit : str | None, default=None
         If set, bounds are converted to this unit before ``bounds`` runs
         (``'rad'`` for the trigonometric functions, whose numpy versions assume radians).
-    arg_names : tuple of str or None
-        If set, Scipp's function takes these keyword-only arguments (``atan2(y=, x=)``).
-    jacobian : Callable or None
+    jacobian : Callable | None, default=None
         Partial derivatives of the function, ``jacobian(*values) -> (df/dx1, df/dx2, ...)``.
         Set it for functions whose variance Scipp cannot propagate; EasyScience then
         applies the delta method itself.
-    guard : Callable or None
+    guard : Callable[..., None] | None, default=None
         Extra check of the arguments' values, ``guard(*params)``, raising ``ValueError``
         where the delta method breaks down (tan asymptotes, the arctan2 origin).
     """
 
     name: str
     sc_func: Callable
-    bounds: BoundsStrategy
+    bounds: _BoundsStrategy
     domain: _Domain = _Domain()
     native_unit: str | None = None
-    arg_names: tuple[str, ...] | None = None
     jacobian: Callable | None = None
     guard: Callable[..., None] | None = None
 
@@ -1145,6 +1171,9 @@ class _MathOp:
 def _apply(op: _MathOp, *params: Parameter) -> Parameter:
     """
     Evaluate ``op`` on ``params``: validate, call Scipp, derive bounds, repack.
+
+    Scipp validates the units, so a wrong unit raises its ``UnitError`` before any of
+    the checks below.
 
     Parameters
     ----------
@@ -1162,8 +1191,6 @@ def _apply(op: _MathOp, *params: Parameter) -> Parameter:
     ------
     NotImplementedError
         If an argument is not a ``Parameter``.
-    UnitError
-        Raised by Scipp if a unit is not valid for the function.
     ValueError
         If an argument's value is outside the domain, or the result is not finite.
     """
@@ -1177,10 +1204,7 @@ def _apply(op: _MathOp, *params: Parameter) -> Parameter:
     # 1. Scipp first: it owns the unit rules, so a unit error is reported before anything else.
     manual_variance = op.jacobian is not None
     sc_args = [_to_scipp_scalar(param, strip_variance=manual_variance) for param in params]
-    if op.arg_names is None:
-        sc_result = op.sc_func(*sc_args)
-    else:
-        sc_result = op.sc_func(**dict(zip(op.arg_names, sc_args, strict=True)))
+    sc_result = op.sc_func(*sc_args)
 
     # 2. Values are validated strictly: a bad value would break a fit loop.
     for param in params:
@@ -1198,10 +1222,10 @@ def _apply(op: _MathOp, *params: Parameter) -> Parameter:
         if variance is not None:
             sc_result.variance = variance
 
-    arg_names = ', '.join(param.name for param in params)
+    label = ', '.join(param.name for param in params)
     if not _is_finite(sc_result.value) or not _is_finite(sc_result.variance):
         raise ValueError(
-            f'{op.name}({arg_names}) is not finite: value={sc_result.value}, '
+            f'{op.name}({label}) is not finite: value={sc_result.value}, '
             f'variance={sc_result.variance}. Check the value and variance of the argument(s).'
         )
 
@@ -1213,18 +1237,24 @@ def _apply(op: _MathOp, *params: Parameter) -> Parameter:
     new_min, new_max = min(new_min, sc_result.value), max(new_max, sc_result.value)
 
     return Parameter.from_scipp(
-        name=f'{op.name}({arg_names})',
+        name=f'{op.name}({label})',
         full_value=sc_result,
         min=new_min,
         max=new_max,
     )
 
 
+def _variance(param: Parameter) -> float:
+    """Variance of a parameter; a missing (``None``) or zero variance counts as 0.0."""
+    return float(param.variance) if param.variance else 0.0
+
+
 def _to_scipp_scalar(param: Parameter, strip_variance: bool = False) -> sc.Variable:
     """Convert a Parameter to a Scipp scalar; a zero or missing variance is dropped."""
     kwargs = {'value': float(param.value), 'unit': param.unit}
-    if not strip_variance and param.variance is not None and param.variance > 0:
-        kwargs['variance'] = float(param.variance)
+    variance = _variance(param)
+    if not strip_variance and variance > 0:
+        kwargs['variance'] = variance
     return sc.scalar(**kwargs)
 
 
@@ -1235,7 +1265,7 @@ def _delta_method_variance(op: _MathOp, params: tuple[Parameter, ...]) -> float 
     Only arguments that have a variance contribute (this avoids ``0 * inf``).
     Returns ``None`` if no argument has a variance.
     """
-    variances = [p.variance if p.variance is not None and p.variance > 0 else 0.0 for p in params]
+    variances = [_variance(p) for p in params]
     if not any(variances):
         return None
     with np.errstate(all='ignore'):
@@ -1248,24 +1278,19 @@ def _is_finite(value: float | None) -> bool:
     return value is None or bool(np.isfinite(value))
 
 
-@lru_cache(maxsize=None)
-def _native_factor(unit: str, native_unit: str) -> float:
-    """Factor converting ``unit`` to ``native_unit``, asked of Scipp once per unit pair."""
+@cache
+def _native_factor(unit: str, native_unit: str | None) -> float:
+    """Factor converting ``unit`` to ``native_unit`` (1.0 if none is needed), asked of Scipp once."""
+    if native_unit is None or unit == native_unit:
+        return 1.0
     return float(sc.scalar(1.0, unit=unit).to(unit=native_unit).value)
 
 
-def _to_native(x: float, unit: str, native_unit: str | None) -> float:
-    """Convert a number from ``unit`` to ``native_unit`` (unit rules stay in Scipp)."""
-    unit = str(unit)
-    if native_unit is None or unit == native_unit:
-        return x
-    return x * _native_factor(unit, native_unit)
-
-
-def _native_interval(op: _MathOp, param: Parameter) -> Interval:
+def _native_interval(op: _MathOp, param: Parameter) -> _Interval:
     """The parameter's bounds, clipped to the domain and in the unit the strategy expects."""
     lo, hi = op.domain.clip(float(param.min), float(param.max))
-    return _to_native(lo, param.unit, op.native_unit), _to_native(hi, param.unit, op.native_unit)
+    factor = _native_factor(str(param.unit), op.native_unit)
+    return lo * factor, hi * factor
 
 
 # ==========================================
@@ -1276,10 +1301,10 @@ def _native_interval(op: _MathOp, param: Parameter) -> Interval:
 # such as log(0) = -inf is returned instead of warning.
 
 
-def _monotonic(func: Callable) -> BoundsStrategy:
+def _monotonic(func: Callable) -> _BoundsStrategy:
     """Monotonic function (increasing or decreasing): the extremes sit at the endpoints."""
 
-    def bounds(interval: Interval) -> tuple[float, float]:
+    def bounds(interval: _Interval) -> tuple[float, float]:
         lo, hi = interval
         at_lo, at_hi = float(func(lo)), float(func(hi))
         return min(at_lo, at_hi), max(at_lo, at_hi)
@@ -1287,7 +1312,9 @@ def _monotonic(func: Callable) -> BoundsStrategy:
     return bounds
 
 
-def _extrema(func: Callable, critical_points: Callable[[float, float], np.ndarray]):
+def _extrema(
+    func: Callable, critical_points: Callable[[float, float], np.ndarray]
+) -> _BoundsStrategy:
     """
     Non-monotonic function: the extremes sit at the endpoints or at critical points.
 
@@ -1295,7 +1322,7 @@ def _extrema(func: Callable, critical_points: Callable[[float, float], np.ndarra
     may have a local extremum. ``nan`` candidates, such as ``sin(inf)``, are ignored.
     """
 
-    def bounds(interval: Interval) -> tuple[float, float]:
+    def bounds(interval: _Interval) -> tuple[float, float]:
         lo, hi = interval
         candidates = np.concatenate(([lo, hi], critical_points(lo, hi)))
         values = np.asarray(func(candidates), dtype=float)
@@ -1304,20 +1331,21 @@ def _extrema(func: Callable, critical_points: Callable[[float, float], np.ndarra
     return bounds
 
 
-def _sin_critical_points(lo: float, hi: float) -> np.ndarray:
-    """Maxima and minima of sin: pi/2 + n*pi."""
-    if not (np.isfinite(lo) and np.isfinite(hi)) or hi - lo >= 2 * np.pi:
-        return np.array([np.pi / 2, -np.pi / 2])  # a whole period: sin reaches +1 and -1
-    n = np.arange(np.ceil((lo - np.pi / 2) / np.pi), np.floor((hi - np.pi / 2) / np.pi) + 1)
-    return np.pi / 2 + n * np.pi
+def _periodic_critical_points(offset: float) -> Callable[[float, float], np.ndarray]:
+    """
+    Critical points ``offset + n*pi`` (n an integer) of sin (``pi/2``) or cos (``0``).
 
+    A whole period, or an infinite interval, holds a maximum and a minimum, so those two
+    are returned without enumerating.
+    """
 
-def _cos_critical_points(lo: float, hi: float) -> np.ndarray:
-    """Maxima and minima of cos: n*pi."""
-    if not (np.isfinite(lo) and np.isfinite(hi)) or hi - lo >= 2 * np.pi:
-        return np.array([0.0, np.pi])  # a whole period: cos reaches +1 and -1
-    n = np.arange(np.ceil(lo / np.pi), np.floor(hi / np.pi) + 1)
-    return n * np.pi
+    def points(lo: float, hi: float) -> np.ndarray:
+        if not (np.isfinite(lo) and np.isfinite(hi)) or hi - lo >= _TWO_PI:
+            return np.array([offset, offset + np.pi])
+        n = np.arange(np.ceil((lo - offset) / np.pi), np.floor((hi - offset) / np.pi) + 1)
+        return offset + n * np.pi
+
+    return points
 
 
 def _cosh_critical_points(lo: float, hi: float) -> np.ndarray:
@@ -1336,7 +1364,7 @@ def _unnormalized_sinc(x) -> np.ndarray:
         return np.where(np.isinf(x), 0.0, np.sinc(x / np.pi))
 
 
-def _sinc_positive_extrema(lo: float, hi: float, count: int = 4) -> np.ndarray:
+def _sinc_positive_extrema(lo: float, hi: float, count: int = _SINC_ROOT_COUNT) -> np.ndarray:
     """
     Stationary points of sinc on the positive axis inside ``[lo, hi]``, nearest to ``lo``.
 
@@ -1344,17 +1372,19 @@ def _sinc_positive_extrema(lo: float, hi: float, count: int = 4) -> np.ndarray:
     The heights of the lobes fall off like 1/x, so the largest maximum and the deepest
     minimum in the interval are among the first few roots at or after ``lo``.
 
+    Beyond ``_SINC_NEGLIGIBLE_LOBES_FROM`` the lobes are negligible and none are returned.
+
     All ``count`` roots are refined at once with Newton's method on
     ``g(x) = x cos(x) - sin(x)``, ``g'(x) = -x sin(x)``, with the vectorised update
     ``x <- x - g(x) / g'(x)`` (no Python loop over the roots).
     """
-    if hi <= 0.0:
+    if hi <= 0.0 or lo > _SINC_NEGLIGIBLE_LOBES_FROM:
         return np.array([])
     first = max(1, int(np.floor(max(lo, 0.0) / np.pi)))
     k = np.arange(first, first + count)
     x = (k + 0.5) * np.pi
     x = x - 1.0 / x  # asymptotic first guess for the root of tan(x) = x
-    for _ in range(8):
+    for _ in range(_SINC_NEWTON_STEPS):
         x = x - (x * np.cos(x) - np.sin(x)) / (-x * np.sin(x))
     return x[(x >= lo) & (x <= hi)]
 
@@ -1367,7 +1397,7 @@ def _sinc_critical_points(lo: float, hi: float) -> np.ndarray:
     return np.concatenate(points)
 
 
-def _tan_bounds(interval: Interval) -> tuple[float, float]:
+def _tan_bounds(interval: _Interval) -> tuple[float, float]:
     """
     Bounds of tan(x) for ``x`` in radians. tan is increasing between asymptotes
     (``pi/2 + n*pi``); an interval that spans an asymptote covers all real numbers.
@@ -1375,8 +1405,8 @@ def _tan_bounds(interval: Interval) -> tuple[float, float]:
     lo, hi = interval
     if not (np.isfinite(lo) and np.isfinite(hi)):
         return -np.inf, np.inf
-    branch_lo = np.floor((lo - np.pi / 2) / np.pi)
-    branch_hi = np.floor((hi - np.pi / 2) / np.pi)
+    branch_lo = np.floor((lo - _HALF_PI) / np.pi)
+    branch_hi = np.floor((hi - _HALF_PI) / np.pi)
     if branch_lo != branch_hi:
         return -np.inf, np.inf
     return float(np.tan(lo)), float(np.tan(hi))
@@ -1384,11 +1414,7 @@ def _tan_bounds(interval: Interval) -> tuple[float, float]:
 
 def _std(param: Parameter) -> float:
     """Standard deviation of a parameter; 0 if it has no variance."""
-    return (
-        float(np.sqrt(param.variance))
-        if param.variance is not None and param.variance > 0
-        else 0.0
-    )
+    return math.sqrt(_variance(param))
 
 
 def _tan_guard(param: Parameter) -> None:
@@ -1396,11 +1422,13 @@ def _tan_guard(param: Parameter) -> None:
     The value must keep clear of a tan asymptote, where the variance would explode.
 
     The delta method is only meaningful if the asymptote lies more than one standard
-    deviation away, so that distance (never less than 1e-7 rad) is the limit.
+    deviation away, so that distance (never less than ``_TAN_ASYMPTOTE_TOLERANCE``) is
+    the limit.
     """
-    value = _to_native(float(param.value), param.unit, 'rad')
-    margin = max(1e-7, _to_native(_std(param), param.unit, 'rad'))
-    distance = abs(value % np.pi - np.pi / 2)
+    factor = _native_factor(str(param.unit), 'rad')
+    value = float(param.value) * factor
+    margin = max(_TAN_ASYMPTOTE_TOLERANCE, _std(param) * factor)
+    distance = abs(value % np.pi - _HALF_PI)
     if distance <= margin:
         raise ValueError(
             f"The value of '{param.name}' ({param.value} {param.unit}) is within "
@@ -1425,7 +1453,7 @@ def _arctan2_guard(y: Parameter, x: Parameter) -> None:
         )
 
 
-def _arctan2_bounds(y_interval: Interval, x_interval: Interval) -> tuple[float, float]:
+def _arctan2_bounds(y_interval: _Interval, x_interval: _Interval) -> tuple[float, float]:
     """
     Bounds of arctan2(y, x) over the box ``y_interval x x_interval``.
 
@@ -1435,7 +1463,8 @@ def _arctan2_bounds(y_interval: Interval, x_interval: Interval) -> tuple[float, 
     """
     (y_lo, y_hi), (x_lo, x_hi) = y_interval, x_interval
     if y_lo < 0.0 <= y_hi and x_lo < 0.0:
-        if all(np.isfinite([y_lo, y_hi, x_lo, x_hi])):
+        if np.isfinite([y_lo, y_hi, x_lo, x_hi]).all():
+            # stacklevel=4: this function -> _apply -> arctan2 -> the user's call.
             warnings.warn(
                 'The bounds of the arguments touch the arctan2 branch cut (y = 0, x < 0), where '
                 'the angle jumps between -pi and pi. Gradient-based minimisers behave badly '
@@ -1487,17 +1516,18 @@ _SQRT = _MathOp('sqrt', sc.sqrt, _monotonic(np.sqrt), domain=_NON_NEGATIVE)
 _ERF = _MathOp('erf', sc.erf, _monotonic(math.erf), jacobian=_erf_jacobian)
 _ERFC = _MathOp('erfc', sc.erfc, _monotonic(math.erfc), jacobian=_erfc_jacobian)
 
-_SIN = _MathOp('sin', sc.sin, _extrema(np.sin, _sin_critical_points), native_unit='rad')
-_COS = _MathOp('cos', sc.cos, _extrema(np.cos, _cos_critical_points), native_unit='rad')
+_SIN = _MathOp(
+    'sin', sc.sin, _extrema(np.sin, _periodic_critical_points(_HALF_PI)), native_unit='rad'
+)
+_COS = _MathOp('cos', sc.cos, _extrema(np.cos, _periodic_critical_points(0.0)), native_unit='rad')
 _TAN = _MathOp('tan', sc.tan, _tan_bounds, native_unit='rad', guard=_tan_guard)
 _ARCSIN = _MathOp('arcsin', sc.asin, _monotonic(np.arcsin), domain=_CLOSED_UNIT_INTERVAL)
 _ARCCOS = _MathOp('arccos', sc.acos, _monotonic(np.arccos), domain=_CLOSED_UNIT_INTERVAL)
 _ARCTAN = _MathOp('arctan', sc.atan, _monotonic(np.arctan))
 _ARCTAN2 = _MathOp(
     'arctan2',
-    sc.atan2,
+    lambda y, x: sc.atan2(y=y, x=x),  # Scipp's atan2 takes keyword-only arguments
     _arctan2_bounds,
-    arg_names=('y', 'x'),
     jacobian=_arctan2_jacobian,
     guard=_arctan2_guard,
 )
