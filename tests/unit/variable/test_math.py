@@ -130,41 +130,74 @@ def clear():
 class TestValueAndVariance:
     @pytest.mark.parametrize('name', UNARY_FUNCTIONS)
     def test_value_matches_reference(self, name):
+        # WHEN
         reference, _, value, unit = VALUE_CASES[name]
-        result = fn(name)(make(value, unit))
+        x = make(value, unit)
+
+        # THEN
+        result = fn(name)(x)
+
+        # EXPECT
         assert isinstance(result, Parameter)
         assert result.value == pytest.approx(float(reference(value)), rel=1e-12)
 
     @pytest.mark.parametrize('name', UNARY_FUNCTIONS)
     def test_variance_matches_delta_method(self, name):
+        # WHEN
         # sigma_y^2 = f'(x)^2 * sigma_x^2. This also covers erf/erfc, for which
         # Scipp itself has no variance support and EasyScience must supply it.
         _, derivative, value, unit = VALUE_CASES[name]
         variance = 0.04
-        result = fn(name)(make(value, unit, variance=variance))
+        x = make(value, unit, variance=variance)
+
+        # THEN
+        result = fn(name)(x)
+
+        # EXPECT
         expected = float(derivative(value)) ** 2 * variance
         assert result.variance == pytest.approx(expected, rel=1e-9)
 
     @pytest.mark.parametrize('name', UNARY_FUNCTIONS)
     @pytest.mark.parametrize('variance', [0.0, None])
     def test_no_input_variance_gives_no_output_variance(self, name, variance):
+        # WHEN
         _, _, value, unit = VALUE_CASES[name]
-        result = fn(name)(make(value, unit, variance=variance))
+        x = make(value, unit, variance=variance)
+
+        # THEN
+        result = fn(name)(x)
+
+        # EXPECT
         assert not result.variance
 
     @pytest.mark.parametrize('name', UNARY_FUNCTIONS)
     def test_inputs_are_not_modified(self, name):
+        # WHEN
         _, _, value, unit = VALUE_CASES[name]
         x = make(value, unit, variance=0.04, min=value - 0.1, max=value + 0.1)
         before = (x.value, x.variance, x.min, x.max, x.unit)
+
+        # THEN
         fn(name)(x)
+
+        # EXPECT
         assert (x.value, x.variance, x.min, x.max, x.unit) == before
 
     def test_result_name_is_built_from_function_and_argument(self):
+        # WHEN
         angle = make(0.5, 'rad', name='angle')
-        assert es_math.sin(angle).name == 'sin(angle)'
-        assert es_math.sinc(angle).name == 'sinc(angle)'
-        assert es_math.arctan2(make(1.0, name='y'), make(2.0, name='x')).name == 'arctan2(y, x)'
+        y = make(1.0, name='y')
+        x = make(2.0, name='x')
+
+        # THEN
+        sin_result = es_math.sin(angle)
+        sinc_result = es_math.sinc(angle)
+        arctan2_result = es_math.arctan2(y, x)
+
+        # EXPECT
+        assert sin_result.name == 'sin(angle)'
+        assert sinc_result.name == 'sinc(angle)'
+        assert arctan2_result.name == 'arctan2(y, x)'
 
 
 # ----------------------------------------------------------------------
@@ -211,7 +244,13 @@ ORACLE_CASES = [
 class TestBounds:
     @pytest.mark.parametrize(('name', 'reference', 'lo', 'hi', 'value', 'unit'), ORACLE_CASES)
     def test_bounds_match_brute_force_range(self, name, reference, lo, hi, value, unit):
-        result = fn(name)(make(value, unit, min=lo, max=hi))
+        # WHEN
+        x = make(value, unit, min=lo, max=hi)
+
+        # THEN
+        result = fn(name)(x)
+
+        # EXPECT
         true_min, true_max = dense_range(reference, lo, hi)
         # Contains everything the dense sampling found (up to rounding) ...
         assert result.min <= true_min + 1e-12
@@ -247,35 +286,78 @@ class TestBounds:
     def test_default_infinite_bounds_are_accepted(
         self, name, value, unit, expected_min, expected_max
     ):
+        # WHEN
         # A freshly created Parameter has bounds (-inf, inf); that must just work.
-        result = fn(name)(make(value, unit))
+        x = make(value, unit)
+
+        # THEN
+        result = fn(name)(x)
+
+        # EXPECT
         assert_bounds(result, expected_min, expected_max)
 
     def test_sin_with_degrees_bounds_are_computed_in_radians(self):
+        # WHEN
         # Regression: numpy used to be fed 0..90 as if they were radians.
-        result = es_math.sin(make(45.0, 'deg', min=0.0, max=90.0))
+        angle = make(45.0, 'deg', min=0.0, max=90.0)
+
+        # THEN
+        result = es_math.sin(angle)
+
+        # EXPECT
         assert result.value == pytest.approx(np.sqrt(0.5))
         assert_bounds(result, 0.0, 1.0)
 
     def test_cos_with_degrees(self):
-        result = es_math.cos(make(30.0, 'deg', min=0.0, max=90.0))
+        # WHEN
+        angle = make(30.0, 'deg', min=0.0, max=90.0)
+
+        # THEN
+        result = es_math.cos(angle)
+
+        # EXPECT
         assert_bounds(result, 0.0, 1.0)
 
     def test_sin_with_degrees_and_infinite_bounds(self):
-        assert_bounds(es_math.sin(make(45.0, 'deg')), -1.0, 1.0)
+        # WHEN
+        angle = make(45.0, 'deg')
+
+        # THEN
+        result = es_math.sin(angle)
+
+        # EXPECT
+        assert_bounds(result, -1.0, 1.0)
 
     def test_inverse_trig_bounds_are_in_radians(self):
-        result = es_math.arcsin(make(0.5, min=0.0, max=1.0))
+        # WHEN
+        x = make(0.5, min=0.0, max=1.0)
+
+        # THEN
+        result = es_math.arcsin(x)
+
+        # EXPECT
         assert result.unit == 'rad'
         assert_bounds(result, 0.0, np.pi / 2)
 
     def test_sinc_global_minimum_is_found(self):
-        result = es_math.sinc(make(1.0, 'rad', min=-20.0, max=20.0))
+        # WHEN
+        x = make(1.0, 'rad', min=-20.0, max=20.0)
+
+        # THEN
+        result = es_math.sinc(x)
+
+        # EXPECT
         assert_bounds(result, SINC_GLOBAL_MIN, 1.0)
 
     def test_sinc_one_sided_infinite_bounds(self):
+        # WHEN
         # Lobes decay like 1/x; the extremes beyond x=100 are tiny but present.
-        result = es_math.sinc(make(150.0, 'rad', min=100.0))
+        x = make(150.0, 'rad', min=100.0)
+
+        # THEN
+        result = es_math.sinc(x)
+
+        # EXPECT
         true_min, true_max = dense_range(unnormalized_sinc, 100.0, 1000.0)
         assert result.min <= true_min + 1e-12
         assert result.max >= true_max - 1e-12
@@ -308,21 +390,33 @@ class TestValueGuard:
         ],
     )
     def test_value_outside_domain_raises(self, name, value, unit):
+        # WHEN THEN
+        x = make(value, unit)
+
+        # EXPECT
         with pytest.raises(ValueError):
-            fn(name)(make(value, unit))
+            fn(name)(x)
 
     @pytest.mark.parametrize('name', ['exp', 'sinh', 'cosh'])
     def test_overflowing_result_raises(self, name):
+        # WHEN THEN
+        x = make(1000.0)
+
+        # EXPECT
         with pytest.raises(ValueError):
-            fn(name)(make(1000.0))
+            fn(name)(x)
 
     @pytest.mark.parametrize('name', ['sqrt', 'arcsin', 'arccos', 'arccosh'])
     def test_infinite_variance_at_domain_edge_raises(self, name):
+        # WHEN THEN
         # d/dx is infinite at the edge, so a non-zero input variance gives a
         # non-finite output variance.
         edge = {'sqrt': 0.0, 'arcsin': 1.0, 'arccos': 1.0, 'arccosh': 1.0}[name]
+        x = make(edge, variance=0.01)
+
+        # EXPECT
         with pytest.raises(ValueError):
-            fn(name)(make(edge, variance=0.01))
+            fn(name)(x)
 
     @pytest.mark.parametrize(
         ('name', 'value', 'expected'),
@@ -336,12 +430,22 @@ class TestValueGuard:
         ],
     )
     def test_domain_edge_value_is_allowed_without_variance(self, name, value, expected):
-        result = fn(name)(make(value))
+        # WHEN
+        x = make(value)
+
+        # THEN
+        result = fn(name)(x)
+
+        # EXPECT
         assert result.value == pytest.approx(expected)
 
     def test_error_message_names_the_parameter(self):
+        # WHEN THEN
+        x = make(-1.0, name='my_param')
+
+        # EXPECT
         with pytest.raises(ValueError, match='my_param'):
-            es_math.log(make(-1.0, name='my_param'))
+            es_math.log(x)
 
 
 class TestPermissiveBounds:
@@ -354,36 +458,84 @@ class TestPermissiveBounds:
             yield
 
     def test_log_bounds_below_zero(self):
-        result = es_math.log(make(2.0, min=-1.0, max=5.0))
+        # WHEN
+        x = make(2.0, min=-1.0, max=5.0)
+
+        # THEN
+        result = es_math.log(x)
+
+        # EXPECT
         assert_bounds(result, -INF, np.log(5.0))
 
     def test_log10_bounds_touching_zero(self):
-        result = es_math.log10(make(10.0, min=0.0, max=100.0))
+        # WHEN
+        x = make(10.0, min=0.0, max=100.0)
+
+        # THEN
+        result = es_math.log10(x)
+
+        # EXPECT
         assert_bounds(result, -INF, 2.0)
 
     def test_sqrt_bounds_below_zero(self):
-        result = es_math.sqrt(make(4.0, min=-4.0, max=9.0))
+        # WHEN
+        x = make(4.0, min=-4.0, max=9.0)
+
+        # THEN
+        result = es_math.sqrt(x)
+
+        # EXPECT
         assert_bounds(result, 0.0, 3.0)
 
     def test_arcsin_bounds_beyond_one(self):
-        result = es_math.arcsin(make(0.2, min=-3.0, max=3.0))
+        # WHEN
+        x = make(0.2, min=-3.0, max=3.0)
+
+        # THEN
+        result = es_math.arcsin(x)
+
+        # EXPECT
         assert_bounds(result, -np.pi / 2, np.pi / 2)
 
     def test_arccos_bounds_beyond_one(self):
-        result = es_math.arccos(make(0.2, min=-3.0, max=3.0))
+        # WHEN
+        x = make(0.2, min=-3.0, max=3.0)
+
+        # THEN
+        result = es_math.arccos(x)
+
+        # EXPECT
         assert_bounds(result, 0.0, np.pi)
 
     def test_arccosh_bounds_below_one(self):
-        result = es_math.arccosh(make(3.0, min=-5.0, max=10.0))
+        # WHEN
+        x = make(3.0, min=-5.0, max=10.0)
+
+        # THEN
+        result = es_math.arccosh(x)
+
+        # EXPECT
         assert_bounds(result, 0.0, np.arccosh(10.0))
 
     def test_arctanh_bounds_beyond_one(self):
-        result = es_math.arctanh(make(0.3, min=-5.0, max=5.0))
+        # WHEN
+        x = make(0.3, min=-5.0, max=5.0)
+
+        # THEN
+        result = es_math.arctanh(x)
+
+        # EXPECT
         assert_bounds(result, -INF, INF)
 
     @pytest.mark.parametrize('name', ['log', 'log10', 'sqrt', 'arcsin', 'arccos', 'arctanh'])
     def test_bounds_are_never_nan(self, name):
-        result = fn(name)(make(0.5, min=-10.0, max=10.0))
+        # WHEN
+        x = make(0.5, min=-10.0, max=10.0)
+
+        # THEN
+        result = fn(name)(x)
+
+        # EXPECT
         assert not np.isnan(result.min)
         assert not np.isnan(result.max)
 
@@ -395,42 +547,90 @@ class TestPermissiveBounds:
 
 class TestTan:
     def test_bounds_without_asymptote(self):
-        result = es_math.tan(make(0.3, 'rad', min=-1.0, max=1.0))
+        # WHEN
+        angle = make(0.3, 'rad', min=-1.0, max=1.0)
+
+        # THEN
+        result = es_math.tan(angle)
+
+        # EXPECT
         assert_bounds(result, np.tan(-1.0), np.tan(1.0))
 
     def test_bounds_crossing_asymptote_blow_up(self):
-        result = es_math.tan(make(0.3, 'rad', min=0.0, max=2.0))
+        # WHEN
+        angle = make(0.3, 'rad', min=0.0, max=2.0)
+
+        # THEN
+        result = es_math.tan(angle)
+
+        # EXPECT
         assert_bounds(result, -INF, INF)
 
     def test_bounds_crossing_asymptote_in_degrees(self):
-        result = es_math.tan(make(30.0, 'deg', min=0.0, max=100.0))
+        # WHEN
+        angle = make(30.0, 'deg', min=0.0, max=100.0)
+
+        # THEN
+        result = es_math.tan(angle)
+
+        # EXPECT
         assert_bounds(result, -INF, INF)
 
     def test_bounds_in_degrees_without_asymptote(self):
-        result = es_math.tan(make(30.0, 'deg', min=0.0, max=60.0))
+        # WHEN
+        angle = make(30.0, 'deg', min=0.0, max=60.0)
+
+        # THEN
+        result = es_math.tan(angle)
+
+        # EXPECT
         assert_bounds(result, 0.0, np.tan(np.pi / 3))
 
     @pytest.mark.parametrize(
         ('value', 'unit'), [(np.pi / 2, 'rad'), (90.0, 'deg'), (-90.0, 'deg')]
     )
     def test_value_on_asymptote_raises(self, value, unit):
+        # WHEN THEN
+        angle = make(value, unit)
+
+        # EXPECT
         with pytest.raises(ValueError):
-            es_math.tan(make(value, unit))
+            es_math.tan(angle)
 
     def test_value_within_one_sigma_of_asymptote_raises(self):
+        # WHEN THEN
+        angle = make(np.pi / 2 - 1e-6, 'rad', variance=1e-4)
+
+        # EXPECT
         with pytest.raises(ValueError):
-            es_math.tan(make(np.pi / 2 - 1e-6, 'rad', variance=1e-4))
+            es_math.tan(angle)
 
     def test_value_within_one_sigma_of_asymptote_in_degrees_raises(self):
+        # WHEN THEN
+        angle = make(89.9, 'deg', variance=1.0)
+
+        # EXPECT
         with pytest.raises(ValueError):
-            es_math.tan(make(89.9, 'deg', variance=1.0))
+            es_math.tan(angle)
 
     def test_value_far_from_asymptote_in_sigma_is_allowed(self):
-        result = es_math.tan(make(1.0, 'rad', variance=1e-4))
+        # WHEN
+        angle = make(1.0, 'rad', variance=1e-4)
+
+        # THEN
+        result = es_math.tan(angle)
+
+        # EXPECT
         assert np.isfinite(result.variance)
 
     def test_value_near_but_not_on_asymptote_is_allowed(self):
-        result = es_math.tan(make(np.pi / 2 - 1e-3, 'rad'))
+        # WHEN
+        angle = make(np.pi / 2 - 1e-3, 'rad')
+
+        # THEN
+        result = es_math.tan(angle)
+
+        # EXPECT
         assert result.value == pytest.approx(np.tan(np.pi / 2 - 1e-3))
 
 
@@ -441,45 +641,112 @@ class TestTan:
 
 class TestArctan2:
     def test_value_and_unit(self):
-        result = es_math.arctan2(make(1.0, 'm', name='y'), make(2.0, 'm', name='x'))
+        # WHEN
+        y = make(1.0, 'm', name='y')
+        x = make(2.0, 'm', name='x')
+
+        # THEN
+        result = es_math.arctan2(y, x)
+
+        # EXPECT
         assert result.value == pytest.approx(np.arctan2(1.0, 2.0))
         assert result.unit == 'rad'
 
     @pytest.mark.parametrize(('y', 'x'), [(1.0, 2.0), (1.0, -2.0), (-1.0, -2.0), (-1.0, 2.0)])
     def test_correct_quadrant(self, y, x):
-        result = es_math.arctan2(make(y), make(x))
+        # WHEN
+        y_param = make(y)
+        x_param = make(x)
+
+        # THEN
+        result = es_math.arctan2(y_param, x_param)
+
+        # EXPECT
         assert result.value == pytest.approx(np.arctan2(y, x))
 
     def test_variance_matches_delta_method(self):
+        # WHEN
         y, x, var_y, var_x = 1.0, 2.0, 0.04, 0.09
-        result = es_math.arctan2(make(y, variance=var_y), make(x, variance=var_x))
+        y_param = make(y, variance=var_y)
+        x_param = make(x, variance=var_x)
+
+        # THEN
+        result = es_math.arctan2(y_param, x_param)
+
+        # EXPECT
         expected = (x**2 * var_y + y**2 * var_x) / (x**2 + y**2) ** 2
         assert result.variance == pytest.approx(expected, rel=1e-12)
 
     def test_variance_with_only_one_argument_uncertain(self):
-        result = es_math.arctan2(make(1.0, variance=0.04), make(2.0))
+        # WHEN
+        y = make(1.0, variance=0.04)
+        x = make(2.0)
+
+        # THEN
+        result = es_math.arctan2(y, x)
+
+        # EXPECT
         assert result.variance == pytest.approx(2.0**2 * 0.04 / (1.0 + 4.0) ** 2, rel=1e-12)
 
     def test_no_variance_when_neither_argument_has_one(self):
-        assert not es_math.arctan2(make(1.0), make(2.0)).variance
+        # WHEN
+        y = make(1.0)
+        x = make(2.0)
+
+        # THEN
+        result = es_math.arctan2(y, x)
+
+        # EXPECT
+        assert not result.variance
 
     def test_variance_at_origin_raises(self):
+        # WHEN THEN
+        y = make(0.0, variance=0.01)
+        x = make(0.0, variance=0.01)
+
+        # EXPECT
         with pytest.raises(ValueError):
-            es_math.arctan2(make(0.0, variance=0.01), make(0.0, variance=0.01))
+            es_math.arctan2(y, x)
 
     def test_origin_without_variance_is_allowed(self):
-        assert es_math.arctan2(make(0.0), make(0.0)).value == 0.0
+        # WHEN
+        y = make(0.0)
+        x = make(0.0)
+
+        # THEN
+        result = es_math.arctan2(y, x)
+
+        # EXPECT
+        assert result.value == 0.0
 
     def test_point_within_one_sigma_of_origin_raises(self):
+        # WHEN THEN
+        y = make(0.01, variance=0.01)
+        x = make(0.0)
+
+        # EXPECT
         with pytest.raises(ValueError, match='origin'):
-            es_math.arctan2(make(0.01, variance=0.01), make(0.0))
+            es_math.arctan2(y, x)
 
     def test_point_far_from_origin_in_sigma_is_allowed(self):
-        assert np.isfinite(es_math.arctan2(make(1.0, variance=0.01), make(0.0)).variance)
+        # WHEN
+        y = make(1.0, variance=0.01)
+        x = make(0.0)
+
+        # THEN
+        result = es_math.arctan2(y, x)
+
+        # EXPECT
+        assert np.isfinite(result.variance)
 
     def test_mismatched_units_raise(self):
+        # WHEN THEN
+        y = make(1.0, 'm')
+        x = make(2.0, 's')
+
+        # EXPECT
         with pytest.raises(UnitError):
-            es_math.arctan2(make(1.0, 'm'), make(2.0, 's'))
+            es_math.arctan2(y, x)
 
     @pytest.mark.parametrize(
         ('y_bounds', 'x_bounds', 'y', 'x'),
@@ -494,12 +761,16 @@ class TestArctan2:
         ],
     )
     def test_bounds_without_branch_cut_match_brute_force(self, y_bounds, x_bounds, y, x):
+        # WHEN
+        y_param = make(y, min=y_bounds[0], max=y_bounds[1])
+        x_param = make(x, min=x_bounds[0], max=x_bounds[1])
+
+        # THEN
         with warnings.catch_warnings():
             warnings.simplefilter('error')
-            result = es_math.arctan2(
-                make(y, min=y_bounds[0], max=y_bounds[1]),
-                make(x, min=x_bounds[0], max=x_bounds[1]),
-            )
+            result = es_math.arctan2(y_param, x_param)
+
+        # EXPECT
         ys, xs = np.meshgrid(
             np.linspace(*y_bounds, 801), np.linspace(*x_bounds, 801), indexing='ij'
         )
@@ -510,31 +781,53 @@ class TestArctan2:
         assert result.max <= angles.max() + 1e-2
 
     def test_bounds_crossing_branch_cut_warn_and_span_full_range(self):
+        # WHEN
         # y crosses 0 while x < 0: the angle jumps between -pi and +pi.
+        y = make(0.3, min=-1.0, max=1.0)
+        x = make(-1.0, min=-2.0, max=-0.5)
+
+        # THEN
         with pytest.warns(UserWarning, match='branch cut'):
-            result = es_math.arctan2(
-                make(0.3, min=-1.0, max=1.0),
-                make(-1.0, min=-2.0, max=-0.5),
-            )
+            result = es_math.arctan2(y, x)
+
+        # EXPECT
         assert_bounds(result, -np.pi, np.pi)
 
     def test_bounds_containing_origin_span_full_range(self):
+        # WHEN
+        y = make(0.3, min=-1.0, max=1.0)
+        x = make(0.3, min=-1.0, max=1.0)
+
+        # THEN
         with pytest.warns(UserWarning):
-            result = es_math.arctan2(
-                make(0.3, min=-1.0, max=1.0),
-                make(0.3, min=-1.0, max=1.0),
-            )
+            result = es_math.arctan2(y, x)
+
+        # EXPECT
         assert_bounds(result, -np.pi, np.pi)
 
     def test_default_infinite_bounds_span_full_range_without_warning(self):
+        # WHEN
         # Unbounded parameters are the default; warning on every call would be noise.
+        y = make(1.0)
+        x = make(-2.0)
+
+        # THEN
         with warnings.catch_warnings():
             warnings.simplefilter('error')
-            result = es_math.arctan2(make(1.0), make(-2.0))
+            result = es_math.arctan2(y, x)
+
+        # EXPECT
         assert_bounds(result, -np.pi, np.pi)
 
     def test_value_is_always_inside_bounds(self):
-        result = es_math.arctan2(make(1.0, min=0.5, max=2.0), make(2.0, min=1.0, max=3.0))
+        # WHEN
+        y = make(1.0, min=0.5, max=2.0)
+        x = make(2.0, min=1.0, max=3.0)
+
+        # THEN
+        result = es_math.arctan2(y, x)
+
+        # EXPECT
         assert result.min <= result.value <= result.max
 
 
@@ -547,53 +840,108 @@ class TestUnits:
     @pytest.mark.parametrize('name', ['sin', 'cos', 'tan'])
     @pytest.mark.parametrize('unit', ['m', ''])
     def test_trig_requires_an_angle_unit(self, name, unit):
+        # WHEN THEN
+        x = make(0.5, unit)
+
+        # EXPECT
         with pytest.raises(UnitError):
-            fn(name)(make(0.5, unit))
+            fn(name)(x)
 
     @pytest.mark.parametrize('name', ['sin', 'cos'])
     def test_trig_result_is_dimensionless(self, name):
-        assert fn(name)(make(0.5, 'rad')).unit == 'dimensionless'
-        assert fn(name)(make(30.0, 'deg')).unit == 'dimensionless'
+        # WHEN
+        radians = make(0.5, 'rad')
+        degrees = make(30.0, 'deg')
+
+        # THEN
+        result_rad = fn(name)(radians)
+        result_deg = fn(name)(degrees)
+
+        # EXPECT
+        assert result_rad.unit == 'dimensionless'
+        assert result_deg.unit == 'dimensionless'
 
     @pytest.mark.parametrize('name', ['arcsin', 'arccos', 'arctan'])
     def test_inverse_trig_returns_radians(self, name):
-        assert fn(name)(make(0.5)).unit == 'rad'
+        # WHEN
+        x = make(0.5)
+
+        # THEN
+        result = fn(name)(x)
+
+        # EXPECT
+        assert result.unit == 'rad'
 
     @pytest.mark.parametrize('name', ['arcsin', 'arccos', 'arctan'])
     def test_inverse_trig_requires_dimensionless_input(self, name):
+        # WHEN THEN
+        x = make(0.5, 'rad')
+
+        # EXPECT
         with pytest.raises(UnitError):
-            fn(name)(make(0.5, 'rad'))
+            fn(name)(x)
 
     @pytest.mark.parametrize(
         'name',
         ['exp', 'log', 'log10', 'erf', 'erfc', 'sinh', 'cosh', 'tanh', 'arcsinh', 'arccosh'],
     )
     def test_dimensionless_only_functions_reject_units(self, name):
+        # WHEN THEN
+        x = make(1.5, 'm')
+
+        # EXPECT
         with pytest.raises(UnitError):
-            fn(name)(make(1.5, 'm'))
+            fn(name)(x)
 
     def test_arctanh_rejects_units(self):
+        # WHEN THEN
+        x = make(0.5, 'm')
+
+        # EXPECT
         with pytest.raises(UnitError):
-            es_math.arctanh(make(0.5, 'm'))
+            es_math.arctanh(x)
 
     def test_sinc_accepts_radians_and_dimensionless(self):
-        assert es_math.sinc(make(0.5, 'rad')).value == pytest.approx(np.sin(0.5) / 0.5)
-        assert es_math.sinc(make(0.5, '')).value == pytest.approx(np.sin(0.5) / 0.5)
+        # WHEN
+        radians = make(0.5, 'rad')
+        dimensionless = make(0.5, '')
+
+        # THEN
+        result_rad = es_math.sinc(radians)
+        result_dimensionless = es_math.sinc(dimensionless)
+
+        # EXPECT
+        assert result_rad.value == pytest.approx(np.sin(0.5) / 0.5)
+        assert result_dimensionless.value == pytest.approx(np.sin(0.5) / 0.5)
 
     def test_sinc_rejects_degrees(self):
+        # WHEN THEN
+        angle = make(30.0, 'deg')
+
+        # EXPECT
         with pytest.raises(UnitError):
-            es_math.sinc(make(30.0, 'deg'))
+            es_math.sinc(angle)
 
     def test_sqrt_of_a_square_unit(self):
-        result = es_math.sqrt(make(4.0, 'm**2', min=1.0, max=9.0))
+        # WHEN
+        area = make(4.0, 'm**2', min=1.0, max=9.0)
+
+        # THEN
+        result = es_math.sqrt(area)
+
+        # EXPECT
         assert result.unit == 'm'
         assert result.value == pytest.approx(2.0)
         assert_bounds(result, 1.0, 3.0)
 
     def test_unit_error_wins_over_value_error(self):
+        # WHEN THEN
         # Scipp validates units first, so the more fundamental error is reported.
+        x = make(-1.0, 'm')
+
+        # EXPECT
         with pytest.raises(UnitError):
-            es_math.log(make(-1.0, 'm'))
+            es_math.log(x)
 
 
 # ----------------------------------------------------------------------
@@ -604,20 +952,36 @@ class TestUnits:
 class TestInputTypes:
     @pytest.mark.parametrize('name', UNARY_FUNCTIONS)
     def test_plain_numbers_are_not_supported(self, name):
+        # WHEN THEN
+        x = 0.5
+
+        # EXPECT
         with pytest.raises(NotImplementedError):
-            fn(name)(0.5)
+            fn(name)(x)
 
     @pytest.mark.parametrize('name', UNARY_FUNCTIONS)
     def test_descriptor_number_is_not_supported(self, name):
+        # WHEN THEN
+        x = DescriptorNumber(name='d', value=0.5, unit='rad')
+
+        # EXPECT
         with pytest.raises(NotImplementedError):
-            fn(name)(DescriptorNumber(name='d', value=0.5, unit='rad'))
+            fn(name)(x)
 
     def test_scipp_variable_is_not_supported(self):
+        # WHEN THEN
+        x = sc.scalar(0.5, unit='rad')
+
+        # EXPECT
         with pytest.raises(NotImplementedError):
-            es_math.sin(sc.scalar(0.5, unit='rad'))
+            es_math.sin(x)
 
     @pytest.mark.parametrize(('y', 'x'), [(1.0, 2.0), (1.0, make(2.0)), (make(1.0), 2.0)])
     def test_arctan2_requires_two_parameters(self, y, x):
+        # WHEN THEN
+        # (y, x) contain at least one plain number
+
+        # EXPECT
         with pytest.raises(NotImplementedError):
             es_math.arctan2(y, x)
 
@@ -653,27 +1017,40 @@ RANDOM_RANGES = {
 class TestInvariants:
     @pytest.mark.parametrize('name', UNARY_FUNCTIONS)
     def test_value_lies_within_result_bounds_and_bounds_are_not_nan(self, name):
+        # WHEN
         (low, high), unit = RANDOM_RANGES[name]
         rng = np.random.default_rng(seed=1234)
         for _ in range(50):
             value = rng.uniform(low, high)
             lo = value - rng.uniform(0.01, 3.0)
             hi = value + rng.uniform(0.01, 3.0)
+            x = make(value, unit, min=lo, max=hi, variance=0.001)
+
+            # THEN
             with warnings.catch_warnings():
                 warnings.simplefilter('error')
-                result = fn(name)(make(value, unit, min=lo, max=hi, variance=0.001))
+                result = fn(name)(x)
+
+            # EXPECT
             assert not np.isnan(result.min) and not np.isnan(result.max)
             assert result.min <= result.value <= result.max
 
     def test_arctan2_value_lies_within_result_bounds(self):
+        # WHEN
         rng = np.random.default_rng(seed=99)
         for _ in range(50):
             y, x = rng.uniform(-3.0, 3.0, size=2)
             y_lo, y_hi = y - rng.uniform(0.01, 2.0), y + rng.uniform(0.01, 2.0)
             x_lo, x_hi = x - rng.uniform(0.01, 2.0), x + rng.uniform(0.01, 2.0)
+            y_param = make(y, min=y_lo, max=y_hi)
+            x_param = make(x, min=x_lo, max=x_hi)
+
+            # THEN
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
-                result = es_math.arctan2(make(y, min=y_lo, max=y_hi), make(x, min=x_lo, max=x_hi))
+                result = es_math.arctan2(y_param, x_param)
+
+            # EXPECT
             assert result.min <= result.value <= result.max
 
 
@@ -685,14 +1062,32 @@ class TestInvariants:
 class TestPublicApi:
     @pytest.mark.parametrize('name', ALL_FUNCTIONS)
     def test_function_is_exported_from_easyscience_variable(self, name):
-        assert callable(getattr(es_variable, name))
-        assert getattr(es_variable, name) is getattr(es_math, name)
+        # WHEN THEN
+        exported = getattr(es_variable, name)
+
+        # EXPECT
+        assert callable(exported)
+        assert exported is getattr(es_math, name)
 
     @pytest.mark.parametrize('name', ALL_FUNCTIONS)
     def test_function_has_a_docstring(self, name):
-        assert fn(name).__doc__ and fn(name).__doc__.strip()
+        # WHEN
+        function = fn(name)
+
+        # THEN
+        docstring = function.__doc__
+
+        # EXPECT
+        assert docstring and docstring.strip()
 
     def test_variable_all_contains_only_strings(self):
-        assert all(isinstance(entry, str) for entry in es_variable.__all__)
+        # WHEN
+        exported_names = es_variable.__all__
+
+        # THEN
+        all_are_strings = all(isinstance(entry, str) for entry in exported_names)
+
+        # EXPECT
+        assert all_are_strings
         for name in ALL_FUNCTIONS:
-            assert name in es_variable.__all__
+            assert name in exported_names
