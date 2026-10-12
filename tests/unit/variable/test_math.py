@@ -30,6 +30,7 @@ import easyscience.variable as es_variable
 from easyscience import DescriptorNumber
 from easyscience import Parameter
 from easyscience import global_object
+from easyscience.variable import DescriptorArray
 from easyscience.variable import math as es_math
 
 INF = np.inf
@@ -1227,15 +1228,6 @@ class TestInputTypes:
         with pytest.raises(NotImplementedError):
             fn(name)(x)
 
-    @pytest.mark.parametrize('name', UNARY_FUNCTIONS)
-    def test_descriptor_number_is_not_supported(self, name):
-        # WHEN THEN
-        x = DescriptorNumber(name='d', value=0.5, unit='rad')
-
-        # EXPECT
-        with pytest.raises(NotImplementedError):
-            fn(name)(x)
-
     def test_scipp_variable_is_not_supported(self):
         # WHEN THEN
         x = sc.scalar(0.5, unit='rad')
@@ -1245,7 +1237,7 @@ class TestInputTypes:
             es_math.sin(x)
 
     @pytest.mark.parametrize(('y', 'x'), [(1.0, 2.0), (1.0, make(2.0)), (make(1.0), 2.0)])
-    def test_arctan2_requires_two_parameters(self, y, x):
+    def test_arctan2_requires_descriptor_numbers_or_parameters(self, y, x):
         # WHEN THEN
         # (y, x) contain at least one plain number
 
@@ -1586,6 +1578,164 @@ class TestAliases:
 
         # EXPECT
         assert result.value == pytest.approx(3 * np.pi / 4)
+
+
+# ----------------------------------------------------------------------
+# Inheritance: Parameter and DescriptorNumber
+# ----------------------------------------------------------------------
+
+
+class MyParameter(Parameter):
+    """A user subclass whose constructor needs an extra argument."""
+
+    def __init__(self, name, value, tag, **kwargs):
+        super().__init__(name, value, **kwargs)
+        self.tag = tag
+
+
+class MyDescriptor(DescriptorNumber):
+    """A user subclass whose constructor needs an extra argument."""
+
+    def __init__(self, name, value, tag, **kwargs):
+        super().__init__(name, value, **kwargs)
+        self.tag = tag
+
+
+def descriptor(value, unit='', *, variance=0.0, name='x') -> DescriptorNumber:
+    """Shorthand for a plain ``DescriptorNumber`` (no bounds)."""
+    return DescriptorNumber(name=name, value=value, unit=unit, variance=variance)
+
+
+class TestInheritance:
+    @pytest.mark.parametrize('name', UNARY_FUNCTIONS)
+    def test_descriptor_number_input_returns_a_descriptor_number(self, name):
+        # WHEN
+        _, _, value, unit = VALUE_CASES[name]
+        plain = descriptor(value, unit, variance=0.04)
+        parameter = make(value, unit, variance=0.04)
+
+        # THEN
+        result = fn(name)(plain)
+        reference = fn(name)(parameter)
+
+        # EXPECT
+        assert type(result) is DescriptorNumber
+        assert not hasattr(result, 'min')
+        assert result.value == pytest.approx(reference.value, rel=1e-12)
+        assert result.variance == pytest.approx(reference.variance, rel=1e-12)
+
+    @pytest.mark.parametrize('name', UNARY_FUNCTIONS)
+    def test_parameter_input_still_returns_a_parameter(self, name):
+        # WHEN
+        _, _, value, unit = VALUE_CASES[name]
+        x = make(value, unit)
+
+        # THEN
+        result = fn(name)(x)
+
+        # EXPECT
+        assert type(result) is Parameter
+
+    def test_mixed_arctan2_returns_a_parameter_with_point_bounds(self):
+        # WHEN
+        y = make(1.0, min=0.5, max=2.0, name='y')
+        x = descriptor(2.0, name='x')
+        point_y = descriptor(1.0, name='y')
+        range_x = make(2.0, min=1.0, max=3.0, name='x')
+
+        # THEN
+        result = es_math.arctan2(y, x)
+        swapped = es_math.arctan2(point_y, range_x)
+
+        # EXPECT
+        assert type(result) is Parameter
+        assert_bounds(result, np.arctan2(0.5, 2.0), np.arctan2(2.0, 2.0))
+        assert type(swapped) is Parameter
+        assert_bounds(swapped, np.arctan2(1.0, 3.0), np.arctan2(1.0, 1.0))
+
+    def test_arctan2_of_two_descriptor_numbers_returns_a_descriptor_number(self):
+        # WHEN
+        y = descriptor(1.0, name='y')
+        x = descriptor(1.0, name='x')
+
+        # THEN
+        result = es_math.arctan2(y, x)
+
+        # EXPECT
+        assert type(result) is DescriptorNumber
+        assert result.value == pytest.approx(np.pi / 4)
+
+    def test_user_subclasses_are_accepted_and_return_base_classes(self):
+        # WHEN
+        sub_parameter = MyParameter('p', 0.5, 'tag', unit='rad', min=0.0, max=1.0)
+        sub_descriptor = MyDescriptor('d', 0.5, 'tag', unit='rad')
+
+        # THEN
+        from_parameter = es_math.sin(sub_parameter)
+        from_descriptor = es_math.sin(sub_descriptor)
+
+        # EXPECT
+        assert type(from_parameter) is Parameter
+        assert type(from_descriptor) is DescriptorNumber
+        assert from_parameter.value == pytest.approx(np.sin(0.5))
+        assert from_descriptor.value == pytest.approx(np.sin(0.5))
+
+    def test_unit_keyword_on_a_descriptor_number(self):
+        # WHEN
+        x = descriptor(0.5, name='x')
+
+        # THEN
+        result = es_math.arcsin(x, unit='deg')
+
+        # EXPECT
+        assert type(result) is DescriptorNumber
+        assert result.unit == 'deg'
+        assert result.value == pytest.approx(30.0, abs=1e-9)
+
+    def test_variance_in_degrees_for_a_descriptor_number(self):
+        # WHEN
+        angle = descriptor(30.0, 'deg', variance=1.0)
+
+        # THEN
+        result = es_math.sin(angle)
+
+        # EXPECT
+        expected = np.cos(np.deg2rad(30.0)) ** 2 * np.deg2rad(1.0) ** 2
+        assert result.variance == pytest.approx(expected, rel=1e-9)
+
+    @pytest.mark.parametrize(
+        ('name', 'value', 'unit', 'message'),
+        [
+            ('tan', np.pi / 2, 'rad', 'asymptote'),
+            ('log', -1.0, '', 'outside the domain'),
+            ('exp', 1000.0, '', 'not finite'),
+        ],
+    )
+    def test_guards_apply_to_a_descriptor_number(self, name, value, unit, message):
+        # WHEN THEN
+        x = descriptor(value, unit)
+
+        # EXPECT
+        with pytest.raises(ValueError, match=message):
+            fn(name)(x)
+
+    @pytest.mark.parametrize(
+        'unsupported',
+        [
+            0.5,
+            np.array([0.5]),
+            sc.scalar(0.5, unit='rad'),
+            DescriptorArray(name='arr', value=[0.5], unit='rad', dimensions=['x']),
+        ],
+        ids=['float', 'ndarray', 'scipp-variable', 'descriptor-array'],
+    )
+    def test_other_types_still_raise_not_implemented(self, unsupported):
+        # WHEN THEN
+        argument = unsupported
+
+        # EXPECT
+        with pytest.raises(NotImplementedError, match='DescriptorNumber'):
+            es_math.sin(argument)
 
 
 # ----------------------------------------------------------------------

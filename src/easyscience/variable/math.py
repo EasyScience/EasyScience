@@ -21,6 +21,15 @@ Conventions:
   asymptote become ``(-inf, inf)``, and bounds that collapse to (nearly) a single
   number are padded by a relative 2e-9 around the value.
 
+Input and result classes:
+
+Every function accepts a ``DescriptorNumber`` or a ``Parameter`` (a ``Parameter`` is a
+``DescriptorNumber``), including user subclasses of either. The result is a ``Parameter``,
+with bounds, if any argument is a ``Parameter``, and a ``DescriptorNumber``, without bounds,
+otherwise. It is always the base class and never the subclass, as for the arithmetic
+operators. A ``DescriptorNumber`` argument counts as the single point at its value when
+the bounds of a ``Parameter`` result are derived.
+
 Using ``es.math`` in a model:
 
 ``es.math`` works on scalar ``Parameter`` objects, so it cannot be applied
@@ -63,16 +72,21 @@ import warnings
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import cache
+from typing import TypeVar
+from typing import overload
 
 import numpy as np
 import scipp as sc
 
+from easyscience.variable.descriptor_number import DescriptorNumber
 from easyscience.variable.parameter import Parameter
 
 # A closed interval ``(lo, hi)`` of an argument, in the unit the bounds strategy works in.
 _Interval = tuple[float, float]
 # A bounds strategy maps one interval per argument to the ``(min, max)`` of the result.
 _BoundsStrategy = Callable[..., tuple[float, float]]
+# A function returns the class of its input (see the module docstring), as Scipp's do.
+_D = TypeVar('_D', bound=DescriptorNumber)
 
 _HALF_PI = np.pi / 2
 _TWO_PI = 2 * np.pi
@@ -139,24 +153,26 @@ __all__ = [
 # ==========================================
 
 
-def exp(x: Parameter) -> Parameter:
+def exp(x: _D) -> _D:
     """
     Calculate the exponential, ``e**x``, of a dimensionless parameter.
 
     Parameters
     ----------
-    x : Parameter
+    x : Parameter or DescriptorNumber
         Dimensionless input.
 
     Returns
     -------
-    Parameter
+    Parameter or DescriptorNumber
         ``exp(x)`` with propagated variance and bounds ``(exp(x.min), exp(x.max))``.
+        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
     NotImplementedError
-        If ``x`` is not a ``Parameter``.
+        If ``x`` is not a ``Parameter`` or ``DescriptorNumber``.
     UnitError
         If ``x`` is not dimensionless.
     ValueError
@@ -181,28 +197,30 @@ def exp(x: Parameter) -> Parameter:
     >>> result = es.math.exp(x)
     >>> print(f'{result.value:.4f}, variance {result.variance:.4f}')
     1.0000, variance 0.0100
-    """  # noqa: DOC502 -- raised in _apply
+    """  # noqa: DOC502, DOC203, DOC105 -- see _apply
     return _apply(_EXP, x)
 
 
-def log(x: Parameter) -> Parameter:
+def log(x: _D) -> _D:
     """
     Calculate the natural logarithm of a dimensionless parameter.
 
     Parameters
     ----------
-    x : Parameter
+    x : Parameter or DescriptorNumber
         Dimensionless input. Its value must be strictly positive.
 
     Returns
     -------
-    Parameter
+    Parameter or DescriptorNumber
         ``log(x)`` with propagated variance and bounds.
+        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
     NotImplementedError
-        If ``x`` is not a ``Parameter``.
+        If ``x`` is not a ``Parameter`` or ``DescriptorNumber``.
     UnitError
         If ``x`` is not dimensionless.
     ValueError
@@ -230,28 +248,30 @@ def log(x: Parameter) -> Parameter:
     >>> result = es.math.log(x)
     >>> print(f'bounds [{result.min:.4f}, {result.max:.4f}]')
     bounds [-inf, 1.6094]
-    """  # noqa: DOC502 -- raised in _apply
+    """  # noqa: DOC502, DOC203, DOC105 -- see _apply
     return _apply(_LOG, x)
 
 
-def log10(x: Parameter) -> Parameter:
+def log10(x: _D) -> _D:
     """
     Calculate the base-10 logarithm of a dimensionless parameter.
 
     Parameters
     ----------
-    x : Parameter
+    x : Parameter or DescriptorNumber
         Dimensionless input. Its value must be strictly positive.
 
     Returns
     -------
-    Parameter
+    Parameter or DescriptorNumber
         ``log10(x)`` with propagated variance and bounds.
+        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
     NotImplementedError
-        If ``x`` is not a ``Parameter``.
+        If ``x`` is not a ``Parameter`` or ``DescriptorNumber``.
     UnitError
         If ``x`` is not dimensionless.
     ValueError
@@ -279,30 +299,32 @@ def log10(x: Parameter) -> Parameter:
     >>> result = es.math.log10(x)
     >>> print(f'bounds [{result.min:.4f}, {result.max:.4f}]')
     bounds [-inf, 2.0000]
-    """  # noqa: DOC502 -- raised in _apply
+    """  # noqa: DOC502, DOC203, DOC105 -- see _apply
     return _apply(_LOG10, x)
 
 
-def sqrt(x: Parameter) -> Parameter:
+def sqrt(x: _D) -> _D:
     """
     Calculate the square root of a parameter.
 
     Parameters
     ----------
-    x : Parameter
+    x : Parameter or DescriptorNumber
         Input that is dimensionless, or whose unit is a perfect square (e.g. ``m**2``).
         Its value must not be negative.
 
     Returns
     -------
-    Parameter
+    Parameter or DescriptorNumber
         ``sqrt(x)`` with propagated variance and bounds. The unit is the square root
         of the input unit (``m**2`` gives ``m``).
+        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
     NotImplementedError
-        If ``x`` is not a ``Parameter``.
+        If ``x`` is not a ``Parameter`` or ``DescriptorNumber``.
     UnitError
         If the unit of ``x`` has no square root in Scipp (e.g. ``m``).
     ValueError
@@ -331,28 +353,30 @@ def sqrt(x: Parameter) -> Parameter:
     >>> result = es.math.sqrt(area)
     >>> print(result.value, result.unit)
     3.0 m
-    """  # noqa: DOC502 -- raised in _apply
+    """  # noqa: DOC502, DOC203, DOC105 -- see _apply
     return _apply(_SQRT, x)
 
 
-def erf(x: Parameter) -> Parameter:
+def erf(x: _D) -> _D:
     """
     Calculate the error function of a dimensionless parameter.
 
     Parameters
     ----------
-    x : Parameter
+    x : Parameter or DescriptorNumber
         Dimensionless input.
 
     Returns
     -------
-    Parameter
+    Parameter or DescriptorNumber
         ``erf(x)`` with propagated variance and bounds in ``[-1, 1]``.
+        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
     NotImplementedError
-        If ``x`` is not a ``Parameter``.
+        If ``x`` is not a ``Parameter`` or ``DescriptorNumber``.
     UnitError
         If ``x`` is not dimensionless.
 
@@ -378,28 +402,30 @@ def erf(x: Parameter) -> Parameter:
     >>> result = es.math.erf(x)
     >>> print(f'{result.value:.4f}, variance {result.variance:.4f}')
     0.0000, variance 0.0127
-    """  # noqa: DOC502 -- raised in _apply
+    """  # noqa: DOC502, DOC203, DOC105 -- see _apply
     return _apply(_ERF, x)
 
 
-def erfc(x: Parameter) -> Parameter:
+def erfc(x: _D) -> _D:
     """
     Calculate the complementary error function, ``1 - erf(x)``, of a dimensionless parameter.
 
     Parameters
     ----------
-    x : Parameter
+    x : Parameter or DescriptorNumber
         Dimensionless input.
 
     Returns
     -------
-    Parameter
+    Parameter or DescriptorNumber
         ``erfc(x)`` with propagated variance and bounds in ``[0, 2]``.
+        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
     NotImplementedError
-        If ``x`` is not a ``Parameter``.
+        If ``x`` is not a ``Parameter`` or ``DescriptorNumber``.
     UnitError
         If ``x`` is not dimensionless.
 
@@ -426,7 +452,7 @@ def erfc(x: Parameter) -> Parameter:
     >>> result = es.math.erfc(x)
     >>> print(f'{result.value:.4f}, variance {result.variance:.4f}')
     1.0000, variance 0.0127
-    """  # noqa: DOC502 -- raised in _apply
+    """  # noqa: DOC502, DOC203, DOC105 -- see _apply
     return _apply(_ERFC, x)
 
 
@@ -435,24 +461,26 @@ def erfc(x: Parameter) -> Parameter:
 # ==========================================
 
 
-def sin(x: Parameter) -> Parameter:
+def sin(x: _D) -> _D:
     """
     Calculate the trigonometric sine of an angle parameter.
 
     Parameters
     ----------
-    x : Parameter
+    x : Parameter or DescriptorNumber
         Angle, with unit ``rad`` or ``deg``.
 
     Returns
     -------
-    Parameter
+    Parameter or DescriptorNumber
         Dimensionless ``sin(x)`` with propagated variance and exact bounds.
+        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
     NotImplementedError
-        If ``x`` is not a ``Parameter``.
+        If ``x`` is not a ``Parameter`` or ``DescriptorNumber``.
     UnitError
         If the unit of ``x`` is not an angle.
 
@@ -480,28 +508,30 @@ def sin(x: Parameter) -> Parameter:
     >>> result = es.math.sin(angle)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     0.5000 in [0.0000, 1.0000]
-    """  # noqa: DOC502 -- raised in _apply
+    """  # noqa: DOC502, DOC203, DOC105 -- see _apply
     return _apply(_SIN, x)
 
 
-def cos(x: Parameter) -> Parameter:
+def cos(x: _D) -> _D:
     """
     Calculate the trigonometric cosine of an angle parameter.
 
     Parameters
     ----------
-    x : Parameter
+    x : Parameter or DescriptorNumber
         Angle, with unit ``rad`` or ``deg``.
 
     Returns
     -------
-    Parameter
+    Parameter or DescriptorNumber
         Dimensionless ``cos(x)`` with propagated variance and exact bounds.
+        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
     NotImplementedError
-        If ``x`` is not a ``Parameter``.
+        If ``x`` is not a ``Parameter`` or ``DescriptorNumber``.
     UnitError
         If the unit of ``x`` is not an angle.
 
@@ -531,28 +561,30 @@ def cos(x: Parameter) -> Parameter:
     >>> result = es.math.cos(angle)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     0.5000 in [-1.0000, 1.0000]
-    """  # noqa: DOC502 -- raised in _apply
+    """  # noqa: DOC502, DOC203, DOC105 -- see _apply
     return _apply(_COS, x)
 
 
-def tan(x: Parameter) -> Parameter:
+def tan(x: _D) -> _D:
     """
     Calculate the trigonometric tangent of an angle parameter.
 
     Parameters
     ----------
-    x : Parameter
+    x : Parameter or DescriptorNumber
         Angle, with unit ``rad`` or ``deg``.
 
     Returns
     -------
-    Parameter
+    Parameter or DescriptorNumber
         Dimensionless ``tan(x)`` with propagated variance and bounds.
+        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
     NotImplementedError
-        If ``x`` is not a ``Parameter``.
+        If ``x`` is not a ``Parameter`` or ``DescriptorNumber``.
     UnitError
         If the unit of ``x`` is not an angle.
     ValueError
@@ -587,17 +619,17 @@ def tan(x: Parameter) -> Parameter:
     >>> result = es.math.tan(angle)
     >>> print(f'bounds [{result.min:.4f}, {result.max:.4f}]')
     bounds [-inf, inf]
-    """  # noqa: DOC502 -- raised in _apply
+    """  # noqa: DOC502, DOC203, DOC105 -- see _apply
     return _apply(_TAN, x)
 
 
-def arcsin(x: Parameter, *, unit: str = 'rad') -> Parameter:
+def arcsin(x: _D, *, unit: str = 'rad') -> _D:
     """
     Calculate the inverse sine of a dimensionless parameter.
 
     Parameters
     ----------
-    x : Parameter
+    x : Parameter or DescriptorNumber
         Dimensionless input; its value must be in ``[-1, 1]``.
     unit : str, default='rad'
         Unit of the returned angle, ``'rad'`` or ``'deg'``. The value, the variance and
@@ -605,13 +637,15 @@ def arcsin(x: Parameter, *, unit: str = 'rad') -> Parameter:
 
     Returns
     -------
-    Parameter
+    Parameter or DescriptorNumber
         Angle in ``unit`` (``[-pi/2, pi/2]`` rad), with propagated variance and bounds.
+        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
     NotImplementedError
-        If ``x`` is not a ``Parameter``.
+        If ``x`` is not a ``Parameter`` or ``DescriptorNumber``.
     UnitError
         If ``x`` is not dimensionless, or ``unit`` is not an angle unit.
     ValueError
@@ -641,17 +675,17 @@ def arcsin(x: Parameter, *, unit: str = 'rad') -> Parameter:
     ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
     ... )
     30.0000 deg in [0.0000, 90.0000]
-    """  # noqa: DOC502 -- raised in _apply and _angle_in
+    """  # noqa: DOC502, DOC203, DOC105 -- see _apply and _angle_in
     return _angle_in(_apply(_ARCSIN, x), unit)
 
 
-def arccos(x: Parameter, *, unit: str = 'rad') -> Parameter:
+def arccos(x: _D, *, unit: str = 'rad') -> _D:
     """
     Calculate the inverse cosine of a dimensionless parameter.
 
     Parameters
     ----------
-    x : Parameter
+    x : Parameter or DescriptorNumber
         Dimensionless input; its value must be in ``[-1, 1]``.
     unit : str, default='rad'
         Unit of the returned angle, ``'rad'`` or ``'deg'``. The value, the variance and
@@ -659,13 +693,15 @@ def arccos(x: Parameter, *, unit: str = 'rad') -> Parameter:
 
     Returns
     -------
-    Parameter
+    Parameter or DescriptorNumber
         Angle in ``unit`` (``[0, pi]`` rad), with propagated variance and bounds.
+        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
     NotImplementedError
-        If ``x`` is not a ``Parameter``.
+        If ``x`` is not a ``Parameter`` or ``DescriptorNumber``.
     UnitError
         If ``x`` is not dimensionless, or ``unit`` is not an angle unit.
     ValueError
@@ -698,17 +734,17 @@ def arccos(x: Parameter, *, unit: str = 'rad') -> Parameter:
     ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
     ... )
     60.0000 deg in [0.0000, 90.0000]
-    """  # noqa: DOC502 -- raised in _apply and _angle_in
+    """  # noqa: DOC502, DOC203, DOC105 -- see _apply and _angle_in
     return _angle_in(_apply(_ARCCOS, x), unit)
 
 
-def arctan(x: Parameter, *, unit: str = 'rad') -> Parameter:
+def arctan(x: _D, *, unit: str = 'rad') -> _D:
     """
     Calculate the inverse tangent of a dimensionless parameter.
 
     Parameters
     ----------
-    x : Parameter
+    x : Parameter or DescriptorNumber
         Dimensionless input.
     unit : str, default='rad'
         Unit of the returned angle, ``'rad'`` or ``'deg'``. The value, the variance and
@@ -716,13 +752,15 @@ def arctan(x: Parameter, *, unit: str = 'rad') -> Parameter:
 
     Returns
     -------
-    Parameter
+    Parameter or DescriptorNumber
         Angle in ``unit`` (``[-pi/2, pi/2]`` rad), with propagated variance and bounds.
+        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
     NotImplementedError
-        If ``x`` is not a ``Parameter``.
+        If ``x`` is not a ``Parameter`` or ``DescriptorNumber``.
     UnitError
         If ``x`` is not dimensionless, or ``unit`` is not an angle unit.
 
@@ -747,19 +785,31 @@ def arctan(x: Parameter, *, unit: str = 'rad') -> Parameter:
     ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
     ... )
     45.0000 deg in [0.0000, 84.2894]
-    """  # noqa: DOC502 -- raised in _apply and _angle_in
+    """  # noqa: DOC502, DOC203, DOC105 -- see _apply and _angle_in
     return _angle_in(_apply(_ARCTAN, x), unit)
 
 
-def arctan2(y: Parameter, x: Parameter, *, unit: str = 'rad') -> Parameter:
+@overload
+def arctan2(y: Parameter, x: DescriptorNumber, *, unit: str = ...) -> Parameter: ...
+
+
+@overload
+def arctan2(y: DescriptorNumber, x: Parameter, *, unit: str = ...) -> Parameter: ...
+
+
+@overload
+def arctan2(y: DescriptorNumber, x: DescriptorNumber, *, unit: str = ...) -> DescriptorNumber: ...
+
+
+def arctan2(y: DescriptorNumber, x: DescriptorNumber, *, unit: str = 'rad') -> DescriptorNumber:
     """
     Calculate the angle of the point ``(x, y)``, using both signs to find the quadrant.
 
     Parameters
     ----------
-    y : Parameter
+    y : Parameter or DescriptorNumber
         Cartesian y-coordinate.
-    x : Parameter
+    x : Parameter or DescriptorNumber
         Cartesian x-coordinate. Must have the same unit as ``y``.
     unit : str, default='rad'
         Unit of the returned angle, ``'rad'`` or ``'deg'``. The value, the variance and
@@ -767,13 +817,15 @@ def arctan2(y: Parameter, x: Parameter, *, unit: str = 'rad') -> Parameter:
 
     Returns
     -------
-    Parameter
+    Parameter or DescriptorNumber
         Angle in ``unit`` (``[-pi, pi]`` rad), with propagated variance and bounds.
+        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
     NotImplementedError
-        If ``y`` or ``x`` is not a ``Parameter``.
+        If ``y`` or ``x`` is not a ``Parameter`` or ``DescriptorNumber``.
     UnitError
         If ``y`` and ``x`` have different units, or ``unit`` is not an angle unit.
     ValueError
@@ -820,29 +872,31 @@ def arctan2(y: Parameter, x: Parameter, *, unit: str = 'rad') -> Parameter:
     ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
     ... )
     45.0000 deg in [9.4623, 63.4349]
-    """  # noqa: DOC502 -- raised in _apply and _angle_in
+    """  # noqa: DOC502, DOC203, DOC105 -- see _apply and _angle_in
     return _angle_in(_apply(_ARCTAN2, y, x), unit)
 
 
-def sinc(x: Parameter) -> Parameter:
+def sinc(x: _D) -> _D:
     """
     Calculate the unnormalised sinc function, ``sin(x) / x``, of a parameter.
 
     Parameters
     ----------
-    x : Parameter
+    x : Parameter or DescriptorNumber
         Input, with unit ``rad`` or dimensionless.
 
     Returns
     -------
-    Parameter
+    Parameter or DescriptorNumber
         Dimensionless ``sinc(x)`` (equal to 1 at ``x = 0``) with propagated variance
         and exact bounds.
+        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
     NotImplementedError
-        If ``x`` is not a ``Parameter``.
+        If ``x`` is not a ``Parameter`` or ``DescriptorNumber``.
     UnitError
         If the unit of ``x`` is neither ``rad`` nor dimensionless.
 
@@ -874,7 +928,7 @@ def sinc(x: Parameter) -> Parameter:
     >>> result = es.math.sinc(angle)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     0.6366 in [-0.2172, 1.0000]
-    """  # noqa: DOC502 -- raised in _apply
+    """  # noqa: DOC502, DOC203, DOC105 -- see _apply
     return _apply(_SINC, x)
 
 
@@ -883,24 +937,26 @@ def sinc(x: Parameter) -> Parameter:
 # ==========================================
 
 
-def sinh(x: Parameter) -> Parameter:
+def sinh(x: _D) -> _D:
     """
     Calculate the hyperbolic sine of a dimensionless parameter.
 
     Parameters
     ----------
-    x : Parameter
+    x : Parameter or DescriptorNumber
         Dimensionless input.
 
     Returns
     -------
-    Parameter
+    Parameter or DescriptorNumber
         ``sinh(x)`` with propagated variance and bounds.
+        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
     NotImplementedError
-        If ``x`` is not a ``Parameter``.
+        If ``x`` is not a ``Parameter`` or ``DescriptorNumber``.
     UnitError
         If ``x`` is not dimensionless.
     ValueError
@@ -925,28 +981,30 @@ def sinh(x: Parameter) -> Parameter:
     >>> result = es.math.sinh(x)
     >>> print(f'{result.value:.4f}, variance {result.variance:.4f}')
     0.0000, variance 0.0100
-    """  # noqa: DOC502 -- raised in _apply
+    """  # noqa: DOC502, DOC203, DOC105 -- see _apply
     return _apply(_SINH, x)
 
 
-def cosh(x: Parameter) -> Parameter:
+def cosh(x: _D) -> _D:
     """
     Calculate the hyperbolic cosine of a dimensionless parameter.
 
     Parameters
     ----------
-    x : Parameter
+    x : Parameter or DescriptorNumber
         Dimensionless input.
 
     Returns
     -------
-    Parameter
+    Parameter or DescriptorNumber
         ``cosh(x)`` with propagated variance and bounds.
+        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
     NotImplementedError
-        If ``x`` is not a ``Parameter``.
+        If ``x`` is not a ``Parameter`` or ``DescriptorNumber``.
     UnitError
         If ``x`` is not dimensionless.
     ValueError
@@ -975,28 +1033,30 @@ def cosh(x: Parameter) -> Parameter:
     >>> result = es.math.cosh(x)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     1.5431 in [1.1276, 3.7622]
-    """  # noqa: DOC502 -- raised in _apply
+    """  # noqa: DOC502, DOC203, DOC105 -- see _apply
     return _apply(_COSH, x)
 
 
-def tanh(x: Parameter) -> Parameter:
+def tanh(x: _D) -> _D:
     """
     Calculate the hyperbolic tangent of a dimensionless parameter.
 
     Parameters
     ----------
-    x : Parameter
+    x : Parameter or DescriptorNumber
         Dimensionless input.
 
     Returns
     -------
-    Parameter
+    Parameter or DescriptorNumber
         ``tanh(x)`` with propagated variance and bounds in ``[-1, 1]``.
+        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
     NotImplementedError
-        If ``x`` is not a ``Parameter``.
+        If ``x`` is not a ``Parameter`` or ``DescriptorNumber``.
     UnitError
         If ``x`` is not dimensionless.
 
@@ -1017,28 +1077,30 @@ def tanh(x: Parameter) -> Parameter:
     >>> result = es.math.tanh(x)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     0.4621 in [-1.0000, 1.0000]
-    """  # noqa: DOC502 -- raised in _apply
+    """  # noqa: DOC502, DOC203, DOC105 -- see _apply
     return _apply(_TANH, x)
 
 
-def arcsinh(x: Parameter) -> Parameter:
+def arcsinh(x: _D) -> _D:
     """
     Calculate the inverse hyperbolic sine of a dimensionless parameter.
 
     Parameters
     ----------
-    x : Parameter
+    x : Parameter or DescriptorNumber
         Dimensionless input.
 
     Returns
     -------
-    Parameter
+    Parameter or DescriptorNumber
         ``arcsinh(x)`` with propagated variance and bounds.
+        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
     NotImplementedError
-        If ``x`` is not a ``Parameter``.
+        If ``x`` is not a ``Parameter`` or ``DescriptorNumber``.
     UnitError
         If ``x`` is not dimensionless.
 
@@ -1059,28 +1121,30 @@ def arcsinh(x: Parameter) -> Parameter:
     >>> result = es.math.arcsinh(x)
     >>> print(f'{result.value:.4f}, variance {result.variance:.4f}')
     0.0000, variance 0.0100
-    """  # noqa: DOC502 -- raised in _apply
+    """  # noqa: DOC502, DOC203, DOC105 -- see _apply
     return _apply(_ARCSINH, x)
 
 
-def arccosh(x: Parameter) -> Parameter:
+def arccosh(x: _D) -> _D:
     """
     Calculate the inverse hyperbolic cosine of a dimensionless parameter.
 
     Parameters
     ----------
-    x : Parameter
+    x : Parameter or DescriptorNumber
         Dimensionless input; its value must be at least 1.
 
     Returns
     -------
-    Parameter
+    Parameter or DescriptorNumber
         ``arccosh(x)`` (non-negative) with propagated variance and bounds.
+        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
     NotImplementedError
-        If ``x`` is not a ``Parameter``.
+        If ``x`` is not a ``Parameter`` or ``DescriptorNumber``.
     UnitError
         If ``x`` is not dimensionless.
     ValueError
@@ -1108,28 +1172,30 @@ def arccosh(x: Parameter) -> Parameter:
     >>> result = es.math.arccosh(x)
     >>> print(f'bounds [{result.min:.4f}, {result.max:.4f}]')
     bounds [0.0000, 2.9932]
-    """  # noqa: DOC502 -- raised in _apply
+    """  # noqa: DOC502, DOC203, DOC105 -- see _apply
     return _apply(_ARCCOSH, x)
 
 
-def arctanh(x: Parameter) -> Parameter:
+def arctanh(x: _D) -> _D:
     """
     Calculate the inverse hyperbolic tangent of a dimensionless parameter.
 
     Parameters
     ----------
-    x : Parameter
+    x : Parameter or DescriptorNumber
         Dimensionless input; its value must be strictly between -1 and 1.
 
     Returns
     -------
-    Parameter
+    Parameter or DescriptorNumber
         ``arctanh(x)`` with propagated variance and bounds.
+        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
     NotImplementedError
-        If ``x`` is not a ``Parameter``.
+        If ``x`` is not a ``Parameter`` or ``DescriptorNumber``.
     UnitError
         If ``x`` is not dimensionless.
     ValueError
@@ -1156,7 +1222,7 @@ def arctanh(x: Parameter) -> Parameter:
     >>> result = es.math.arctanh(x)
     >>> print(f'bounds [{result.min:.4f}, {result.max:.4f}]')
     bounds [-inf, inf]
-    """  # noqa: DOC502 -- raised in _apply
+    """  # noqa: DOC502, DOC203, DOC105 -- see _apply
     return _apply(_ARCTANH, x)
 
 
@@ -1256,7 +1322,7 @@ class _MathOp:
 # evaluations and without leaking. That is fine for ordinary fits, but it has not been profiled
 # where the time goes: profile before using es.math in hot loops (tens of thousands of
 # evaluations), and consider a cheaper path if it matters.
-def _apply(op: _MathOp, *params: Parameter) -> Parameter:
+def _apply(op: _MathOp, *params: DescriptorNumber) -> DescriptorNumber:
     """
     Evaluate ``op`` on ``params``: validate, call Scipp, derive bounds, repack.
 
@@ -1267,26 +1333,28 @@ def _apply(op: _MathOp, *params: Parameter) -> Parameter:
     ----------
     op : _MathOp
         Specification of the function.
-    *params : Parameter
-        The arguments.
+    *params : DescriptorNumber
+        The arguments (a ``Parameter`` is a ``DescriptorNumber``).
 
     Returns
     -------
-    Parameter
-        A new ``Parameter`` named ``'<op>(<arg names>)'``.
+    DescriptorNumber
+        A new ``Parameter`` named ``'<op>(<arg names>)'`` if any argument is a ``Parameter``,
+        otherwise a new ``DescriptorNumber`` with that name.
 
     Raises
     ------
     NotImplementedError
-        If an argument is not a ``Parameter``.
+        If an argument is not a ``Parameter`` or ``DescriptorNumber``.
     ValueError
         If an argument's value is outside the domain, or the result is not finite.
     """
     for param in params:
-        if not isinstance(param, Parameter):
+        if not isinstance(param, DescriptorNumber):
             raise NotImplementedError(
-                f'EasyScience math functions currently only support `Parameter` objects. '
-                f'Raw numbers and arrays are not yet supported. Found: {type(param)}'
+                'EasyScience math functions currently only support `Parameter` and '
+                '`DescriptorNumber` objects. Raw numbers and arrays are not yet supported. '
+                f'Found: {type(param)}'
             )
 
     # 1. Scipp first: it owns the unit rules, so a unit error is reported before anything else.
@@ -1316,6 +1384,10 @@ def _apply(op: _MathOp, *params: Parameter) -> Parameter:
             f'{op.name}({label}) is not finite: value={sc_result.value}, '
             f'variance={sc_result.variance}. Check the value and variance of the argument(s).'
         )
+
+    # A plain DescriptorNumber has no bounds, so neither has a result made only from those.
+    if not any(isinstance(param, Parameter) for param in params):
+        return DescriptorNumber.from_scipp(name=f'{op.name}({label})', full_value=sc_result)
 
     # 4. Bounds are permissive: clip to the domain, convert, and let the strategy decide.
     intervals = [_native_interval(op, param) for param in params]
@@ -1363,7 +1435,7 @@ def _pad_if_collapsed(lo: float, hi: float, value: float) -> tuple[float, float]
     return lo - pad, hi + pad
 
 
-def _angle_in(result: Parameter, unit: str) -> Parameter:
+def _angle_in(result: DescriptorNumber, unit: str) -> DescriptorNumber:
     """
     Express an angle ``result`` (in radians, as Scipp returns it) in ``unit``.
 
@@ -1372,14 +1444,14 @@ def _angle_in(result: Parameter, unit: str) -> Parameter:
 
     Parameters
     ----------
-    result : Parameter
+    result : DescriptorNumber
         An angle in radians. It is converted in place.
     unit : str
         Target unit, ``'rad'`` or ``'deg'``.
 
     Returns
     -------
-    Parameter
+    DescriptorNumber
         ``result``, in ``unit``.
 
     Raises
@@ -1392,12 +1464,12 @@ def _angle_in(result: Parameter, unit: str) -> Parameter:
     return result
 
 
-def _variance(param: Parameter) -> float:
+def _variance(param: DescriptorNumber) -> float:
     """Variance of a parameter; a missing (``None``) or zero variance counts as 0.0."""
     return float(param.variance) if param.variance else 0.0
 
 
-def _to_scipp_scalar(param: Parameter, strip_variance: bool = False) -> sc.Variable:
+def _to_scipp_scalar(param: DescriptorNumber, strip_variance: bool = False) -> sc.Variable:
     """Convert a Parameter to a Scipp scalar; a zero or missing variance is dropped."""
     kwargs = {'value': float(param.value), 'unit': param.unit}
     variance = _variance(param)
@@ -1406,7 +1478,7 @@ def _to_scipp_scalar(param: Parameter, strip_variance: bool = False) -> sc.Varia
     return sc.scalar(**kwargs)
 
 
-def _delta_method_variance(op: _MathOp, params: tuple[Parameter, ...]) -> float | None:
+def _delta_method_variance(op: _MathOp, params: tuple[DescriptorNumber, ...]) -> float | None:
     """
     First-order error propagation, ``var(y) = sum_i (dy/dx_i)**2 * var(x_i)``.
 
@@ -1434,9 +1506,13 @@ def _native_factor(unit: str, native_unit: str | None) -> float:
     return float(sc.scalar(1.0, unit=unit).to(unit=native_unit).value)
 
 
-def _native_interval(op: _MathOp, param: Parameter) -> _Interval:
+def _native_interval(op: _MathOp, param: DescriptorNumber) -> _Interval:
     """The parameter's bounds, clipped to the domain and in the unit the strategy expects."""
-    lo, hi = op.domain.clip(float(param.min), float(param.max))
+    if isinstance(param, Parameter):
+        lo, hi = float(param.min), float(param.max)
+    else:  # a plain DescriptorNumber has no bounds: it is the single point at its value
+        lo = hi = float(param.value)
+    lo, hi = op.domain.clip(lo, hi)
     factor = _native_factor(str(param.unit), op.native_unit)
     return lo * factor, hi * factor
 
@@ -1587,7 +1663,7 @@ def _tan_bounds(interval: _Interval) -> tuple[float, float]:
     return lower, upper
 
 
-def _std(param: Parameter) -> float:
+def _std(param: DescriptorNumber) -> float:
     """Standard deviation of a parameter; 0 if it has no variance."""
     return math.sqrt(_variance(param))
 
@@ -1598,7 +1674,7 @@ def _std(param: Parameter) -> float:
 # consistent with the singularity (for example a = 0.1 +- 0.2 and b = 0.1 +- 0.2 in
 # arctan2(b, a)) cannot be turned into a derived quantity. Alternatives: only warn, or return a
 # very large variance instead of raising.
-def _tan_guard(param: Parameter) -> None:
+def _tan_guard(param: DescriptorNumber) -> None:
     """
     The value must keep clear of a tan asymptote, where the variance would explode.
 
@@ -1619,7 +1695,7 @@ def _tan_guard(param: Parameter) -> None:
 
 
 # NOTE(): The same one-standard-deviation design decision as for _tan_guard applies here.
-def _arctan2_guard(y: Parameter, x: Parameter) -> None:
+def _arctan2_guard(y: DescriptorNumber, x: DescriptorNumber) -> None:
     """
     The point ``(x, y)`` must keep clear of the origin, where the angle is undefined.
 
