@@ -11,6 +11,7 @@ global_object.instantiate_stack()
 global_object.stack.enabled = False
 
 
+from . import math  # noqa: E402
 from .base_classes import ObjBase  # noqa: E402
 from .fitting import AvailableMinimizers  # noqa: E402
 from .fitting import Fitter  # noqa: E402
@@ -21,12 +22,13 @@ from .variable import Parameter  # noqa: E402
 __version__ = version('easyscience')
 
 __all__ = [
-    __version__,
-    global_object,
-    ObjBase,
-    CollectionBase,
-    AvailableMinimizers,
-    Fitter,
-    DescriptorNumber,
-    Parameter,
+    '__version__',
+    'global_object',
+    'ObjBase',
+    'CollectionBase',
+    'AvailableMinimizers',
+    'Fitter',
+    'DescriptorNumber',
+    'Parameter',
+    'math',
 ]
