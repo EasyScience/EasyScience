@@ -16,6 +16,7 @@ Conventions encoded here (agreed with the lead developer):
   dense evaluation of the function over the input interval.
 """
 
+import importlib
 import math
 import warnings
 
@@ -24,6 +25,7 @@ import pytest
 import scipp as sc
 from scipp import UnitError
 
+import easyscience as es
 import easyscience.variable as es_variable
 from easyscience import DescriptorNumber
 from easyscience import Parameter
@@ -1526,6 +1528,70 @@ class TestAliases:
 
         # EXPECT
         assert result.value == pytest.approx(3 * np.pi / 4)
+
+
+# ----------------------------------------------------------------------
+# The es.math namespace
+# ----------------------------------------------------------------------
+
+
+class TestEsMathNamespace:
+    def test_es_math_is_the_easyscience_math_module(self):
+        # WHEN THEN
+        namespace = es.math
+
+        # EXPECT
+        assert namespace.__name__ == 'easyscience.math'
+
+    def test_es_math_is_not_the_standard_library_math(self):
+        # WHEN
+        import math as stdlib_math
+
+        # THEN
+        namespace = es.math
+
+        # EXPECT
+        assert stdlib_math is not namespace
+        assert stdlib_math.sin(0.0) == 0.0
+
+    def test_es_math_all_equals_the_implementation_all(self):
+        # WHEN THEN
+        public_names = es.math.__all__
+
+        # EXPECT
+        assert public_names == es_math.__all__
+        assert len(public_names) == 27
+        assert all(isinstance(name, str) for name in public_names)
+
+    @pytest.mark.parametrize('name', es_math.__all__)
+    def test_es_math_exposes_the_same_function_objects(self, name):
+        # WHEN THEN
+        exposed = getattr(es.math, name)
+
+        # EXPECT
+        assert exposed is getattr(es_math, name)
+
+    def test_es_math_exposes_nothing_beyond_the_public_names(self):
+        # WHEN THEN
+        public_attributes = {name for name in dir(es.math) if not name.startswith('_')}
+
+        # EXPECT
+        assert public_attributes == set(es_math.__all__)
+
+    def test_variable_still_exports_every_math_name(self):
+        # WHEN THEN
+        math_names = set(es_math.__all__)
+
+        # EXPECT
+        assert math_names <= set(es_variable.__all__)
+
+    def test_from_import_works(self):
+        # WHEN THEN
+        module = importlib.import_module('easyscience.math')
+
+        # EXPECT
+        assert module.sin is es_math.sin
+        assert module.asin is es_math.arcsin
 
 
 # ----------------------------------------------------------------------

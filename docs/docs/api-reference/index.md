@@ -18,6 +18,9 @@ available in EasyScience.
   persisting EasyScience objects (serializers and components).
 - [job](job.md) – Job and experiment abstractions for running and
   organizing analyses.
+- [math](math.md) – Maths functions on `Parameter` objects (for example
+  `es.math.sin`, `es.math.log`, `es.math.arctan2`) that propagate units,
+  uncertainties and fitting bounds.
 - [models](models.md) – Predefined model implementations (e.g.
   polynomial models) used in fitting workflows.
 - [utils](utils.md) – Miscellaneous utility functions and helpers (class
