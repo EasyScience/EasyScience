@@ -7,6 +7,8 @@ from .descriptor_base import DescriptorBase
 from .descriptor_bool import DescriptorBool
 from .descriptor_number import DescriptorNumber
 from .descriptor_str import DescriptorStr
+from .math import acos
+from .math import acosh
 from .math import arccos
 from .math import arccosh
 from .math import arcsin
@@ -14,6 +16,11 @@ from .math import arcsinh
 from .math import arctan
 from .math import arctan2
 from .math import arctanh
+from .math import asin
+from .math import asinh
+from .math import atan
+from .math import atan2
+from .math import atanh
 from .math import cos
 from .math import cosh
 from .math import erf
@@ -37,6 +44,8 @@ __all__ = [
     'DescriptorNumber',
     'DescriptorStr',
     'Parameter',
+    'acos',
+    'acosh',
     'arccos',
     'arccosh',
     'arcsin',
@@ -44,6 +53,11 @@ __all__ = [
     'arctan',
     'arctan2',
     'arctanh',
+    'asin',
+    'asinh',
+    'atan',
+    'atan2',
+    'atanh',
     'cos',
     'cosh',
     'erf',

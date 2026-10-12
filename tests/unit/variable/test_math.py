@@ -308,6 +308,31 @@ class TestBounds:
         assert result.value == pytest.approx(np.sqrt(0.5))
         assert_bounds(result, 0.0, 1.0)
 
+    def test_sin_bounds_include_an_interior_maximum(self):
+        # WHEN
+        # sin peaks at 90 deg, which lies inside [15, 95] deg, so the upper bound is 1.0 and
+        # NOT sin(95 deg) = 0.9962, the value at the endpoint.
+        angle = make(45.0, 'deg', min=15.0, max=95.0)
+
+        # THEN
+        result = es_math.sin(angle)
+
+        # EXPECT
+        assert result.value == pytest.approx(0.707106781, abs=1e-9)
+        assert_bounds(result, 0.258819045, 1.0)
+
+    def test_sin_bounds_are_the_endpoint_values_when_no_extremum_is_inside(self):
+        # WHEN
+        # sin is increasing on all of [15, 85] deg, so the bounds are just sin(15) and sin(85).
+        angle = make(45.0, 'deg', min=15.0, max=85.0)
+
+        # THEN
+        result = es_math.sin(angle)
+
+        # EXPECT
+        assert result.value == pytest.approx(0.707106781, abs=1e-9)
+        assert_bounds(result, 0.258819045, 0.996194698)
+
     def test_cos_bounds_are_computed_in_radians_for_degree_input(self):
         # WHEN
         angle = make(30.0, 'deg', min=0.0, max=90.0)
@@ -1303,6 +1328,204 @@ class TestPublicApi:
         assert all_are_strings
         for name in ALL_FUNCTIONS:
             assert name in exported_names
+
+
+# ----------------------------------------------------------------------
+# Output unit of the inverse trigonometric functions
+# ----------------------------------------------------------------------
+
+INVERSE_TRIG = ['arcsin', 'arccos', 'arctan']
+
+
+class TestInverseOutputUnit:
+    @pytest.mark.parametrize('name', INVERSE_TRIG)
+    def test_default_unit_is_radians(self, name):
+        # WHEN
+        x = make(0.4, min=0.2, max=0.8)
+
+        # THEN
+        result = fn(name)(x)
+
+        # EXPECT
+        assert result.unit == 'rad'
+
+    @pytest.mark.parametrize('name', INVERSE_TRIG)
+    def test_explicit_radians_equals_the_default(self, name):
+        # WHEN
+        x = make(0.4, min=0.2, max=0.8, variance=0.04)
+
+        # THEN
+        default = fn(name)(x)
+        explicit = fn(name)(x, unit='rad')
+
+        # EXPECT
+        assert explicit.unit == 'rad'
+        assert (explicit.value, explicit.variance, explicit.min, explicit.max) == (
+            default.value,
+            default.variance,
+            default.min,
+            default.max,
+        )
+
+    @pytest.mark.parametrize('name', INVERSE_TRIG)
+    def test_degrees_convert_value_and_bounds(self, name):
+        # WHEN
+        x = make(0.4, min=0.2, max=0.8)
+        in_radians = fn(name)(x)
+
+        # THEN
+        in_degrees = fn(name)(x, unit='deg')
+
+        # EXPECT
+        assert in_degrees.unit == 'deg'
+        assert in_degrees.value == pytest.approx(np.degrees(in_radians.value), rel=1e-12)
+        assert in_degrees.min == pytest.approx(np.degrees(in_radians.min), rel=1e-12)
+        assert in_degrees.max == pytest.approx(np.degrees(in_radians.max), rel=1e-12)
+
+    @pytest.mark.parametrize('name', INVERSE_TRIG)
+    def test_degrees_convert_variance_with_the_squared_factor(self, name):
+        # WHEN
+        _, derivative, value, _ = VALUE_CASES[name]
+        variance = 0.04
+        x = make(value, variance=variance)
+
+        # THEN
+        result = fn(name)(x, unit='deg')
+
+        # EXPECT
+        variance_in_rad2 = float(derivative(value)) ** 2 * variance
+        assert result.variance == pytest.approx(variance_in_rad2 * np.degrees(1.0) ** 2, rel=1e-9)
+
+    def test_arcsin_example_in_degrees(self):
+        # WHEN
+        x = make(0.5, min=0.0, max=1.0)
+
+        # THEN
+        result = es_math.arcsin(x, unit='deg')
+
+        # EXPECT
+        assert result.value == pytest.approx(30.0, abs=1e-9)
+        assert_bounds(result, 0.0, 90.0)
+
+    def test_arctan2_in_degrees(self):
+        # WHEN
+        y = make(1.0, 'm', min=0.5, max=2.0, name='y')
+        x = make(1.0, 'm', min=1.0, max=3.0, name='x')
+
+        # THEN
+        result = es_math.arctan2(y, x, unit='deg')
+
+        # EXPECT
+        assert result.unit == 'deg'
+        assert result.value == pytest.approx(45.0, abs=1e-9)
+        assert result.min == pytest.approx(np.degrees(np.arctan2(0.5, 3.0)), rel=1e-12)
+        assert result.max == pytest.approx(np.degrees(np.arctan2(2.0, 1.0)), rel=1e-12)
+
+    def test_arctan2_variance_in_degrees(self):
+        # WHEN
+        y, x, var_y, var_x = 1.0, 2.0, 0.04, 0.09
+        y_param = make(y, 'm', variance=var_y)
+        x_param = make(x, 'm', variance=var_x)
+
+        # THEN
+        result = es_math.arctan2(y_param, x_param, unit='deg')
+
+        # EXPECT
+        variance_in_rad2 = (x**2 * var_y + y**2 * var_x) / (x**2 + y**2) ** 2
+        assert result.variance == pytest.approx(variance_in_rad2 * np.degrees(1.0) ** 2, rel=1e-9)
+
+    @pytest.mark.parametrize('name', INVERSE_TRIG)
+    def test_a_unit_that_is_not_an_angle_raises(self, name):
+        # WHEN THEN
+        x = make(0.4)
+
+        # EXPECT
+        with pytest.raises(UnitError):
+            fn(name)(x, unit='m')
+
+    def test_arctan2_with_a_unit_that_is_not_an_angle_raises(self):
+        # WHEN THEN
+        y = make(1.0, 'm')
+        x = make(2.0, 'm')
+
+        # EXPECT
+        with pytest.raises(UnitError):
+            es_math.arctan2(y, x, unit='m')
+
+    @pytest.mark.parametrize('name', INVERSE_TRIG)
+    def test_unit_is_keyword_only(self, name):
+        # WHEN THEN
+        x = make(0.4)
+
+        # EXPECT
+        with pytest.raises(TypeError):
+            fn(name)(x, 'deg')
+
+
+# ----------------------------------------------------------------------
+# Aliases
+# ----------------------------------------------------------------------
+
+ALIASES = {
+    'asin': 'arcsin',
+    'acos': 'arccos',
+    'atan': 'arctan',
+    'atan2': 'arctan2',
+    'asinh': 'arcsinh',
+    'acosh': 'arccosh',
+    'atanh': 'arctanh',
+}
+
+
+class TestAliases:
+    @pytest.mark.parametrize(('alias', 'canonical'), ALIASES.items())
+    def test_alias_is_the_same_function_object(self, alias, canonical):
+        # WHEN THEN
+        alias_function = getattr(es_math, alias)
+
+        # EXPECT
+        assert alias_function is getattr(es_math, canonical)
+
+    @pytest.mark.parametrize(('alias', 'canonical'), ALIASES.items())
+    def test_alias_is_exported_from_easyscience_variable(self, alias, canonical):
+        # WHEN THEN
+        exported = getattr(es_variable, alias)
+
+        # EXPECT
+        assert exported is getattr(es_variable, canonical)
+        assert alias in es_variable.__all__
+
+    def test_result_is_named_after_the_canonical_function(self):
+        # WHEN
+        x = make(0.4, name='x')
+
+        # THEN
+        result = es_variable.asin(x)
+
+        # EXPECT
+        assert result.name == 'arcsin(x)'
+
+    def test_alias_accepts_the_unit_keyword(self):
+        # WHEN
+        x = make(0.5, min=0.0, max=1.0)
+
+        # THEN
+        result = es_variable.asin(x, unit='deg')
+
+        # EXPECT
+        assert result.unit == 'deg'
+        assert result.value == pytest.approx(30.0, abs=1e-9)
+
+    def test_atan2_alias_keeps_the_y_then_x_argument_order(self):
+        # WHEN
+        y = make(1.0, name='y')
+        x = make(-1.0, name='x')
+
+        # THEN
+        result = es_variable.atan2(y, x)
+
+        # EXPECT
+        assert result.value == pytest.approx(3 * np.pi / 4)
 
 
 # ----------------------------------------------------------------------

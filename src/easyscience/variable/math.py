@@ -526,7 +526,7 @@ def tan(x: Parameter) -> Parameter:
     return _apply(_TAN, x)
 
 
-def arcsin(x: Parameter) -> Parameter:
+def arcsin(x: Parameter, *, unit: str = 'rad') -> Parameter:
     """
     Calculate the inverse sine of a dimensionless parameter.
 
@@ -534,18 +534,21 @@ def arcsin(x: Parameter) -> Parameter:
     ----------
     x : Parameter
         Dimensionless input; its value must be in ``[-1, 1]``.
+    unit : str, default='rad'
+        Unit of the returned angle, ``'rad'`` or ``'deg'``. The value, the variance and
+        the bounds are all converted.
 
     Returns
     -------
     Parameter
-        Angle in ``rad``, in ``[-pi/2, pi/2]``, with propagated variance and bounds.
+        Angle in ``unit`` (``[-pi/2, pi/2]`` rad), with propagated variance and bounds.
 
     Raises
     ------
     NotImplementedError
         If ``x`` is not a ``Parameter``.
     UnitError
-        If ``x`` is not dimensionless.
+        If ``x`` is not dimensionless, or ``unit`` is not an angle unit.
     ValueError
         If the value of ``x`` is outside ``[-1, 1]``, or if the result is not finite
         (a non-zero variance at ``x == +-1``, where the derivative is infinite).
@@ -566,20 +569,19 @@ def arcsin(x: Parameter) -> Parameter:
     >>> result.unit
     'rad'
 
-    Convert the result to degrees; the bounds follow:
+    Ask for degrees with ``unit``; the value, variance and bounds follow:
 
     >>> x = Parameter('x', 0.5, min=0.0, max=1.0)
-    >>> result = arcsin(x)
-    >>> result.convert_unit('deg')
+    >>> result = arcsin(x, unit='deg')
     >>> print(
     ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
     ... )
     30.0000 deg in [0.0000, 90.0000]
-    """  # noqa: DOC502 -- raised in _apply
-    return _apply(_ARCSIN, x)
+    """  # noqa: DOC502 -- raised in _apply and _angle_in
+    return _angle_in(_apply(_ARCSIN, x), unit)
 
 
-def arccos(x: Parameter) -> Parameter:
+def arccos(x: Parameter, *, unit: str = 'rad') -> Parameter:
     """
     Calculate the inverse cosine of a dimensionless parameter.
 
@@ -587,18 +589,21 @@ def arccos(x: Parameter) -> Parameter:
     ----------
     x : Parameter
         Dimensionless input; its value must be in ``[-1, 1]``.
+    unit : str, default='rad'
+        Unit of the returned angle, ``'rad'`` or ``'deg'``. The value, the variance and
+        the bounds are all converted.
 
     Returns
     -------
     Parameter
-        Angle in ``rad``, in ``[0, pi]``, with propagated variance and bounds.
+        Angle in ``unit`` (``[0, pi]`` rad), with propagated variance and bounds.
 
     Raises
     ------
     NotImplementedError
         If ``x`` is not a ``Parameter``.
     UnitError
-        If ``x`` is not dimensionless.
+        If ``x`` is not dimensionless, or ``unit`` is not an angle unit.
     ValueError
         If the value of ``x`` is outside ``[-1, 1]``, or if the result is not finite
         (a non-zero variance at ``x == +-1``, where the derivative is infinite).
@@ -622,20 +627,19 @@ def arccos(x: Parameter) -> Parameter:
     ... )
     1.0472 rad in [0.0000, 1.5708]
 
-    Convert the result to degrees:
+    Ask for degrees with ``unit``; the value, variance and bounds follow:
 
     >>> x = Parameter('x', 0.5, min=0.0, max=1.0)
-    >>> result = arccos(x)
-    >>> result.convert_unit('deg')
+    >>> result = arccos(x, unit='deg')
     >>> print(
     ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
     ... )
     60.0000 deg in [0.0000, 90.0000]
-    """  # noqa: DOC502 -- raised in _apply
-    return _apply(_ARCCOS, x)
+    """  # noqa: DOC502 -- raised in _apply and _angle_in
+    return _angle_in(_apply(_ARCCOS, x), unit)
 
 
-def arctan(x: Parameter) -> Parameter:
+def arctan(x: Parameter, *, unit: str = 'rad') -> Parameter:
     """
     Calculate the inverse tangent of a dimensionless parameter.
 
@@ -643,18 +647,21 @@ def arctan(x: Parameter) -> Parameter:
     ----------
     x : Parameter
         Dimensionless input.
+    unit : str, default='rad'
+        Unit of the returned angle, ``'rad'`` or ``'deg'``. The value, the variance and
+        the bounds are all converted.
 
     Returns
     -------
     Parameter
-        Angle in ``rad``, in ``[-pi/2, pi/2]``, with propagated variance and bounds.
+        Angle in ``unit`` (``[-pi/2, pi/2]`` rad), with propagated variance and bounds.
 
     Raises
     ------
     NotImplementedError
         If ``x`` is not a ``Parameter``.
     UnitError
-        If ``x`` is not dimensionless.
+        If ``x`` is not dimensionless, or ``unit`` is not an angle unit.
 
     Examples
     --------
@@ -670,20 +677,19 @@ def arctan(x: Parameter) -> Parameter:
     ... )
     0.7854 rad in [0.0000, 1.4711]
 
-    Convert the result to degrees:
+    Ask for degrees with ``unit``; the value, variance and bounds follow:
 
     >>> x = Parameter('x', 1.0, min=0.0, max=10.0)
-    >>> result = arctan(x)
-    >>> result.convert_unit('deg')
+    >>> result = arctan(x, unit='deg')
     >>> print(
     ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
     ... )
     45.0000 deg in [0.0000, 84.2894]
-    """  # noqa: DOC502 -- raised in _apply
-    return _apply(_ARCTAN, x)
+    """  # noqa: DOC502 -- raised in _apply and _angle_in
+    return _angle_in(_apply(_ARCTAN, x), unit)
 
 
-def arctan2(y: Parameter, x: Parameter) -> Parameter:
+def arctan2(y: Parameter, x: Parameter, *, unit: str = 'rad') -> Parameter:
     """
     Calculate the angle of the point ``(x, y)``, using both signs to find the quadrant.
 
@@ -693,18 +699,21 @@ def arctan2(y: Parameter, x: Parameter) -> Parameter:
         Cartesian y-coordinate.
     x : Parameter
         Cartesian x-coordinate. Must have the same unit as ``y``.
+    unit : str, default='rad'
+        Unit of the returned angle, ``'rad'`` or ``'deg'``. The value, the variance and
+        the bounds are all converted.
 
     Returns
     -------
     Parameter
-        Angle in ``rad``, in ``[-pi, pi]``, with propagated variance and bounds.
+        Angle in ``unit`` (``[-pi, pi]`` rad), with propagated variance and bounds.
 
     Raises
     ------
     NotImplementedError
         If ``y`` or ``x`` is not a ``Parameter``.
     UnitError
-        If ``y`` and ``x`` have different units.
+        If ``y`` and ``x`` have different units, or ``unit`` is not an angle unit.
     ValueError
         If an argument has a variance and the point ``(x, y)`` lies within the larger of
         the two standard deviations of the origin, where the angle is undefined, or if
@@ -741,18 +750,17 @@ def arctan2(y: Parameter, x: Parameter) -> Parameter:
     ... )
     0.7854 rad in [0.1651, 1.1071]
 
-    Convert the result to degrees:
+    Ask for degrees with ``unit``; the value, variance and bounds follow:
 
     >>> y = Parameter('y', 1.0, unit='m', min=0.5, max=2.0)
     >>> x = Parameter('x', 1.0, unit='m', min=1.0, max=3.0)
-    >>> result = arctan2(y, x)
-    >>> result.convert_unit('deg')
+    >>> result = arctan2(y, x, unit='deg')
     >>> print(
     ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
     ... )
     45.0000 deg in [9.4623, 63.4349]
-    """  # noqa: DOC502 -- raised in _apply
-    return _apply(_ARCTAN2, y, x)
+    """  # noqa: DOC502 -- raised in _apply and _angle_in
+    return _angle_in(_apply(_ARCTAN2, y, x), unit)
 
 
 def sinc(x: Parameter) -> Parameter:
@@ -1099,6 +1107,22 @@ def arctanh(x: Parameter) -> Parameter:
 
 
 # ==========================================
+# Aliases
+# ==========================================
+# The C / Scipp spellings of the inverse functions. They are the same function objects, so
+# they share the docstring, and the parameters they return are named after the canonical
+# function (``asin(x)`` returns a parameter called ``arcsin(x)``).
+
+asin = arcsin
+acos = arccos
+atan = arctan
+atan2 = arctan2
+asinh = arcsinh
+acosh = arccosh
+atanh = arctanh
+
+
+# ==========================================
 # Specification of a maths operation
 # ==========================================
 
@@ -1242,6 +1266,35 @@ def _apply(op: _MathOp, *params: Parameter) -> Parameter:
         min=new_min,
         max=new_max,
     )
+
+
+def _angle_in(result: Parameter, unit: str) -> Parameter:
+    """
+    Express an angle ``result`` (in radians, as Scipp returns it) in ``unit``.
+
+    The value, the variance and the bounds are converted together by
+    ``Parameter.convert_unit``.
+
+    Parameters
+    ----------
+    result : Parameter
+        An angle in radians. It is converted in place.
+    unit : str
+        Target unit, ``'rad'`` or ``'deg'``.
+
+    Returns
+    -------
+    Parameter
+        ``result``, in ``unit``.
+
+    Raises
+    ------
+    UnitError
+        If ``unit`` is not an angle unit.
+    """  # noqa: DOC502 -- raised by Parameter.convert_unit
+    if unit != result.unit:
+        result.convert_unit(unit)
+    return result
 
 
 def _variance(param: Parameter) -> float:
