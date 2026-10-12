@@ -21,6 +21,34 @@ Conventions:
   asymptote become ``(-inf, inf)``, and bounds that collapse to (nearly) a single
   number are padded by a relative 2e-9 around the value.
 
+Using ``es.math`` in a model:
+
+``es.math`` works on scalar ``Parameter`` objects, so it cannot be applied
+over an ``x`` array. Use it to derive scalar quantities, with their
+uncertainty, from the parameters of a model or of a fit. Each result is a new
+``Parameter`` that is a *snapshot* of its inputs: it does not follow later
+changes. Inside a model, derive it in ``__call__`` so that it is recomputed
+on every evaluation of the fit, and not once in ``__init__``:
+
+```python
+class GaussianPeak(ModelBase):
+    def sigma(self):
+        two = self._two
+        return self._fwhm / (2 * es.math.sqrt(2 * es.math.log(two)))
+
+    def __call__(self, x):
+        sigma = self.sigma().value  # derived on every evaluation
+        shift = (x - self.center.value) ** 2
+        return self.amplitude.value * np.exp(-shift / (2 * sigma**2))
+```
+
+Two things to keep in mind. Propagated variances assume uncorrelated inputs,
+because a ``Parameter`` stores a variance but no covariance; a function of two
+strongly correlated fit parameters (for example ``arctan2`` of the slope and
+intercept of a line) can be off by a large factor. And a fit reports different
+uncertainties for different minimizers, so every derived variance is only as
+good as the variance it starts from.
+
 Implementation: each function is described by a small, immutable ``_MathOp``
 specification (which Scipp function to call, which domain it accepts, how to
 derive its bounds, ...). A single dispatcher, ``_apply``, does the work for all of
@@ -63,6 +91,10 @@ _SINC_NEWTON_STEPS = 8
 # Beyond this the lobes of sinc are below 1e-15 (they fall off like 1/x), and the lobe index
 # would no longer fit numpy's integer range; the endpoints give the bounds to that precision.
 _SINC_NEGLIGIBLE_LOBES_FROM = 1e15
+
+# tan: a bound within this distance (in units of pi) of an asymptote counts as sitting on it, so
+# that 90 deg converted to radians is recognised despite round-off.
+_TAN_EDGE_TOLERANCE = 1e-12
 
 # ``Parameter`` refuses ``min`` and ``max`` that are equal or within a relative 1e-9 of each
 # other. Result bounds that collapse (a saturating or underflowing function, or an extremum
@@ -532,7 +564,8 @@ def tan(x: Parameter) -> Parameter:
     -----
     The *value* is guarded against asymptotes, but the *bounds* are allowed to cross
     them: if ``x.min`` and ``x.max`` lie on different branches of ``tan``, the result
-    bounds are ``(-inf, inf)``.
+    bounds are ``(-inf, inf)``. A bound exactly on an asymptote makes the result bound
+    infinite on that side only, so ``[0, 90]`` deg gives ``[0, inf)``.
 
     Examples
     --------
@@ -1213,6 +1246,16 @@ class _MathOp:
 # ==========================================
 
 
+# NOTE(): Every result is an independent, non-fixed ``Parameter`` that is a snapshot of its inputs
+# (as are the results of ``Parameter.__mul__`` and friends): it does not follow later changes and,
+# if handed to a ``Fitter``, would be varied as a free parameter of its own. Whether results should
+# be ``fixed=True``, or linked to their inputs (compare ``Parameter.from_dependency``), is for the
+# lead developer to decide.
+# TODO(): Cost. A chain of five es.math / Parameter operations (a Gaussian width derived from a
+# FWHM inside a model's __call__) took about 1.3 ms per evaluation, constant over thousands of
+# evaluations and without leaking. That is fine for ordinary fits, but it has not been profiled
+# where the time goes: profile before using es.math in hot loops (tens of thousands of
+# evaluations), and consider a cheaper path if it matters.
 def _apply(op: _MathOp, *params: Parameter) -> Parameter:
     """
     Evaluate ``op`` on ``params``: validate, call Scipp, derive bounds, repack.
@@ -1291,6 +1334,10 @@ def _apply(op: _MathOp, *params: Parameter) -> Parameter:
     )
 
 
+# TODO(): ``rtol=1e-9`` below mirrors the literal tolerance in the min/max setters of ``Parameter``,
+# which is not a named constant. Expose it in parameter.py and import it here, so that the two
+# cannot drift apart (if ``Parameter`` tightens its tolerance this padding would silently stop
+# preventing the 'identical bounds' ValueError).
 def _pad_if_collapsed(lo: float, hi: float, value: float) -> tuple[float, float]:
     """
     Widen bounds that ``Parameter`` would reject as identical, symmetrically around ``value``.
@@ -1498,19 +1545,46 @@ def _sinc_critical_points(lo: float, hi: float) -> np.ndarray:
     return np.concatenate(points)
 
 
+def _tan_branch(position: float) -> tuple[float, bool]:
+    """
+    Branch of tan that a point lies on, and whether it sits exactly on an asymptote.
+
+    Parameters
+    ----------
+    position : float
+        ``(x - pi/2) / pi``, so that the asymptotes ``pi/2 + n*pi`` are the integers.
+
+    Returns
+    -------
+    tuple[float, bool]
+        The branch index (the asymptote's own index if the point sits on one) and whether the
+        point sits on an asymptote.
+    """
+    nearest = float(np.round(position))
+    on_asymptote = abs(position - nearest) <= _TAN_EDGE_TOLERANCE
+    return (nearest if on_asymptote else float(np.floor(position))), on_asymptote
+
+
 def _tan_bounds(interval: _Interval) -> tuple[float, float]:
     """
-    Bounds of tan(x) for ``x`` in radians. tan is increasing between asymptotes
-    (``pi/2 + n*pi``); an interval that spans an asymptote covers all real numbers.
+    Bounds of tan(x) for ``x`` in radians.
+
+    tan is increasing between asymptotes (``pi/2 + n*pi``). An interval that contains an
+    asymptote in its interior covers all real numbers. A bound exactly on an asymptote makes
+    the result unbounded on that side only: ``[0, pi/2]`` gives ``[0, inf)``.
     """
     lo, hi = interval
     if not (np.isfinite(lo) and np.isfinite(hi)):
         return -np.inf, np.inf
-    branch_lo = np.floor((lo - _HALF_PI) / np.pi)
-    branch_hi = np.floor((hi - _HALF_PI) / np.pi)
+    branch_lo, lo_on_asymptote = _tan_branch((lo - _HALF_PI) / np.pi)
+    branch_hi, hi_on_asymptote = _tan_branch((hi - _HALF_PI) / np.pi)
+    if hi_on_asymptote:
+        branch_hi -= 1  # an upper bound on an asymptote closes the branch below it
     if branch_lo != branch_hi:
         return -np.inf, np.inf
-    return float(np.tan(lo)), float(np.tan(hi))
+    lower = -np.inf if lo_on_asymptote else float(np.tan(lo))
+    upper = np.inf if hi_on_asymptote else float(np.tan(hi))
+    return lower, upper
 
 
 def _std(param: Parameter) -> float:
@@ -1518,6 +1592,12 @@ def _std(param: Parameter) -> float:
     return math.sqrt(_variance(param))
 
 
+# NOTE(): Design decision awaiting sign-off. The guards below reject a
+# value that lies within one standard deviation of a tan asymptote (or of the arctan2 origin),
+# because the delta method is meaningless there. The price is that a legitimate fit result that is
+# consistent with the singularity (for example a = 0.1 +- 0.2 and b = 0.1 +- 0.2 in
+# arctan2(b, a)) cannot be turned into a derived quantity. Alternatives: only warn, or return a
+# very large variance instead of raising.
 def _tan_guard(param: Parameter) -> None:
     """
     The value must keep clear of a tan asymptote, where the variance would explode.
@@ -1538,6 +1618,7 @@ def _tan_guard(param: Parameter) -> None:
         )
 
 
+# NOTE(): The same one-standard-deviation design decision as for _tan_guard applies here.
 def _arctan2_guard(y: Parameter, x: Parameter) -> None:
     """
     The point ``(x, y)`` must keep clear of the origin, where the angle is undefined.

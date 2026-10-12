@@ -159,6 +159,22 @@ class TestValueAndVariance:
         expected = float(derivative(value)) ** 2 * variance
         assert result.variance == pytest.approx(expected, rel=1e-9)
 
+    @pytest.mark.parametrize('name', ['sin', 'cos', 'tan'])
+    def test_variance_in_degrees_follows_the_unit_conversion(self, name):
+        # WHEN
+        _, derivative, _, _ = VALUE_CASES[name]
+        angle_in_degrees, variance_in_degrees2 = 30.0, 1.0
+        x = make(angle_in_degrees, 'deg', variance=variance_in_degrees2)
+
+        # THEN
+        result = fn(name)(x)
+
+        # EXPECT
+        # d f / d(deg) = f'(rad) * pi / 180, so the variance picks up (pi / 180) ** 2.
+        radians = np.deg2rad(angle_in_degrees)
+        expected = float(derivative(radians)) ** 2 * variance_in_degrees2 * np.deg2rad(1.0) ** 2
+        assert result.variance == pytest.approx(expected, rel=1e-9)
+
     @pytest.mark.parametrize('name', UNARY_FUNCTIONS)
     @pytest.mark.parametrize('variance', [0.0, None])
     def test_no_input_variance_gives_no_output_variance(self, name, variance):
@@ -655,6 +671,48 @@ class TestTan:
 
         # EXPECT
         assert_bounds(result, 0.0, np.tan(np.pi / 3))
+
+    def test_upper_bound_exactly_on_an_asymptote_is_infinite_on_that_side_only(self):
+        # WHEN
+        # tan rises from tan(0) = 0 to +inf as the angle approaches 90 deg.
+        angle = make(45.0, 'deg', min=0.0, max=90.0)
+
+        # THEN
+        result = es_math.tan(angle)
+
+        # EXPECT
+        assert_bounds(result, 0.0, INF)
+
+    def test_upper_bound_exactly_on_an_asymptote_in_radians(self):
+        # WHEN
+        angle = make(0.5, 'rad', min=0.0, max=np.pi / 2)
+
+        # THEN
+        result = es_math.tan(angle)
+
+        # EXPECT
+        assert_bounds(result, 0.0, INF)
+
+    def test_lower_bound_exactly_on_an_asymptote_is_infinite_on_that_side_only(self):
+        # WHEN
+        # Just after 90 deg tan is -inf and rises to tan(120 deg) = -sqrt(3).
+        angle = make(100.0, 'deg', min=90.0, max=120.0)
+
+        # THEN
+        result = es_math.tan(angle)
+
+        # EXPECT
+        assert_bounds(result, -INF, -np.sqrt(3.0))
+
+    def test_bounds_on_two_asymptotes_cover_all_real_numbers(self):
+        # WHEN
+        angle = make(0.0, 'deg', min=-90.0, max=90.0)
+
+        # THEN
+        result = es_math.tan(angle)
+
+        # EXPECT
+        assert_bounds(result, -INF, INF)
 
     @pytest.mark.parametrize(
         ('value', 'unit'), [(np.pi / 2, 'rad'), (90.0, 'deg'), (-90.0, 'deg')]
@@ -1577,6 +1635,14 @@ class TestEsMathNamespace:
 
         # EXPECT
         assert public_attributes == set(es_math.__all__)
+
+    def test_math_is_not_exported_by_a_star_import_of_the_package(self):
+        # WHEN THEN
+        top_level_all = es.__all__
+
+        # EXPECT
+        # `from easyscience import *` would otherwise replace the standard-library `math`.
+        assert 'math' not in top_level_all
 
     def test_variable_still_exports_every_math_name(self):
         # WHEN THEN
