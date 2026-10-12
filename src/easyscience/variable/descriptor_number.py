@@ -131,8 +131,8 @@ class DescriptorNumber(DescriptorBase):
 
         Returns
         -------
-        DescriptorNumber
-            DescriptorNumber.
+        Self
+            A new instance of the class this is called on.
 
         Raises
         ------
