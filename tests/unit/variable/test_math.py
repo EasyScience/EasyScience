@@ -1529,11 +1529,11 @@ class TestAliases:
 
 
 # ----------------------------------------------------------------------
-# Known bug (deferred): collapsed result bounds
+# Collapsed result bounds
 # ----------------------------------------------------------------------
 
 COLLAPSED_BOUNDS_CASES = [
-    # (function, value, unit, min, max, why the result bounds collapse)
+    # (function, value, unit, min, max, why the exact result bounds collapse)
     ('erf', 15.0, '', 10.0, 20.0, 'erf(10) == erf(20) == 1.0'),
     ('erf', 5.5, '', 5.0, 6.0, 'erf(5) and erf(6) differ by 1.5e-12 (< rtol 1e-9)'),
     ('tanh', 20.0, '', 15.0, 25.0, 'tanh saturates at 1.0'),
@@ -1544,32 +1544,23 @@ COLLAPSED_BOUNDS_CASES = [
     ('sin', np.pi / 2, 'rad', np.pi / 2 - 1e-5, np.pi / 2 + 1e-5, 'quadratic at the maximum'),
     ('arctan', 1e11, '', 1e10, 1e12, 'arctan saturates at pi/2'),
 ]
+COLLAPSED_IDS = [f'{case[0]}[{case[3]:g},{case[4]:g}]' for case in COLLAPSED_BOUNDS_CASES]
 
 
-class TestCollapsedBoundsKnownBug:
+class TestCollapsedBounds:
     """
-    ``Parameter`` rejects ``min`` and ``max`` that are equal or within ``rtol=1e-9``
-    ('The min and max bounds cannot be identical'). Valid inputs whose function saturates,
-    underflows or is quadratic at an extremum therefore make the maths functions raise,
-    which contradicts 'bounds never raise'.
-
-    Deferred on purpose: the right fix (pad the bounds, use the natural range, or something
-    else) needs manual inspection, see ``tests/manual/collapsed_bounds.ipynb``.
-    ``strict=True``: once the bug is fixed these tests XPASS and fail, which is the signal
-    to delete the ``xfail`` marker.
+    ``Parameter`` rejects ``min`` and ``max`` that are equal or within ``rtol=1e-9``. Valid
+    inputs whose function saturates, underflows or is quadratic at an extremum would make the
+    exact result bounds collapse, so such bounds are padded around the value (by twice that
+    relative tolerance, or by an absolute 1e-12 if the value is 0).
     """
 
-    @pytest.mark.xfail(
-        strict=True,
-        raises=ValueError,
-        reason='Known bug: collapsed result bounds are rejected by Parameter (deferred).',
-    )
     @pytest.mark.parametrize(
-        ('name', 'value', 'unit', 'lo', 'hi', 'why'),
-        COLLAPSED_BOUNDS_CASES,
-        ids=[f'{case[0]}[{case[3]:g},{case[4]:g}]' for case in COLLAPSED_BOUNDS_CASES],
+        ('name', 'value', 'unit', 'lo', 'hi', 'why'), COLLAPSED_BOUNDS_CASES, ids=COLLAPSED_IDS
     )
-    def test_collapsed_bounds_do_not_raise(self, name, value, unit, lo, hi, why):
+    def test_collapsed_bounds_do_not_raise_and_contain_the_value(
+        self, name, value, unit, lo, hi, why
+    ):
         # WHEN
         x = make(value, unit, min=lo, max=hi)
 
@@ -1577,4 +1568,59 @@ class TestCollapsedBoundsKnownBug:
         result = fn(name)(x)
 
         # EXPECT
+        assert not np.isnan(result.min) and not np.isnan(result.max)
         assert result.min <= result.value <= result.max
+        assert result.min < result.max
+
+    @pytest.mark.parametrize(
+        ('name', 'value', 'unit', 'lo', 'hi', 'why'), COLLAPSED_BOUNDS_CASES, ids=COLLAPSED_IDS
+    )
+    def test_padded_bounds_contain_the_true_range(self, name, value, unit, lo, hi, why):
+        # WHEN
+        x = make(value, unit, min=lo, max=hi)
+        reference = ARRAY_REFERENCE.get(name, VALUE_CASES[name][0])
+
+        # THEN
+        result = fn(name)(x)
+
+        # EXPECT
+        true_min, true_max = dense_range(reference, lo, hi, n=20_001)
+        assert result.min <= true_min
+        assert result.max >= true_max
+
+    @pytest.mark.parametrize(
+        ('name', 'value', 'unit', 'lo', 'hi', 'why'), COLLAPSED_BOUNDS_CASES, ids=COLLAPSED_IDS
+    )
+    def test_padding_is_tiny(self, name, value, unit, lo, hi, why):
+        # WHEN
+        x = make(value, unit, min=lo, max=hi)
+
+        # THEN
+        result = fn(name)(x)
+
+        # EXPECT
+        # Twice the 1e-9 relative tolerance on each side, i.e. a width of about 4e-9 * |value|
+        # (an absolute 2e-12 around a value of 0).
+        assert result.max - result.min <= 1e-8 * max(abs(result.value), 1e-3)
+
+    def test_zero_value_gets_an_absolute_pad(self):
+        # WHEN
+        # exp(-900) underflows to exactly 0.0, so a relative pad would again be zero.
+        x = make(-900.0, min=-1000.0, max=-800.0)
+
+        # THEN
+        result = es_math.exp(x)
+
+        # EXPECT
+        assert result.value == 0.0
+        assert_bounds(result, -1e-12, 1e-12, tol=1e-15)
+
+    def test_bounds_that_do_not_collapse_are_left_exact(self):
+        # WHEN
+        x = make(0.5, min=0.0, max=1.0)
+
+        # THEN
+        result = es_math.erf(x)
+
+        # EXPECT
+        assert_bounds(result, 0.0, math.erf(1.0), tol=1e-15)

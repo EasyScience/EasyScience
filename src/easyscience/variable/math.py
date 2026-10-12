@@ -17,8 +17,9 @@ Conventions:
 * *Values are validated strictly.* A value outside the function's domain, or a
   non-finite result, raises ``ValueError``; such values would break a fit loop.
 * *Bounds are permissive.* They never raise: bounds outside the domain are
-  clipped to it, infinite bounds are accepted, and ``tan`` bounds that cross an
-  asymptote become ``(-inf, inf)``.
+  clipped to it, infinite bounds are accepted, ``tan`` bounds that cross an
+  asymptote become ``(-inf, inf)``, and bounds that collapse to (nearly) a single
+  number are padded by a relative 2e-9 around the value.
 
 Implementation: each function is described by a small, immutable ``_MathOp``
 specification (which Scipp function to call, which domain it accepts, how to
@@ -59,6 +60,13 @@ _SINC_NEWTON_STEPS = 8
 # Beyond this the lobes of sinc are below 1e-15 (they fall off like 1/x), and the lobe index
 # would no longer fit numpy's integer range; the endpoints give the bounds to that precision.
 _SINC_NEGLIGIBLE_LOBES_FROM = 1e15
+
+# ``Parameter`` refuses ``min`` and ``max`` that are equal or within a relative 1e-9 of each
+# other. Result bounds that collapse (a saturating or underflowing function, or an extremum
+# at which the function is quadratic) are therefore padded around the value by twice that
+# relative tolerance, or by an absolute amount if the value is 0.
+_COLLAPSE_PAD = 2e-9
+_COLLAPSE_PAD_ZERO = 1e-12
 
 
 # ==========================================
@@ -1259,6 +1267,8 @@ def _apply(op: _MathOp, *params: Parameter) -> Parameter:
         new_min, new_max = op.bounds(*intervals)
     # Guard against round-off at an extremum: the value is always inside its own bounds.
     new_min, new_max = min(new_min, sc_result.value), max(new_max, sc_result.value)
+    # Parameter rejects (nearly) identical bounds, so bounds that collapsed are padded.
+    new_min, new_max = _pad_if_collapsed(new_min, new_max, sc_result.value)
 
     return Parameter.from_scipp(
         name=f'{op.name}({label})',
@@ -1266,6 +1276,31 @@ def _apply(op: _MathOp, *params: Parameter) -> Parameter:
         min=new_min,
         max=new_max,
     )
+
+
+def _pad_if_collapsed(lo: float, hi: float, value: float) -> tuple[float, float]:
+    """
+    Widen bounds that ``Parameter`` would reject as identical, symmetrically around ``value``.
+
+    Parameters
+    ----------
+    lo : float
+        Lower bound.
+    hi : float
+        Upper bound.
+    value : float
+        The result value, which lies inside ``[lo, hi]``.
+
+    Returns
+    -------
+    tuple[float, float]
+        ``(lo, hi)`` unchanged, or padded by ``_COLLAPSE_PAD * |value|`` (``_COLLAPSE_PAD_ZERO``
+        if the value is 0) on each side if they are equal or within ``Parameter``'s tolerance.
+    """
+    if not np.isclose(lo, hi, rtol=1e-9, atol=0.0):
+        return lo, hi
+    pad = abs(value) * _COLLAPSE_PAD or _COLLAPSE_PAD_ZERO
+    return lo - pad, hi + pad
 
 
 def _angle_in(result: Parameter, unit: str) -> Parameter:
