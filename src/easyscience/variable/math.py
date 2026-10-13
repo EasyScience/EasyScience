@@ -4,8 +4,8 @@
 """
 Mathematical functions for EasyScience ``Parameter`` objects.
 
-Every public function takes one or more ``Parameter`` objects and returns a new
-``Parameter`` holding
+Every public function takes one or more ``Parameter`` objects and
+returns a new ``Parameter`` holding
 
 * the **value**, evaluated by Scipp (which also validates the units),
 * the propagated **variance** (first-order "delta method", uncorrelated inputs), and
@@ -23,21 +23,23 @@ Conventions:
 
 Input and result classes:
 
-Every function accepts a ``DescriptorNumber`` or a ``Parameter`` (a ``Parameter`` is a
-``DescriptorNumber``), including user subclasses of either. The result is a ``Parameter``,
-with bounds, if any argument is a ``Parameter``, and a ``DescriptorNumber``, without bounds,
-otherwise. It is always the base class and never the subclass, as for the arithmetic
-operators. A ``DescriptorNumber`` argument counts as the single point at its value when
-the bounds of a ``Parameter`` result are derived.
+Every function accepts a ``DescriptorNumber`` or a ``Parameter`` (a
+``Parameter`` is a ``DescriptorNumber``), including user subclasses of
+either. The result is a ``Parameter``, with bounds, if any argument is a
+``Parameter``, and a ``DescriptorNumber``, without bounds, otherwise. It
+is always the base class and never the subclass, as for the arithmetic
+operators. A ``DescriptorNumber`` argument counts as the single point at
+its value when the bounds of a ``Parameter`` result are derived.
 
 Using ``es.math`` in a model:
 
-``es.math`` works on scalar ``Parameter`` objects, so it cannot be applied
-over an ``x`` array. Use it to derive scalar quantities, with their
-uncertainty, from the parameters of a model or of a fit. Each result is a new
-``Parameter`` that is a *snapshot* of its inputs: it does not follow later
-changes. Inside a model, derive it in ``__call__`` so that it is recomputed
-on every evaluation of the fit, and not once in ``__init__``:
+``es.math`` works on scalar ``Parameter`` objects, so it cannot be
+applied over an ``x`` array. Use it to derive scalar quantities, with
+their uncertainty, from the parameters of a model or of a fit. Each
+result is a new ``Parameter`` that is a *snapshot* of its inputs: it
+does not follow later changes. Inside a model, derive it in ``__call__``
+so that it is recomputed on every evaluation of the fit, and not once in
+``__init__``:
 
 ```python
 class GaussianPeak(ModelBase):
@@ -51,20 +53,23 @@ class GaussianPeak(ModelBase):
         return self.amplitude.value * np.exp(-shift / (2 * sigma**2))
 ```
 
-Two things to keep in mind. Propagated variances assume uncorrelated inputs,
-because a ``Parameter`` stores a variance but no covariance; a function of two
-strongly correlated fit parameters (for example ``arctan2`` of the slope and
-intercept of a line) can be off by a large factor. And a fit reports different
-uncertainties for different minimizers, so every derived variance is only as
-good as the variance it starts from.
+Two things to keep in mind. Propagated variances assume uncorrelated
+inputs, because a ``Parameter`` stores a variance but no covariance; a
+function of two strongly correlated fit parameters (for example
+``arctan2`` of the slope and intercept of a line) can be off by a large
+factor. And a fit reports different uncertainties for different
+minimizers, so every derived variance is only as good as the variance it
+starts from.
 
-Implementation: each function is described by a small, immutable ``_MathOp``
-specification (which Scipp function to call, which domain it accepts, how to
-derive its bounds, ...). A single dispatcher, ``_apply``, does the work for all of
-them, so adding a function means adding a specification, not new control flow.
+Implementation: each function is described by a small, immutable
+``_MathOp`` specification (which Scipp function to call, which domain it
+accepts, how to derive its bounds, ...). A single dispatcher,
+``_apply``, does the work for all of them, so adding a function means
+adding a specification, not new control flow.
 
-The public entry point is ``easyscience.math`` (``es.math``), which re-exports the names in
-``__all__``. They are also available from ``easyscience.variable``.
+The public entry point is ``easyscience.math`` (``es.math``), which
+re-exports the names in ``__all__``. They are also available from
+``easyscience.variable``.
 """
 
 import math
@@ -159,15 +164,17 @@ def exp(x: _D) -> _D:
 
     Parameters
     ----------
-    x : Parameter or DescriptorNumber
+    x : _D
         Dimensionless input.
 
     Returns
     -------
-    Parameter or DescriptorNumber
-        ``exp(x)`` with propagated variance and bounds ``(exp(x.min), exp(x.max))``.
-        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
-        otherwise a ``DescriptorNumber`` (without bounds).
+    _D
+        Parameter or DescriptorNumber
+        ``exp(x)`` with propagated variance and bounds ``(exp(x.min),
+        exp(x.max))``. The class follows the inputs: a ``Parameter``
+        (with bounds) if any argument is one, otherwise a
+        ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
@@ -176,9 +183,10 @@ def exp(x: _D) -> _D:
     UnitError
         If ``x`` is not dimensionless.
     ValueError
-        If the result overflows (``x`` greater than about 709.78) or, when ``x``
-        has a variance, if the propagated variance overflows. The variance scales
-        with ``exp(2x)``, so that happens from about 355 for a unit variance.
+        If the result overflows (``x`` greater than about 709.78) or,
+        when ``x`` has a variance, if the propagated variance overflows.
+        The variance scales with ``exp(2x)``, so that happens from about
+        355 for a unit variance.
 
     Examples
     --------
@@ -207,15 +215,17 @@ def log(x: _D) -> _D:
 
     Parameters
     ----------
-    x : Parameter or DescriptorNumber
+    x : _D
         Dimensionless input. Its value must be strictly positive.
 
     Returns
     -------
-    Parameter or DescriptorNumber
-        ``log(x)`` with propagated variance and bounds.
-        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
-        otherwise a ``DescriptorNumber`` (without bounds).
+    _D
+        Parameter or DescriptorNumber
+        ``log(x)`` with propagated variance and bounds. The class
+        follows the inputs: a ``Parameter`` (with bounds) if any
+        argument is one, otherwise a ``DescriptorNumber`` (without
+        bounds).
 
     Raises
     ------
@@ -258,15 +268,17 @@ def log10(x: _D) -> _D:
 
     Parameters
     ----------
-    x : Parameter or DescriptorNumber
+    x : _D
         Dimensionless input. Its value must be strictly positive.
 
     Returns
     -------
-    Parameter or DescriptorNumber
-        ``log10(x)`` with propagated variance and bounds.
-        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
-        otherwise a ``DescriptorNumber`` (without bounds).
+    _D
+        Parameter or DescriptorNumber
+        ``log10(x)`` with propagated variance and bounds. The class
+        follows the inputs: a ``Parameter`` (with bounds) if any
+        argument is one, otherwise a ``DescriptorNumber`` (without
+        bounds).
 
     Raises
     ------
@@ -279,8 +291,8 @@ def log10(x: _D) -> _D:
 
     Notes
     -----
-    Bounds below zero are clipped to the domain, so ``x`` in ``[0, 100]``
-    gives result bounds ``[-inf, 2]``.
+    Bounds below zero are clipped to the domain, so ``x`` in ``[0,
+    100]`` gives result bounds ``[-inf, 2]``.
 
     Examples
     --------
@@ -309,17 +321,19 @@ def sqrt(x: _D) -> _D:
 
     Parameters
     ----------
-    x : Parameter or DescriptorNumber
-        Input that is dimensionless, or whose unit is a perfect square (e.g. ``m**2``).
-        Its value must not be negative.
+    x : _D
+        Input that is dimensionless, or whose unit is a perfect square
+        (e.g. ``m**2``). Its value must not be negative.
 
     Returns
     -------
-    Parameter or DescriptorNumber
-        ``sqrt(x)`` with propagated variance and bounds. The unit is the square root
-        of the input unit (``m**2`` gives ``m``).
-        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
-        otherwise a ``DescriptorNumber`` (without bounds).
+    _D
+        Parameter or DescriptorNumber
+        ``sqrt(x)`` with propagated variance and bounds. The unit is the
+        square root of the input unit (``m**2`` gives ``m``). The class
+        follows the inputs: a ``Parameter`` (with bounds) if any
+        argument is one, otherwise a ``DescriptorNumber`` (without
+        bounds).
 
     Raises
     ------
@@ -328,13 +342,14 @@ def sqrt(x: _D) -> _D:
     UnitError
         If the unit of ``x`` has no square root in Scipp (e.g. ``m``).
     ValueError
-        If the value of ``x`` is negative, or if the result is not finite (for example a
-        non-zero variance at ``x == 0``, where the derivative is infinite).
+        If the value of ``x`` is negative, or if the result is not
+        finite (for example a non-zero variance at ``x == 0``, where the
+        derivative is infinite).
 
     Notes
     -----
-    Bounds below zero are clipped to the domain.
-    EasyScience ``Parameter`` objects also support ``x ** 0.5``.
+    Bounds below zero are clipped to the domain. EasyScience
+    ``Parameter`` objects also support ``x ** 0.5``.
 
     Examples
     --------
@@ -363,15 +378,17 @@ def erf(x: _D) -> _D:
 
     Parameters
     ----------
-    x : Parameter or DescriptorNumber
+    x : _D
         Dimensionless input.
 
     Returns
     -------
-    Parameter or DescriptorNumber
+    _D
+        Parameter or DescriptorNumber
         ``erf(x)`` with propagated variance and bounds in ``[-1, 1]``.
-        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
-        otherwise a ``DescriptorNumber`` (without bounds).
+        The class follows the inputs: a ``Parameter`` (with bounds) if
+        any argument is one, otherwise a ``DescriptorNumber`` (without
+        bounds).
 
     Raises
     ------
@@ -382,8 +399,9 @@ def erf(x: _D) -> _D:
 
     Notes
     -----
-    Scipp does not propagate variances through ``erf``. EasyScience does it with
-    the delta method, using ``d erf / dx = 2 / sqrt(pi) * exp(-x**2)``.
+    Scipp does not propagate variances through ``erf``. EasyScience does
+    it with the delta method, using ``d erf / dx = 2 / sqrt(pi) *
+    exp(-x**2)``.
 
     Examples
     --------
@@ -408,19 +426,22 @@ def erf(x: _D) -> _D:
 
 def erfc(x: _D) -> _D:
     """
-    Calculate the complementary error function, ``1 - erf(x)``, of a dimensionless parameter.
+    Calculate the complementary error function, ``1 - erf(x)``, of a
+    dimensionless parameter.
 
     Parameters
     ----------
-    x : Parameter or DescriptorNumber
+    x : _D
         Dimensionless input.
 
     Returns
     -------
-    Parameter or DescriptorNumber
+    _D
+        Parameter or DescriptorNumber
         ``erfc(x)`` with propagated variance and bounds in ``[0, 2]``.
-        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
-        otherwise a ``DescriptorNumber`` (without bounds).
+        The class follows the inputs: a ``Parameter`` (with bounds) if
+        any argument is one, otherwise a ``DescriptorNumber`` (without
+        bounds).
 
     Raises
     ------
@@ -431,9 +452,10 @@ def erfc(x: _D) -> _D:
 
     Notes
     -----
-    Scipp does not propagate variances through ``erfc``. EasyScience does it with
-    the delta method, using ``d erfc / dx = -2 / sqrt(pi) * exp(-x**2)``.
-    The function is decreasing, so the bounds are swapped relative to the input.
+    Scipp does not propagate variances through ``erfc``. EasyScience
+    does it with the delta method, using ``d erfc / dx = -2 / sqrt(pi) *
+    exp(-x**2)``. The function is decreasing, so the bounds are swapped
+    relative to the input.
 
     Examples
     --------
@@ -467,15 +489,17 @@ def sin(x: _D) -> _D:
 
     Parameters
     ----------
-    x : Parameter or DescriptorNumber
+    x : _D
         Angle, with unit ``rad`` or ``deg``.
 
     Returns
     -------
-    Parameter or DescriptorNumber
-        Dimensionless ``sin(x)`` with propagated variance and exact bounds.
-        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
-        otherwise a ``DescriptorNumber`` (without bounds).
+    _D
+        Parameter or DescriptorNumber
+        Dimensionless ``sin(x)`` with propagated variance and exact
+        bounds. The class follows the inputs: a ``Parameter`` (with
+        bounds) if any argument is one, otherwise a ``DescriptorNumber``
+        (without bounds).
 
     Raises
     ------
@@ -486,9 +510,10 @@ def sin(x: _D) -> _D:
 
     Notes
     -----
-    The bounds are exact: the endpoints and the interior maxima and minima
-    (``pi/2 + n*pi``) are evaluated, in radians whatever the input unit. Infinite
-    bounds, or bounds wider than one period, give ``[-1, 1]``.
+    The bounds are exact: the endpoints and the interior maxima and
+    minima (``pi/2 + n*pi``) are evaluated, in radians whatever the
+    input unit. Infinite bounds, or bounds wider than one period, give
+    ``[-1, 1]``.
 
     Examples
     --------
@@ -518,15 +543,17 @@ def cos(x: _D) -> _D:
 
     Parameters
     ----------
-    x : Parameter or DescriptorNumber
+    x : _D
         Angle, with unit ``rad`` or ``deg``.
 
     Returns
     -------
-    Parameter or DescriptorNumber
-        Dimensionless ``cos(x)`` with propagated variance and exact bounds.
-        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
-        otherwise a ``DescriptorNumber`` (without bounds).
+    _D
+        Parameter or DescriptorNumber
+        Dimensionless ``cos(x)`` with propagated variance and exact
+        bounds. The class follows the inputs: a ``Parameter`` (with
+        bounds) if any argument is one, otherwise a ``DescriptorNumber``
+        (without bounds).
 
     Raises
     ------
@@ -537,9 +564,9 @@ def cos(x: _D) -> _D:
 
     Notes
     -----
-    The bounds are exact: the endpoints and the interior maxima and minima
-    (``n*pi``) are evaluated, in radians whatever the input unit. Infinite
-    bounds, or bounds wider than one period, give ``[-1, 1]``.
+    The bounds are exact: the endpoints and the interior maxima and
+    minima (``n*pi``) are evaluated, in radians whatever the input unit.
+    Infinite bounds, or bounds wider than one period, give ``[-1, 1]``.
 
     Examples
     --------
@@ -571,15 +598,17 @@ def tan(x: _D) -> _D:
 
     Parameters
     ----------
-    x : Parameter or DescriptorNumber
+    x : _D
         Angle, with unit ``rad`` or ``deg``.
 
     Returns
     -------
-    Parameter or DescriptorNumber
+    _D
+        Parameter or DescriptorNumber
         Dimensionless ``tan(x)`` with propagated variance and bounds.
-        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
-        otherwise a ``DescriptorNumber`` (without bounds).
+        The class follows the inputs: a ``Parameter`` (with bounds) if
+        any argument is one, otherwise a ``DescriptorNumber`` (without
+        bounds).
 
     Raises
     ------
@@ -588,16 +617,17 @@ def tan(x: _D) -> _D:
     UnitError
         If the unit of ``x`` is not an angle.
     ValueError
-        If the value of ``x`` is within 1e-7 rad, or one standard deviation if that is
-        larger, of an asymptote (``pi/2 + n*pi``), where the propagated variance
-        would explode.
+        If the value of ``x`` is within 1e-7 rad, or one standard
+        deviation if that is larger, of an asymptote (``pi/2 + n*pi``),
+        where the propagated variance would explode.
 
     Notes
     -----
-    The *value* is guarded against asymptotes, but the *bounds* are allowed to cross
-    them: if ``x.min`` and ``x.max`` lie on different branches of ``tan``, the result
-    bounds are ``(-inf, inf)``. A bound exactly on an asymptote makes the result bound
-    infinite on that side only, so ``[0, 90]`` deg gives ``[0, inf)``.
+    The *value* is guarded against asymptotes, but the *bounds* are
+    allowed to cross them: if ``x.min`` and ``x.max`` lie on different
+    branches of ``tan``, the result bounds are ``(-inf, inf)``. A bound
+    exactly on an asymptote makes the result bound infinite on that side
+    only, so ``[0, 90]`` deg gives ``[0, inf)``.
 
     Examples
     --------
@@ -613,7 +643,8 @@ def tan(x: _D) -> _D:
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     1.0000 in [0.0000, 1.7321]
 
-    Angle in degrees; bounds that cross an asymptote (90 deg) become infinite:
+    Angle in degrees; bounds that cross an asymptote (90 deg) become
+    infinite:
 
     >>> angle = es.Parameter('angle', 45.0, unit='deg', min=0.0, max=120.0)
     >>> result = es.math.tan(angle)
@@ -629,18 +660,20 @@ def arcsin(x: _D, *, unit: str = 'rad') -> _D:
 
     Parameters
     ----------
-    x : Parameter or DescriptorNumber
+    x : _D
         Dimensionless input; its value must be in ``[-1, 1]``.
     unit : str, default='rad'
-        Unit of the returned angle, ``'rad'`` or ``'deg'``. The value, the variance and
-        the bounds are all converted.
+        Unit of the returned angle, ``'rad'`` or ``'deg'``. The value,
+        the variance and the bounds are all converted.
 
     Returns
     -------
-    Parameter or DescriptorNumber
-        Angle in ``unit`` (``[-pi/2, pi/2]`` rad), with propagated variance and bounds.
-        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
-        otherwise a ``DescriptorNumber`` (without bounds).
+    _D
+        Parameter or DescriptorNumber
+        Angle in ``unit`` (``[-pi/2, pi/2]`` rad), with propagated
+        variance and bounds. The class follows the inputs: a
+        ``Parameter`` (with bounds) if any argument is one, otherwise a
+        ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
@@ -649,8 +682,9 @@ def arcsin(x: _D, *, unit: str = 'rad') -> _D:
     UnitError
         If ``x`` is not dimensionless, or ``unit`` is not an angle unit.
     ValueError
-        If the value of ``x`` is outside ``[-1, 1]``, or if the result is not finite
-        (a non-zero variance at ``x == ±1``, where the derivative is infinite).
+        If the value of ``x`` is outside ``[-1, 1]``, or if the result
+        is not finite (a non-zero variance at ``x == ±1``, where the
+        derivative is infinite).
 
     Notes
     -----
@@ -667,7 +701,8 @@ def arcsin(x: _D, *, unit: str = 'rad') -> _D:
     >>> result.unit
     'rad'
 
-    Ask for degrees with ``unit``; the value, variance and bounds follow:
+    Ask for degrees with ``unit``; the value, variance and bounds
+    follow:
 
     >>> x = es.Parameter('x', 0.5, min=0.0, max=1.0)
     >>> result = es.math.arcsin(x, unit='deg')
@@ -685,18 +720,20 @@ def arccos(x: _D, *, unit: str = 'rad') -> _D:
 
     Parameters
     ----------
-    x : Parameter or DescriptorNumber
+    x : _D
         Dimensionless input; its value must be in ``[-1, 1]``.
     unit : str, default='rad'
-        Unit of the returned angle, ``'rad'`` or ``'deg'``. The value, the variance and
-        the bounds are all converted.
+        Unit of the returned angle, ``'rad'`` or ``'deg'``. The value,
+        the variance and the bounds are all converted.
 
     Returns
     -------
-    Parameter or DescriptorNumber
-        Angle in ``unit`` (``[0, pi]`` rad), with propagated variance and bounds.
-        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
-        otherwise a ``DescriptorNumber`` (without bounds).
+    _D
+        Parameter or DescriptorNumber
+        Angle in ``unit`` (``[0, pi]`` rad), with propagated variance
+        and bounds. The class follows the inputs: a ``Parameter`` (with
+        bounds) if any argument is one, otherwise a ``DescriptorNumber``
+        (without bounds).
 
     Raises
     ------
@@ -705,18 +742,20 @@ def arccos(x: _D, *, unit: str = 'rad') -> _D:
     UnitError
         If ``x`` is not dimensionless, or ``unit`` is not an angle unit.
     ValueError
-        If the value of ``x`` is outside ``[-1, 1]``, or if the result is not finite
-        (a non-zero variance at ``x == ±1``, where the derivative is infinite).
+        If the value of ``x`` is outside ``[-1, 1]``, or if the result
+        is not finite (a non-zero variance at ``x == ±1``, where the
+        derivative is infinite).
 
     Notes
     -----
-    Bounds outside ``[-1, 1]`` are clipped to the domain. The function is decreasing,
-    so ``x.min`` maps to the result's maximum.
+    Bounds outside ``[-1, 1]`` are clipped to the domain. The function
+    is decreasing, so ``x.min`` maps to the result's maximum.
 
     Examples
     --------
 
-    The result is an angle in radians; the function is decreasing, so the bounds swap:
+    The result is an angle in radians; the function is decreasing, so
+    the bounds swap:
 
     >>> import easyscience as es
     >>> x = es.Parameter('x', 0.5, min=0.0, max=1.0)
@@ -726,7 +765,8 @@ def arccos(x: _D, *, unit: str = 'rad') -> _D:
     ... )
     1.0472 rad in [0.0000, 1.5708]
 
-    Ask for degrees with ``unit``; the value, variance and bounds follow:
+    Ask for degrees with ``unit``; the value, variance and bounds
+    follow:
 
     >>> x = es.Parameter('x', 0.5, min=0.0, max=1.0)
     >>> result = es.math.arccos(x, unit='deg')
@@ -744,18 +784,20 @@ def arctan(x: _D, *, unit: str = 'rad') -> _D:
 
     Parameters
     ----------
-    x : Parameter or DescriptorNumber
+    x : _D
         Dimensionless input.
     unit : str, default='rad'
-        Unit of the returned angle, ``'rad'`` or ``'deg'``. The value, the variance and
-        the bounds are all converted.
+        Unit of the returned angle, ``'rad'`` or ``'deg'``. The value,
+        the variance and the bounds are all converted.
 
     Returns
     -------
-    Parameter or DescriptorNumber
-        Angle in ``unit`` (``[-pi/2, pi/2]`` rad), with propagated variance and bounds.
-        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
-        otherwise a ``DescriptorNumber`` (without bounds).
+    _D
+        Parameter or DescriptorNumber
+        Angle in ``unit`` (``[-pi/2, pi/2]`` rad), with propagated
+        variance and bounds. The class follows the inputs: a
+        ``Parameter`` (with bounds) if any argument is one, otherwise a
+        ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
@@ -777,7 +819,8 @@ def arctan(x: _D, *, unit: str = 'rad') -> _D:
     ... )
     0.7854 rad in [0.0000, 1.4711]
 
-    Ask for degrees with ``unit``; the value, variance and bounds follow:
+    Ask for degrees with ``unit``; the value, variance and bounds
+    follow:
 
     >>> x = es.Parameter('x', 1.0, min=0.0, max=10.0)
     >>> result = es.math.arctan(x, unit='deg')
@@ -803,51 +846,58 @@ def arctan2(y: DescriptorNumber, x: DescriptorNumber, *, unit: str = ...) -> Des
 
 def arctan2(y: DescriptorNumber, x: DescriptorNumber, *, unit: str = 'rad') -> DescriptorNumber:
     """
-    Calculate the angle of the point ``(x, y)``, using both signs to find the quadrant.
+    Calculate the angle of the point ``(x, y)``, using both signs to
+    find the quadrant.
 
     Parameters
     ----------
-    y : Parameter or DescriptorNumber
+    y : DescriptorNumber
         Cartesian y-coordinate.
-    x : Parameter or DescriptorNumber
+    x : DescriptorNumber
         Cartesian x-coordinate. Must have the same unit as ``y``.
     unit : str, default='rad'
-        Unit of the returned angle, ``'rad'`` or ``'deg'``. The value, the variance and
-        the bounds are all converted.
+        Unit of the returned angle, ``'rad'`` or ``'deg'``. The value,
+        the variance and the bounds are all converted.
 
     Returns
     -------
-    Parameter or DescriptorNumber
-        Angle in ``unit`` (``[-pi, pi]`` rad), with propagated variance and bounds.
-        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
-        otherwise a ``DescriptorNumber`` (without bounds).
+    DescriptorNumber
+        Parameter or DescriptorNumber
+        Angle in ``unit`` (``[-pi, pi]`` rad), with propagated variance
+        and bounds. The class follows the inputs: a ``Parameter`` (with
+        bounds) if any argument is one, otherwise a ``DescriptorNumber``
+        (without bounds).
 
     Raises
     ------
     NotImplementedError
-        If ``y`` or ``x`` is not a ``Parameter`` or ``DescriptorNumber``.
+        If ``y`` or ``x`` is not a ``Parameter`` or
+        ``DescriptorNumber``.
     UnitError
-        If ``y`` and ``x`` have different units, or ``unit`` is not an angle unit.
+        If ``y`` and ``x`` have different units, or ``unit`` is not an
+        angle unit.
     ValueError
-        If an argument has a variance and the point ``(x, y)`` lies within the larger of
-        the two standard deviations of the origin, where the angle is undefined, or if
-        the result is not finite.
+        If an argument has a variance and the point ``(x, y)`` lies
+        within the larger of the two standard deviations of the origin,
+        where the angle is undefined, or if the result is not finite.
 
     Warns
     -----
-    UserWarning
-        If all four bounds are finite and the box they span touches the branch cut.
+    UserWarning If all four bounds are finite and the box they span
+    touches the branch cut.
 
     Notes
     -----
-    Scipp does not propagate variances through ``atan2``. EasyScience does it with the
-    delta method, assuming ``y`` and ``x`` are uncorrelated.
+    Scipp does not propagate variances through ``atan2``. EasyScience
+    does it with the delta method, assuming ``y`` and ``x`` are
+    uncorrelated.
 
-    The bounds are the exact range of the angle over the box ``[y.min, y.max] x
-    [x.min, x.max]``. If the box touches the branch cut (``y = 0`` with ``x < 0``) the
-    angle jumps between ``-pi`` and ``pi``; the bounds are then ``[-pi, pi]``, and a
-    ``UserWarning`` is raised when all four bounds are finite, since gradient-based
-    minimisers behave badly across the jump.
+    The bounds are the exact range of the angle over the box ``[y.min,
+    y.max] x [x.min, x.max]``. If the box touches the branch cut (``y =
+    0`` with ``x < 0``) the angle jumps between ``-pi`` and ``pi``; the
+    bounds are then ``[-pi, pi]``, and a ``UserWarning`` is raised when
+    all four bounds are finite, since gradient-based minimisers behave
+    badly across the jump.
 
     Examples
     --------
@@ -863,7 +913,8 @@ def arctan2(y: DescriptorNumber, x: DescriptorNumber, *, unit: str = 'rad') -> D
     ... )
     0.7854 rad in [0.1651, 1.1071]
 
-    Ask for degrees with ``unit``; the value, variance and bounds follow:
+    Ask for degrees with ``unit``; the value, variance and bounds
+    follow:
 
     >>> y = es.Parameter('y', 1.0, unit='m', min=0.5, max=2.0)
     >>> x = es.Parameter('x', 1.0, unit='m', min=1.0, max=3.0)
@@ -878,19 +929,21 @@ def arctan2(y: DescriptorNumber, x: DescriptorNumber, *, unit: str = 'rad') -> D
 
 def sinc(x: _D) -> _D:
     """
-    Calculate the unnormalised sinc function, ``sin(x) / x``, of a parameter.
+    Calculate the unnormalised sinc function, ``sin(x) / x``, of a
+    parameter.
 
     Parameters
     ----------
-    x : Parameter or DescriptorNumber
+    x : _D
         Input, with unit ``rad`` or dimensionless.
 
     Returns
     -------
-    Parameter or DescriptorNumber
-        Dimensionless ``sinc(x)`` (equal to 1 at ``x = 0``) with propagated variance
-        and exact bounds.
-        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
+    _D
+        Parameter or DescriptorNumber
+        Dimensionless ``sinc(x)`` (equal to 1 at ``x = 0``) with
+        propagated variance and exact bounds. The class follows the
+        inputs: a ``Parameter`` (with bounds) if any argument is one,
         otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
@@ -905,9 +958,10 @@ def sinc(x: _D) -> _D:
     This matches Scipp and the physics convention, not the normalised
     ``sin(pi x) / (pi x)`` of ``numpy.sinc``.
 
-    The bounds are exact. The extrema of sinc lie at ``x = 0`` and at the roots of
-    ``tan(x) = x``; the roots inside the interval are found numerically.
-    The global minimum, about -0.2172, is at ``x`` of about 4.4934.
+    The bounds are exact. The extrema of sinc lie at ``x = 0`` and at
+    the roots of ``tan(x) = x``; the roots inside the interval are found
+    numerically. The global minimum, about -0.2172, is at ``x`` of about
+    4.4934.
 
     Examples
     --------
@@ -943,15 +997,17 @@ def sinh(x: _D) -> _D:
 
     Parameters
     ----------
-    x : Parameter or DescriptorNumber
+    x : _D
         Dimensionless input.
 
     Returns
     -------
-    Parameter or DescriptorNumber
-        ``sinh(x)`` with propagated variance and bounds.
-        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
-        otherwise a ``DescriptorNumber`` (without bounds).
+    _D
+        Parameter or DescriptorNumber
+        ``sinh(x)`` with propagated variance and bounds. The class
+        follows the inputs: a ``Parameter`` (with bounds) if any
+        argument is one, otherwise a ``DescriptorNumber`` (without
+        bounds).
 
     Raises
     ------
@@ -960,9 +1016,9 @@ def sinh(x: _D) -> _D:
     UnitError
         If ``x`` is not dimensionless.
     ValueError
-        If the result overflows (``|x|`` greater than about 710) or, when ``x``
-        has a variance, if the propagated variance overflows (from ``|x|`` of
-        about 355 for a unit variance).
+        If the result overflows (``|x|`` greater than about 710) or,
+        when ``x`` has a variance, if the propagated variance overflows
+        (from ``|x|`` of about 355 for a unit variance).
 
     Examples
     --------
@@ -991,15 +1047,17 @@ def cosh(x: _D) -> _D:
 
     Parameters
     ----------
-    x : Parameter or DescriptorNumber
+    x : _D
         Dimensionless input.
 
     Returns
     -------
-    Parameter or DescriptorNumber
-        ``cosh(x)`` with propagated variance and bounds.
-        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
-        otherwise a ``DescriptorNumber`` (without bounds).
+    _D
+        Parameter or DescriptorNumber
+        ``cosh(x)`` with propagated variance and bounds. The class
+        follows the inputs: a ``Parameter`` (with bounds) if any
+        argument is one, otherwise a ``DescriptorNumber`` (without
+        bounds).
 
     Raises
     ------
@@ -1008,13 +1066,14 @@ def cosh(x: _D) -> _D:
     UnitError
         If ``x`` is not dimensionless.
     ValueError
-        If the result overflows (``|x|`` greater than about 710) or, when ``x``
-        has a variance, if the propagated variance overflows (from ``|x|`` of
-        about 355 for a unit variance).
+        If the result overflows (``|x|`` greater than about 710) or,
+        when ``x`` has a variance, if the propagated variance overflows
+        (from ``|x|`` of about 355 for a unit variance).
 
     Notes
     -----
-    ``cosh`` is not monotonic: if the bounds contain 0, the lower result bound is 1.
+    ``cosh`` is not monotonic: if the bounds contain 0, the lower result
+    bound is 1.
 
     Examples
     --------
@@ -1043,15 +1102,17 @@ def tanh(x: _D) -> _D:
 
     Parameters
     ----------
-    x : Parameter or DescriptorNumber
+    x : _D
         Dimensionless input.
 
     Returns
     -------
-    Parameter or DescriptorNumber
+    _D
+        Parameter or DescriptorNumber
         ``tanh(x)`` with propagated variance and bounds in ``[-1, 1]``.
-        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
-        otherwise a ``DescriptorNumber`` (without bounds).
+        The class follows the inputs: a ``Parameter`` (with bounds) if
+        any argument is one, otherwise a ``DescriptorNumber`` (without
+        bounds).
 
     Raises
     ------
@@ -1087,15 +1148,17 @@ def arcsinh(x: _D) -> _D:
 
     Parameters
     ----------
-    x : Parameter or DescriptorNumber
+    x : _D
         Dimensionless input.
 
     Returns
     -------
-    Parameter or DescriptorNumber
-        ``arcsinh(x)`` with propagated variance and bounds.
-        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
-        otherwise a ``DescriptorNumber`` (without bounds).
+    _D
+        Parameter or DescriptorNumber
+        ``arcsinh(x)`` with propagated variance and bounds. The class
+        follows the inputs: a ``Parameter`` (with bounds) if any
+        argument is one, otherwise a ``DescriptorNumber`` (without
+        bounds).
 
     Raises
     ------
@@ -1127,19 +1190,22 @@ def arcsinh(x: _D) -> _D:
 
 def arccosh(x: _D) -> _D:
     """
-    Calculate the inverse hyperbolic cosine of a dimensionless parameter.
+    Calculate the inverse hyperbolic cosine of a dimensionless
+    parameter.
 
     Parameters
     ----------
-    x : Parameter or DescriptorNumber
+    x : _D
         Dimensionless input; its value must be at least 1.
 
     Returns
     -------
-    Parameter or DescriptorNumber
-        ``arccosh(x)`` (non-negative) with propagated variance and bounds.
-        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
-        otherwise a ``DescriptorNumber`` (without bounds).
+    _D
+        Parameter or DescriptorNumber
+        ``arccosh(x)`` (non-negative) with propagated variance and
+        bounds. The class follows the inputs: a ``Parameter`` (with
+        bounds) if any argument is one, otherwise a ``DescriptorNumber``
+        (without bounds).
 
     Raises
     ------
@@ -1148,8 +1214,9 @@ def arccosh(x: _D) -> _D:
     UnitError
         If ``x`` is not dimensionless.
     ValueError
-        If the value of ``x`` is below 1, or if the result is not finite (a non-zero
-        variance at ``x == 1``, where the derivative is infinite).
+        If the value of ``x`` is below 1, or if the result is not finite
+        (a non-zero variance at ``x == 1``, where the derivative is
+        infinite).
 
     Notes
     -----
@@ -1178,19 +1245,23 @@ def arccosh(x: _D) -> _D:
 
 def arctanh(x: _D) -> _D:
     """
-    Calculate the inverse hyperbolic tangent of a dimensionless parameter.
+    Calculate the inverse hyperbolic tangent of a dimensionless
+    parameter.
 
     Parameters
     ----------
-    x : Parameter or DescriptorNumber
-        Dimensionless input; its value must be strictly between -1 and 1.
+    x : _D
+        Dimensionless input; its value must be strictly between -1 and
+        1.
 
     Returns
     -------
-    Parameter or DescriptorNumber
-        ``arctanh(x)`` with propagated variance and bounds.
-        The class follows the inputs: a ``Parameter`` (with bounds) if any argument is one,
-        otherwise a ``DescriptorNumber`` (without bounds).
+    _D
+        Parameter or DescriptorNumber
+        ``arctanh(x)`` with propagated variance and bounds. The class
+        follows the inputs: a ``Parameter`` (with bounds) if any
+        argument is one, otherwise a ``DescriptorNumber`` (without
+        bounds).
 
     Raises
     ------
@@ -1203,7 +1274,8 @@ def arctanh(x: _D) -> _D:
 
     Notes
     -----
-    Bounds beyond ±1 are clipped to the domain, which makes the result bound infinite.
+    Bounds beyond ±1 are clipped to the domain, which makes the result
+    bound infinite.
 
     Examples
     --------
@@ -1216,7 +1288,8 @@ def arctanh(x: _D) -> _D:
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     0.5493 in [0.0000, 1.4722]
 
-    Bounds beyond ±1 are clipped, which makes the result bounds infinite:
+    Bounds beyond ±1 are clipped, which makes the result bounds
+    infinite:
 
     >>> x = es.Parameter('x', 0.5, min=-2.0, max=2.0)
     >>> result = es.math.arctanh(x)
@@ -1249,7 +1322,10 @@ atanh = arctanh
 
 @dataclass(frozen=True)
 class _Domain:
-    """The set of argument values a function accepts: an interval, open or closed at each end."""
+    """
+    The set of argument values a function accepts: an interval, open or
+    closed at each end.
+    """
 
     lo: float = -np.inf
     hi: float = np.inf
@@ -1262,7 +1338,10 @@ class _Domain:
         return above and below
 
     def clip(self, lo: float, hi: float) -> _Interval:
-        """Restrict ``[lo, hi]`` to the domain (open ends clip to the edge: the limit)."""
+        """
+        Restrict ``[lo, hi]`` to the domain (open ends clip to the edge:
+        the limit).
+        """
         return max(lo, self.lo), min(hi, self.hi)
 
     def __str__(self) -> str:
@@ -1279,23 +1358,29 @@ class _MathOp:
     Attributes
     ----------
     name : str
-        Name used in error messages and in the name of the resulting ``Parameter``.
+        Name used in error messages and in the name of the resulting
+        ``Parameter``.
     sc_func : Callable
-        The Scipp function (it validates units and propagates variance, if it can).
+        The Scipp function (it validates units and propagates variance,
+        if it can).
     bounds : _BoundsStrategy
-        Maps one ``(lo, hi)`` interval per argument to the ``(min, max)`` of the result.
+        Maps one ``(lo, hi)`` interval per argument to the ``(min,
+        max)`` of the result.
     domain : _Domain, default=_Domain()
         Accepted argument values. Applies to every argument.
     native_unit : str | None, default=None
         If set, bounds are converted to this unit before ``bounds`` runs
-        (``'rad'`` for the trigonometric functions, whose numpy versions assume radians).
+        (``'rad'`` for the trigonometric functions, whose numpy versions
+        assume radians).
     jacobian : Callable | None, default=None
-        Partial derivatives of the function, ``jacobian(*values) -> (df/dx1, df/dx2, ...)``.
-        Set it for functions whose variance Scipp cannot propagate; EasyScience then
-        applies the delta method itself.
+        Partial derivatives of the function, ``jacobian(*values) ->
+        (df/dx1, df/dx2, ...)``. Set it for functions whose variance
+        Scipp cannot propagate; EasyScience then applies the delta
+        method itself.
     guard : Callable[..., None] | None, default=None
-        Extra check of the arguments' values, ``guard(*params)``, raising ``ValueError``
-        where the delta method breaks down (tan asymptotes, the arctan2 origin).
+        Extra check of the arguments' values, ``guard(*params)``,
+        raising ``ValueError`` where the delta method breaks down (tan
+        asymptotes, the arctan2 origin).
     """
 
     name: str
@@ -1324,10 +1409,11 @@ class _MathOp:
 # evaluations), and consider a cheaper path if it matters.
 def _apply(op: _MathOp, *params: DescriptorNumber) -> DescriptorNumber:
     """
-    Evaluate ``op`` on ``params``: validate, call Scipp, derive bounds, repack.
+    Evaluate ``op`` on ``params``: validate, call Scipp, derive bounds,
+    repack.
 
-    Scipp validates the units, so a wrong unit raises its ``UnitError`` before any of
-    the checks below.
+    Scipp validates the units, so a wrong unit raises its ``UnitError``
+    before any of the checks below.
 
     Parameters
     ----------
@@ -1339,15 +1425,17 @@ def _apply(op: _MathOp, *params: DescriptorNumber) -> DescriptorNumber:
     Returns
     -------
     DescriptorNumber
-        A new ``Parameter`` named ``'<op>(<arg names>)'`` if any argument is a ``Parameter``,
-        otherwise a new ``DescriptorNumber`` with that name.
+        A new ``Parameter`` named ``'<op>(<arg names>)'`` if any
+        argument is a ``Parameter``, otherwise a new
+        ``DescriptorNumber`` with that name.
 
     Raises
     ------
     NotImplementedError
         If an argument is not a ``Parameter`` or ``DescriptorNumber``.
     ValueError
-        If an argument's value is outside the domain, or the result is not finite.
+        If an argument's value is outside the domain, or the result is
+        not finite.
     """
     for param in params:
         if not isinstance(param, DescriptorNumber):
@@ -1412,7 +1500,8 @@ def _apply(op: _MathOp, *params: DescriptorNumber) -> DescriptorNumber:
 # preventing the 'identical bounds' ValueError).
 def _pad_if_collapsed(lo: float, hi: float, value: float) -> tuple[float, float]:
     """
-    Widen bounds that ``Parameter`` would reject as identical, symmetrically around ``value``.
+    Widen bounds that ``Parameter`` would reject as identical,
+    symmetrically around ``value``.
 
     Parameters
     ----------
@@ -1426,8 +1515,9 @@ def _pad_if_collapsed(lo: float, hi: float, value: float) -> tuple[float, float]
     Returns
     -------
     tuple[float, float]
-        ``(lo, hi)`` unchanged, or padded by ``_COLLAPSE_PAD * |value|`` (``_COLLAPSE_PAD_ZERO``
-        if the value is 0) on each side if they are equal or within ``Parameter``'s tolerance.
+        ``(lo, hi)`` unchanged, or padded by ``_COLLAPSE_PAD * |value|``
+        (``_COLLAPSE_PAD_ZERO`` if the value is 0) on each side if they
+        are equal or within ``Parameter``'s tolerance.
     """
     if not np.isclose(lo, hi, rtol=1e-9, atol=0.0):
         return lo, hi
@@ -1437,7 +1527,8 @@ def _pad_if_collapsed(lo: float, hi: float, value: float) -> tuple[float, float]
 
 def _angle_in(result: DescriptorNumber, unit: str) -> DescriptorNumber:
     """
-    Express an angle ``result`` (in radians, as Scipp returns it) in ``unit``.
+    Express an angle ``result`` (in radians, as Scipp returns it) in
+    ``unit``.
 
     The value, the variance and the bounds are converted together by
     ``Parameter.convert_unit``.
@@ -1465,12 +1556,18 @@ def _angle_in(result: DescriptorNumber, unit: str) -> DescriptorNumber:
 
 
 def _variance(param: DescriptorNumber) -> float:
-    """Variance of a parameter; a missing (``None``) or zero variance counts as 0.0."""
+    """
+    Variance of a parameter; a missing (``None``) or zero variance
+    counts as 0.0.
+    """
     return float(param.variance) if param.variance else 0.0
 
 
 def _to_scipp_scalar(param: DescriptorNumber, strip_variance: bool = False) -> sc.Variable:
-    """Convert a Parameter to a Scipp scalar; a zero or missing variance is dropped."""
+    """
+    Convert a Parameter to a Scipp scalar; a zero or missing variance is
+    dropped.
+    """
     kwargs = {'value': float(param.value), 'unit': param.unit}
     variance = _variance(param)
     if not strip_variance and variance > 0:
@@ -1480,10 +1577,11 @@ def _to_scipp_scalar(param: DescriptorNumber, strip_variance: bool = False) -> s
 
 def _delta_method_variance(op: _MathOp, params: tuple[DescriptorNumber, ...]) -> float | None:
     """
-    First-order error propagation, ``var(y) = sum_i (dy/dx_i)**2 * var(x_i)``.
+    First-order error propagation, ``var(y) = sum_i (dy/dx_i)**2 *
+    var(x_i)``.
 
-    Only arguments that have a variance contribute (this avoids ``0 * inf``).
-    Returns ``None`` if no argument has a variance.
+    Only arguments that have a variance contribute (this avoids ``0 *
+    inf``). Returns ``None`` if no argument has a variance.
     """
     variances = [_variance(p) for p in params]
     if not any(variances):
@@ -1494,20 +1592,29 @@ def _delta_method_variance(op: _MathOp, params: tuple[DescriptorNumber, ...]) ->
 
 
 def _is_finite(value: float | None) -> bool:
-    """Whether ``value`` is finite; a missing value (no variance) counts as fine."""
+    """
+    Whether ``value`` is finite; a missing value (no variance) counts as
+    fine.
+    """
     return value is None or bool(np.isfinite(value))
 
 
 @cache
 def _native_factor(unit: str, native_unit: str | None) -> float:
-    """Factor converting ``unit`` to ``native_unit`` (1.0 if none is needed), asked of Scipp once."""
+    """
+    Factor converting ``unit`` to ``native_unit`` (1.0 if none is
+    needed), asked of Scipp once.
+    """
     if native_unit is None or unit == native_unit:
         return 1.0
     return float(sc.scalar(1.0, unit=unit).to(unit=native_unit).value)
 
 
 def _native_interval(op: _MathOp, param: DescriptorNumber) -> _Interval:
-    """The parameter's bounds, clipped to the domain and in the unit the strategy expects."""
+    """
+    The parameter's bounds, clipped to the domain and in the unit the
+    strategy expects.
+    """
     if isinstance(param, Parameter):
         lo, hi = float(param.min), float(param.max)
     else:  # a plain DescriptorNumber has no bounds: it is the single point at its value
@@ -1526,7 +1633,10 @@ def _native_interval(op: _MathOp, param: DescriptorNumber) -> _Interval:
 
 
 def _monotonic(func: Callable) -> _BoundsStrategy:
-    """Monotonic function (increasing or decreasing): the extremes sit at the endpoints."""
+    """
+    Monotonic function (increasing or decreasing): the extremes sit at
+    the endpoints.
+    """
 
     def bounds(interval: _Interval) -> tuple[float, float]:
         lo, hi = interval
@@ -1540,10 +1650,12 @@ def _extrema(
     func: Callable, critical_points: Callable[[float, float], np.ndarray]
 ) -> _BoundsStrategy:
     """
-    Non-monotonic function: the extremes sit at the endpoints or at critical points.
+    Non-monotonic function: the extremes sit at the endpoints or at
+    critical points.
 
-    ``critical_points(lo, hi)`` returns the points inside ``[lo, hi]`` where the function
-    may have a local extremum. ``nan`` candidates, such as ``sin(inf)``, are ignored.
+    ``critical_points(lo, hi)`` returns the points inside ``[lo, hi]``
+    where the function may have a local extremum. ``nan`` candidates,
+    such as ``sin(inf)``, are ignored.
     """
 
     def bounds(interval: _Interval) -> tuple[float, float]:
@@ -1557,10 +1669,11 @@ def _extrema(
 
 def _periodic_critical_points(offset: float) -> Callable[[float, float], np.ndarray]:
     """
-    Critical points ``offset + n*pi`` (n an integer) of sin (``pi/2``) or cos (``0``).
+    Critical points ``offset + n*pi`` (n an integer) of sin (``pi/2``)
+    or cos (``0``).
 
-    A whole period, or an infinite interval, holds a maximum and a minimum, so those two
-    are returned without enumerating.
+    A whole period, or an infinite interval, holds a maximum and a
+    minimum, so those two are returned without enumerating.
     """
 
     def points(lo: float, hi: float) -> np.ndarray:
@@ -1581,7 +1694,8 @@ def _unnormalized_sinc(x) -> np.ndarray:
     """
     sin(x)/x, with sinc(0) = 1 and the limit sinc(±inf) = 0.
 
-    ``np.sinc`` is the *normalised* sin(pi x)/(pi x), so the argument is scaled by 1/pi.
+    ``np.sinc`` is the *normalised* sin(pi x)/(pi x), so the argument is
+    scaled by 1/pi.
     """
     x = np.asarray(x, dtype=float)
     with np.errstate(all='ignore'):
@@ -1590,17 +1704,21 @@ def _unnormalized_sinc(x) -> np.ndarray:
 
 def _sinc_positive_extrema(lo: float, hi: float, count: int = _SINC_ROOT_COUNT) -> np.ndarray:
     """
-    Stationary points of sinc on the positive axis inside ``[lo, hi]``, nearest to ``lo``.
+    Stationary points of sinc on the positive axis inside ``[lo, hi]``,
+    nearest to ``lo``.
 
-    They are the positive roots of ``tan(x) = x``, one in each ``(k*pi, k*pi + pi/2)``.
-    The heights of the lobes fall off like 1/x, so the largest maximum and the deepest
-    minimum in the interval are among the first few roots at or after ``lo``.
+    They are the positive roots of ``tan(x) = x``, one in each ``(k*pi,
+    k*pi + pi/2)``. The heights of the lobes fall off like 1/x, so the
+    largest maximum and the deepest minimum in the interval are among
+    the first few roots at or after ``lo``.
 
-    Beyond ``_SINC_NEGLIGIBLE_LOBES_FROM`` the lobes are negligible and none are returned.
+    Beyond ``_SINC_NEGLIGIBLE_LOBES_FROM`` the lobes are negligible and
+    none are returned.
 
     All ``count`` roots are refined at once with Newton's method on
-    ``g(x) = x cos(x) - sin(x)``, ``g'(x) = -x sin(x)``, with the vectorised update
-    ``x <- x - g(x) / g'(x)`` (no Python loop over the roots).
+    ``g(x) = x cos(x) - sin(x)``, ``g'(x) = -x sin(x)``, with the
+    vectorised update ``x <- x - g(x) / g'(x)`` (no Python loop over the
+    roots).
     """
     if hi <= 0.0 or lo > _SINC_NEGLIGIBLE_LOBES_FROM:
         return np.array([])
@@ -1614,7 +1732,10 @@ def _sinc_positive_extrema(lo: float, hi: float, count: int = _SINC_ROOT_COUNT) 
 
 
 def _sinc_critical_points(lo: float, hi: float) -> np.ndarray:
-    """Stationary points of sinc: 0 (the global maximum) and the roots of tan(x) = x on both sides."""
+    """
+    Stationary points of sinc: 0 (the global maximum) and the roots of
+    tan(x) = x on both sides.
+    """
     points = [_sinc_positive_extrema(lo, hi), -_sinc_positive_extrema(-hi, -lo)]
     if lo <= 0.0 <= hi:
         points.append(np.array([0.0]))
@@ -1623,18 +1744,20 @@ def _sinc_critical_points(lo: float, hi: float) -> np.ndarray:
 
 def _tan_branch(position: float) -> tuple[float, bool]:
     """
-    Branch of tan that a point lies on, and whether it sits exactly on an asymptote.
+    Branch of tan that a point lies on, and whether it sits exactly on
+    an asymptote.
 
     Parameters
     ----------
     position : float
-        ``(x - pi/2) / pi``, so that the asymptotes ``pi/2 + n*pi`` are the integers.
+        ``(x - pi/2) / pi``, so that the asymptotes ``pi/2 + n*pi`` are
+        the integers.
 
     Returns
     -------
     tuple[float, bool]
-        The branch index (the asymptote's own index if the point sits on one) and whether the
-        point sits on an asymptote.
+        The branch index (the asymptote's own index if the point sits on
+        one) and whether the point sits on an asymptote.
     """
     nearest = float(np.round(position))
     on_asymptote = abs(position - nearest) <= _TAN_EDGE_TOLERANCE
@@ -1645,9 +1768,10 @@ def _tan_bounds(interval: _Interval) -> tuple[float, float]:
     """
     Bounds of tan(x) for ``x`` in radians.
 
-    tan is increasing between asymptotes (``pi/2 + n*pi``). An interval that contains an
-    asymptote in its interior covers all real numbers. A bound exactly on an asymptote makes
-    the result unbounded on that side only: ``[0, pi/2]`` gives ``[0, inf)``.
+    tan is increasing between asymptotes (``pi/2 + n*pi``). An interval
+    that contains an asymptote in its interior covers all real numbers.
+    A bound exactly on an asymptote makes the result unbounded on that
+    side only: ``[0, pi/2]`` gives ``[0, inf)``.
     """
     lo, hi = interval
     if not (np.isfinite(lo) and np.isfinite(hi)):
@@ -1676,11 +1800,12 @@ def _std(param: DescriptorNumber) -> float:
 # very large variance instead of raising.
 def _tan_guard(param: DescriptorNumber) -> None:
     """
-    The value must keep clear of a tan asymptote, where the variance would explode.
+    The value must keep clear of a tan asymptote, where the variance
+    would explode.
 
-    The delta method is only meaningful if the asymptote lies more than one standard
-    deviation away, so that distance (never less than ``_TAN_ASYMPTOTE_TOLERANCE``) is
-    the limit.
+    The delta method is only meaningful if the asymptote lies more than
+    one standard deviation away, so that distance (never less than
+    ``_TAN_ASYMPTOTE_TOLERANCE``) is the limit.
     """
     factor = _native_factor(str(param.unit), 'rad')
     value = float(param.value) * factor
@@ -1697,10 +1822,12 @@ def _tan_guard(param: DescriptorNumber) -> None:
 # NOTE(): The same one-standard-deviation design decision as for _tan_guard applies here.
 def _arctan2_guard(y: DescriptorNumber, x: DescriptorNumber) -> None:
     """
-    The point ``(x, y)`` must keep clear of the origin, where the angle is undefined.
+    The point ``(x, y)`` must keep clear of the origin, where the angle
+    is undefined.
 
-    Only checked if an argument has a variance: the delta method then divides by
-    ``x**2 + y**2``. The point must lie more than one standard deviation from the origin.
+    Only checked if an argument has a variance: the delta method then
+    divides by ``x**2 + y**2``. The point must lie more than one
+    standard deviation from the origin.
     """
     margin = max(_std(y), _std(x))
     if margin > 0 and np.hypot(float(y.value), float(x.value)) <= margin:
@@ -1715,9 +1842,10 @@ def _arctan2_bounds(y_interval: _Interval, x_interval: _Interval) -> tuple[float
     """
     Bounds of arctan2(y, x) over the box ``y_interval x x_interval``.
 
-    The angle is a harmonic function, so away from the branch cut its extremes sit on the
-    corners of the box. If the box touches the cut (``y = 0`` with ``x < 0``) the angle
-    jumps between -pi and pi and the range is the full ``[-pi, pi]``.
+    The angle is a harmonic function, so away from the branch cut its
+    extremes sit on the corners of the box. If the box touches the cut
+    (``y = 0`` with ``x < 0``) the angle jumps between -pi and pi and
+    the range is the full ``[-pi, pi]``.
     """
     (y_lo, y_hi), (x_lo, x_hi) = y_interval, x_interval
     if y_lo < 0.0 <= y_hi and x_lo < 0.0:
