@@ -15,6 +15,13 @@ section of the documentation.
 
 The tutorials are organized into the following categories:
 
+## Basics
+
+- [Using maths](using-math.ipynb) – A series of short examples showing
+  how to do maths with EasyScience parameters: the basic operations, the
+  functions of `es.math`, and how units, uncertainties and bounds are
+  propagated.
+
 ## Workshops & Schools
 
 - [Fitting QENS](fitting-qens.ipynb) – A tutorial demonstrating how to

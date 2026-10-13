@@ -194,6 +194,8 @@ nav:
       - Controlling Log Output: user-guide/controlling-log-output.md
   - Tutorials:
       - Tutorials: tutorials/index.md
+      - Basics:
+          - Using maths: tutorials/using-math.ipynb
       - Bayesian analysis: tutorials/fitting-bayesian.ipynb
       - Progress Callback: tutorials/progress-callback.ipynb
       - Workshops & Schools:
