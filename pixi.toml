@@ -43,7 +43,7 @@ python = '3.14.*'
 # editable installations.
 
 [feature.dev.dependencies]
-nodejs = '*'  # Required for Prettier (non-Python formatting)
+nodejs = '*'       # Required for Prettier (non-Python formatting)
 pixi-kernel = '*'  # Pixi Jupyter kernel
 
 [feature.dev.pypi-dependencies]

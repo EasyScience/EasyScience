@@ -2,12 +2,13 @@ plugins = [
   'prettier-plugin-toml',  # use the TOML plugin
 ]
 
-endOfLine = 'lf'  # change line endings to LF
-proseWrap = 'always'  # change wrapping in Markdown files
-semi = false  # remove semicolons
-singleQuote = true  # use single quotes instead of double quotes
-tabWidth = 2  # change tab width to 2 spaces
-useTabs = false  # use spaces instead of tabs
+endOfLine = 'lf'                 # change line endings to LF
+proseWrap = 'always'             # change wrapping in Markdown files
+semi = false                     # remove semicolons
+singleQuote = true               # use single quotes instead of double quotes
+tabWidth = 2                     # change tab width to 2 spaces
+trailingCommentAlignment = true  # align trailing comments
+useTabs = false                  # use spaces instead of tabs
 
 printWidth = 79  # wrap lines at 79 characters
 
