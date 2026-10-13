@@ -1,22 +1,24 @@
 plugins = [
-  "prettier-plugin-toml", # use the TOML plugin
+  'prettier-plugin-toml',  # use the TOML plugin
 ]
 
-endOfLine = 'lf'     # change line endings to LF
-proseWrap = 'always' # change wrapping in Markdown files
-semi = false         # remove semicolons
-singleQuote = true   # use single quotes instead of double quotes
-tabWidth = 2         # change tab width to 2 spaces
-useTabs = false      # use spaces instead of tabs
+endOfLine = 'lf'  # change line endings to LF
+proseWrap = 'always'  # change wrapping in Markdown files
+semi = false  # remove semicolons
+singleQuote = true  # use single quotes instead of double quotes
+tabWidth = 2  # change tab width to 2 spaces
+useTabs = false  # use spaces instead of tabs
 
-printWidth = 79 # wrap lines at 79 characters
-
-[[overrides]]
-files = ["*.md"]
-[overrides.options]
-printWidth = 72 # wrap Markdown files at 72 characters
+printWidth = 79  # wrap lines at 79 characters
 
 [[overrides]]
-files = ["*.yml", "*.yaml"]
+files = ['*.md']
+
 [overrides.options]
-printWidth = 88 # wrap YAML files at 88 characters
+printWidth = 72  # wrap Markdown files at 72 characters
+
+[[overrides]]
+files = ['*.yml', '*.yaml']
+
+[overrides.options]
+printWidth = 88  # wrap YAML files at 88 characters
