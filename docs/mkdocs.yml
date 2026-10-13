@@ -202,6 +202,8 @@ nav:
               - Inverse trigonometric functions:
                   tutorials/basics/maths-inverse-trigonometric.ipynb
               - Hyperbolic functions: tutorials/basics/maths-hyperbolic.ipynb
+              - Error propagation: tutorials/basics/maths-error-propagation.ipynb
+              - Correlation: tutorials/basics/maths-correlation.ipynb
       - Fitting introduction: tutorials/fitting-intro.ipynb
       - Bayesian analysis: tutorials/fitting-bayesian.ipynb
       - Progress Callback: tutorials/progress-callback.ipynb

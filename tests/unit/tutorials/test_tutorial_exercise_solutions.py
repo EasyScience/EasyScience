@@ -173,18 +173,6 @@ MESSAGES = {
 }
 
 
-@pytest.fixture
-def solutions(run_notebook):
-    cache: dict[str, list[Solution]] = {}
-
-    def get(name: str) -> list[Solution]:
-        if name not in cache:
-            cache[name] = run_notebook(name)
-        return cache[name]
-
-    return get
-
-
 @pytest.mark.parametrize('name', NOTEBOOKS)
 def test_every_exercise_shows_a_solution_with_code_and_output(solutions, name):
     shown = solutions(name)
