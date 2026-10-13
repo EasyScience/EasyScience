@@ -75,3 +75,16 @@ def run_notebook(notebook_environment):
         return solutions
 
     return run
+
+
+@pytest.fixture
+def solutions(run_notebook):
+    """Return a function that replays a notebook once and returns its solutions."""
+    cache: dict[str, list[Solution]] = {}
+
+    def get(name: str) -> list[Solution]:
+        if name not in cache:
+            cache[name] = run_notebook(name)
+        return cache[name]
+
+    return get

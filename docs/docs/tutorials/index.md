@@ -31,6 +31,12 @@ exercises. Units, uncertainties and bounds are propagated for you.
   – `arcsin`, `arccos`, `arctan` and `arctan2`, and their domains.
 - [Hyperbolic functions](basics/maths-hyperbolic.ipynb) – `sinh`,
   `cosh`, `tanh` and their inverses.
+- [Error propagation](basics/maths-error-propagation.ipynb) – How the
+  choice of formula changes the uncertainty of a result, with the area of
+  a table as the running example.
+- [Correlation](basics/maths-correlation.ipynb) – Correlated
+  measurements and fit parameters, and what ignoring the correlation
+  costs.
 
 ## Workshops & Schools
 

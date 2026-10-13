@@ -27,8 +27,12 @@ MATHS_NOTEBOOKS = [
     'basics/maths-inverse-trigonometric',
     'basics/maths-hyperbolic',
 ]
+PROPAGATION_NOTEBOOKS = [
+    'basics/maths-error-propagation',
+    'basics/maths-correlation',
+]
 FITTING_NOTEBOOKS = ['fitting-intro']
-NOTEBOOKS = MATHS_NOTEBOOKS + FITTING_NOTEBOOKS
+NOTEBOOKS = MATHS_NOTEBOOKS + PROPAGATION_NOTEBOOKS + FITTING_NOTEBOOKS
 
 # Number of exercises (and so of folded solutions) in each notebook.
 EXERCISES = {
@@ -37,6 +41,8 @@ EXERCISES = {
     'basics/maths-trigonometric': 4,
     'basics/maths-inverse-trigonometric': 4,
     'basics/maths-hyperbolic': 4,
+    'basics/maths-error-propagation': 4,
+    'basics/maths-correlation': 4,
     'fitting-intro': 2,
 }
 
