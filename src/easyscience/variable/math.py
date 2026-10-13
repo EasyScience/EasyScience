@@ -170,11 +170,11 @@ def exp(x: _D) -> _D:
     Returns
     -------
     _D
-        Parameter or DescriptorNumber
-        ``exp(x)`` with propagated variance and bounds ``(exp(x.min),
-        exp(x.max))``. The class follows the inputs: a ``Parameter``
-        (with bounds) if any argument is one, otherwise a
-        ``DescriptorNumber`` (without bounds).
+        Parameter or DescriptorNumber ``exp(x)`` with propagated
+        variance and bounds ``(exp(x.min), exp(x.max))``. The class
+        follows the inputs: a ``Parameter`` (with bounds) if any
+        argument is one, otherwise a ``DescriptorNumber`` (without
+        bounds).
 
     Raises
     ------
@@ -221,11 +221,10 @@ def log(x: _D) -> _D:
     Returns
     -------
     _D
-        Parameter or DescriptorNumber
-        ``log(x)`` with propagated variance and bounds. The class
-        follows the inputs: a ``Parameter`` (with bounds) if any
-        argument is one, otherwise a ``DescriptorNumber`` (without
-        bounds).
+        Parameter or DescriptorNumber ``log(x)`` with propagated
+        variance and bounds. The class follows the inputs: a
+        ``Parameter`` (with bounds) if any argument is one, otherwise a
+        ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
@@ -274,11 +273,10 @@ def log10(x: _D) -> _D:
     Returns
     -------
     _D
-        Parameter or DescriptorNumber
-        ``log10(x)`` with propagated variance and bounds. The class
-        follows the inputs: a ``Parameter`` (with bounds) if any
-        argument is one, otherwise a ``DescriptorNumber`` (without
-        bounds).
+        Parameter or DescriptorNumber ``log10(x)`` with propagated
+        variance and bounds. The class follows the inputs: a
+        ``Parameter`` (with bounds) if any argument is one, otherwise a
+        ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
@@ -328,12 +326,11 @@ def sqrt(x: _D) -> _D:
     Returns
     -------
     _D
-        Parameter or DescriptorNumber
-        ``sqrt(x)`` with propagated variance and bounds. The unit is the
-        square root of the input unit (``m**2`` gives ``m``). The class
-        follows the inputs: a ``Parameter`` (with bounds) if any
-        argument is one, otherwise a ``DescriptorNumber`` (without
-        bounds).
+        Parameter or DescriptorNumber ``sqrt(x)`` with propagated
+        variance and bounds. The unit is the square root of the input
+        unit (``m**2`` gives ``m``). The class follows the inputs: a
+        ``Parameter`` (with bounds) if any argument is one, otherwise a
+        ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
@@ -384,11 +381,10 @@ def erf(x: _D) -> _D:
     Returns
     -------
     _D
-        Parameter or DescriptorNumber
-        ``erf(x)`` with propagated variance and bounds in ``[-1, 1]``.
-        The class follows the inputs: a ``Parameter`` (with bounds) if
-        any argument is one, otherwise a ``DescriptorNumber`` (without
-        bounds).
+        Parameter or DescriptorNumber ``erf(x)`` with propagated
+        variance and bounds in ``[-1, 1]``. The class follows the
+        inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
@@ -437,11 +433,10 @@ def erfc(x: _D) -> _D:
     Returns
     -------
     _D
-        Parameter or DescriptorNumber
-        ``erfc(x)`` with propagated variance and bounds in ``[0, 2]``.
-        The class follows the inputs: a ``Parameter`` (with bounds) if
-        any argument is one, otherwise a ``DescriptorNumber`` (without
-        bounds).
+        Parameter or DescriptorNumber ``erfc(x)`` with propagated
+        variance and bounds in ``[0, 2]``. The class follows the inputs:
+        a ``Parameter`` (with bounds) if any argument is one, otherwise
+        a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
@@ -495,11 +490,10 @@ def sin(x: _D) -> _D:
     Returns
     -------
     _D
-        Parameter or DescriptorNumber
-        Dimensionless ``sin(x)`` with propagated variance and exact
-        bounds. The class follows the inputs: a ``Parameter`` (with
-        bounds) if any argument is one, otherwise a ``DescriptorNumber``
-        (without bounds).
+        Parameter or DescriptorNumber Dimensionless ``sin(x)`` with
+        propagated variance and exact bounds. The class follows the
+        inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
@@ -549,11 +543,10 @@ def cos(x: _D) -> _D:
     Returns
     -------
     _D
-        Parameter or DescriptorNumber
-        Dimensionless ``cos(x)`` with propagated variance and exact
-        bounds. The class follows the inputs: a ``Parameter`` (with
-        bounds) if any argument is one, otherwise a ``DescriptorNumber``
-        (without bounds).
+        Parameter or DescriptorNumber Dimensionless ``cos(x)`` with
+        propagated variance and exact bounds. The class follows the
+        inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
@@ -604,11 +597,10 @@ def tan(x: _D) -> _D:
     Returns
     -------
     _D
-        Parameter or DescriptorNumber
-        Dimensionless ``tan(x)`` with propagated variance and bounds.
-        The class follows the inputs: a ``Parameter`` (with bounds) if
-        any argument is one, otherwise a ``DescriptorNumber`` (without
-        bounds).
+        Parameter or DescriptorNumber Dimensionless ``tan(x)`` with
+        propagated variance and bounds. The class follows the inputs: a
+        ``Parameter`` (with bounds) if any argument is one, otherwise a
+        ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
@@ -669,11 +661,11 @@ def arcsin(x: _D, *, unit: str = 'rad') -> _D:
     Returns
     -------
     _D
-        Parameter or DescriptorNumber
-        Angle in ``unit`` (``[-pi/2, pi/2]`` rad), with propagated
-        variance and bounds. The class follows the inputs: a
-        ``Parameter`` (with bounds) if any argument is one, otherwise a
-        ``DescriptorNumber`` (without bounds).
+        Parameter or DescriptorNumber Angle in ``unit`` (``[-pi/2,
+        pi/2]`` rad), with propagated variance and bounds. The class
+        follows the inputs: a ``Parameter`` (with bounds) if any
+        argument is one, otherwise a ``DescriptorNumber`` (without
+        bounds).
 
     Raises
     ------
@@ -729,11 +721,10 @@ def arccos(x: _D, *, unit: str = 'rad') -> _D:
     Returns
     -------
     _D
-        Parameter or DescriptorNumber
-        Angle in ``unit`` (``[0, pi]`` rad), with propagated variance
-        and bounds. The class follows the inputs: a ``Parameter`` (with
-        bounds) if any argument is one, otherwise a ``DescriptorNumber``
-        (without bounds).
+        Parameter or DescriptorNumber Angle in ``unit`` (``[0, pi]``
+        rad), with propagated variance and bounds. The class follows the
+        inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
@@ -793,11 +784,11 @@ def arctan(x: _D, *, unit: str = 'rad') -> _D:
     Returns
     -------
     _D
-        Parameter or DescriptorNumber
-        Angle in ``unit`` (``[-pi/2, pi/2]`` rad), with propagated
-        variance and bounds. The class follows the inputs: a
-        ``Parameter`` (with bounds) if any argument is one, otherwise a
-        ``DescriptorNumber`` (without bounds).
+        Parameter or DescriptorNumber Angle in ``unit`` (``[-pi/2,
+        pi/2]`` rad), with propagated variance and bounds. The class
+        follows the inputs: a ``Parameter`` (with bounds) if any
+        argument is one, otherwise a ``DescriptorNumber`` (without
+        bounds).
 
     Raises
     ------
@@ -862,11 +853,10 @@ def arctan2(y: DescriptorNumber, x: DescriptorNumber, *, unit: str = 'rad') -> D
     Returns
     -------
     DescriptorNumber
-        Parameter or DescriptorNumber
-        Angle in ``unit`` (``[-pi, pi]`` rad), with propagated variance
-        and bounds. The class follows the inputs: a ``Parameter`` (with
-        bounds) if any argument is one, otherwise a ``DescriptorNumber``
-        (without bounds).
+        Parameter or DescriptorNumber Angle in ``unit`` (``[-pi, pi]``
+        rad), with propagated variance and bounds. The class follows the
+        inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
@@ -940,11 +930,11 @@ def sinc(x: _D) -> _D:
     Returns
     -------
     _D
-        Parameter or DescriptorNumber
-        Dimensionless ``sinc(x)`` (equal to 1 at ``x = 0``) with
-        propagated variance and exact bounds. The class follows the
-        inputs: a ``Parameter`` (with bounds) if any argument is one,
-        otherwise a ``DescriptorNumber`` (without bounds).
+        Parameter or DescriptorNumber Dimensionless ``sinc(x)`` (equal
+        to 1 at ``x = 0``) with propagated variance and exact bounds.
+        The class follows the inputs: a ``Parameter`` (with bounds) if
+        any argument is one, otherwise a ``DescriptorNumber`` (without
+        bounds).
 
     Raises
     ------
@@ -1003,11 +993,10 @@ def sinh(x: _D) -> _D:
     Returns
     -------
     _D
-        Parameter or DescriptorNumber
-        ``sinh(x)`` with propagated variance and bounds. The class
-        follows the inputs: a ``Parameter`` (with bounds) if any
-        argument is one, otherwise a ``DescriptorNumber`` (without
-        bounds).
+        Parameter or DescriptorNumber ``sinh(x)`` with propagated
+        variance and bounds. The class follows the inputs: a
+        ``Parameter`` (with bounds) if any argument is one, otherwise a
+        ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
@@ -1053,11 +1042,10 @@ def cosh(x: _D) -> _D:
     Returns
     -------
     _D
-        Parameter or DescriptorNumber
-        ``cosh(x)`` with propagated variance and bounds. The class
-        follows the inputs: a ``Parameter`` (with bounds) if any
-        argument is one, otherwise a ``DescriptorNumber`` (without
-        bounds).
+        Parameter or DescriptorNumber ``cosh(x)`` with propagated
+        variance and bounds. The class follows the inputs: a
+        ``Parameter`` (with bounds) if any argument is one, otherwise a
+        ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
@@ -1108,11 +1096,10 @@ def tanh(x: _D) -> _D:
     Returns
     -------
     _D
-        Parameter or DescriptorNumber
-        ``tanh(x)`` with propagated variance and bounds in ``[-1, 1]``.
-        The class follows the inputs: a ``Parameter`` (with bounds) if
-        any argument is one, otherwise a ``DescriptorNumber`` (without
-        bounds).
+        Parameter or DescriptorNumber ``tanh(x)`` with propagated
+        variance and bounds in ``[-1, 1]``. The class follows the
+        inputs: a ``Parameter`` (with bounds) if any argument is one,
+        otherwise a ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
@@ -1154,11 +1141,10 @@ def arcsinh(x: _D) -> _D:
     Returns
     -------
     _D
-        Parameter or DescriptorNumber
-        ``arcsinh(x)`` with propagated variance and bounds. The class
-        follows the inputs: a ``Parameter`` (with bounds) if any
-        argument is one, otherwise a ``DescriptorNumber`` (without
-        bounds).
+        Parameter or DescriptorNumber ``arcsinh(x)`` with propagated
+        variance and bounds. The class follows the inputs: a
+        ``Parameter`` (with bounds) if any argument is one, otherwise a
+        ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
@@ -1201,11 +1187,10 @@ def arccosh(x: _D) -> _D:
     Returns
     -------
     _D
-        Parameter or DescriptorNumber
-        ``arccosh(x)`` (non-negative) with propagated variance and
-        bounds. The class follows the inputs: a ``Parameter`` (with
-        bounds) if any argument is one, otherwise a ``DescriptorNumber``
-        (without bounds).
+        Parameter or DescriptorNumber ``arccosh(x)`` (non-negative) with
+        propagated variance and bounds. The class follows the inputs: a
+        ``Parameter`` (with bounds) if any argument is one, otherwise a
+        ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
@@ -1257,11 +1242,10 @@ def arctanh(x: _D) -> _D:
     Returns
     -------
     _D
-        Parameter or DescriptorNumber
-        ``arctanh(x)`` with propagated variance and bounds. The class
-        follows the inputs: a ``Parameter`` (with bounds) if any
-        argument is one, otherwise a ``DescriptorNumber`` (without
-        bounds).
+        Parameter or DescriptorNumber ``arctanh(x)`` with propagated
+        variance and bounds. The class follows the inputs: a
+        ``Parameter`` (with bounds) if any argument is one, otherwise a
+        ``DescriptorNumber`` (without bounds).
 
     Raises
     ------
