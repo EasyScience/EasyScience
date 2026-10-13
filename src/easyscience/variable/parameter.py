@@ -1024,6 +1024,8 @@ class Parameter(DescriptorNumber):
         s = []
         if self.fixed:
             super_str += ' (fixed)'
+        elif not self.independent:
+            super_str += ' (dependent)'
         s.append(super_str)
         s.append('bounds=[%s:%s]' % (repr(float(self.min)), repr(float(self.max))))
         return '%s>' % ', '.join(s)
