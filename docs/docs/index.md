@@ -14,8 +14,8 @@ Here is a brief overview of the main documentation sections:
   Covers core concepts, key terminology, workflow steps, and essential
   parameters for effective use of EasyScience.
 - [:material-school: Tutorials](tutorials/index.md) – Offers practical,
-  step-by-step examples demonstrating common workflows and data analysis
-  tasks.
+  step-by-step examples, from the basics of working with parameters and
+  maths functions to common workflows and data analysis tasks.
 - [:material-code-braces-box: API Reference](api-reference/index.md) –
   An auto-generated reference detailing the available functions and
   modules in EasyScience.
