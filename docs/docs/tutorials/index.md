@@ -17,13 +17,26 @@ The tutorials are organized into the following categories:
 
 ## Basics
 
-- [Using maths](using-math.ipynb) – A series of short examples showing
-  how to do maths with EasyScience parameters: the basic operations, the
-  functions of `es.math`, and how units, uncertainties and bounds are
-  propagated.
+Short examples of how to do maths with EasyScience parameters, with
+exercises. Units, uncertainties and bounds are propagated for you.
+
+- [Arithmetic](basics/maths-arithmetic.ipynb) – Addition, subtraction,
+  multiplication, division and powers of numbers with units,
+  uncertainties and bounds.
+- [Exponential and logarithm](basics/maths-exp-log.ipynb) – `exp`,
+  `log`, `log10`, `sqrt` and the error functions `erf` and `erfc`.
+- [Trigonometric functions](basics/maths-trigonometric.ipynb) – `sin`,
+  `cos`, `tan` and `sinc`, with Bragg's law as the running example.
+- [Inverse trigonometric functions](basics/maths-inverse-trigonometric.ipynb)
+  – `arcsin`, `arccos`, `arctan` and `arctan2`, and their domains.
+- [Hyperbolic functions](basics/maths-hyperbolic.ipynb) – `sinh`,
+  `cosh`, `tanh` and their inverses.
 
 ## Workshops & Schools
 
+- [Fitting introduction](fitting-intro.ipynb) – A short introduction to
+  fitting: fit a straight line, then compute quantities that derive from
+  the fitted parameters, with their uncertainty.
 - [Fitting QENS](fitting-qens.ipynb) – A tutorial demonstrating how to
   fit a quasielastic neutron scattering (QENS) data using EasyScience
   framework.

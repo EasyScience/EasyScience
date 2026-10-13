@@ -195,7 +195,14 @@ nav:
   - Tutorials:
       - Tutorials: tutorials/index.md
       - Basics:
-          - Using maths: tutorials/using-math.ipynb
+          - Maths:
+              - Arithmetic: tutorials/basics/maths-arithmetic.ipynb
+              - Exponential and logarithm: tutorials/basics/maths-exp-log.ipynb
+              - Trigonometric functions: tutorials/basics/maths-trigonometric.ipynb
+              - Inverse trigonometric functions:
+                  tutorials/basics/maths-inverse-trigonometric.ipynb
+              - Hyperbolic functions: tutorials/basics/maths-hyperbolic.ipynb
+      - Fitting introduction: tutorials/fitting-intro.ipynb
       - Bayesian analysis: tutorials/fitting-bayesian.ipynb
       - Progress Callback: tutorials/progress-callback.ipynb
       - Workshops & Schools:
