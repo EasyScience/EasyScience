@@ -32,7 +32,9 @@ class Beta(NewBase):
 class MockModel(ModelBase):
     """A ModelBase subclass with a Parameter and a DescriptorNumber for testing get_all_variables."""
 
-    def __init__(self, unique_name=None, display_name=None, temperature=25, volume=1.0, items=None):
+    def __init__(
+        self, unique_name=None, display_name=None, temperature=25, volume=1.0, items=None
+    ):
         super().__init__(unique_name=unique_name, display_name=display_name)
         self._temperature = Parameter(name='temperature', value=temperature)
         self._volume = DescriptorNumber(name='volume', value=volume)
@@ -643,9 +645,12 @@ class TestEasyList:
         el_dict = {
             '@module': 'easyscience',
             '@class': 'EasyList',
-            'protected_types': [{'@module': 'easyscience.base_classes', '@class': 'ModelBase'}]
+            'protected_types': [{'@module': 'easyscience.base_classes', '@class': 'ModelBase'}],
         }
-        with pytest.raises(ValueError, match='The provided dictionary does not represent an EasyList. Missing the "data" key.'):
+        with pytest.raises(
+            ValueError,
+            match='The provided dictionary does not represent an EasyList. Missing the "data" key.',
+        ):
             EasyList.from_dict(el_dict)
 
     # --- get_all_variables ---
