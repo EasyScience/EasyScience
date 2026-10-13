@@ -41,7 +41,7 @@ class TestOutput:
 
         solution('', 'print(1)')
 
-        assert shown[0].data.startswith('<details><summary>Solution</summary>')
+        assert shown[0].data.startswith('<details class="example"><summary>Solution</summary>')
         assert shown[0].data.endswith('</details>')
 
     def test_the_code_is_shown_highlighted_and_unchanged(self, helper):

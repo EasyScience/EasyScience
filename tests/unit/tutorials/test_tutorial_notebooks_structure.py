@@ -103,7 +103,7 @@ class TestExercises:
             hints = source_of(cells[start + 2])
 
             assert '<summary>Hint 1</summary>' in hints
-            assert hints.count('<details>') == hints.count('</details>')
+            assert hints.count('<details class="question">') == hints.count('</details>')
             assert '<summary>Solution' not in hints
             assert '```' not in hints
 
