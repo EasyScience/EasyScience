@@ -12,8 +12,8 @@ import re
 import pytest
 
 from .notebooks import EXERCISES
-from .notebooks import NOTEBOOKS
 from .notebooks import PROJECT_ROOT
+from .notebooks import STRUCTURE_NOTEBOOKS
 from .notebooks import TUTORIALS_DIR
 from .notebooks import is_hidden_helper
 from .notebooks import is_solution_cell
@@ -23,7 +23,7 @@ from .notebooks import source_of
 pytestmark = pytest.mark.fast
 
 
-@pytest.fixture(params=NOTEBOOKS)
+@pytest.fixture(params=STRUCTURE_NOTEBOOKS)
 def name(request):
     return request.param
 
@@ -140,7 +140,7 @@ class TestHelperCell:
 
 
 class TestSite:
-    @pytest.mark.parametrize('name', NOTEBOOKS)
+    @pytest.mark.parametrize('name', STRUCTURE_NOTEBOOKS)
     def test_notebook_is_in_the_navigation(self, name):
         config = (PROJECT_ROOT / 'docs' / 'mkdocs.yml').read_text(encoding='utf-8')
 

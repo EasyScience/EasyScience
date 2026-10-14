@@ -276,9 +276,16 @@ class TestWording:
         assert r'\rho = 0' in text
 
     @pytest.mark.parametrize('name', [PROPAGATION, CORRELATION])
-    def test_the_tutorial_index_lists_the_notebook(self, name):
+    def test_the_basics_hub_lists_the_notebook(self, name):
+        hub = (PROJECT_ROOT / 'docs' / 'docs' / 'tutorials' / 'basics' / 'index.md').read_text(
+            encoding='utf-8'
+        )
+
+        assert f'{name.removeprefix("basics/")}.ipynb' in hub
+
+    def test_the_tutorial_index_links_the_basics_hub(self):
         index = (PROJECT_ROOT / 'docs' / 'docs' / 'tutorials' / 'index.md').read_text(
             encoding='utf-8'
         )
 
-        assert f'{name.removeprefix("basics/")}.ipynb' in index
+        assert '(basics/index.md)' in index
