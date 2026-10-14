@@ -101,8 +101,8 @@ class DFO(MinimizerBase):
         max_evaluations : int | None, default=None
             Maximum number of evaluations. By default, None.
         progress_callback : Callable[[dict], None] | None, default=None
-            Optional callback receiving normalized progress payloads. Its
-            return value is ignored.
+            Optional callback receiving normalized progress payloads.
+            Its return value is ignored.
         callback : Callable[[DFOCallbackState], None] | None, default=None
             Optional native DFO callback.
         **kwargs :

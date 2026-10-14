@@ -23,9 +23,9 @@ class EngineBase(metaclass=ABCMeta):
     An engine binds an EasyScience object and a fit function, and
     repeatedly evaluates the function while writing values back into the
     object's ``Parameter`` instances. ``EngineBase`` owns this shared
-    system: the parameter cache, the ``Parameter``-writing wrapped
-    fit function, and value restore on failure. It deliberately declares
-    no abstract methods: the interfaces are defined on its subclasses
+    system: the parameter cache, the ``Parameter``-writing wrapped fit
+    function, and value restore on failure. It deliberately declares no
+    abstract methods: the interfaces are defined on its subclasses
     (``MinimizerBase.fit``, ``DreamSampler.run``).
     """
 
@@ -49,7 +49,8 @@ class EngineBase(metaclass=ABCMeta):
 
     @staticmethod
     def validate_arrays(x: np.ndarray, y: np.ndarray, weights: np.ndarray) -> None:
-        """Validate the (x, y, weights) arrays handed to an engine.
+        """
+        Validate the (x, y, weights) arrays handed to an engine.
 
         Parameters
         ----------
@@ -63,9 +64,9 @@ class EngineBase(metaclass=ABCMeta):
         Raises
         ------
         ValueError
-            If any array is non-numeric, the shapes disagree, x or y contain
-            NaN or infinite values, or the weights are non-finite or
-            non-positive.
+            If any array is non-numeric, the shapes disagree, x or y
+            contain NaN or infinite values, or the weights are
+            non-finite or non-positive.
         """
         # A non-numeric dtype (an object array holding None, or a string
         # array) would otherwise reach np.isfinite and raise an opaque numpy

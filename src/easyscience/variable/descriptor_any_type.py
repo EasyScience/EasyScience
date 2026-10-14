@@ -53,7 +53,6 @@ class DescriptorAnyType(DescriptorBase):
         display_name : Optional[str], default=None
             A pretty name for the object. Falls back to ``unique_name``
             when not given. By default, None.
-
         """
 
         self._value = value

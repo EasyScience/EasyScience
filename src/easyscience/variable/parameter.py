@@ -97,7 +97,6 @@ class Parameter(DescriptorNumber):
         ValueError
             If ``value`` falls outside the provided bounds or if the
             bounds are invalid.
-
         """
         # Extract and ignore serialization-specific fields from kwargs
         kwargs.pop('_dependency_string', None)
@@ -888,10 +887,11 @@ class Parameter(DescriptorNumber):
     @property
     def _arg_spec(self) -> List[str]:
         """
-        Names of the constructor arguments the serializer has to collect.
+        Names of the constructor arguments the serializer has to
+        collect.
 
-        ``callback`` links to a calculator object.
-          Holds a ``property`` that cannot be serialized.
+        ``callback`` links to a calculator object. Holds a ``property``
+        that cannot be serialized.
         """
         _, args = SerializerBase.get_arg_spec(self.__class__.__init__)
         return [name for name in args if name != 'callback']

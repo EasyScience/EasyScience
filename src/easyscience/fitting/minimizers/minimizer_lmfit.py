@@ -109,8 +109,8 @@ class LMFit(MinimizerBase):  # noqa: S101
         max_evaluations : int | None, default=None
             Maximum number of function evaluations. By default, None.
         progress_callback : Callable[[dict], None] | None, default=None
-            Optional callback receiving normalized progress payloads. Its
-            return value is ignored.
+            Optional callback receiving normalized progress payloads.
+            Its return value is ignored.
         minimizer_kwargs : dict | None, default=None
             Additional keyword arguments passed to LMFit's minimizer. By
             default, None.

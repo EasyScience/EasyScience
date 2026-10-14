@@ -104,7 +104,6 @@ class DescriptorNumber(DescriptorBase):
             If ``unit`` is not a valid scipp unit.
         ValueError
             If ``variance`` is negative.
-
         """
         self._observers: List[DescriptorNumber] = []
 
@@ -158,7 +157,7 @@ class DescriptorNumber(DescriptorBase):
 
         Returns
         -------
-        Self
+        DescriptorNumber
             A new instance of the class this is called on.
 
         Raises

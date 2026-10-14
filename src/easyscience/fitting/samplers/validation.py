@@ -6,7 +6,8 @@ from __future__ import annotations
 
 
 def validate_run_settings(samples: int, burn: int, thin: int) -> None:
-    """Validate the DREAM run settings.
+    """
+    Validate the DREAM run settings.
 
     Parameters
     ----------

@@ -401,8 +401,8 @@ class EasyList(ModelBase, MutableSequence[ProtectedType_]):
         Parameters
         ----------
         obj_dict : Dict[str, Any]
-            Dictionary containing the serialized contents
-            of an EasyScience object.
+            Dictionary containing the serialized contents of an
+            EasyScience object.
 
         Returns
         -------

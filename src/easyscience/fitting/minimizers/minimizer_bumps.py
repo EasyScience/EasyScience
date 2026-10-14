@@ -122,8 +122,9 @@ class Bumps(MinimizerBase):
             fit should be aborted.  Called periodically during the BUMPS
             optimizer iteration loop, and once more after the optimizer
             returns in order to distinguish an aborted fit from a
-            converged one, so it must be side-effect free. An aborted fit
-            returns ``FitResults(success=False)`` rather than raising.
+            converged one, so it must be side-effect free. An aborted
+            fit returns ``FitResults(success=False)`` rather than
+            raising.
         minimizer_kwargs : dict | None, default=None
             Additional keyword arguments passed to the BUMPS minimizer.
             The mapping is copied before use, so it is never mutated. By
@@ -136,15 +137,15 @@ class Bumps(MinimizerBase):
         Returns
         -------
         FitResults
-            Fit results. ``FitResults.iterations`` is the number of BUMPS
-            *optimizer steps* consumed (the last reported step index plus
-            one), which is what ``max_evaluations`` tests against; it is
-            not comparable to LMFit's ``nfev`` or DFO-LS' ``nf``. The
-            objective-call count is reported separately as
+            Fit results. ``FitResults.iterations`` is the number of
+            BUMPS *optimizer steps* consumed (the last reported step
+            index plus one), which is what ``max_evaluations`` tests
+            against; it is not comparable to LMFit's ``nfev`` or DFO-LS'
+            ``nf``. The objective-call count is reported separately as
             ``FitResults.n_evaluations``, which is the cross-backend
-            consistent figure. Note that BUMPS derives the step index from
-            whatever the selected fitter reports to its monitors, so the
-            granularity of a "step" varies between fitters.
+            consistent figure. Note that BUMPS derives the step index
+            from whatever the selected fitter reports to its monitors,
+            so the granularity of a "step" varies between fitters.
 
         Raises
         ------

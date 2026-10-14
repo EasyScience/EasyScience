@@ -24,7 +24,6 @@ class MultiFitter(Fitter):
     The inherited ``fit`` wrapper from ``Fitter`` is used unchanged,
     including support for forwarding progress callbacks to the active
     minimizer.
-
     """
 
     def __init__(

@@ -1,11 +1,13 @@
 # SPDX-FileCopyrightText: 2026 EasyScience contributors <https://github.com/easyscience>
 # SPDX-License-Identifier: BSD-3-Clause
-"""Data reshaping and fit-function wrapping shared by ``Fitter`` and ``Sampler``.
+"""
+Data reshaping and fit-function wrapping shared by ``Fitter`` and
+``Sampler``.
 
 Both fitting and sampling provide the engine witha flat 1-D ``y`` array
-and a dummy 1-D ``x`` index array, while the user's fit function is called
-with the real ``x``. The helpers here do the translation in one place:
-``reshape_dataset``/``inject_x`` do one dataset,
+and a dummy 1-D ``x`` index array, while the user's fit function is
+called with the real ``x``. The helpers here do the translation in one
+place: ``reshape_dataset``/``inject_x`` do one dataset,
 ``reshape_datasets``/``inject_x_multi`` do a list of datasets.
 """
 
@@ -42,9 +44,10 @@ def reshape_dataset(
     -------
     tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray | None, tuple[int, ...]]
         Dummy x index array for the engine, reshaped x values, flattened
-        y values, flattened weights, and the shape of ``y`` (the dependent
-        dimensions; its product is the number of observations, which the
-        multi-dataset helpers use to slice the combined output).
+        y values, flattened weights, and the shape of ``y`` (the
+        dependent dimensions; its product is the number of observations,
+        which the multi-dataset helpers use to slice the combined
+        output).
 
     Raises
     ------
@@ -113,9 +116,9 @@ def reshape_datasets(
     Returns
     -------
     tuple[np.ndarray, list[np.ndarray], np.ndarray, np.ndarray | None, list[tuple[int, ...]]]
-        Dummy x index array for the engine, per-dataset reshaped x values,
-        concatenated y values, concatenated weights, and the per-dataset
-        dependent dimensions.
+        Dummy x index array for the engine, per-dataset reshaped x
+        values, concatenated y values, concatenated weights, and the
+        per-dataset dependent dimensions.
     """
     if weights is None:
         weights = [None] * len(x)
@@ -175,8 +178,8 @@ def inject_x_multi(
     flatten: bool = True,
 ) -> Callable:
     """
-    Wrap one fit function per dataset into a single function whose output
-    is the concatenation of the per-dataset outputs.
+    Wrap one fit function per dataset into a single function whose
+    output is the concatenation of the per-dataset outputs.
 
     Parameters
     ----------

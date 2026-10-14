@@ -68,9 +68,8 @@ class InterfaceFactoryTemplate:
         """
         Changes the current interface to a new interface.
 
-        The current interface is destroyed and all
-        parameters carried over to the new interface. i.e. pick up where
-        you left off.
+        The current interface is destroyed and all parameters carried
+        over to the new interface. i.e. pick up where you left off.
 
         Parameters
         ----------

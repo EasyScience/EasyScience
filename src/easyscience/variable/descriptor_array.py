@@ -75,15 +75,14 @@ class DescriptorArray(DescriptorBase):
         Raises
         ------
         TypeError
-            If ``value`` or ``variance`` is not a list or NumPy array, or
-            if ``unit`` is not a string or scipp unit.
+            If ``value`` or ``variance`` is not a list or NumPy array,
+            or if ``unit`` is not a string or scipp unit.
         UnitError
             If ``unit`` is not a valid scipp unit.
         ValueError
             If ``variance`` does not match the shape of ``value``, if it
             contains negative entries, or if ``dimensions`` does not
             match the shape of ``value``.
-
         """
 
         if not isinstance(value, (list, np.ndarray)):
