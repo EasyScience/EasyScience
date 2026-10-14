@@ -19,10 +19,10 @@ making data analysis easier.
 
 ## Who is it for
 
-**EasyScience** is for scientists who want to analyse data with numbers
-that carry a **unit**, an **uncertainty** and **bounds**, and for
-developers who build scientific libraries and applications on the same
-building blocks. It provides:
+**EasyScience** is the foundation for scientific libraries and
+applications. It is for developers who build on its numbers, which carry
+a **unit**, an **uncertainty** and **bounds**, and for scientists who
+use them directly to analyse data. It provides:
 
 - numbers (`Parameter`, `DescriptorNumber`) that know their unit,
   uncertainty and bounds, with arithmetic and mathematical functions

@@ -24,7 +24,10 @@ their uncertainties, computed with the arithmetic and the functions of
   resolution. _Next._
 - [Bayesian QENS](bayesian-qens.ipynb) – Sample the posterior of the
   QENS model and compare its derived quantities with the first-order
-  uncertainties. _Advanced._
+  uncertainties. _Advanced._ For the sampling workflow itself, with
+  diagnostics and extending a chain, see
+  [Bayesian analysis](../fitting-bayesian.ipynb) in
+  [Advanced Topics](../advanced/index.md).
 
 ## How the notebooks work
 
