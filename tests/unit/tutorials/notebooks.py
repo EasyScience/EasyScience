@@ -31,7 +31,7 @@ PROPAGATION_NOTEBOOKS = [
     'basics/maths-error-propagation',
     'basics/maths-correlation',
 ]
-FITTING_NOTEBOOKS = ['fitting-intro']
+FITTING_NOTEBOOKS = ['fitting/fitting-intro']
 NOTEBOOKS = MATHS_NOTEBOOKS + PROPAGATION_NOTEBOOKS + FITTING_NOTEBOOKS
 
 # These notebooks download their data, so the unit tests read them but never run them. The
@@ -52,7 +52,7 @@ EXERCISES = {
     'basics/maths-hyperbolic': 4,
     'basics/maths-error-propagation': 4,
     'basics/maths-correlation': 4,
-    'fitting-intro': 2,
+    'fitting/fitting-intro': 2,
     'fitting/sans-sphere': 4,
     'fitting/qens-lorentzian': 4,
     'fitting/bayesian-qens': 3,
