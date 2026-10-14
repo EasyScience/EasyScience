@@ -8,6 +8,12 @@ class FitResults:
     """
     At the moment this is just a dummy way of unifying the returned fit
     parameters.
+
+    ``covariance`` is the unscaled covariance of the fitted parameters,
+    assuming weights of ``1 / sigma`` (a ``ParameterCovariance`` or
+    None), and ``covariance_parameters`` the keys of ``p`` in the order
+    of its matrix. Use ``covariance.scaled(reduced_chi2)`` for a
+    covariance scaled by the reduced chi-square.
     """
 
     __slots__ = [
@@ -26,6 +32,8 @@ class FitResults:
         'message',
         'engine_result',
         'total_results',
+        'covariance',
+        'covariance_parameters',
     ]
 
     def __init__(self):
@@ -44,6 +52,8 @@ class FitResults:
         self.message = ''
         self.engine_result = None
         self.total_results = None
+        self.covariance = None
+        self.covariance_parameters = []
 
     def __repr__(self) -> str:
         engine_name = self.minimizer_engine.__name__ if self.minimizer_engine else None
@@ -76,6 +86,10 @@ class FitResults:
         if self.p:
             par_str = ', '.join(f'{k}={v:.4g}' for k, v in self.p.items())
             lines.append(f'  parameters={{{par_str}}}')
+        if self.covariance is not None:
+            lines.append(
+                f'  covariance={self.covariance.source} {len(self.covariance)}x{len(self.covariance)}'
+            )
         lines.append(')')
         return '\n'.join(lines)
 

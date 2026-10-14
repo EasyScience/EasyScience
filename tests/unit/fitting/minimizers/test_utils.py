@@ -23,6 +23,25 @@ class TestFitResultsRepr:
             setattr(r, k, v)
         return r
 
+    def test_repr_has_no_covariance_line_by_default(self):
+        # When Then
+        text = repr(self._make_result())
+
+        # Expect
+        assert 'covariance' not in text
+
+    def test_repr_mentions_the_covariance(self):
+        # When
+        from easyscience import Parameter
+        from easyscience.variable.covariance import ParameterCovariance
+
+        parameters = [Parameter(1.0), Parameter(2.0)]
+        result = self._make_result()
+        result.covariance = ParameterCovariance(parameters, np.eye(2))
+
+        # Then Expect
+        assert 'covariance=hessian 2x2' in repr(result)
+
     def test_repr_contains_success(self):
         r = self._make_result()
         assert 'success=True' in repr(r)

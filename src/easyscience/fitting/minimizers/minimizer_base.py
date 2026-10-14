@@ -5,12 +5,15 @@ from abc import abstractmethod
 from typing import Any
 from typing import Callable
 from typing import List
+from typing import Sequence
 
 import numpy as np
 
 from easyscience.variable import Parameter
+from easyscience.variable.covariance import ParameterCovariance
 
 from ..available_minimizers import AvailableMinimizers
+from ..engine_base import PARAMETER_PREFIX
 from ..engine_base import EngineBase
 from .utils import FitError
 from .utils import FitResults
@@ -34,6 +37,7 @@ class MinimizerBase(EngineBase):
         self._minimizer_enum = minimizer_enum
         self._method = minimizer_enum.method
         self._cached_model = None
+        self._covariance: ParameterCovariance | None = None
 
     @property
     def enum(self) -> AvailableMinimizers:
@@ -121,19 +125,94 @@ class MinimizerBase(EngineBase):
         """
 
     @staticmethod
-    def _error_from_jacobian(
-        jacobian: np.ndarray, residuals: np.ndarray, confidence: float = 0.95
-    ) -> np.ndarray:
-        from scipy import stats
+    def _covariance_from_jacobian(jacobian: np.ndarray) -> np.ndarray | None:
+        """
+        Covariance matrix ``(J^T J)^-1`` of a least-squares fit.
 
-        JtJi = np.linalg.inv(np.dot(jacobian.T, jacobian))
-        # 1.96 is a 95% confidence value
-        error_matrix = np.dot(
-            JtJi,
-            np.dot(jacobian.T, np.dot(np.diag(residuals**2), np.dot(jacobian, JtJi))),
+        Parameters
+        ----------
+        jacobian : np.ndarray
+            Jacobian of the weighted residuals, shape
+            ``(n_points, n_parameters)``. With weights of ``1 / sigma``
+            the result is the unscaled covariance.
+
+        Returns
+        -------
+        np.ndarray | None
+            The covariance matrix, or None (with a logged warning) if
+            ``J^T J`` is singular or the Jacobian is not finite.
+        """
+        from easyscience import global_object
+
+        jacobian = np.asarray(jacobian, dtype=float)
+        normal_matrix = jacobian.T @ jacobian
+        if (
+            np.all(np.isfinite(normal_matrix))
+            and np.linalg.cond(normal_matrix) < 1 / np.finfo(float).eps
+        ):
+            return np.linalg.inv(normal_matrix)
+        global_object.log.getLogger('fitting').warning(
+            'The Jacobian is singular or not finite; no covariance or errors are available.'
         )
+        return None
 
-        z = 1 - ((1 - confidence) / 2)
-        z = stats.norm.pdf(z)
-        error_matrix = z * np.sqrt(error_matrix)
-        return error_matrix
+    def _store_fit_covariance(
+        self,
+        covariance: np.ndarray | None,
+        parameters: Sequence[Parameter],
+        source: str = 'hessian',
+    ) -> ParameterCovariance | None:
+        """
+        Make the covariance of a finished fit the covariance of its
+        parameters. Call it after the values and errors are written.
+
+        Parameters
+        ----------
+        covariance : np.ndarray | None
+            The unscaled covariance in the order of ``parameters``, or
+            None if the fit has none.
+        parameters : Sequence[Parameter]
+            The fitted parameters, in the order of the matrix.
+        source : str, default='hessian'
+            Source of the covariance. By default, 'hessian'.
+
+        Returns
+        -------
+        ParameterCovariance | None
+            The attached record, or None if there is no valid
+            covariance. A record that the parameters held before is
+            then removed.
+        """
+        from easyscience import global_object
+
+        for parameter in parameters:
+            previous = getattr(parameter, '_covariance_record', None)
+            if previous is not None:
+                previous.detach()
+        self._covariance = None
+        if not isinstance(covariance, np.ndarray) or not len(parameters):
+            return None
+        try:
+            record = ParameterCovariance(parameters, covariance, source=source)
+        except (TypeError, ValueError) as error:
+            global_object.log.getLogger('fitting').warning(f'No covariance stored: {error}')
+            return None
+        self._covariance = record.attach()
+        return self._covariance
+
+    def _covariance_results(self) -> tuple[ParameterCovariance | None, list[str]]:
+        """
+        The stored covariance and the labels of its parameters.
+
+        Returns
+        -------
+        tuple[ParameterCovariance | None, list[str]]
+            The record and the labels (the keys of ``FitResults.p``) in
+            matrix order; ``(None, [])`` if there is none.
+        """
+        record = self._covariance
+        if record is None:
+            return None, []
+        keys = {id(parameter): key for key, parameter in self._cached_pars.items()}
+        labels = [keys[id(parameter)] for parameter in record.parameters if id(parameter) in keys]
+        return record, [PARAMETER_PREFIX + str(label) for label in labels]

@@ -288,12 +288,12 @@ class DFO(MinimizerBase):
 
         return adapter
 
-    def _set_parameter_fit_result(
-        self, fit_result: Any, stack_status: bool, ci: float = 0.95
-    ) -> None:
+    def _set_parameter_fit_result(self, fit_result: Any, stack_status: bool) -> None:
         """
         Update parameters to their final values and assign a std error
-        to them.
+        to them. The errors are the square roots of the diagonal of
+        ``(J^T J)^-1``, which assumes weights of ``1 / sigma``. If that
+        matrix is singular the errors are None.
 
         Parameters
         ----------
@@ -301,9 +301,6 @@ class DFO(MinimizerBase):
             Fit object which contains info on the fit.
         stack_status : bool
             Whether the undo stack was enabled.
-        ci : float, default=0.95
-            Confidence interval for calculating errors. Default 95%. By
-            default, 0.95.
         """
         from easyscience import global_object
 
@@ -313,13 +310,14 @@ class DFO(MinimizerBase):
             global_object.stack.enabled = True
             global_object.stack.beginMacro('Fitting routine')
 
-        error_matrix = self._error_from_jacobian(fit_result.jacobian, fit_result.resid, ci)
+        covariance = self._covariance_from_jacobian(fit_result.jacobian)
         for idx, par in enumerate(pars.values()):
             par.value = fit_result.x[idx]
-            par.error = error_matrix[idx, idx]
+            par.error = None if covariance is None else float(np.sqrt(covariance[idx, idx]))
 
         if stack_status:
             global_object.stack.endMacro()
+        self._store_fit_covariance(covariance, list(pars.values()))
 
     def _gen_fit_results(self, fit_results: Any, weights: np.ndarray, **kwargs: Any) -> FitResults:
         """
@@ -373,6 +371,7 @@ class DFO(MinimizerBase):
         # results.residual = results.y_obs - results.y_calc
         # results.goodness_of_fit = fit_results.f
 
+        results.covariance, results.covariance_parameters = self._covariance_results()
         results.minimizer_engine = self.__class__
         results.fit_args = None
         results.engine_result = fit_results

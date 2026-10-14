@@ -229,25 +229,59 @@ class TestDFOFit:
             'a': MagicMock(),
             'b': MagicMock(),
         }
-        minimizer._cached_pars['a'].value = 'a'
-        minimizer._cached_pars['b'].value = 'b'
-
         mock_fit_result = MagicMock()
         mock_fit_result.x = [1.0, 2.0]
         mock_fit_result.jacobian = 'jacobian'
-        mock_fit_result.resid = 'resid'
-
-        minimizer._error_from_jacobian = MagicMock(return_value=np.array([[0.1, 0.0], [0.0, 0.2]]))
+        minimizer._covariance_from_jacobian = MagicMock(
+            return_value=np.array([[0.04, 0.0], [0.0, 0.09]])
+        )
+        minimizer._store_fit_covariance = MagicMock()
 
         # Then
         minimizer._set_parameter_fit_result(mock_fit_result, False)
 
         # Expect
         assert minimizer._cached_pars['a'].value == 1.0
-        assert minimizer._cached_pars['a'].error == 0.1
+        assert minimizer._cached_pars['a'].error == pytest.approx(0.2)
         assert minimizer._cached_pars['b'].value == 2.0
-        assert minimizer._cached_pars['b'].error == 0.2
-        minimizer._error_from_jacobian.assert_called_once_with('jacobian', 'resid', 0.95)
+        assert minimizer._cached_pars['b'].error == pytest.approx(0.3)
+        minimizer._covariance_from_jacobian.assert_called_once_with('jacobian')
+        covariance, parameters = minimizer._store_fit_covariance.call_args.args
+        assert covariance[0, 0] == 0.04
+        assert parameters == list(minimizer._cached_pars.values())
+
+    def test_set_parameter_fit_result_singular_jacobian_gives_no_errors(self, minimizer: DFO):
+        # When
+        minimizer._cached_pars = {'a': MagicMock(), 'b': MagicMock()}
+        mock_fit_result = MagicMock()
+        mock_fit_result.x = [1.0, 2.0]
+        mock_fit_result.jacobian = np.array([[1.0, 1.0], [2.0, 2.0], [3.0, 3.0]])
+        minimizer._store_fit_covariance = MagicMock()
+
+        # Then
+        minimizer._set_parameter_fit_result(mock_fit_result, False)
+
+        # Expect
+        assert minimizer._cached_pars['a'].error is None
+        assert minimizer._cached_pars['b'].error is None
+        assert minimizer._store_fit_covariance.call_args.args[0] is None
+
+    def test_covariance_from_jacobian_is_the_inverse_of_jtj(self):
+        # When
+        jacobian = np.array([[1.0, 0.0], [0.0, 2.0], [1.0, 1.0]])
+
+        # Then
+        covariance = DFO._covariance_from_jacobian(jacobian)
+
+        # Expect
+        np.testing.assert_allclose(covariance, np.linalg.inv(jacobian.T @ jacobian))
+
+    def test_covariance_from_jacobian_singular_gives_none(self):
+        # When Then
+        covariance = DFO._covariance_from_jacobian(np.array([[1.0, 1.0], [2.0, 2.0]]))
+
+        # Expect
+        assert covariance is None
 
     def test_gen_fit_results(self, minimizer: DFO, monkeypatch):
         # When

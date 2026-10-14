@@ -137,6 +137,8 @@ class MultiFitter(Fitter):
                 fit_result_obj.y_err[sp:ep], current_results.y_obs.shape
             )
             current_results.engine_result = fit_result_obj.engine_result
+            current_results.covariance = fit_result_obj.covariance
+            current_results.covariance_parameters = fit_result_obj.covariance_parameters
 
             # Attach an additional field for the un-modified results
             current_results.total_results = fit_result_obj
