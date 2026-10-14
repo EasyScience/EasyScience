@@ -10,7 +10,7 @@ take. This page defines the ideas that the tutorials rely on.
 
 ## Numbers with a unit and an uncertainty
 
-A **`DescriptorNumber`** is a named number with a value, a unit and an
+A **`DescriptorNumber`** is a number with a value, a unit and an
 uncertainty. It takes part in arithmetic and in the functions of
 `es.math`, but it cannot be fitted. It is the right choice for a
 constant, or for a measured value that no fit will touch.
