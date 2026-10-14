@@ -247,6 +247,10 @@ class Minuit(MinimizerBase):
 
         if stack_status:
             global_object.stack.endMacro()
+        covariance = None
+        if method == 'migrad' and fit_result.valid and fit_result.covariance is not None:
+            covariance = np.array(fit_result.covariance, dtype=float)
+        self._store_fit_covariance(covariance, list(self._cached_pars.values()))
 
         if fit_result.fmin.has_parameters_at_limit:
             global_object.log.getLogger('fitting.minuit').warning(
@@ -351,6 +355,7 @@ class Minuit(MinimizerBase):
             from easyscience import global_object
 
             global_object.log.getLogger('fitting.minuit').warning(results.message)
+        results.covariance, results.covariance_parameters = self._covariance_results()
         results.minimizer_engine = self.__class__
         results.fit_args = None
         results.engine_result = fit_result

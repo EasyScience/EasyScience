@@ -309,6 +309,42 @@ class LMFit(MinimizerBase):  # noqa: S101
                 pars[name].error = None
         if stack_status:
             global_object.stack.endMacro()
+        self._store_fit_covariance(*self._lmfit_covariance(fit_result))
+
+    def _lmfit_covariance(self, fit_result: ModelResult) -> tuple[np.ndarray | None, list]:
+        """
+        The unscaled covariance of an LMFit result and its parameters.
+
+        LMFit multiplies its covariance by the reduced chi-square
+        (``scale_covar``, on by default); that is undone here, so the
+        covariance assumes weights of ``1 / sigma`` like the other
+        backends. The parameters are looked up by name in the order of
+        ``var_names``, never by position.
+
+        Parameters
+        ----------
+        fit_result : ModelResult
+            The result of the fit.
+
+        Returns
+        -------
+        tuple[np.ndarray | None, list]
+            The covariance and its parameters; ``(None, [])`` if the
+            fit has none or it can not be unscaled.
+        """
+        covariance = getattr(fit_result, 'covar', None)
+        var_names = getattr(fit_result, 'var_names', None)
+        if not fit_result.errorbars or not isinstance(covariance, np.ndarray) or not var_names:
+            return None, []
+        keys = {PARAMETER_PREFIX + str(key): par for key, par in self._cached_pars.items()}
+        if any(name not in keys for name in var_names):
+            return None, []
+        if getattr(fit_result, 'scale_covar', True):
+            reduced_chi2 = fit_result.redchi
+            if not np.isfinite(reduced_chi2) or reduced_chi2 <= 0:
+                return None, []
+            covariance = covariance / reduced_chi2
+        return covariance, [keys[name] for name in var_names]
 
     def _gen_fit_results(self, fit_results: ModelResult, **kwargs: Any) -> FitResults:
         """
@@ -351,6 +387,7 @@ class LMFit(MinimizerBase):  # noqa: S101
             from easyscience import global_object
 
             global_object.log.getLogger('fitting.lmfit').warning(str(fit_results.message))
+        results.covariance, results.covariance_parameters = self._covariance_results()
         results.minimizer_engine = self.__class__
         results.fit_args = None
 

@@ -268,9 +268,11 @@ class Bumps(MinimizerBase):
                 nit=nit_value,
             )
             model_results.state = driver.fitter.state
+            model_results.cov = self._driver_covariance(driver) if best_x is not None else None
 
             if best_x is None:
                 self._restore_parameter_values()
+                self._store_fit_covariance(None, [])
             else:
                 self._set_parameter_fit_result(
                     model_results, stack_status, parameter_names(problem)
@@ -368,6 +370,21 @@ class Bumps(MinimizerBase):
             pars[name].error = None if stderr is None else stderr[index]
         if stack_status:
             global_object.stack.endMacro()
+        covariance = getattr(fit_result, 'cov', None)
+        self._store_fit_covariance(
+            None if stderr is None else covariance, [pars[name] for name in par_names]
+        )
+
+    @staticmethod
+    def _driver_covariance(driver: FitDriver) -> np.ndarray | None:
+        """
+        The covariance estimate of a finished BUMPS fit, in the order of
+        the BUMPS problem, or None if it can not be computed.
+        """
+        try:
+            return np.array(driver.cov(), dtype=float)
+        except (np.linalg.LinAlgError, ValueError, FloatingPointError):
+            return None
 
     def _gen_fit_results(
         self,
@@ -456,6 +473,7 @@ class Bumps(MinimizerBase):
                 'Consider increasing the maximum number of evaluations or adjusting the tolerance.'
             )
 
+        results.covariance, results.covariance_parameters = self._covariance_results()
         results.minimizer_engine = self.__class__
         results.fit_args = None
         results.engine_result = fit_results
