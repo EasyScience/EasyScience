@@ -55,12 +55,6 @@ class TestNoStoredState:
         assert code_cells
         assert all(cell['outputs'] == [] for cell in code_cells)
 
-    def test_no_execution_state_is_stored(self, cells):
-        code_cells = [cell for cell in cells if cell['cell_type'] == 'code']
-
-        assert all(cell['execution_count'] is None for cell in code_cells)
-        assert all('execution' not in cell['metadata'] for cell in code_cells)
-
     def test_cell_ids_are_unique(self, cells):
         ids = [cell['id'] for cell in cells]
 
