@@ -6,9 +6,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from easyscience import ObjBase
 from easyscience import Parameter
 from easyscience import global_object
+from easyscience.base_classes import NewBase
 from easyscience.global_object.map import Map
 from easyscience.global_object.map import _EntryList
 
@@ -137,11 +137,11 @@ class TestMap:
 
     @pytest.fixture
     def base_object(self):
-        return ObjBase(name='test')
+        return NewBase(display_name='test')
 
     @pytest.fixture
     def parameter_object(self):
-        return Parameter(name='test2', value=2)
+        return Parameter(display_name='test2', value=2)
 
     def test_add_vertex(self, clear, base_object, parameter_object):
         # When Then Expect
@@ -160,7 +160,7 @@ class TestMap:
 
     def test_weakref(self, clear):
         # When
-        test_obj = ObjBase(name='test')
+        test_obj = NewBase(display_name='test')
         assert len(global_object.map._store) == 1
         assert len(global_object.map._Map__type_dict) == 1
         # Then
@@ -182,23 +182,25 @@ class TestMap:
         assert global_object.map.get_item_by_key(base_object.unique_name) == base_object
         assert global_object.map.get_item_by_key(parameter_object.unique_name) == parameter_object
 
-    @pytest.mark.parametrize('cls, kwargs', [(ObjBase, {}), (Parameter, {'value': 2.0})])
+    @pytest.mark.parametrize(
+        'cls, kwargs', [(NewBase, {'display_name': 'test'}), (Parameter, {'value': 2.0})]
+    )
     def test_identical_unique_names_exception(self, clear, cls, kwargs):
         # When
-        test_obj = cls(name='test', unique_name='test', **kwargs)
+        test_obj = cls(unique_name='test', **kwargs)
         # Then Expect
         with pytest.raises(ValueError):
-            test_obj2 = cls(name='test2', unique_name='test', **kwargs)
+            test_obj2 = cls(unique_name='test', **kwargs)
 
     def test_unique_name_change_still_in_map(self, clear, base_object, parameter_object):
         # When
-        assert global_object.map.get_item_by_key('ObjBase_0') == base_object
+        assert global_object.map.get_item_by_key('NewBase_0') == base_object
         assert global_object.map.get_item_by_key('Parameter_0') == parameter_object
         # Then
         base_object.unique_name = 'test3'
         parameter_object.unique_name = 'test4'
         # Expect
-        assert global_object.map.get_item_by_key('ObjBase_0') == base_object
+        assert global_object.map.get_item_by_key('NewBase_0') == base_object
         assert global_object.map.get_item_by_key('Parameter_0') == parameter_object
         assert global_object.map.get_item_by_key('test3') == base_object
         assert global_object.map.get_item_by_key('test4') == parameter_object
@@ -208,12 +210,12 @@ class TestMap:
         # When/Then
         with pytest.raises(ValueError, match='already exists'):
             # Try to add another object with same unique_name
-            duplicate_obj = ObjBase(name='duplicate', unique_name=base_object.unique_name)
+            duplicate_obj = NewBase(display_name='duplicate', unique_name=base_object.unique_name)
 
     def test_add_vertex_with_object_type(self, clear):
         """Test adding vertex with specific object type"""
         # Given
-        obj = ObjBase(name='test')
+        obj = NewBase(display_name='test')
 
         # When - Object is automatically added during construction
         # Then
@@ -249,7 +251,7 @@ class TestMap:
 
     def test_returned_objs_access_safe_under_modification(self, clear):
         """Ensure accessing returned_objs doesn't raise when entries change size during iteration."""
-        objs = [ObjBase(name=f'race_{i}') for i in range(8)]
+        objs = [NewBase(display_name=f'race_{i}') for i in range(8)]
         # Mark all as returned
         for o in objs:
             global_object.map.change_type(o, 'returned')
@@ -380,8 +382,8 @@ class TestMap:
     def test_type_filtering_properties(self, clear):
         """Test type filtering properties"""
         # Given
-        obj1 = ObjBase(name='obj1')  # 'created' type
-        obj2 = Parameter(name='obj2', value=1)  # 'created' type
+        obj1 = NewBase(display_name='obj1')  # 'created' type
+        obj2 = Parameter(display_name='obj2', value=1)  # 'created' type
 
         global_object.map.change_type(obj1, 'argument')
         global_object.map.change_type(obj2, 'returned')
@@ -493,7 +495,7 @@ class TestMap:
     def test_clear_with_finalizers(self, clear):
         """Test clearing map properly calls finalizers"""
         # Given
-        obj = ObjBase(name='test')
+        obj = NewBase(display_name='test')
         original_count = len(global_object.map.vertices())
 
         # When
@@ -691,7 +693,7 @@ class TestMap:
     def test_created_internal_property(self, clear):
         """Test created_internal property."""
         # Given
-        obj = ObjBase(name='internal_obj')
+        obj = NewBase(display_name='internal_obj')
         global_object.map.change_type(obj, 'created_internal')
 
         # When

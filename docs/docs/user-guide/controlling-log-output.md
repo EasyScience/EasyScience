@@ -35,7 +35,6 @@ individual subsystems:
 ```
 easyscience                        # root — controls everything
 ├── easyscience.base_classes       # EasyList runtime warnings
-├── easyscience.legacy             # ObjBase / CollectionBase deprecations
 ├── easyscience.deprecated         # @deprecated decorator messages
 ├── easyscience.fitting            # import-availability warnings
 │   ├── easyscience.fitting.bumps  # Bumps fitting runtime messages
@@ -56,9 +55,6 @@ logging.getLogger('easyscience.fitting').setLevel(logging.ERROR)
 
 # Suppress only Bumps runtime messages
 logging.getLogger('easyscience.fitting.bumps').setLevel(logging.ERROR)
-
-# Suppress only legacy deprecation notices
-logging.getLogger('easyscience.legacy').setLevel(logging.ERROR)
 ```
 
 ## Environment Variable

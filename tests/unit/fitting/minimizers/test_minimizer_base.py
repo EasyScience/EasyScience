@@ -61,7 +61,7 @@ class TestMinimizerBase:
         # Then
         result = minimizer.evaluate(
             'x',
-            minimizer_parameters={'parms_key': 'parms_val'},
+            parameters={'parms_key': 'parms_val'},
             kwargs={'kwargs_key': 'kwargs_val'},
         )
 
@@ -84,7 +84,7 @@ class TestMinimizerBase:
         # Then
         minimizer.evaluate(
             'x',
-            minimizer_parameters={'parms_key': 'parms_val'},
+            parameters={'parms_key': 'parms_val'},
             kwargs={'kwargs_key': 'kwargs_val'},
         )
 
@@ -108,11 +108,11 @@ class TestMinimizerBase:
 
     def test_evaluate_exception(self, minimizer: MinimizerBase):
         # When
-        minimizer_parameters = 'not dict type'
+        parameters = 'not dict type'
 
         # Then Expect
         with pytest.raises(TypeError):
-            minimizer.evaluate('x', minimizer_parameters=minimizer_parameters)
+            minimizer.evaluate('x', parameters=parameters)
 
     def test_prepare_parameters(self, minimizer: MinimizerBase):
         # When

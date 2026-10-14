@@ -68,7 +68,7 @@ class InterfaceFactoryTemplate:
         """
         Changes the current interface to a new interface.
 
-        The current interface is destroyed and all SerializerComponent
+        The current interface is destroyed and all
         parameters carried over to the new interface. i.e. pick up where
         you left off.
 
@@ -175,7 +175,7 @@ class InterfaceFactoryTemplate:
         Parameters
         ----------
         model : Any
-            Model whose linkable attributes should be bound.
+            Model whose variables should be bound.
         *args : Any
             Positional arguments reserved for interface-specific binding
             hooks.
@@ -187,8 +187,11 @@ class InterfaceFactoryTemplate:
         """
 
         class_links = self.__interface_obj.create(model)
-        props = model._get_linkable_attributes()
-        props_names = [prop.name for prop in props]
+        if hasattr(model, '_get_linkable_attributes'):
+            props = model._get_linkable_attributes()
+        else:
+            props = model.get_all_variables()
+        props_names = [prop.display_name for prop in props]
         for item in class_links:
             for item_key in item.name_conversion.keys():
                 if item_key not in props_names:

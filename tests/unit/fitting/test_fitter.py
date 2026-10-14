@@ -54,19 +54,6 @@ class TestFitter:
         assert result == 'result'
         mock_minimizer.evaluate.assert_called_once_with('pars')
 
-    def test_convert_to_pars_obj(self, fitter: Fitter):
-        # When
-        mock_minimizer = MagicMock()
-        mock_minimizer.convert_to_pars_obj = MagicMock(return_value='obj')
-        fitter._minimizer = mock_minimizer
-
-        # Then
-        obj = fitter.convert_to_pars_obj('pars')
-
-        # Expect
-        assert obj == 'obj'
-        mock_minimizer.convert_to_pars_obj.assert_called_once_with('pars')
-
     def test_initialize(self, fitter: Fitter):
         # When
         mock_fit_object = MagicMock()

@@ -13,14 +13,12 @@ class TestDescriptorNumber:
     @pytest.fixture
     def descriptor(self):
         descriptor = DescriptorNumber(
-            name='name',
             value=1,
             unit='m',
             variance=0.1,
             description='description',
             url='url',
             display_name='display_name',
-            parent=None,
         )
         return descriptor
 
@@ -36,7 +34,6 @@ class TestDescriptorNumber:
         assert descriptor._observers == []
 
         # From super
-        assert descriptor._name == 'name'
         assert descriptor._description == 'description'
         assert descriptor._url == 'url'
         assert descriptor._display_name == 'display_name'
@@ -44,14 +41,12 @@ class TestDescriptorNumber:
     def test_init_sc_unit(self):
         # When Then
         descriptor = DescriptorNumber(
-            name='name',
             value=1,
             unit=sc.units.Unit('m'),
             variance=0.1,
             description='description',
             url='url',
             display_name='display_name',
-            parent=None,
         )
 
         # Expect
@@ -63,14 +58,12 @@ class TestDescriptorNumber:
         # When Then Expect
         with pytest.raises(UnitError):
             DescriptorNumber(
-                name='name',
                 value=1,
                 unit='unknown',
                 variance=0.1,
                 description='description',
                 url='url',
                 display_name='display_name',
-                parent=None,
             )
 
     @pytest.mark.parametrize('value', [True, 'string'])
@@ -80,14 +73,12 @@ class TestDescriptorNumber:
         # Then Expect
         with pytest.raises(TypeError):
             DescriptorNumber(
-                name='name',
                 value=value,
                 unit='m',
                 variance=0.1,
                 description='description',
                 url='url',
                 display_name='display_name',
-                parent=None,
             )
 
     def test_init_variance_exception(self):
@@ -97,14 +88,12 @@ class TestDescriptorNumber:
         # Then Expect
         with pytest.raises(ValueError):
             DescriptorNumber(
-                name='name',
                 value=1,
                 unit='m',
                 variance=variance,
                 description='description',
                 url='url',
                 display_name='display_name',
-                parent=None,
             )
 
     # test from_scipp
@@ -113,7 +102,7 @@ class TestDescriptorNumber:
         full_value = sc.scalar(1, unit='m')
 
         # Then
-        descriptor = DescriptorNumber.from_scipp(name='name', full_value=full_value)
+        descriptor = DescriptorNumber.from_scipp(display_name='name', full_value=full_value)
 
         # Expect
         assert descriptor._scalar.value == 1
@@ -134,7 +123,7 @@ class TestDescriptorNumber:
     def test_from_scipp_type_exception(self, full_value):
         # When Then Expect
         with pytest.raises(TypeError):
-            DescriptorNumber.from_scipp(name='name', full_value=full_value)
+            DescriptorNumber.from_scipp(display_name='name', full_value=full_value)
 
     def test_full_value(self, descriptor: DescriptorNumber):
         # When Then Expect
@@ -201,7 +190,7 @@ class TestDescriptorNumber:
         repr_str = str(descriptor)
 
         # Expect
-        assert repr_str == "<DescriptorNumber 'name': 1.0000 ± 0.3162 m>"
+        assert repr_str == "<DescriptorNumber 'display_name': 1.0000 ± 0.3162 m>"
 
     def test_copy(self, descriptor: DescriptorNumber):
         # When Then
@@ -219,7 +208,7 @@ class TestDescriptorNumber:
     )
     def test_base_unit(self, unit_string, expected):
         # When
-        descriptor = DescriptorNumber(name='name', value=1, unit=unit_string)
+        descriptor = DescriptorNumber(display_name='name', value=1, unit=unit_string)
 
         # Then
         base_unit = descriptor._base_unit()
@@ -231,17 +220,12 @@ class TestDescriptorNumber:
         'test, expected',
         [
             (
-                DescriptorNumber(
-                    'test',
-                    2,
-                    'm',
-                    0.01,
-                ),
-                DescriptorNumber('test + name', 3, 'm', 0.11),
+                DescriptorNumber(2, unit='m', variance=0.01, display_name='test'),
+                DescriptorNumber(3, unit='m', variance=0.11, display_name='test + name'),
             ),
             (
-                DescriptorNumber('test', 2, 'cm', 0.01),
-                DescriptorNumber('test + name', 102, 'cm', 1000.01),
+                DescriptorNumber(2, unit='cm', variance=0.01, display_name='test'),
+                DescriptorNumber(102, unit='cm', variance=1000.01, display_name='test + name'),
             ),
         ],
         ids=['regular', 'unit_conversion'],
@@ -252,7 +236,6 @@ class TestDescriptorNumber:
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
@@ -261,7 +244,7 @@ class TestDescriptorNumber:
 
     def test_addition_with_scalar(self):
         # When
-        descriptor = DescriptorNumber(name='name', value=1, variance=0.1)
+        descriptor = DescriptorNumber(display_name='name', value=1, variance=0.1)
 
         # Then
         result = descriptor + 1.0
@@ -269,13 +252,11 @@ class TestDescriptorNumber:
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == result.unique_name
         assert result.value == 2.0
         assert result.unit == 'dimensionless'
         assert result.variance == 0.1
 
         assert type(result_reverse) == DescriptorNumber
-        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == 2.0
         assert result_reverse.unit == 'dimensionless'
         assert result_reverse.variance == 0.1
@@ -284,11 +265,7 @@ class TestDescriptorNumber:
         'test',
         [
             1.0,
-            DescriptorNumber(
-                'test',
-                2,
-                's',
-            ),
+            DescriptorNumber(2, unit='s', display_name='test'),
         ],
         ids=['add_scalar_to_unit', 'incompatible_units'],
     )
@@ -303,17 +280,12 @@ class TestDescriptorNumber:
         'test, expected',
         [
             (
-                DescriptorNumber(
-                    'test',
-                    2,
-                    'm',
-                    0.01,
-                ),
-                DescriptorNumber('test - name', 1, 'm', 0.11),
+                DescriptorNumber(2, unit='m', variance=0.01, display_name='test'),
+                DescriptorNumber(1, unit='m', variance=0.11, display_name='test - name'),
             ),
             (
-                DescriptorNumber('test', 2, 'cm', 0.01),
-                DescriptorNumber('test - name', -98, 'cm', 1000.01),
+                DescriptorNumber(2, unit='cm', variance=0.01, display_name='test'),
+                DescriptorNumber(-98, unit='cm', variance=1000.01, display_name='test - name'),
             ),
         ],
         ids=['regular', 'unit_conversion'],
@@ -324,7 +296,6 @@ class TestDescriptorNumber:
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
@@ -333,7 +304,7 @@ class TestDescriptorNumber:
 
     def test_subtraction_with_scalar(self):
         # When
-        descriptor = DescriptorNumber(name='name', value=2, variance=0.1)
+        descriptor = DescriptorNumber(display_name='name', value=2, variance=0.1)
 
         # Then
         result = descriptor - 1.0
@@ -341,13 +312,11 @@ class TestDescriptorNumber:
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == result.unique_name
         assert result.value == 1.0
         assert result.unit == 'dimensionless'
         assert result.variance == 0.1
 
         assert type(result_reverse) == DescriptorNumber
-        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == -1.0
         assert result_reverse.unit == 'dimensionless'
         assert result_reverse.variance == 0.1
@@ -356,11 +325,7 @@ class TestDescriptorNumber:
         'test',
         [
             1.0,
-            DescriptorNumber(
-                'test',
-                2,
-                's',
-            ),
+            DescriptorNumber(2, unit='s', display_name='test'),
         ],
         ids=['sub_scalar_to_unit', 'incompatible_units'],
     )
@@ -375,17 +340,12 @@ class TestDescriptorNumber:
         'test, expected',
         [
             (
-                DescriptorNumber(
-                    'test',
-                    2,
-                    'm',
-                    0.01,
-                ),
-                DescriptorNumber('test * name', 2, 'm^2', 0.41),
+                DescriptorNumber(2, unit='m', variance=0.01, display_name='test'),
+                DescriptorNumber(2, unit='m^2', variance=0.41, display_name='test * name'),
             ),
             (
-                DescriptorNumber('test', 2, 'dm', 0.01),
-                DescriptorNumber('test * name', 0.2, 'm^2', 0.0041),
+                DescriptorNumber(2, unit='dm', variance=0.01, display_name='test'),
+                DescriptorNumber(0.2, unit='m^2', variance=0.0041, display_name='test * name'),
             ),
         ],
         ids=['regular', 'base_unit_conversion'],
@@ -396,7 +356,6 @@ class TestDescriptorNumber:
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == pytest.approx(expected.variance)
@@ -408,13 +367,11 @@ class TestDescriptorNumber:
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == result.unique_name
         assert result.value == 2.0
         assert result.unit == 'm'
         assert result.variance == 0.4
 
         assert type(result_reverse) == DescriptorNumber
-        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == 2.0
         assert result_reverse.unit == 'm'
         assert result_reverse.variance == 0.4
@@ -423,19 +380,14 @@ class TestDescriptorNumber:
         'test, expected, expected_reverse',
         [
             (
-                DescriptorNumber(
-                    'test',
-                    2,
-                    'm^2',
-                    0.01,
-                ),
-                DescriptorNumber('name / test', 0.5, '1/m', 0.025625),
-                DescriptorNumber('test / name', 2, 'm', 0.41),
+                DescriptorNumber(2, unit='m^2', variance=0.01, display_name='test'),
+                DescriptorNumber(0.5, unit='1/m', variance=0.025625, display_name='name / test'),
+                DescriptorNumber(2, unit='m', variance=0.41, display_name='test / name'),
             ),
             (
                 2,
-                DescriptorNumber('name / 2', 0.5, 'm', 0.025),
-                DescriptorNumber('2 / name', 2, '1/m', 0.4),
+                DescriptorNumber(0.5, unit='m', variance=0.025, display_name='name / 2'),
+                DescriptorNumber(2, unit='1/m', variance=0.4, display_name='2 / name'),
             ),
         ],
         ids=['descriptorNumber', 'scalar'],
@@ -447,19 +399,19 @@ class TestDescriptorNumber:
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == pytest.approx(expected.variance)
 
         assert type(result_reverse) == DescriptorNumber
-        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
         assert result_reverse.variance == pytest.approx(expected_reverse.variance)
 
     @pytest.mark.parametrize(
-        'test', [0, DescriptorNumber('test', 0, 'm', 0.01)], ids=['zero', 'zero_descriptor']
+        'test',
+        [0, DescriptorNumber(0, unit='m', variance=0.01, display_name='test')],
+        ids=['zero', 'zero_descriptor'],
     )
     def test_division_exception(self, descriptor: DescriptorNumber, test):
         # When Then Expect
@@ -468,7 +420,7 @@ class TestDescriptorNumber:
 
     def test_division_exception_reverse(self):
         # When
-        descriptor = DescriptorNumber(name='name', value=0, variance=0.1)
+        descriptor = DescriptorNumber(display_name='name', value=0, variance=0.1)
 
         # Then Expect
         with pytest.raises(ZeroDivisionError):
@@ -478,38 +430,41 @@ class TestDescriptorNumber:
         'test, expected',
         [
             (
-                DescriptorNumber('test', 2),
-                DescriptorNumber('name ** test', 4, unit='m^2', variance=1.6),
+                DescriptorNumber(2, display_name='test'),
+                DescriptorNumber(4, unit='m^2', variance=1.6, display_name='name ** test'),
             ),
-            (2, DescriptorNumber('name ** 2', 4, unit='m^2', variance=1.6)),
-            (-2, DescriptorNumber('name ** -2', 0.25, unit='1/m^2', variance=0.00625)),
+            (2, DescriptorNumber(4, unit='m^2', variance=1.6, display_name='name ** 2')),
+            (
+                -2,
+                DescriptorNumber(0.25, unit='1/m^2', variance=0.00625, display_name='name ** -2'),
+            ),
         ],
         ids=['descriptorNumber', 'scalar', 'negative_scalar'],
     )
     def test_power_of_descriptor(self, test, expected):
         # When
-        descriptor = DescriptorNumber(name='name', value=2, unit='m', variance=0.1)
+        descriptor = DescriptorNumber(display_name='name', value=2, unit='m', variance=0.1)
 
         # Then
         result = descriptor**test
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
 
     def test_power_of_dimensionless_descriptor(self):
         # When
-        descriptor = DescriptorNumber(name='name', value=2, unit='dimensionless', variance=0.1)
+        descriptor = DescriptorNumber(
+            display_name='name', value=2, unit='dimensionless', variance=0.1
+        )
 
         # Then
         result = descriptor**0.5
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == result.unique_name
         assert result.value == 1.4142135623730951
         assert result.unit == 'dimensionless'
         assert result.variance == pytest.approx(0.0125)
@@ -517,10 +472,18 @@ class TestDescriptorNumber:
     @pytest.mark.parametrize(
         'descriptor, exponent, exception',
         [
-            (DescriptorNumber('name', 2), DescriptorNumber('test', 2, unit='m'), UnitError),
-            (DescriptorNumber('name', 2), DescriptorNumber('test', 2, variance=0.1), ValueError),
-            (DescriptorNumber('name', 2, unit='m'), 0.5, UnitError),
-            (DescriptorNumber('name', -2), 0.5, ValueError),
+            (
+                DescriptorNumber(2, display_name='name'),
+                DescriptorNumber(2, unit='m', display_name='test'),
+                UnitError,
+            ),
+            (
+                DescriptorNumber(2, display_name='name'),
+                DescriptorNumber(2, variance=0.1, display_name='test'),
+                ValueError,
+            ),
+            (DescriptorNumber(2, unit='m', display_name='name'), 0.5, UnitError),
+            (DescriptorNumber(-2, display_name='name'), 0.5, ValueError),
         ],
         ids=[
             'descriptor_unit',
@@ -536,7 +499,7 @@ class TestDescriptorNumber:
 
     def test_descriptor_as_exponentiation(self):
         # When
-        descriptor = DescriptorNumber(name='name', value=2)
+        descriptor = DescriptorNumber(display_name='name', value=2)
 
         # Then
         result = 2**descriptor
@@ -547,8 +510,8 @@ class TestDescriptorNumber:
     @pytest.mark.parametrize(
         'exponent, exception',
         [
-            (DescriptorNumber('test', 2, unit='m'), UnitError),
-            (DescriptorNumber('test', 2, variance=0.1), ValueError),
+            (DescriptorNumber(2, unit='m', display_name='test'), UnitError),
+            (DescriptorNumber(2, variance=0.1, display_name='test'), ValueError),
         ],
         ids=['descriptor_unit', 'descriptor_variance'],
     )
@@ -559,28 +522,26 @@ class TestDescriptorNumber:
 
     def test_negation(self):
         # When
-        descriptor = DescriptorNumber(name='name', unit='m', value=2, variance=0.1)
+        descriptor = DescriptorNumber(display_name='name', unit='m', value=2, variance=0.1)
 
         # Then
         result = -descriptor
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == result.unique_name
         assert result.value == -2
         assert result.unit == 'm'
         assert result.variance == 0.1
 
     def test_abs(self):
         # When
-        descriptor = DescriptorNumber(name='name', unit='m', value=-2, variance=0.1)
+        descriptor = DescriptorNumber(display_name='name', unit='m', value=-2, variance=0.1)
 
         # Then
         result = abs(descriptor)
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == result.unique_name
         assert result.value == 2
         assert result.unit == 'm'
         assert result.variance == 0.1

@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from ..utils.classUtils import singleton
-from .hugger.hugger import ScriptManager
 from .logger import Logger
 from .map import Map
 
@@ -28,8 +27,6 @@ class GlobalObject:
         self.debug: bool = self.__debug
         # Stack. This is where the undo/redo operations are stored.
         self.stack = self.__stack
-        #
-        self.script: ScriptManager = ScriptManager()
         # Map. This is the conduit database between all global object species
         self.map: Map = self.__map
 

@@ -8,7 +8,10 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = PROJECT_ROOT / 'src'
+# Shared test-only models, imported as ``from easy_test_models import ...``
+HELPERS_ROOT = Path(__file__).resolve().parent / 'helpers'
 
-src_root_str = str(SRC_ROOT)
-if src_root_str not in sys.path:
-    sys.path.insert(0, src_root_str)
+for root in (SRC_ROOT, HELPERS_ROOT):
+    root_str = str(root)
+    if root_str not in sys.path:
+        sys.path.insert(0, root_str)

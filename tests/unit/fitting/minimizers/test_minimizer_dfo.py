@@ -70,10 +70,7 @@ class TestDFOFit:
         minimizer._dfo_fit.assert_called_once_with(
             cached_pars, mock_model, user_params={'logging.save_diagnostic_info': True}
         )
-        minimizer._make_model.assert_called_once_with(
-            parameters=None,
-            callback=None,
-        )
+        minimizer._make_model.assert_called_once_with(callback=None)
         minimizer._set_parameter_fit_result.assert_called_once_with('fit', False)
         minimizer._gen_fit_results.assert_called_once_with('fit', 1)
         mock_model_function.assert_called_once_with(1.0, 2.0, 1)
@@ -98,78 +95,7 @@ class TestDFOFit:
 
         minimizer.fit(x=1.0, y=2.0, weights=1, callback=callback)
 
-        minimizer._make_model.assert_called_once_with(
-            parameters=None,
-            callback=callback,
-        )
-
-    def test_fit_wraps_supplied_model_with_explicit_callback(self, minimizer: DFO) -> None:
-        from easyscience import global_object
-
-        global_object.stack.enabled = False
-
-        supplied_model = MagicMock()
-        wrapped_model = MagicMock()
-        explicit_callback = MagicMock()
-
-        minimizer._make_model = MagicMock()
-        minimizer._wrap_model_with_callback = MagicMock(return_value=wrapped_model)
-        minimizer._get_callback_parameter_names = MagicMock(return_value=['palpha'])
-        minimizer._dfo_fit = MagicMock(return_value='fit')
-        minimizer._set_parameter_fit_result = MagicMock()
-        minimizer._gen_fit_results = MagicMock(return_value='gen_fit_results')
-        minimizer._cached_pars = {'alpha': MagicMock(value=1.0)}
-
-        result = minimizer.fit(
-            x=np.array([1.0]),
-            y=np.array([2.0]),
-            weights=np.array([1.0]),
-            model=supplied_model,
-            callback=explicit_callback,
-        )
-
-        assert result == 'gen_fit_results'
-        minimizer._make_model.assert_not_called()
-        minimizer._wrap_model_with_callback.assert_called_once_with(
-            supplied_model,
-            ['palpha'],
-            explicit_callback,
-        )
-        minimizer._dfo_fit.assert_called_once_with(
-            minimizer._cached_pars,
-            wrapped_model,
-            user_params={'logging.save_diagnostic_info': True},
-        )
-
-    def test_fit_uses_supplied_model_without_callback(self, minimizer: DFO) -> None:
-        from easyscience import global_object
-
-        global_object.stack.enabled = False
-
-        supplied_model = MagicMock()
-
-        minimizer._make_model = MagicMock()
-        minimizer._wrap_model_with_callback = MagicMock()
-        minimizer._dfo_fit = MagicMock(return_value='fit')
-        minimizer._set_parameter_fit_result = MagicMock()
-        minimizer._gen_fit_results = MagicMock(return_value='gen_fit_results')
-        minimizer._cached_pars = {'alpha': MagicMock(value=1.0)}
-
-        result = minimizer.fit(
-            x=np.array([1.0]),
-            y=np.array([2.0]),
-            weights=np.array([1.0]),
-            model=supplied_model,
-        )
-
-        assert result == 'gen_fit_results'
-        minimizer._make_model.assert_not_called()
-        minimizer._wrap_model_with_callback.assert_not_called()
-        minimizer._dfo_fit.assert_called_once_with(
-            minimizer._cached_pars,
-            supplied_model,
-            user_params={'logging.save_diagnostic_info': True},
-        )
+        minimizer._make_model.assert_called_once_with(callback=callback)
 
     def test_generate_fit_function(self, minimizer: DFO) -> None:
         # When
@@ -219,14 +145,13 @@ class TestDFOFit:
         minimizer._generate_fit_function = MagicMock(return_value=mock_fit_function)
 
         mock_parm_1 = MagicMock()
-        mock_parm_1.unique_name = 'mock_parm_1'
         mock_parm_1.value = 1000.0
         mock_parm_2 = MagicMock()
-        mock_parm_2.unique_name = 'mock_parm_2'
         mock_parm_2.value = 2000.0
+        minimizer._cached_pars = {'mock_parm_1': mock_parm_1, 'mock_parm_2': mock_parm_2}
 
         # Then
-        model = minimizer._make_model(parameters=[mock_parm_1, mock_parm_2])
+        model = minimizer._make_model()
         residuals_for_model = model(
             x=np.array([1, 2]),
             y=np.array([10, 20]),
@@ -247,15 +172,14 @@ class TestDFOFit:
         minimizer._generate_fit_function = MagicMock(return_value=mock_fit_function)
 
         mock_parm_1 = MagicMock()
-        mock_parm_1.unique_name = 'mock_parm_1'
         mock_parm_1.value = 1000.0
         mock_parm_2 = MagicMock()
-        mock_parm_2.unique_name = 'mock_parm_2'
         mock_parm_2.value = 2000.0
+        minimizer._cached_pars = {'mock_parm_1': mock_parm_1, 'mock_parm_2': mock_parm_2}
 
         callback = MagicMock()
 
-        model = minimizer._make_model(parameters=[mock_parm_1, mock_parm_2], callback=callback)
+        model = minimizer._make_model(callback=callback)
         residuals_for_model = model(
             x=np.array([1, 2]),
             y=np.array([10, 20]),
@@ -758,22 +682,6 @@ class TestDFOFit:
 
         call_kwargs = minimizer._make_model.call_args[1]
         assert call_kwargs['callback'] is explicit_cb
-
-    @pytest.mark.parametrize(
-        ('parameters', 'expected_names'),
-        [
-            ([MagicMock(unique_name='alpha')], ['palpha']),
-            (None, ['pbeta']),
-        ],
-    )
-    def test_get_callback_parameter_names_optional_parameters(
-        self, minimizer: DFO, parameters, expected_names
-    ) -> None:
-        minimizer._cached_pars = {'beta': MagicMock(value=1.0)}
-
-        parameter_names = minimizer._get_callback_parameter_names(parameters)
-
-        assert parameter_names == expected_names
 
     def test_wrap_model_with_callback_invokes_on_each_evaluation(self, minimizer: DFO) -> None:
         callback = MagicMock()

@@ -194,14 +194,14 @@ def exp(x: _D) -> _D:
     Exponential of a dimensionless parameter, with its bounds:
 
     >>> import easyscience as es
-    >>> x = es.Parameter('x', 1.0, min=0.0, max=2.0)
+    >>> x = es.Parameter(1.0, min=0.0, max=2.0)
     >>> result = es.math.exp(x)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     2.7183 in [1.0000, 7.3891]
 
     The variance is propagated (first order):
 
-    >>> x = es.Parameter('x', 0.0, variance=0.01)
+    >>> x = es.Parameter(0.0, variance=0.01)
     >>> result = es.math.exp(x)
     >>> print(f'{result.value:.4f}, variance {result.variance:.4f}')
     1.0000, variance 0.0100
@@ -246,14 +246,14 @@ def log(x: _D) -> _D:
     Natural logarithm, with its bounds:
 
     >>> import easyscience as es
-    >>> x = es.Parameter('x', 10.0, min=1.0, max=100.0)
+    >>> x = es.Parameter(10.0, min=1.0, max=100.0)
     >>> result = es.math.log(x)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     2.3026 in [0.0000, 4.6052]
 
     Bounds below zero are clipped to the domain:
 
-    >>> x = es.Parameter('x', 2.0, min=-1.0, max=5.0)
+    >>> x = es.Parameter(2.0, min=-1.0, max=5.0)
     >>> result = es.math.log(x)
     >>> print(f'bounds [{result.min:.4f}, {result.max:.4f}]')
     bounds [-inf, 1.6094]
@@ -298,14 +298,14 @@ def log10(x: _D) -> _D:
     Base-10 logarithm, with its bounds:
 
     >>> import easyscience as es
-    >>> x = es.Parameter('x', 100.0, min=10.0, max=1000.0)
+    >>> x = es.Parameter(100.0, min=10.0, max=1000.0)
     >>> result = es.math.log10(x)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     2.0000 in [1.0000, 3.0000]
 
     Bounds touching zero are clipped to the domain:
 
-    >>> x = es.Parameter('x', 10.0, min=0.0, max=100.0)
+    >>> x = es.Parameter(10.0, min=0.0, max=100.0)
     >>> result = es.math.log10(x)
     >>> print(f'bounds [{result.min:.4f}, {result.max:.4f}]')
     bounds [-inf, 2.0000]
@@ -354,14 +354,14 @@ def sqrt(x: _D) -> _D:
     Square root of a dimensionless parameter, with its bounds:
 
     >>> import easyscience as es
-    >>> x = es.Parameter('x', 4.0, min=1.0, max=9.0)
+    >>> x = es.Parameter(4.0, min=1.0, max=9.0)
     >>> result = es.math.sqrt(x)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     2.0000 in [1.0000, 3.0000]
 
     The unit is square-rooted too:
 
-    >>> area = es.Parameter('area', 9.0, unit='m**2')
+    >>> area = es.Parameter(9.0, unit='m**2')
     >>> result = es.math.sqrt(area)
     >>> print(result.value, result.unit)
     3.0 m
@@ -405,14 +405,14 @@ def erf(x: _D) -> _D:
     Error function, with its bounds:
 
     >>> import easyscience as es
-    >>> x = es.Parameter('x', 1.0, min=0.0, max=2.0)
+    >>> x = es.Parameter(1.0, min=0.0, max=2.0)
     >>> result = es.math.erf(x)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     0.8427 in [0.0000, 0.9953]
 
     The variance is propagated, although Scipp cannot do it for erf:
 
-    >>> x = es.Parameter('x', 0.0, variance=0.01)
+    >>> x = es.Parameter(0.0, variance=0.01)
     >>> result = es.math.erf(x)
     >>> print(f'{result.value:.4f}, variance {result.variance:.4f}')
     0.0000, variance 0.0127
@@ -458,14 +458,14 @@ def erfc(x: _D) -> _D:
     Complementary error function; it is decreasing, so the bounds swap:
 
     >>> import easyscience as es
-    >>> x = es.Parameter('x', 1.0, min=0.0, max=2.0)
+    >>> x = es.Parameter(1.0, min=0.0, max=2.0)
     >>> result = es.math.erfc(x)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     0.1573 in [0.0047, 1.0000]
 
     The variance is propagated, although Scipp cannot do it for erfc:
 
-    >>> x = es.Parameter('x', 0.0, variance=0.01)
+    >>> x = es.Parameter(0.0, variance=0.01)
     >>> result = es.math.erfc(x)
     >>> print(f'{result.value:.4f}, variance {result.variance:.4f}')
     1.0000, variance 0.0127
@@ -516,14 +516,14 @@ def sin(x: _D) -> _D:
 
     >>> import easyscience as es
     >>> import numpy as np
-    >>> angle = es.Parameter('angle', np.pi / 2, unit='rad', min=0.0, max=np.pi)
+    >>> angle = es.Parameter(np.pi / 2, unit='rad', min=0.0, max=np.pi)
     >>> result = es.math.sin(angle)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     1.0000 in [0.0000, 1.0000]
 
     Angle in degrees; the bounds are computed in radians internally:
 
-    >>> angle = es.Parameter('angle', 30.0, unit='deg', min=0.0, max=90.0)
+    >>> angle = es.Parameter(30.0, unit='deg', min=0.0, max=90.0)
     >>> result = es.math.sin(angle)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     0.5000 in [0.0000, 1.0000]
@@ -577,7 +577,7 @@ def cos(x: _D) -> _D:
 
     Angle in degrees:
 
-    >>> angle = es.Parameter('angle', 60.0, unit='deg', min=0.0, max=180.0)
+    >>> angle = es.Parameter(60.0, unit='deg', min=0.0, max=180.0)
     >>> result = es.math.cos(angle)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     0.5000 in [-1.0000, 1.0000]
@@ -638,7 +638,7 @@ def tan(x: _D) -> _D:
     Angle in degrees; bounds that cross an asymptote (90 deg) become
     infinite:
 
-    >>> angle = es.Parameter('angle', 45.0, unit='deg', min=0.0, max=120.0)
+    >>> angle = es.Parameter(45.0, unit='deg', min=0.0, max=120.0)
     >>> result = es.math.tan(angle)
     >>> print(f'bounds [{result.min:.4f}, {result.max:.4f}]')
     bounds [-inf, inf]
@@ -688,7 +688,7 @@ def arcsin(x: _D, *, unit: str = 'rad') -> _D:
     The result is an angle in radians:
 
     >>> import easyscience as es
-    >>> x = es.Parameter('x', 0.5, min=0.0, max=1.0)
+    >>> x = es.Parameter(0.5, min=0.0, max=1.0)
     >>> result = es.math.arcsin(x)
     >>> result.unit
     'rad'
@@ -696,7 +696,7 @@ def arcsin(x: _D, *, unit: str = 'rad') -> _D:
     Ask for degrees with ``unit``; the value, variance and bounds
     follow:
 
-    >>> x = es.Parameter('x', 0.5, min=0.0, max=1.0)
+    >>> x = es.Parameter(0.5, min=0.0, max=1.0)
     >>> result = es.math.arcsin(x, unit='deg')
     >>> print(
     ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
@@ -749,7 +749,7 @@ def arccos(x: _D, *, unit: str = 'rad') -> _D:
     the bounds swap:
 
     >>> import easyscience as es
-    >>> x = es.Parameter('x', 0.5, min=0.0, max=1.0)
+    >>> x = es.Parameter(0.5, min=0.0, max=1.0)
     >>> result = es.math.arccos(x)
     >>> print(
     ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
@@ -759,7 +759,7 @@ def arccos(x: _D, *, unit: str = 'rad') -> _D:
     Ask for degrees with ``unit``; the value, variance and bounds
     follow:
 
-    >>> x = es.Parameter('x', 0.5, min=0.0, max=1.0)
+    >>> x = es.Parameter(0.5, min=0.0, max=1.0)
     >>> result = es.math.arccos(x, unit='deg')
     >>> print(
     ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
@@ -803,7 +803,7 @@ def arctan(x: _D, *, unit: str = 'rad') -> _D:
     The result is an angle in radians:
 
     >>> import easyscience as es
-    >>> x = es.Parameter('x', 1.0, min=0.0, max=10.0)
+    >>> x = es.Parameter(1.0, min=0.0, max=10.0)
     >>> result = es.math.arctan(x)
     >>> print(
     ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
@@ -813,7 +813,7 @@ def arctan(x: _D, *, unit: str = 'rad') -> _D:
     Ask for degrees with ``unit``; the value, variance and bounds
     follow:
 
-    >>> x = es.Parameter('x', 1.0, min=0.0, max=10.0)
+    >>> x = es.Parameter(1.0, min=0.0, max=10.0)
     >>> result = es.math.arctan(x, unit='deg')
     >>> print(
     ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
@@ -895,8 +895,8 @@ def arctan2(y: DescriptorNumber, x: DescriptorNumber, *, unit: str = 'rad') -> D
     The angle of the point (x, y) = (1, 1) m, in radians:
 
     >>> import easyscience as es
-    >>> y = es.Parameter('y', 1.0, unit='m', min=0.5, max=2.0)
-    >>> x = es.Parameter('x', 1.0, unit='m', min=1.0, max=3.0)
+    >>> y = es.Parameter(1.0, unit='m', min=0.5, max=2.0)
+    >>> x = es.Parameter(1.0, unit='m', min=1.0, max=3.0)
     >>> result = es.math.arctan2(y, x)
     >>> print(
     ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
@@ -906,8 +906,8 @@ def arctan2(y: DescriptorNumber, x: DescriptorNumber, *, unit: str = 'rad') -> D
     Ask for degrees with ``unit``; the value, variance and bounds
     follow:
 
-    >>> y = es.Parameter('y', 1.0, unit='m', min=0.5, max=2.0)
-    >>> x = es.Parameter('x', 1.0, unit='m', min=1.0, max=3.0)
+    >>> y = es.Parameter(1.0, unit='m', min=0.5, max=2.0)
+    >>> x = es.Parameter(1.0, unit='m', min=1.0, max=3.0)
     >>> result = es.math.arctan2(y, x, unit='deg')
     >>> print(
     ...     f'{result.value:.4f} {result.unit} in [{result.min:.4f}, {result.max:.4f}]'
@@ -960,14 +960,14 @@ def sinc(x: _D) -> _D:
 
     >>> import easyscience as es
     >>> import numpy as np
-    >>> angle = es.Parameter('angle', np.pi / 2, unit='rad', min=0.0, max=10.0)
+    >>> angle = es.Parameter(np.pi / 2, unit='rad', min=0.0, max=10.0)
     >>> result = es.math.sinc(angle)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     0.6366 in [-0.2172, 1.0000]
 
     sinc does not accept degrees; convert an angle in degrees first:
 
-    >>> angle = es.Parameter('angle', 90.0, unit='deg')
+    >>> angle = es.Parameter(90.0, unit='deg')
     >>> angle.convert_unit('rad')
     >>> result = es.math.sinc(angle)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
@@ -1015,14 +1015,14 @@ def sinh(x: _D) -> _D:
     Hyperbolic sine, with its bounds:
 
     >>> import easyscience as es
-    >>> x = es.Parameter('x', 1.0, min=0.0, max=2.0)
+    >>> x = es.Parameter(1.0, min=0.0, max=2.0)
     >>> result = es.math.sinh(x)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     1.1752 in [0.0000, 3.6269]
 
     The variance is propagated (first order):
 
-    >>> x = es.Parameter('x', 0.0, variance=0.01)
+    >>> x = es.Parameter(0.0, variance=0.01)
     >>> result = es.math.sinh(x)
     >>> print(f'{result.value:.4f}, variance {result.variance:.4f}')
     0.0000, variance 0.0100
@@ -1069,14 +1069,14 @@ def cosh(x: _D) -> _D:
     Hyperbolic cosine; the minimum, 1, is inside the bounds:
 
     >>> import easyscience as es
-    >>> x = es.Parameter('x', 0.5, min=-1.0, max=2.0)
+    >>> x = es.Parameter(0.5, min=-1.0, max=2.0)
     >>> result = es.math.cosh(x)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     1.1276 in [1.0000, 3.7622]
 
     Bounds on one side of zero: cosh is monotonic there:
 
-    >>> x = es.Parameter('x', 1.0, min=0.5, max=2.0)
+    >>> x = es.Parameter(1.0, min=0.5, max=2.0)
     >>> result = es.math.cosh(x)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     1.5431 in [1.1276, 3.7622]
@@ -1114,14 +1114,14 @@ def tanh(x: _D) -> _D:
     Hyperbolic tangent, with its bounds:
 
     >>> import easyscience as es
-    >>> x = es.Parameter('x', 0.5, min=0.0, max=2.0)
+    >>> x = es.Parameter(0.5, min=0.0, max=2.0)
     >>> result = es.math.tanh(x)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     0.4621 in [0.0000, 0.9640]
 
     Without bounds the result is limited to [-1, 1]:
 
-    >>> x = es.Parameter('x', 0.5)
+    >>> x = es.Parameter(0.5)
     >>> result = es.math.tanh(x)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     0.4621 in [-1.0000, 1.0000]
@@ -1159,14 +1159,14 @@ def arcsinh(x: _D) -> _D:
     Inverse hyperbolic sine, with its bounds:
 
     >>> import easyscience as es
-    >>> x = es.Parameter('x', 1.0, min=0.0, max=10.0)
+    >>> x = es.Parameter(1.0, min=0.0, max=10.0)
     >>> result = es.math.arcsinh(x)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     0.8814 in [0.0000, 2.9982]
 
     The variance is propagated (first order):
 
-    >>> x = es.Parameter('x', 0.0, variance=0.01)
+    >>> x = es.Parameter(0.0, variance=0.01)
     >>> result = es.math.arcsinh(x)
     >>> print(f'{result.value:.4f}, variance {result.variance:.4f}')
     0.0000, variance 0.0100
@@ -1213,14 +1213,14 @@ def arccosh(x: _D) -> _D:
     Inverse hyperbolic cosine, with its bounds:
 
     >>> import easyscience as es
-    >>> x = es.Parameter('x', 2.0, min=1.0, max=10.0)
+    >>> x = es.Parameter(2.0, min=1.0, max=10.0)
     >>> result = es.math.arccosh(x)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     1.3170 in [0.0000, 2.9932]
 
     Bounds below 1 are clipped to the domain:
 
-    >>> x = es.Parameter('x', 2.0, min=-5.0, max=10.0)
+    >>> x = es.Parameter(2.0, min=-5.0, max=10.0)
     >>> result = es.math.arccosh(x)
     >>> print(f'bounds [{result.min:.4f}, {result.max:.4f}]')
     bounds [0.0000, 2.9932]
@@ -1267,7 +1267,7 @@ def arctanh(x: _D) -> _D:
     Inverse hyperbolic tangent, with its bounds:
 
     >>> import easyscience as es
-    >>> x = es.Parameter('x', 0.5, min=0.0, max=0.9)
+    >>> x = es.Parameter(0.5, min=0.0, max=0.9)
     >>> result = es.math.arctanh(x)
     >>> print(f'{result.value:.4f} in [{result.min:.4f}, {result.max:.4f}]')
     0.5493 in [0.0000, 1.4722]
@@ -1275,7 +1275,7 @@ def arctanh(x: _D) -> _D:
     Bounds beyond ±1 are clipped, which makes the result bounds
     infinite:
 
-    >>> x = es.Parameter('x', 0.5, min=-2.0, max=2.0)
+    >>> x = es.Parameter(0.5, min=-2.0, max=2.0)
     >>> result = es.math.arctanh(x)
     >>> print(f'bounds [{result.min:.4f}, {result.max:.4f}]')
     bounds [-inf, inf]
@@ -1438,7 +1438,7 @@ def _apply(op: _MathOp, *params: DescriptorNumber) -> DescriptorNumber:
     for param in params:
         if not op.domain.contains(param.value):
             raise ValueError(
-                f"The value of '{param.name}' ({param.value}) is outside the domain "
+                f"The value of '{param.display_name}' ({param.value}) is outside the domain "
                 f'{op.domain} of {op.name}().'
             )
     if op.guard is not None:
@@ -1450,7 +1450,7 @@ def _apply(op: _MathOp, *params: DescriptorNumber) -> DescriptorNumber:
         if variance is not None:
             sc_result.variance = variance
 
-    label = ', '.join(param.name for param in params)
+    label = ', '.join(param.display_name for param in params)
     if not _is_finite(sc_result.value) or not _is_finite(sc_result.variance):
         raise ValueError(
             f'{op.name}({label}) is not finite: value={sc_result.value}, '
@@ -1459,7 +1459,9 @@ def _apply(op: _MathOp, *params: DescriptorNumber) -> DescriptorNumber:
 
     # A plain DescriptorNumber has no bounds, so neither has a result made only from those.
     if not any(isinstance(param, Parameter) for param in params):
-        return DescriptorNumber.from_scipp(name=f'{op.name}({label})', full_value=sc_result)
+        return DescriptorNumber.from_scipp(
+            display_name=f'{op.name}({label})', full_value=sc_result
+        )
 
     # 4. Bounds are permissive: clip to the domain, convert, and let the strategy decide.
     intervals = [_native_interval(op, param) for param in params]
@@ -1471,7 +1473,7 @@ def _apply(op: _MathOp, *params: DescriptorNumber) -> DescriptorNumber:
     new_min, new_max = _pad_if_collapsed(new_min, new_max, sc_result.value)
 
     return Parameter.from_scipp(
-        name=f'{op.name}({label})',
+        display_name=f'{op.name}({label})',
         full_value=sc_result,
         min=new_min,
         max=new_max,
@@ -1797,7 +1799,7 @@ def _tan_guard(param: DescriptorNumber) -> None:
     distance = abs(value % np.pi - _HALF_PI)
     if distance <= margin:
         raise ValueError(
-            f"The value of '{param.name}' ({param.value} {param.unit}) is within "
+            f"The value of '{param.display_name}' ({param.value} {param.unit}) is within "
             f'{margin:.3g} rad of a tan asymptote (pi/2 + n*pi); the propagated variance '
             f'would explode.'
         )
@@ -1816,7 +1818,7 @@ def _arctan2_guard(y: DescriptorNumber, x: DescriptorNumber) -> None:
     margin = max(_std(y), _std(x))
     if margin > 0 and np.hypot(float(y.value), float(x.value)) <= margin:
         raise ValueError(
-            f"The point ('{x.name}', '{y.name}') = ({x.value}, {y.value}) is within one standard "
+            f"The point ('{x.display_name}', '{y.display_name}') = ({x.value}, {y.value}) is within one standard "
             f'deviation ({margin:.3g}) of the origin, where the angle of arctan2() is undefined '
             f'and its propagated variance would explode.'
         )

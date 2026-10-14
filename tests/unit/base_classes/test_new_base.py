@@ -47,14 +47,27 @@ class TestNewBase:
         with pytest.raises(TypeError, match='Display name must be a string or None'):
             NewBase(display_name=456)
 
-    def test_arg_spec(self):
+    def test_no_arg_spec_override(self):
         # When
         obj = NewBase()
-        # Then
-        arg_spec = obj._arg_spec
         # Expect
-        assert 'unique_name' in arg_spec
-        assert 'display_name' in arg_spec
+        assert not hasattr(obj, '_arg_spec')
+
+    def test_to_dict_includes_keyword_only_args(self, clear):
+        # When
+        class KeywordOnly(NewBase):
+            def __init__(self, value, *args, unit='', unique_name=None, **kwargs):
+                super().__init__(unique_name=unique_name)
+                self.value = value
+                self.unit = unit
+
+        obj = KeywordOnly(1.0, unit='m', unique_name='kw')
+        # Then
+        d = obj.to_dict()
+        # Expect
+        assert d['value'] == 1.0
+        assert d['unit'] == 'm'
+        assert d['unique_name'] == 'kw'
 
     def test_unique_name_setter(self, clear):
         # When
@@ -124,6 +137,34 @@ class TestNewBase:
         assert '@version' in obj_dict
         assert 'unique_name' not in obj_dict
         assert 'display_name' not in obj_dict
+
+    def test_to_dict_does_not_mutate_skip(self):
+        obj = NewBase()
+        skip = ['foo']
+        obj.to_dict(skip=skip)
+        assert skip == ['foo']
+
+    def test_to_dict_nested_object_keeps_own_names(self):
+        """A parent without names must not strip names from a nested object."""
+
+        class Holder(NewBase):
+            def __init__(self, item=None, unique_name=None, display_name=None):
+                super().__init__(unique_name=unique_name, display_name=display_name)
+                self._item = item
+
+            @property
+            def item(self):
+                return self._item
+
+        inner = NewBase(unique_name='inner', display_name='Inner')
+        outer = Holder(item=inner)  # auto unique_name, no display_name
+
+        d = outer.to_dict()
+
+        assert 'unique_name' not in d
+        assert 'display_name' not in d
+        assert d['item']['unique_name'] == 'inner'
+        assert d['item']['display_name'] == 'Inner'
 
     def test_to_dict_with_skip(self):
         # When

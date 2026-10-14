@@ -67,7 +67,9 @@ ALL_FUNCTIONS = [*UNARY_FUNCTIONS, 'arctan2']
 
 def make(value, unit='', *, min=-INF, max=INF, variance=0.0, name='x') -> Parameter:
     """Shorthand for building a ``Parameter`` with the bounds under test."""
-    return Parameter(name=name, value=value, unit=unit, variance=variance, min=min, max=max)
+    return Parameter(
+        display_name=name, value=value, unit=unit, variance=variance, min=min, max=max
+    )
 
 
 def fn(name: str):
@@ -214,9 +216,9 @@ class TestValueAndVariance:
         arctan2_result = es_math.arctan2(y, x)
 
         # EXPECT
-        assert sin_result.name == 'sin(angle)'
-        assert sinc_result.name == 'sinc(angle)'
-        assert arctan2_result.name == 'arctan2(y, x)'
+        assert sin_result.display_name == 'sin(angle)'
+        assert sinc_result.display_name == 'sinc(angle)'
+        assert arctan2_result.display_name == 'arctan2(y, x)'
 
 
 # ----------------------------------------------------------------------
@@ -1555,7 +1557,7 @@ class TestAliases:
         result = es_variable.asin(x)
 
         # EXPECT
-        assert result.name == 'arcsin(x)'
+        assert result.display_name == 'arcsin(x)'
 
     def test_alias_accepts_the_unit_keyword(self):
         # WHEN
@@ -1589,7 +1591,7 @@ class MyParameter(Parameter):
     """A user subclass whose constructor needs an extra argument."""
 
     def __init__(self, name, value, tag, **kwargs):
-        super().__init__(name, value, **kwargs)
+        super().__init__(value, display_name=name, **kwargs)
         self.tag = tag
 
 
@@ -1597,13 +1599,13 @@ class MyDescriptor(DescriptorNumber):
     """A user subclass whose constructor needs an extra argument."""
 
     def __init__(self, name, value, tag, **kwargs):
-        super().__init__(name, value, **kwargs)
+        super().__init__(value, display_name=name, **kwargs)
         self.tag = tag
 
 
 def descriptor(value, unit='', *, variance=0.0, name='x') -> DescriptorNumber:
     """Shorthand for a plain ``DescriptorNumber`` (no bounds)."""
-    return DescriptorNumber(name=name, value=value, unit=unit, variance=variance)
+    return DescriptorNumber(display_name=name, value=value, unit=unit, variance=variance)
 
 
 class TestInheritance:
@@ -1725,7 +1727,7 @@ class TestInheritance:
             0.5,
             np.array([0.5]),
             sc.scalar(0.5, unit='rad'),
-            DescriptorArray(name='arr', value=[0.5], unit='rad', dimensions=['x']),
+            DescriptorArray(display_name='arr', value=[0.5], unit='rad', dimensions=['x']),
         ],
         ids=['float', 'ndarray', 'scipp-variable', 'descriptor-array'],
     )

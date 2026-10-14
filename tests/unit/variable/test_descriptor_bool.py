@@ -11,12 +11,10 @@ class TestDescriptorBool:
     @pytest.fixture
     def descriptor(self):
         descriptor = DescriptorBool(
-            name='name',
             value=True,
             description='description',
             url='url',
             display_name='display_name',
-            parent=None,
         )
         return descriptor
 
@@ -29,7 +27,6 @@ class TestDescriptorBool:
         assert descriptor._bool_value == True
 
         # From super
-        assert descriptor._name == 'name'
         assert descriptor._description == 'description'
         assert descriptor._url == 'url'
         assert descriptor._display_name == 'display_name'
@@ -40,12 +37,10 @@ class TestDescriptorBool:
         # When Then Expect
         with pytest.raises(ValueError):
             DescriptorBool(
-                name='name',
                 value=bool_value,
                 description='description',
                 url='url',
                 display_name='display_name',
-                parent=None,
             )
 
     def test_value(self, descriptor: DescriptorBool):
@@ -70,7 +65,7 @@ class TestDescriptorBool:
         repr_str = str(descriptor)
 
         # Expect
-        assert repr_str == "<DescriptorBool 'name': True>"
+        assert repr_str == "<DescriptorBool 'display_name': True>"
 
     def test_copy(self, descriptor: DescriptorBool):
         # When Then

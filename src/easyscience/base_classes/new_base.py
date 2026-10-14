@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-from inspect import signature
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -12,12 +11,11 @@ if TYPE_CHECKING:
     from typing import Iterable
     from typing import List
     from typing import Optional
-    from typing import Set
 
 from easyscience import global_object
 
 from ..global_object.undo_redo import property_stack
-from ..io.serializer_base import SerializerBase
+from .serializer_base import SerializerBase
 
 
 class NewBase:
@@ -42,21 +40,6 @@ class NewBase:
         if display_name is not None and not isinstance(display_name, str):
             raise TypeError('Display name must be a string or None')
         self._display_name = display_name
-
-    @property
-    def _arg_spec(self) -> Set[str]:
-        """
-        This method is used by the serializer to determine which
-        arguments are needed by the constructor to deserialize the
-        object.
-        """
-        sign = signature(self.__class__.__init__)
-        names = [
-            param.name
-            for param in sign.parameters.values()
-            if param.kind == param.POSITIONAL_OR_KEYWORD
-        ]
-        return set(names[1:])
 
     @property
     def unique_name(self) -> str:
@@ -137,16 +120,18 @@ class NewBase:
         Dict[str, Any]
             Encoded object containing all information to reform an
             EasyScience object.
+
+        Notes
+        -----
+        A ``unique_name`` that was generated automatically is not
+        written; only an explicitly supplied one is, so that a
+        deserialized object gets a fresh name instead of clashing with
+        the original. Likewise ``display_name`` is omitted when it is
+        ``None``. Pass ``skip`` to drop further fields.
         """
         serializer = SerializerBase()
-        temp_dict = serializer._convert_to_dict(self, skip=skip, full_encode=False)
-        if skip is None:
-            skip = []
-        if self._default_unique_name or 'unique_name' in skip:
-            temp_dict.pop('unique_name', None)
-        if self._display_name is None or 'display_name' in skip:
-            temp_dict.pop('display_name', None)
-        return temp_dict
+        skip = list(skip) if skip else []
+        return serializer._convert_to_dict(self, skip=skip, full_encode=False)
 
     @classmethod
     def from_dict(cls, obj_dict: Dict[str, Any]) -> NewBase:
@@ -157,7 +142,7 @@ class NewBase:
         ----------
         obj_dict : Dict[str, Any]
             Dictionary containing the serialized contents (from
-            ``SerializerDict``) of an EasyScience object.
+            ``to_dict``) of an EasyScience object.
 
         Returns
         -------

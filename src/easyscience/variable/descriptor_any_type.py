@@ -28,34 +28,41 @@ class DescriptorAnyType(DescriptorBase):
 
     def __init__(
         self,
-        name: str,
         value: Any,
+        *,
         unique_name: Optional[str] = None,
         description: Optional[str] = None,
         url: Optional[str] = None,
         display_name: Optional[str] = None,
-        parent: Optional[Any] = None,
     ):
         """
         Constructor for the DescriptorAnyType class.
 
-        param name: Name of the descriptor param value: Value of the
-        descriptor param description: Description of the descriptor
-        param url: URL of the descriptor param display_name: Display
-        name of the descriptor param parent: Parent of the descriptor ..
-        note:: Undo/Redo functionality is implemented for the attributes
-        ``variance``, ``error``, ``unit`` and ``value``.
+        All arguments after ``value`` are keyword-only.
+
+        Parameters
+        ----------
+        value : Any
+            Value of this object.
+        unique_name : Optional[str], default=None
+            Unique identifier for this object. By default, None.
+        description : Optional[str], default=None
+            A brief summary of what this object is. By default, None.
+        url : Optional[str], default=None
+            Lookup url for documentation/information. By default, None.
+        display_name : Optional[str], default=None
+            A pretty name for the object. Falls back to ``unique_name``
+            when not given. By default, None.
+
         """
 
         self._value = value
 
         super().__init__(
-            name=name,
             unique_name=unique_name,
             description=description,
             url=url,
             display_name=display_name,
-            parent=parent,
         )
 
     @property
@@ -89,7 +96,7 @@ class DescriptorAnyType(DescriptorBase):
     def __repr__(self) -> str:
         """
         Return a string representation of the DescriptorAnyType, showing
-        its name and value.
+        its display name and value.
         """
 
         if hasattr(self._value, '__repr__'):
@@ -97,9 +104,9 @@ class DescriptorAnyType(DescriptorBase):
         else:
             value_repr = type(self._value)
 
-        return f"<{self.__class__.__name__} '{self._name}': {value_repr}>"
+        return f"<{self.__class__.__name__} '{self.display_name}': {value_repr}>"
 
-    def as_dict(self, skip: Optional[List[str]] = None) -> Dict[str, Any]:
-        raw_dict = super().as_dict(skip=skip)
+    def to_dict(self, skip: Optional[List[str]] = None) -> Dict[str, Any]:
+        raw_dict = super().to_dict(skip=skip)
         raw_dict['value'] = self._value
         return raw_dict

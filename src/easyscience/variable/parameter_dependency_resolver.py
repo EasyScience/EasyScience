@@ -82,8 +82,8 @@ def resolve_all_parameter_dependencies(obj: Any) -> None:
                 error_count += 1
                 serializer_id = getattr(param, '_DescriptorNumber__serializer_id', 'unknown')
                 errors.append(
-                    f"Failed to resolve dependencies for parameter '{param.name}'"
-                    f" (unique_name: '{param.unique_name}', serializer_id: '{serializer_id}'): {e}"
+                    f"Failed to resolve dependencies for parameter '{param.unique_name}'"
+                    f" (display_name: '{param.display_name}', serializer_id: '{serializer_id}'): {e}"
                 )
 
     # Report results

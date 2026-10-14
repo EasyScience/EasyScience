@@ -90,7 +90,7 @@ user = { features = ['py-max', 'user'] }
 ##################
 
 unit-tests = 'python -m pytest tests/unit/ --color=yes -v'
-functional-tests = 'python -m pytest tests/functional/ --color=yes -v'
+# functional-tests = 'python -m pytest tests/functional/ --color=yes -v'
 integration-tests = 'python -m pytest tests/integration/ --color=yes -n auto -v'
 notebook-tests = 'python -m pytest --nbmake docs/docs/tutorials/ --nbmake-timeout=1200 --color=yes -n auto -v'
 
@@ -149,7 +149,7 @@ raw-metrics-json = 'radon raw -s -j src/'
 #############
 
 unit-tests-coverage = 'pixi run unit-tests --cov=src/easyscience --cov-report=term-missing'
-functional-tests-coverage = 'pixi run functional-tests --cov=src/easyscience --cov-report=term-missing'
+# functional-tests-coverage = 'pixi run functional-tests --cov=src/easyscience --cov-report=term-missing'
 integration-tests-coverage = 'pixi run integration-tests --cov=src/easyscience --cov-report=term-missing'
 docstring-coverage = 'interrogate -c pyproject.toml src/easyscience'
 

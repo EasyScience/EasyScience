@@ -57,8 +57,8 @@ class StraightLine(ModelBase):
 
     def __init__(self, slope: float, intercept: float):
         super().__init__()
-        self._slope = Parameter('slope', slope)
-        self._intercept = Parameter('intercept', intercept)
+        self._slope = Parameter(slope)
+        self._intercept = Parameter(intercept)
 
     @property
     def slope(self) -> Parameter:
@@ -85,8 +85,8 @@ class AngleLine(ModelBase):
 
     def __init__(self, angle: float, intercept: float):
         super().__init__()
-        self._angle = Parameter('angle', angle, unit='deg', min=1.0, max=80.0)
-        self._intercept = Parameter('intercept', intercept)
+        self._angle = Parameter(angle, unit='deg', min=1.0, max=80.0)
+        self._intercept = Parameter(intercept)
 
     @property
     def angle(self) -> Parameter:
@@ -113,8 +113,8 @@ class Quadrature(ModelBase):
 
     def __init__(self, a: float, b: float):
         super().__init__()
-        self._a = Parameter('a', a)
-        self._b = Parameter('b', b)
+        self._a = Parameter(a)
+        self._b = Parameter(b)
 
     @property
     def a(self) -> Parameter:
@@ -146,10 +146,10 @@ class GaussianPeak(ModelBase):
 
     def __init__(self, amplitude: float, center: float, fwhm: float):
         super().__init__()
-        self._amplitude = Parameter('amplitude', amplitude)
-        self._center = Parameter('center', center)
-        self._fwhm = Parameter('fwhm', fwhm, min=0.1, max=10.0)
-        self._two = Parameter('two', 2.0)  # a constant, so that log() receives a Parameter
+        self._amplitude = Parameter(amplitude)
+        self._center = Parameter(center)
+        self._fwhm = Parameter(fwhm, min=0.1, max=10.0)
+        self._two = Parameter(2.0)  # a constant, so that log() receives a Parameter
 
     @property
     def amplitude(self) -> Parameter:

@@ -6,35 +6,41 @@ import pytest
 
 from easyscience import AvailableMinimizers
 from easyscience import Fitter
-from easyscience import ObjBase
 from easyscience import Parameter
 from easyscience.base_classes import ModelBase
 from easyscience.fitting.minimizers import FitError
 
 
 # Model and container of parameters for tests
-class AbsSin(ObjBase):
-    phase: Parameter
-    offset: Parameter
-
+class _PhaseOffset(ModelBase):
     def __init__(self, offset_val: float, phase_val: float):
-        offset = Parameter('offset', offset_val)
-        phase = Parameter('phase', phase_val)
-        super().__init__('sin', offset=offset, phase=phase)
+        super().__init__()
+        self._offset = Parameter(offset_val, display_name='offset')
+        self._phase = Parameter(phase_val, display_name='phase')
 
+    @property
+    def offset(self) -> Parameter:
+        return self._offset
+
+    @offset.setter
+    def offset(self, value: float) -> None:
+        self._offset.value = value
+
+    @property
+    def phase(self) -> Parameter:
+        return self._phase
+
+    @phase.setter
+    def phase(self, value: float) -> None:
+        self._phase.value = value
+
+
+class AbsSin(_PhaseOffset):
     def __call__(self, x):
         return np.abs(np.sin(self.phase.value * x + self.offset.value))
 
 
-class AbsSin2D(ObjBase):
-    phase: Parameter
-    offset: Parameter
-
-    def __init__(self, offset_val: float, phase_val: float):
-        offset = Parameter('offset', offset_val)
-        phase = Parameter('phase', phase_val)
-        super().__init__('sin2D', offset=offset, phase=phase)
-
+class AbsSin2D(_PhaseOffset):
     def __call__(self, x):
         X = x[:, :, 0]  # x is a 2D array
         Y = x[:, :, 1]
@@ -55,8 +61,8 @@ class AbsSin2DL(AbsSin2D):
 class StraightLine(ModelBase):
     def __init__(self, slope: float, intercept: float):
         super().__init__()
-        self._slope = Parameter('slope', slope)
-        self._intercept = Parameter('intercept', intercept)
+        self._slope = Parameter(slope, display_name='slope')
+        self._intercept = Parameter(intercept, display_name='intercept')
 
     @property
     def slope(self) -> Parameter:
@@ -78,7 +84,7 @@ class StraightLine(ModelBase):
         return self.slope.value * x + self.intercept.value
 
 
-def check_fit_results(result, sp_sin, ref_sin, x, **kwargs):
+def check_fit_results(result, sp_sin, ref_sin, x, expect_error=True, **kwargs):
     assert result.n_pars == len(sp_sin.get_fit_parameters())
     assert result.chi2 == pytest.approx(0, abs=1.5e-3 * (len(result.x) - result.n_pars))
     assert result.reduced_chi2 == pytest.approx(0, abs=1.5e-3)
@@ -90,9 +96,14 @@ def check_fit_results(result, sp_sin, ref_sin, x, **kwargs):
             assert key in result.p0.keys()
             assert result.p0[key] == pytest.approx(value)  # Bumps does something strange here
     assert np.all(result.x == x)
-    for item1, item2 in zip(sp_sin._kwargs.values(), ref_sin._kwargs.values()):
-        # assert item.error > 0 % This does not work as some methods don't calculate error
-        assert item1.error == pytest.approx(0, abs=2.1e-1)
+    for item1, item2 in zip(sp_sin.get_all_parameters(), ref_sin.get_all_parameters()):
+        # Gradient-free methods (e.g. lmfit's powell/cobyla) have no covariance
+        # matrix, so they report error as None rather than a fake 0.0. Every
+        # other method must still produce a real uncertainty.
+        if expect_error:
+            assert item1.error == pytest.approx(0, abs=2.1e-1)
+        else:
+            assert item1.error is None
         assert item1.value == pytest.approx(item2.value, abs=5e-3)
     y_calc_ref = ref_sin(x)
     assert result.y_calc == pytest.approx(y_calc_ref, abs=1e-2)
@@ -160,11 +171,11 @@ def test_fit_result(fit_engine):
 
     sp_ref1 = {
         f'p{item1.unique_name}': item1.value
-        for item1, item2 in zip(sp_sin._kwargs.values(), ref_sin._kwargs.values())
+        for item1, item2 in zip(sp_sin.get_all_parameters(), ref_sin.get_all_parameters())
     }
     sp_ref2 = {
         f'p{item1.unique_name}': item2.value
-        for item1, item2 in zip(sp_sin._kwargs.values(), ref_sin._kwargs.values())
+        for item1, item2 in zip(sp_sin.get_all_parameters(), ref_sin.get_all_parameters())
     }
 
     f = Fitter(sp_sin, sp_sin)
@@ -330,7 +341,9 @@ def test_lmfit_methods(fit_method):
     f = Fitter(sp_sin, sp_sin)
     assert fit_method in f._minimizer.supported_methods()
     result = f.fit(x, y, weights=weights, method=fit_method)
-    check_fit_results(result, sp_sin, ref_sin, x)
+    check_fit_results(
+        result, sp_sin, ref_sin, x, expect_error=fit_method not in ('powell', 'cobyla')
+    )
 
 
 # @pytest.mark.xfail(reason="known bumps issue")
@@ -352,6 +365,35 @@ def test_bumps_methods(fit_method):
     assert fit_method in f._minimizer.supported_methods()
     result = f.fit(x, y, weights=weights, method=fit_method)
     check_fit_results(result, sp_sin, ref_sin, x)
+
+
+@pytest.mark.fast
+def test_bumps_fit_emits_no_fitness_deprecation_warning():
+    """Regression (CR-1): the classical BUMPS fit path must not read the
+    deprecated ``FitProblem.fitness`` property, which emits a ``UserWarning``
+    on bumps >= 1.0.4 — the ``Curve`` comes back from ``build_curve_problem``
+    directly."""
+    import warnings
+
+    ref_sin = AbsSin(0.2, np.pi)
+    sp_sin = AbsSin(0.354, 3.05)
+
+    x = np.linspace(0, 5, 200)
+    weights = np.ones_like(x)
+    y = ref_sin(x)
+
+    sp_sin.offset.fixed = False
+    sp_sin.phase.fixed = False
+
+    f = Fitter(sp_sin, sp_sin)
+    f.switch_minimizer('Bumps')
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter('always')
+        f.fit(x, y, weights=weights)
+
+    fitness_warnings = [w for w in caught if 'fitness' in str(w.message)]
+    assert fitness_warnings == []
 
 
 @pytest.mark.fast
@@ -380,7 +422,12 @@ def test_dependent_parameter(fit_engine):
             pytest.skip(reason=f'{fit_engine} is not installed')
 
     result = f.fit(x, y, weights=weights)
-    check_fit_results(result, sp_sin, ref_sin, x)
+    # With `offset` dependent on `phase` only one parameter varies against
+    # noiseless data, so lmfit's covariance is exactly [[0.]] and it reports
+    # `errorbars=False` -> no uncertainties.
+    check_fit_results(
+        result, sp_sin, ref_sin, x, expect_error=fit_engine is not AvailableMinimizers.LMFit
+    )
 
 
 @pytest.mark.fast

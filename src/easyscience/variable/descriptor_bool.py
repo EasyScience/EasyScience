@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-from typing import Any
 from typing import Optional
 
 from easyscience.global_object.undo_redo import property_stack
@@ -16,26 +15,45 @@ class DescriptorBool(DescriptorBase):
 
     def __init__(
         self,
-        name: str,
         value: bool,
+        *,
         unique_name: Optional[str] = None,
         description: Optional[str] = None,
         url: Optional[str] = None,
         display_name: Optional[str] = None,
-        parent: Optional[Any] = None,
     ):
+        """
+        Constructor for the DescriptorBool class.
+
+        All arguments after ``value`` are keyword-only.
+
+        Parameters
+        ----------
+        value : bool
+            Value of this object.
+        unique_name : Optional[str], default=None
+            Unique identifier for this object. By default, None.
+        description : Optional[str], default=None
+            A brief summary of what this object is. By default, None.
+        url : Optional[str], default=None
+            Lookup url for documentation/information. By default, None.
+        display_name : Optional[str], default=None
+            A pretty name for the object. Falls back to ``unique_name``
+            when not given. By default, None.
+
+        Raises
+        ------
+        ValueError
+            If ``value`` is not a boolean.
+        """
         if not isinstance(value, bool):
             raise ValueError(f'{value=} must be type bool')
         super().__init__(
-            name=name,
             unique_name=unique_name,
             description=description,
             url=url,
             display_name=display_name,
-            parent=parent,
         )
-        if not isinstance(value, bool):
-            raise TypeError(f'{value=} must be type bool')
         self._bool_value = value
 
     @property
@@ -78,7 +96,7 @@ class DescriptorBool(DescriptorBase):
     def __repr__(self) -> str:
         """Return printable representation."""
         class_name = self.__class__.__name__
-        obj_name = self._name
+        obj_name = self.display_name
         obj_value = self._bool_value
         return f"<{class_name} '{obj_name}': {obj_value}>"
 

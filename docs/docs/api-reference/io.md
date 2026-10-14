@@ -1,1 +1,0 @@
-::: easyscience.io

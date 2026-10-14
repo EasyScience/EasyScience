@@ -140,7 +140,6 @@ default-tag = 'v999.0.0'
 [tool.interrogate]
 fail-under = 45                       # Minimum docstring coverage percentage to pass
 verbose = 1
-exclude = ['src/easyscience/legacy']
 
 #######################################
 # Configuration for coverage/pytest-cov
@@ -178,7 +177,7 @@ testpaths = ['tests']
 # https://docs.astral.sh/ruff/rules/
 
 [tool.ruff]
-exclude = ['tests', 'legacy', 'src/easyscience/legacy']
+exclude = ['tests']
 indent-width = 4
 line-length = 99                                         # See also `max-line-length` in [tool.ruff.lint.pycodestyle]
 preview = true                                           # Enable new rules that are not yet stable, like DOC
@@ -285,7 +284,6 @@ max-positional-args = 6
 # the parameter declarations in the code (in function's signature).
 
 [tool.pydoclint]
-exclude = 'src/easyscience/legacy'
 style = 'numpy'
 check-style-mismatch = true
 check-arg-defaults = true
@@ -299,7 +297,6 @@ allow-init-docstring = true
 # https://github.com/jsh9/format-docstring
 
 [tool.format_docstring]
-exclude = 'src/easyscience/legacy'
 docstring_style = 'numpy'
 line_length = 72
 fix_rst_backticks = true

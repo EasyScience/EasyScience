@@ -252,7 +252,7 @@ class TestInterfaceFactoryTemplate:
         # Given
         mock_model = MagicMock()
         mock_prop = MagicMock()
-        mock_prop.name = 'test_param'
+        mock_prop.display_name = 'test_param'
         mock_prop.value = 42
         mock_model._get_linkable_attributes.return_value = [mock_prop]
 
@@ -276,7 +276,7 @@ class TestInterfaceFactoryTemplate:
         # Given
         mock_model = MagicMock()
         mock_prop = MagicMock()
-        mock_prop.name = 'test_param'
+        mock_prop.display_name = 'test_param'
         mock_prop.value_no_call_back = 24
         mock_model._get_linkable_attributes.return_value = [mock_prop]
 
@@ -300,7 +300,7 @@ class TestInterfaceFactoryTemplate:
         # Given
         mock_model = MagicMock()
         mock_prop = MagicMock()
-        mock_prop.name = 'non_matching_param'
+        mock_prop.display_name = 'non_matching_param'
         mock_model._get_linkable_attributes.return_value = [mock_prop]
 
         mock_item = MagicMock()
@@ -391,7 +391,7 @@ class TestInterfaceFactoryTemplate:
         # Given
         mock_model = MagicMock()
         mock_prop = MagicMock()
-        mock_prop.name = 'test_param'
+        mock_prop.display_name = 'test_param'
         mock_prop.value = 99  # This will be used since no value_no_call_back attribute
         # Explicitly remove value_no_call_back to force the else branch
         del mock_prop.value_no_call_back
@@ -561,3 +561,46 @@ class TestItemContainer:
 
         assert len(setter_calls) == 1
         assert setter_calls[0] == ('test_link', {'internal_param1': 'test_value'})
+
+
+def test_generate_bindings_with_model_base():
+    """Bindings are generated for a real ModelBase via get_all_variables."""
+    from easy_test_models import CoefficientModel
+
+    global_object.map._clear()
+    storage = {}
+
+    def getter(link_name, key):
+        return storage[link_name][key]
+
+    def setter(link_name, **kwargs):
+        storage.setdefault(link_name, {}).update(kwargs)
+
+    class Calculator:
+        name = 'Calculator'
+
+        def create(self, model):
+            return [
+                ItemContainer(
+                    link_name='poly',
+                    name_conversion={'c0': 'a', 'c1': 'b'},
+                    getter_fn=getter,
+                    setter_fn=setter,
+                )
+            ]
+
+        def fit_func(self, *args, **kwargs):
+            return None
+
+    poly = CoefficientModel(coefficients=[1.0, 2.0])
+    factory = InterfaceFactoryTemplate([Calculator])
+
+    factory.generate_bindings(poly)
+
+    # Current values are pushed to the calculator on binding
+    assert storage['poly'] == {'a': 1.0, 'b': 2.0}
+
+    # And later changes are forwarded
+    poly.coefficients[1].value = 5.0
+    assert storage['poly']['b'] == 5.0
+    global_object.map._clear()

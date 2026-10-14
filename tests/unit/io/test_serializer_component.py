@@ -19,7 +19,6 @@ dp_param_dict = {
                 '@module': DescriptorNumber.__module__,
                 '@class': DescriptorNumber.__name__,
                 '@version': easyscience.__version__,
-                'name': 'test',
                 'value': 1.0,
                 'variance': None,
                 'unit': 'dimensionless',
@@ -34,7 +33,6 @@ dp_param_dict = {
                 '@module': Parameter.__module__,
                 '@class': Parameter.__name__,
                 '@version': easyscience.__version__,
-                'name': 'test',
                 'unit': 'km',
                 'value': 1.0,
                 'variance': 0.0,
@@ -71,7 +69,7 @@ def check_dict(check, item):
 
 @pytest.mark.parametrize(**skip_dict)
 @pytest.mark.parametrize(**dp_param_dict)
-def test_variable_as_dict_methods(dp_kwargs: dict, dp_cls: Type[DescriptorNumber], skip):
+def test_variable_to_dict_methods(dp_kwargs: dict, dp_cls: Type[DescriptorNumber], skip):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != '@'}
 
     obj = dp_cls(**data_dict)
@@ -84,7 +82,7 @@ def test_variable_as_dict_methods(dp_kwargs: dict, dp_cls: Type[DescriptorNumber
     if not isinstance(skip, list):
         skip = [skip]
 
-    enc = obj.as_dict(skip=skip)
+    enc = obj.to_dict(skip=skip)
 
     expected_keys = set(dp_kwargs.keys())
     obtained_keys = set(enc.keys())

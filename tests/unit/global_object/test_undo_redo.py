@@ -8,11 +8,36 @@ import pytest
 
 from easyscience import DescriptorNumber
 from easyscience import Fitter
-from easyscience import ObjBase
+from easyscience import ModelBase
 from easyscience import Parameter
-from easyscience.base_classes import CollectionBase
 from easyscience.variable import DescriptorBool
 from easyscience.variable import DescriptorStr
+
+
+class Line(ModelBase):
+    def __init__(self, m: Parameter, c: Parameter):
+        super().__init__()
+        self._m = m
+        self._c = c
+
+    @property
+    def m(self) -> Parameter:
+        return self._m
+
+    @m.setter
+    def m(self, value: float) -> None:
+        self._m.value = value
+
+    @property
+    def c(self) -> Parameter:
+        return self._c
+
+    @c.setter
+    def c(self, value: float) -> None:
+        self._c.value = value
+
+    def __call__(self, x: np.ndarray) -> np.ndarray:
+        return self.m.value * x + self.c.value
 
 
 def createSingleObjs(idx):
@@ -20,9 +45,9 @@ def createSingleObjs(idx):
     reps = math.floor(idx / len(alphabet)) + 1
     name = alphabet[idx % len(alphabet)] * reps
     if idx % 2:
-        return Parameter(name, idx, unit='m/s')
+        return Parameter(idx, unit='m/s', display_name=name)
     else:
-        return DescriptorNumber(name, idx, unit='m/s')
+        return DescriptorNumber(idx, unit='m/s', display_name=name)
 
 
 def createParam(option):
@@ -74,7 +99,7 @@ def doUndoRedo(obj, attr, future, additional=''):
     ],
 )
 def test_DescriptorNumberUndoRedo(test):
-    obj = DescriptorNumber('DescriptorNumber', 1, unit='m/s')
+    obj = DescriptorNumber(1, unit='m/s', display_name='DescriptorNumber')
     attr = test[0]
     value = test[1]
 
@@ -83,14 +108,14 @@ def test_DescriptorNumberUndoRedo(test):
 
 
 def test_DescriptorBoolUndoRedo():
-    obj = DescriptorBool('DescriptorBool', False)
+    obj = DescriptorBool(False, display_name='DescriptorBool')
     attr = 'value'
     value = True
 
     e = doUndoRedo(obj, attr, value)
     assert not e
 
-    obj = DescriptorBool('DescriptorBool', True)
+    obj = DescriptorBool(True, display_name='DescriptorBool')
     attr = 'value'
     value = False
 
@@ -99,7 +124,7 @@ def test_DescriptorBoolUndoRedo():
 
 
 def test_DescriptorStrUndoRedo():
-    obj = DescriptorStr('DescriptorStr', 'Foo')
+    obj = DescriptorStr('Foo', display_name='DescriptorStr')
     attr = 'value'
     value = 'Bar'
 
@@ -123,7 +148,7 @@ def test_DescriptorStrUndoRedo():
     ],
 )
 def test_ParameterUndoRedo(test):
-    obj = Parameter('Parameter', 1, unit='m/s')
+    obj = Parameter(1, unit='m/s', display_name='Parameter')
     attr = test[0]
     value = test[1]
 
@@ -135,7 +160,7 @@ def test_Parameter_Bounds_UndoRedo():
     from easyscience import global_object
 
     global_object.stack.enabled = True
-    parameter = Parameter('test', 1)
+    parameter = Parameter(1, display_name='test')
     assert parameter.min == -np.inf
     assert parameter.max == np.inf
 
@@ -150,90 +175,13 @@ def test_Parameter_Bounds_UndoRedo():
     assert parameter.max == np.inf
 
 
-def test_ObjBaseUndoRedo():
-    objs = {obj.name: obj for obj in [createSingleObjs(idx) for idx in range(5)]}
-    name = 'test'
-    obj = ObjBase(name, **objs)
-    name2 = 'best'
+def test_ModelBaseUndoRedo():
+    line = Line(m=Parameter(1.0, display_name='m'), c=Parameter(2.0, display_name='c'))
 
-    # Test name
-    # assert not doUndoRedo(obj, 'name', name2)
-
-    # Test setting value
-    for b_obj in objs.values():
-        e = doUndoRedo(obj, b_obj.name, b_obj.value + 1, 'value')
+    # Test setting value through the model's property setters
+    for attr in ('m', 'c'):
+        e = doUndoRedo(line, attr, getattr(line, attr).value + 1, 'value')
         assert not e
-
-
-def test_CollectionBaseUndoRedo():
-    objs = [createSingleObjs(idx) for idx in range(5)]
-    name = 'test'
-    obj = CollectionBase(name, *objs)
-    name2 = 'best'
-
-    # assert not doUndoRedo(obj, 'name', name2)
-
-    from easyscience import global_object
-
-    global_object.stack.enabled = True
-
-    original_length = len(obj)
-    p = Parameter('slip_in', 50)
-    idx = 2
-    obj.insert(idx, p)
-    assert len(obj) == original_length + 1
-    objs.insert(idx, p)
-    for item, obj_r in zip(obj, objs):
-        assert item == obj_r
-
-    # Test inserting items
-    global_object.stack.undo()
-    assert len(obj) == original_length
-    _ = objs.pop(idx)
-    for item, obj_r in zip(obj, objs):
-        assert item == obj_r
-    global_object.stack.redo()
-    assert len(obj) == original_length + 1
-    objs.insert(idx, p)
-    for item, obj_r in zip(obj, objs):
-        assert item == obj_r
-
-    # Test Del Items
-    del obj[idx]
-    del objs[idx]
-    assert len(obj) == original_length
-    for item, obj_r in zip(obj, objs):
-        assert item == obj_r
-    global_object.stack.undo()
-    assert len(obj) == original_length + 1
-    objs.insert(idx, p)
-    for item, obj_r in zip(obj, objs):
-        assert item == obj_r
-    del objs[idx]
-    global_object.stack.redo()
-    assert len(obj) == original_length
-    for item, obj_r in zip(obj, objs):
-        assert item == obj_r
-
-    # Test Place Item
-    old_item = objs[idx]
-    objs[idx] = p
-    obj[idx] = p
-    assert len(obj) == original_length
-    for item, obj_r in zip(obj, objs):
-        assert item == obj_r
-    global_object.stack.undo()
-    for i in range(len(obj)):
-        if i == idx:
-            item = old_item
-        else:
-            item = objs[i]
-        assert obj[i] == item
-    global_object.stack.redo()
-    for item, obj_r in zip(obj, objs):
-        assert item == obj_r
-
-    global_object.stack.enabled = False
 
 
 def test_UndoRedoMacros():
@@ -273,30 +221,11 @@ def test_fittingUndoRedo(fit_engine):
     weights = np.ones_like(x)
     dy = np.random.rand(*x.shape)
 
-    class Line(ObjBase):
-        def __init__(self, m: Parameter, c: Parameter):
-            super(Line, self).__init__('basic_line', m=m, c=c)
-
-        @classmethod
-        def default(cls):
-            m = Parameter('m', m_value)
-            c = Parameter('c', c_value)
-            return cls(m=m, c=c)
-
-        @classmethod
-        def from_pars(cls, m_value: float, c_value: float):
-            m = Parameter('m', m_value)
-            c = Parameter('c', c_value)
-            return cls(m=m, c=c)
-
-        def __call__(self, x: np.ndarray) -> np.ndarray:
-            return self.m.value * x + self.c.value
-
-    l1 = Line.default()
+    l1 = Line(m=Parameter(m_value, display_name='m'), c=Parameter(c_value, display_name='c'))
     m_sp = 4
     c_sp = -3
 
-    l2 = Line.from_pars(m_sp, c_sp)
+    l2 = Line(m=Parameter(m_sp, display_name='m'), c=Parameter(c_sp, display_name='c'))
     l2.m.fixed = False
     l2.c.fixed = False
 

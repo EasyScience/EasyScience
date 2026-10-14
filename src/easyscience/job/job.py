@@ -3,22 +3,22 @@
 
 from abc import ABCMeta
 from abc import abstractmethod
+from typing import Optional
 
-from ..legacy.obj_base import ObjBase
+from ..base_classes.model_base import ModelBase
 from .analysis import AnalysisBase
 from .experiment import ExperimentBase
 from .theoreticalmodel import TheoreticalModelBase
 
 
-class JobBase(ObjBase, metaclass=ABCMeta):
+class JobBase(ModelBase, metaclass=ABCMeta):
     """
     This virtual class allows for the creation of technique-specific Job
     objects.
     """
 
-    def __init__(self, name: str, *args, **kwargs):
-        super(JobBase, self).__init__(name, *args, **kwargs)
-        self.name = name
+    def __init__(self, display_name: Optional[str] = None, unique_name: Optional[str] = None):
+        super(JobBase, self).__init__(unique_name=unique_name, display_name=display_name)
         self._theory = None
         self._experiment = None
         self._analysis = None

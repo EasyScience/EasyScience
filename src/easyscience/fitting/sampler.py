@@ -1,8 +1,6 @@
 # SPDX-FileCopyrightText: 2026 EasyScience contributors <https://github.com/easyscience>
 # SPDX-License-Identifier: BSD-3-Clause
-"""
-Bayesian MCMC sampling — the ``Sampler`` class and persistence helpers.
-"""
+"""Bayesian MCMC sampling — the ``Sampler`` class and persistence helpers."""
 
 from __future__ import annotations
 
@@ -17,7 +15,9 @@ import numpy as np
 
 from easyscience import global_object
 
-from .minimizers.minimizer_base import MINIMIZER_PARAMETER_PREFIX
+from .engine_base import PARAMETER_PREFIX
+from .reshaping import inject_x_multi
+from .reshaping import reshape_datasets
 
 if TYPE_CHECKING:  # avoid import cycles; only needed for type hints
     from bumps.dream.state import MCMCDraw
@@ -40,9 +40,7 @@ def _data_fingerprint(
     y_list: list,
     w_list: list,
 ) -> str | None:
-    """
-    Return a SHA-256 hex digest of concatenated (x|y|weights), or None.
-    """
+    """Return a SHA-256 hex digest of concatenated (x|y|weights), or None."""
     try:
         h = hashlib.sha256()
         for arr in list(x_list) + list(y_list) + list(w_list):
@@ -55,10 +53,8 @@ def _data_fingerprint(
 def _validate_dataset_arrays(
     name: str,
     data: np.ndarray | list | tuple,
-    allow_none_entries: bool = False,
 ) -> None:
-    """
-    Check that ``data`` (an array or list of arrays) holds numeric,
+    """Check that ``data`` (an array or list of arrays) holds numeric,
     at-least-1-D, non-empty arrays.
 
     Structural checks (array vs list, matching dataset counts) are in
@@ -72,9 +68,6 @@ def _validate_dataset_arrays(
         ``'weights'``).
     data : np.ndarray | list | tuple
         A single dataset array, or a list/tuple of dataset arrays.
-    allow_none_entries : bool, default=False
-        Accept ``None`` entries inside a list (used for per-dataset
-        optional weights).
 
     Raises
     ------
@@ -86,8 +79,6 @@ def _validate_dataset_arrays(
     is_multi = isinstance(data, (list, tuple))
     for i, entry in enumerate(data if is_multi else [data]):
         label = f'{name}[{i}]' if is_multi else name
-        if entry is None and allow_none_entries:
-            continue
         try:
             arr = np.asarray(entry)
         except Exception as exc:
@@ -106,16 +97,13 @@ def _validate_dataset_arrays(
 
 
 def _copy_data(data):
-    """
-    Copy an array (or list of arrays) and mark the copies read-only.
+    """Copy an array (or list of arrays) and mark the copies read-only.
 
-    The ``Sampler`` binds its data at construction; copying decouples
-    the bound data from the caller's arrays, and the read-only flag
-    stops in-place mutation of the copies, so the chain and the
-    ``save()`` fingerprint always describe the data actually sampled.
+    The ``Sampler`` binds its data at construction; copying decouples the
+    bound data from the caller's arrays, and the read-only flag stops
+    in-place mutation of the copies, so the chain and the ``save()``
+    fingerprint always describe the data actually sampled.
     """
-    if data is None:
-        return None
     if isinstance(data, (list, tuple)):
         return [_copy_data(d) for d in data]
     arr = np.array(data, copy=True)
@@ -124,13 +112,10 @@ def _copy_data(data):
 
 
 def _validate_chain_path(path: str | os.PathLike, skip: int = 0) -> str:
-    """
-    Validate the persistence arguments shared by the save/load
-    functions.
+    """Validate the persistence arguments shared by the save/load functions.
 
-    Returns ``path`` coerced to ``str``. Raises ``TypeError`` if
-    ``path`` is not path-like and ``ValueError`` if ``skip`` is not a
-    non-negative int.
+    Returns ``path`` coerced to ``str``. Raises ``TypeError`` if ``path`` is
+    not path-like and ``ValueError`` if ``skip`` is not a non-negative int.
     """
     if not isinstance(path, (str, os.PathLike)):
         raise TypeError(f'path must be a str or os.PathLike, got {type(path).__name__}.')
@@ -140,15 +125,14 @@ def _validate_chain_path(path: str | os.PathLike, skip: int = 0) -> str:
 
 
 def _load_bumps_state(path: str, skip: int = 0) -> MCMCDraw:
-    """
-    Read a BUMPS chain from disk, working around a BUMPS bug.
+    """Read a BUMPS chain from disk, working around a BUMPS bug.
 
     ``bumps.dream.state.load_state`` reads the saved buffers with
-    ``numpy.loadtxt``, which collapses a single-row file to a 1-D array.
-    A short chain stores a single CR-weight update row, so
-    ``load_state``'s subsequent ``stats[:, 0]`` indexing raises
-    ``IndexError: too many indices for array``. We coerce each buffer
-    read back to 2-D before ``load_state`` consumes it.
+    ``numpy.loadtxt``, which collapses a single-row file to a 1-D array. A
+    short chain stores a single CR-weight update row, so ``load_state``'s
+    subsequent ``stats[:, 0]`` indexing raises ``IndexError: too many indices
+    for array``. We coerce each buffer read back to 2-D before ``load_state``
+    consumes it.
 
     Parameters
     ----------
@@ -180,30 +164,28 @@ def _load_bumps_state(path: str, skip: int = 0) -> MCMCDraw:
 
 
 def load_chain(path: str | os.PathLike, skip: int = 0) -> tuple[MCMCDraw, list[str] | None, dict]:
-    """
-    Reload a DREAM chain state saved by ``Sampler.save``.
+    """Reload a DREAM chain state saved by ``Sampler.save``.
 
-    This is the standalone reader: unlike ``Sampler.load_state`` it
-    needs no fitter, model or data, so a saved chain can be inspected or
-    post-processed on a machine that does not have the model. Parameter
-    names are restored from the sidecar when available (schema versions
-    1 and 2), falling back to the state's labels with the minimizer
-    prefix stripped.
+    This is the standalone reader: unlike ``Sampler.load_state`` it needs no
+    model or data, so a saved chain can be inspected or post-processed
+    on a machine that does not have the model. Parameter names are restored
+    from the sidecar when available (schema versions 1 and 2), falling back to
+    the state's labels with the minimizer prefix stripped.
 
     Parameters
     ----------
     path : str | os.PathLike
         File path prefix used when saving.
     skip : int, default=0
-        Discard the first ``skip`` saved generations on load, forwarded
-        to ``bumps.dream.state.load_state``.
+        Discard the first ``skip`` saved generations on load, forwarded to
+        ``bumps.dream.state.load_state``.
 
     Returns
     -------
     tuple[MCMCDraw, list[str] | None, dict]
-        The reloaded BUMPS chain state, the parameter names (or ``None``
-        if neither sidecar nor labels yielded them), and the raw sidecar
-        dict (empty if absent/unreadable).
+        The reloaded BUMPS chain state, the parameter names (or ``None`` if
+        neither sidecar nor labels yielded them), and the raw sidecar dict
+        (empty if absent/unreadable).
 
     Raises
     ------
@@ -230,9 +212,7 @@ def load_chain(path: str | os.PathLike, skip: int = 0) -> tuple[MCMCDraw, list[s
         # save_state/load_state does not preserve labels, so a reloaded state
         # typically carries default labels like ['P0', 'P1', ...].
         param_names = [
-            lbl[len(MINIMIZER_PARAMETER_PREFIX) :]
-            if lbl.startswith(MINIMIZER_PARAMETER_PREFIX)
-            else lbl
+            lbl[len(PARAMETER_PREFIX) :] if lbl.startswith(PARAMETER_PREFIX) else lbl
             for lbl in state.labels
         ]
 
@@ -241,18 +221,15 @@ def load_chain(path: str | os.PathLike, skip: int = 0) -> tuple[MCMCDraw, list[s
 
 @dataclass
 class SamplingResults:
-    """
-    Structured result of an MCMC sampling run (analogous to
-    ``FitResults``).
+    """Structured result of an MCMC sampling run (analogous to ``FitResults``).
 
     Attributes
     ----------
     draws : np.ndarray
-        Posterior samples, shape ``(n_samples, n_params)``. For results
-        from ``Sampler.sample()``/``Sampler.extend()`` this is a
-        *trimmed, outlier-filtered* view of the chain, not the raw
-        buffer, so it holds fewer rows than ``samples / thin`` — see the
-        notes on ``Sampler``.
+        Posterior samples, shape ``(n_samples, n_params)``. For results from
+        ``Sampler.sample()``/``Sampler.extend()`` this is a *trimmed,
+        outlier-filtered* view of the chain, not the raw buffer, so it holds
+        fewer rows than ``samples / thin`` — see the notes on ``Sampler``.
     param_names : list[str]
         Parameter names (one per column of ``draws``).
     logp : np.ndarray
@@ -266,203 +243,254 @@ class SamplingResults:
     logp: np.ndarray
     state: MCMCDraw
 
-    def to_legacy_dict(self) -> dict:
-        """
-        Return the legacy dict shape produced by the deprecated
-        ``mcmc_sample()`` APIs.
-        """
-        return {
-            'draws': self.draws,
-            'param_names': self.param_names,
-            'internal_bumps_object': self.state,
-            'logp': self.logp,
-        }
-
 
 class Sampler:
-    """
-    Bayesian MCMC sampler for one dataset, backed by a Fitter's BUMPS
-    minimizer.
+    """Bayesian MCMC sampler for one dataset, backed by the BUMPS DREAM engine.
 
-    One ``Sampler`` instance represents one chain over one ``(x, y,
-    weights)`` dataset. The data is bound at construction; ``sample()``
-    and ``extend()`` take no data arguments, so a chain can never be
-    extended against different data (undefined behaviour in BUMPS). The
-    bound data is a defensive, read-only copy of the caller's arrays,
-    exposed via the ``x``, ``y`` and ``weights`` properties — mutating
-    the originals after construction has no effect on the sampler, and
-    there are deliberately no setters: to sample different data, create
-    a new ``Sampler``.
+    One ``Sampler`` instance represents one chain over one ``(x, y, weights)``
+    dataset. The data is bound at construction; ``sample()`` and ``extend()``
+    take no data arguments, so a chain can never be extended against different
+    data (undefined behaviour in BUMPS). The bound data is a defensive,
+    read-only copy of the caller's arrays, exposed via the ``x``, ``y`` and
+    ``weights`` properties — mutating the originals after construction has no
+    effect on the sampler, and there are deliberately no setters: to sample
+    different data, create a new ``Sampler``.
 
-    Construct directly with a configured ``Fitter`` (or ``MultiFitter``)
-    whose minimizer has been switched to ``AvailableMinimizers.Bumps``.
-    **Running a fit first is not required** — the ``Fitter`` supplies
-    the model and the minimizer, not a fit result, and sampling from the
-    initial parameter values works fine.
-
-    It is often worth fitting first anyway. DREAM seeds its whole
-    starting population inside a tiny ball around the parameters'
-    *current* values (BUMPS' default ``init='eps'``), so sampling from
-    fitted values starts the chain in the right region and shortens the
-    burn-in needed to reach the typical set. From a poor initial guess,
-    expect to burn for longer.
-
-    The sampler is BUMPS/DREAM-specific for now: the BUMPS check in
-    ``_run()`` is the seam where another backend would plug in.
+    ``Sampler`` is a parallel entry point to ``Fitter``: it takes the same
+    ``(fit_object, fit_function)`` pair plus the data.
 
     Parameters
     ----------
-    fitter : 'Fitter'
-        A configured ``Fitter`` (or ``MultiFitter``) whose minimizer has
-        been switched to ``AvailableMinimizers.Bumps``.
+    fit_object : object
+        The EasyScience model object holding the ``Parameter`` instances to
+        sample. For multiple datasets this is one object exposing all the
+        parameters (for example an ``EasyList`` of models, or the
+        ``fit_object`` of a ``MultiFitter``).
+    fit_function : Callable | list[Callable]
+        The model function, or one per dataset when ``x``, ``y`` and
+        ``weights`` are lists of arrays.
     x : np.ndarray | list[np.ndarray]
-        Independent variable array (or list of arrays for
-        ``MultiFitter``).
+        Independent variable array (or list of arrays, one per dataset).
     y : np.ndarray | list[np.ndarray]
-        Dependent variable array (or list of arrays for
-        ``MultiFitter``).
-    weights : np.ndarray | list[np.ndarray | None] | None, default=None
-        Weight array (or list of arrays for ``MultiFitter``).
+        Dependent variable array (or list of arrays, one per dataset).
+    weights : np.ndarray | list[np.ndarray]
+        Weight array (or list of arrays, one per dataset). Required:
+        sampling has no default weighting, so a missing weight array is
+        rejected here rather than deep inside the sampling engine.
     vectorized : bool, default=False
         When ``True``, each x array may be multi-dimensional (e.g. an
         ``(N, M, 2)`` grid for a 2D model) and is left as-is.
     sampler_kwargs : dict | None, default=None
-        Per-instance default keyword arguments forwarded to the BUMPS
-        DREAM sampler on every run, merged with (and overridden by)
-        per-call ``sampler_kwargs``.
+        Per-instance default keyword arguments forwarded to the BUMPS DREAM
+        sampler on every run, merged with (and overridden by) per-call
+        ``sampler_kwargs``.
 
     Raises
     ------
     TypeError
-        If ``fitter`` is not Fitter-shaped (no
-        ``minimizer``/``fit_function``), if any dataset in
-        ``x``/``y``/``weights`` is not a numeric array (e.g. a string),
-        or ``vectorized``/``sampler_kwargs`` have the wrong type.
+        If ``fit_object`` has no ``get_fit_parameters``, ``fit_function``
+        is not callable, any dataset in ``x``/``y``/``weights`` is not a
+        numeric array (e.g. a string), or ``vectorized``/``sampler_kwargs``
+        have the wrong type.
     ValueError
-        If ``x``, ``y`` and ``weights`` do not hold matching structures
-        (all arrays, or lists of the same length), or any dataset is a
-        scalar or empty array.
+        If ``fit_function``, ``x``, ``y`` and ``weights`` do not hold
+        matching structures (all single, or lists of the same length), or
+        any dataset is a scalar or empty array.
 
     Notes
     -----
-    **The retained draws are a trimmed view, not the whole chain.**
-    BUMPS' DREAM sampler defaults to ``trim=True``: once sampling
-    finishes it runs a convergence-based burn-point detector over the
-    chain and returns only the portion after that point.
-    ``state.draw()`` additionally drops chains flagged as outliers. So
-    ``results.draws`` is usually *smaller* than the chain, and its
-    length is not deterministic — the detector re-runs from scratch on
-    every ``sample()`` and ``extend()`` call and may place the burn
-    point differently each time. Read the count off the array; do not
-    predict it.
+    **The retained draws are a trimmed view, not the whole chain.** BUMPS'
+    DREAM sampler defaults to ``trim=True``: once sampling finishes it runs a
+    convergence-based burn-point detector over the chain and returns only the
+    portion after that point. ``state.draw()`` additionally drops chains
+    flagged as outliers. So ``results.draws`` is usually *smaller* than the
+    chain, and its length is not deterministic — the detector re-runs from
+    scratch on every ``sample()`` and ``extend()`` call and may place the burn
+    point differently each time. Read the count off the array; do not predict
+    it.
 
-    Nor is the chain itself exactly ``samples / thin`` rows: ``samples``
-    is a guaranteed minimum, not an exact count. DREAM advances in
-    blocks of 10 generations (one generation = one draw per chain) and
-    only checks its stopping condition between blocks, so the raw chain
-    length is ``samples`` rounded up to a multiple of ``10 * n_chains``.
+    Nor is the chain itself exactly ``samples / thin`` rows: ``samples`` is a
+    guaranteed minimum, not an exact count. DREAM advances in blocks of 10
+    generations (one generation = one draw per chain) and only checks its
+    stopping condition between blocks, so the raw chain length is ``samples``
+    rounded up to a multiple of ``10 * n_chains``.
 
-    The trimming is only a *view* — nothing is dropped from the buffer.
-    To read the full untrimmed chain::
+    The trimming is only a *view* — nothing is dropped from the buffer. To
+    read the full untrimmed chain::
 
         results = sampler.sample(samples=10000, burn=500, thin=2)
         full = results.state.draw(portion=1.0, outliers=True)
         full.points  # (n_chain_rows, n_params)
         full.logp
 
-    To switch the automatic trimming off entirely, pass BUMPS' own
-    ``trim`` option straight through ``sampler_kwargs``;
-    ``results.draws`` then holds the whole chain::
+    To switch the automatic trimming off entirely, pass BUMPS' own ``trim``
+    option straight through ``sampler_kwargs``; ``results.draws`` then holds
+    the whole chain::
 
         sampler = Sampler(
-            fitter, x, y, weights=w, sampler_kwargs={'trim': False}
+            parameter_container,
+            model_function,
+            x,
+            y,
+            weights=w,
+            sampler_kwargs={'trim': False},
         )
 
-    Note also that trimming does not survive a
-    ``save()``/``load_state()`` round-trip: BUMPS does not persist the
-    trim point, so a reloaded chain comes back untrimmed and
-    ``load_state()`` reports *more* draws than the ``sample()`` call
-    that created it. The chain itself is identical.
+    Note also that trimming does not survive a ``save()``/``load_state()``
+    round-trip: BUMPS does not persist the trim point, so a reloaded chain
+    comes back untrimmed and ``load_state()`` reports *more* draws than the
+    ``sample()`` call that created it. The chain itself is identical.
     """
 
     def __init__(
         self,
-        fitter: 'Fitter',
+        fit_object: object,
+        fit_function: Callable | list[Callable],
         x: np.ndarray | list[np.ndarray],
         y: np.ndarray | list[np.ndarray],
-        weights: np.ndarray | list[np.ndarray | None] | None = None,
+        weights: np.ndarray | list[np.ndarray],
         vectorized: bool = False,
         sampler_kwargs: dict | None = None,
     ):
-        if not (hasattr(fitter, 'minimizer') and hasattr(fitter, 'fit_function')):
-            raise TypeError(
-                f'fitter must be a configured Fitter or MultiFitter, got {type(fitter).__name__}.'
-            )
-        x_is_multi = isinstance(x, (list, tuple))
-        if x_is_multi != isinstance(y, (list, tuple)):
+        is_multi = isinstance(x, (list, tuple))
+        if is_multi != isinstance(y, (list, tuple)):
             raise ValueError('x and y must either both be arrays or both be lists of arrays.')
-        if x_is_multi and len(x) != len(y):
+        if is_multi and len(x) != len(y):
             raise ValueError(
                 f'x and y must hold the same number of datasets, got {len(x)} and {len(y)}.'
             )
-        if weights is not None:
-            if isinstance(weights, (list, tuple)) != x_is_multi:
-                raise ValueError(
-                    'weights must match the structure of x and y (array or list of arrays).'
-                )
-            if x_is_multi and len(weights) != len(x):
-                raise ValueError(
-                    f'weights must hold the same number of datasets as x and y, '
-                    f'got {len(weights)} and {len(x)}.'
-                )
+        if isinstance(weights, (list, tuple)) != is_multi:
+            raise ValueError(
+                'weights must match the structure of x and y (array or list of arrays).'
+            )
+        if is_multi and len(weights) != len(x):
+            raise ValueError(
+                f'weights must hold the same number of datasets as x and y, '
+                f'got {len(weights)} and {len(x)}.'
+            )
         _validate_dataset_arrays('x', x)
         _validate_dataset_arrays('y', y)
-        if weights is not None:
-            _validate_dataset_arrays('weights', weights, allow_none_entries=True)
+        _validate_dataset_arrays('weights', weights)
+        if isinstance(fit_function, (list, tuple)) != is_multi:
+            raise ValueError(
+                'fit_function must be a list of callables when x, y and weights are '
+                'lists of arrays, and a single callable otherwise.'
+            )
+        if is_multi and len(fit_function) != len(x):
+            raise ValueError(
+                f'fit_function must hold one callable per dataset, '
+                f'got {len(fit_function)} for {len(x)} datasets.'
+            )
+        fit_functions = list(fit_function) if is_multi else [fit_function]
+        if not all(callable(f) for f in fit_functions):
+            raise TypeError('fit_function must be callable (or a list of callables).')
+        if not hasattr(fit_object, 'get_fit_parameters'):
+            raise TypeError(
+                f'fit_object must be an EasyScience model object exposing the parameters '
+                f'to sample, got {type(fit_object).__name__}.'
+            )
         if not isinstance(vectorized, bool):
             raise TypeError(f'vectorized must be a bool, got {type(vectorized).__name__}.')
         if sampler_kwargs is not None and not isinstance(sampler_kwargs, dict):
             raise TypeError(
                 f'sampler_kwargs must be a dict or None, got {type(sampler_kwargs).__name__}.'
             )
-        self._fitter = fitter
-        # Defensive copies, exposed read-only: mutating the caller's arrays
-        # (or the properties) cannot desynchronise the chain and the save()
-        # fingerprint from the data actually sampled. To sample different
-        # data, create a new Sampler.
-        self._x = _copy_data(x)
-        self._y = _copy_data(y)
-        self._weights = _copy_data(weights)
+        self._is_multi = is_multi
+        self._fit_object = fit_object
+        self._fit_functions = fit_functions
+
+        self._x = _copy_data(x if is_multi else [x])
+        self._y = _copy_data(y if is_multi else [y])
+        self._weights = _copy_data(weights if is_multi else [weights])
         self._vectorized = vectorized
         self._default_sampler_kwargs = dict(sampler_kwargs or {})
         self._state: MCMCDraw | None = None  # current chain state
         self._results: SamplingResults | None = None
 
+    @classmethod
+    def from_fitter(
+        cls,
+        fitter: Fitter,
+        x: np.ndarray | list[np.ndarray],
+        y: np.ndarray | list[np.ndarray],
+        weights: np.ndarray | list[np.ndarray],
+        vectorized: bool = False,
+        sampler_kwargs: dict | None = None,
+    ) -> Sampler:
+        """Build a ``Sampler`` from the model bound to an existing ``Fitter``.
+
+        A convenience for the common fit-then-sample workflow: the sampler
+        takes the fitter's ``fit_object`` and fit function(s) and is
+        otherwise identical to one constructed directly. The fitter is not
+        retained or modified. A ``MultiFitter`` yields a multi-dataset
+        sampler, so ``x``, ``y`` and ``weights`` must then be lists of arrays.
+
+        Parameters
+        ----------
+        fitter : Fitter
+            A configured ``Fitter`` or ``MultiFitter``. It does not need to
+            have been fitted.
+        x : np.ndarray | list[np.ndarray]
+            Independent variable array (or list of arrays, one per dataset).
+        y : np.ndarray | list[np.ndarray]
+            Dependent variable array (or list of arrays, one per dataset).
+        weights : np.ndarray | list[np.ndarray]
+            Weight array (or list of arrays, one per dataset).
+        vectorized : bool, default=False
+            See ``Sampler``.
+        sampler_kwargs : dict | None, default=None
+            See ``Sampler``.
+
+        Returns
+        -------
+        Sampler
+            A sampler bound to the fitter's model and the given data.
+        """
+        # A MultiFitter exposes one function per dataset as ``fit_functions``;
+        # a plain Fitter has a single ``fit_function``.
+        fit_function = getattr(fitter, 'fit_functions', None) or fitter.fit_function
+        return cls(
+            fitter.fit_object,
+            fit_function,
+            x,
+            y,
+            weights,
+            vectorized=vectorized,
+            sampler_kwargs=sampler_kwargs,
+        )
+
+    def _single_or_list(self, data: list):
+        """Return bound data the way it was passed in: one item or a list copy."""
+        return list(data) if self._is_multi else data[0]
+
     @property
-    def fitter(self) -> Fitter:
-        """The Fitter supplying the model and minimizer (read-only)."""
-        return self._fitter
+    def fit_object(self) -> object:
+        """The EasyScience model object holding the sampled parameters (read-only)."""
+        return self._fit_object
+
+    @property
+    def fit_function(self) -> Callable | list[Callable]:
+        """The model function, or list of them for multiple datasets (read-only)."""
+        return self._single_or_list(self._fit_functions)
 
     @property
     def x(self) -> np.ndarray | list[np.ndarray]:
         """The bound independent variable data (read-only copy)."""
-        return list(self._x) if isinstance(self._x, list) else self._x
+        return self._single_or_list(self._x)
 
     @property
     def y(self) -> np.ndarray | list[np.ndarray]:
         """The bound dependent variable data (read-only copy)."""
-        return list(self._y) if isinstance(self._y, list) else self._y
+        return self._single_or_list(self._y)
 
     @property
-    def weights(self) -> np.ndarray | list[np.ndarray | None] | None:
-        """The bound weight data (read-only copy, or None)."""
-        return list(self._weights) if isinstance(self._weights, list) else self._weights
+    def weights(self) -> np.ndarray | list[np.ndarray]:
+        """The bound weight data (read-only copy)."""
+        return self._single_or_list(self._weights)
 
     @property
     def state(self) -> MCMCDraw | None:
-        """
-        Raw BUMPS MCMCDraw state (None before first sample/load_state).
-        """
+        """Raw BUMPS MCMCDraw state (None before first sample/load_state)."""
         return self._state
 
     @property
@@ -486,18 +514,8 @@ class Sampler:
         return self._results.logp if self._results is not None else None
 
     def _fingerprint(self) -> str | None:
-        """
-        SHA-256 fingerprint of the bound (x, y, weights) data, or None.
-        """
-        x_list = list(self._x) if isinstance(self._x, (list, tuple)) else [self._x]
-        y_list = list(self._y) if isinstance(self._y, (list, tuple)) else [self._y]
-        if self._weights is None:
-            w_list = []
-        elif isinstance(self._weights, (list, tuple)):
-            w_list = [w for w in self._weights if w is not None]
-        else:
-            w_list = [self._weights]
-        return _data_fingerprint(x_list, y_list, w_list)
+        """SHA-256 fingerprint of the bound (x, y, weights) data, or None."""
+        return _data_fingerprint(self._x, self._y, self._weights)
 
     def _run(
         self,
@@ -507,53 +525,46 @@ class Sampler:
         population: int | None,
         resume_state: MCMCDraw | None,
         sampler_kwargs: dict | None,
-        progress_callback: Callable[[dict], bool | None] | None,
+        progress_callback: Callable[[dict], None] | None,
         abort_test: Callable[[], bool] | None,
     ) -> SamplingResults:
-        """
-        Shared sampling engine for ``sample()`` and ``extend()``.
+        """Shared sampling engine for ``sample()`` and ``extend()``.
 
         Argument validation for ``samples``/``burn``/``thin`` lives in
-        ``Bumps.mcmc_sample`` (single source of truth).
+        ``DreamSampler.run``.
         """
-        # Check the minimizer is BUMPS *before* mutating the fitter — a
-        # non-BUMPS fitter must not be needlessly rebuilt.
-        minimizer = self._fitter.minimizer
-        if not (hasattr(minimizer, 'package') and minimizer.package == 'bumps'):
-            raise RuntimeError(
-                'Bayesian sampling requires a BUMPS minimizer. '
-                'Use ``fitter.switch_minimizer(AvailableMinimizers.Bumps)`` first.'
-            )
+        from .available_minimizers import bumps_engine_available
 
-        x_fit, x_new, y_new, w_new, dims = self._fitter._precompute_reshaping(
+        if not bumps_engine_available:
+            raise RuntimeError(
+                'Bayesian sampling requires the bumps package. '
+                'Install it with ``pip install bumps``.'
+            )
+        from .samplers.sampler_bumps import DreamSampler
+
+        x_fit, x_new, y_new, w_new, dims = reshape_datasets(
             self._x, self._y, self._weights, self._vectorized
         )
-        self._fitter._dependent_dims = dims
-        wrapped = self._fitter._fit_function_wrapper(x_new, flatten=True)
+        wrapped = inject_x_multi(self._fit_functions, x_new, dims)
 
         merged_kwargs = {**self._default_sampler_kwargs, **(sampler_kwargs or {})}
 
-        original_fit_func = self._fitter.fit_function
-        # Assigning fit_function triggers _update_minimizer() and *rebuilds*
-        # the minimizer object — it must be re-fetched after this assignment.
-        self._fitter.fit_function = wrapped
-        try:
-            minimizer = self._fitter.minimizer
-            result = minimizer.mcmc_sample(
-                x=x_fit,
-                y=y_new,
-                weights=w_new,
-                samples=samples,
-                burn=burn,
-                thin=thin,
-                population=population,
-                resume_state=resume_state,
-                sampler_kwargs=merged_kwargs or None,
-                progress_callback=progress_callback,
-                abort_test=abort_test,
-            )
-        finally:
-            self._fitter.fit_function = original_fit_func
+        # This is where a sampler factory would plug in once there
+        # is more than one backend.
+        engine = DreamSampler(obj=self._fit_object, fit_function=wrapped)
+        result = engine.run(
+            x=x_fit,
+            y=y_new,
+            weights=w_new,
+            samples=samples,
+            burn=burn,
+            thin=thin,
+            population=population,
+            resume_state=resume_state,
+            sampler_kwargs=merged_kwargs or None,
+            progress_callback=progress_callback,
+            abort_test=abort_test,
+        )
 
         results = SamplingResults(
             draws=result['draws'],
@@ -572,46 +583,41 @@ class Sampler:
         thin: int = 10,
         population: int | None = None,
         sampler_kwargs: dict | None = None,
-        progress_callback: Callable[[dict], bool | None] | None = None,
+        progress_callback: Callable[[dict], None] | None = None,
         abort_test: Callable[[], bool] | None = None,
     ) -> SamplingResults:
-        """
-        Run fresh Bayesian MCMC sampling on the bound data.
+        """Run fresh Bayesian MCMC sampling on the bound data.
 
-        Calling ``sample()`` on a sampler that already holds a chain
-        starts a **fresh** chain — the previous state and results are
-        replaced. Use ``extend()`` to continue an existing chain.
+        Calling ``sample()`` on a sampler that already holds a chain starts a
+        **fresh** chain — the previous state and results are replaced. Use
+        ``extend()`` to continue an existing chain.
 
         Parameters
         ----------
         samples : int, default=10000
-            Number of raw samples to draw across all chains, before
-            thinning. This is a guaranteed minimum, not an exact count:
-            DREAM advances in blocks of 10 generations (one generation =
-            one draw per chain) and stops at the first block boundary at
-            or past ``samples``.
+            Number of raw samples to draw across all chains, before thinning.
+            This is a guaranteed minimum, not an exact count: DREAM advances
+            in blocks of 10 generations (one generation = one draw per chain)
+            and stops at the first block boundary at or past ``samples``.
         burn : int, default=2000
-            Burn-in generations to discard before collecting samples.
-            Note BUMPS counts ``burn`` in generations while ``samples``
-            counts raw draws, so ``burn=500`` discards ``500 *
-            n_chains`` raw samples.
+            Burn-in generations to discard before collecting samples. Note
+            BUMPS counts ``burn`` in generations while ``samples`` counts raw
+            draws, so ``burn=500`` discards ``500 * n_chains`` raw samples.
         thin : int, default=10
-            Thinning interval — only every ``thin``-th generation is
-            kept, which reduces autocorrelation between consecutive
-            draws.
+            Thinning interval — only every ``thin``-th generation is kept,
+            which reduces autocorrelation between consecutive draws.
         population : int | None, default=None
-            DREAM population **scale factor** (not an absolute chain
-            count): BUMPS creates ``ceil(population * n_parameters)``
-            parallel chains.
+            DREAM population **scale factor** (not an absolute chain count):
+            BUMPS creates ``ceil(population * n_parameters)`` parallel chains.
         sampler_kwargs : dict | None, default=None
             Additional keyword arguments forwarded to the BUMPS DREAM
             sampler (merged over the instance defaults).
-        progress_callback : Callable[[dict], bool | None] | None, default=None
-            Optional callback invoked at each DREAM generation. The
-            payload dict includes ``iteration`` and ``sampling: True``.
+        progress_callback : Callable[[dict], None] | None, default=None
+            Optional callback invoked at each DREAM generation. The payload
+            dict includes ``iteration`` and ``sampling: True``. Any return
+            value is ignored.
         abort_test : Callable[[], bool] | None, default=None
-            Optional callable that returns ``True`` to abort sampling
-            early.
+            Optional callable that returns ``True`` to abort sampling early.
 
         Returns
         -------
@@ -620,16 +626,14 @@ class Sampler:
 
         Notes
         -----
-        ``results.draws`` is a trimmed, outlier-filtered view of the
-        chain, so it is usually smaller than the chain and its length is
-        not predictable from ``samples``/``thin``. See the ``Sampler``
-        class notes for how to read the full chain or switch trimming
-        off.
+        ``results.draws`` is a trimmed, outlier-filtered view of the chain,
+        so it is usually smaller than the chain and its length is not
+        predictable from ``samples``/``thin``. See the ``Sampler`` class notes
+        for how to read the full chain or switch trimming off.
 
         Exceptions propagate from the sampling engine: ``ValueError`` if
-        ``samples``, ``burn``, or ``thin`` are invalid, and
-        ``RuntimeError`` if the active minimizer is not a BUMPS
-        instance.
+        ``samples``, ``burn``, or ``thin`` are invalid, and ``RuntimeError``
+        if the ``bumps`` package is not installed.
         """
         if self._state is not None:
             global_object.log.getLogger('fitting').warning(
@@ -653,46 +657,42 @@ class Sampler:
         thin: int = 10,
         total_samples: int | None = None,
         sampler_kwargs: dict | None = None,
-        progress_callback: Callable[[dict], bool | None] | None = None,
+        progress_callback: Callable[[dict], None] | None = None,
         abort_test: Callable[[], bool] | None = None,
     ) -> SamplingResults:
-        """
-        Continue the existing chain with additional samples.
+        """Continue the existing chain with additional samples.
 
         DREAM stores draws in a fixed-size ring buffer sized to its
-        ``samples`` parameter; this method does the ring-buffer
-        arithmetic for you (``samples = stored_generations * population
-        + additional_samples``) so no existing draws are dropped from
-        the buffer, regardless of the thinning interval. Runs with
-        ``burn=0`` — re-burning a converged chain is usually a mistake,
-        and BUMPS forces it to 0 on resume in any case. The DREAM
-        population is recovered from the saved state and cannot be
-        changed on extend.
+        ``samples`` parameter; this method does the ring-buffer arithmetic
+        for you (``samples = stored_generations * population +
+        additional_samples``) so no existing draws are dropped from the
+        buffer, regardless of the thinning interval. Runs with ``burn=0`` —
+        re-burning a converged chain is usually a mistake, and BUMPS forces
+        it to 0 on resume in any case. The DREAM population is recovered from
+        the saved state and cannot be changed on extend.
 
         Parameters
         ----------
         additional_samples : int, default=5000
-            Number of additional DREAM samples to draw, in the same
-            units as ``samples`` in ``sample()``. This grows the ring
-            buffer by exactly ``additional_samples``; how many of the
-            new draws become *visible* in ``results.draws`` depends on
-            the thinning interval and on BUMPS' automatic trimming (see
-            Notes).
+            Number of additional DREAM samples to draw, in the same units
+            as ``samples`` in ``sample()``. This grows the ring buffer by
+            exactly ``additional_samples``; how many of the new draws become
+            *visible* in ``results.draws`` depends on the thinning interval
+            and on BUMPS' automatic trimming (see Notes).
         thin : int, default=10
             Thinning interval for the retained draws.
         total_samples : int | None, default=None
-            Advanced: total retained samples requested from the ring
-            buffer, **overriding** the ``additional_samples``
-            arithmetic. With ``total_samples=N``, only the last N draws
-            are retained.
+            Advanced: total retained samples requested from the ring buffer,
+            **overriding** the ``additional_samples`` arithmetic. With
+            ``total_samples=N``, only the last N draws are retained.
         sampler_kwargs : dict | None, default=None
             Additional keyword arguments forwarded to the BUMPS DREAM
             sampler (merged over the instance defaults).
-        progress_callback : Callable[[dict], bool | None] | None, default=None
-            Optional callback invoked at each DREAM generation.
+        progress_callback : Callable[[dict], None] | None, default=None
+            Optional callback invoked at each DREAM generation. Any return
+            value is ignored.
         abort_test : Callable[[], bool] | None, default=None
-            Optional callable that returns ``True`` to abort sampling
-            early.
+            Optional callable that returns ``True`` to abort sampling early.
 
         Returns
         -------
@@ -703,22 +703,22 @@ class Sampler:
         ------
         RuntimeError
             If there is no chain to extend (call ``sample()`` or
-            ``load_state()`` first), or the minimizer is not BUMPS.
+            ``load_state()`` first), or the ``bumps`` package is not
+            installed.
 
         Notes
         -----
         ``results.draws`` will **not** grow by exactly
-        ``additional_samples / thin``. Two things get in the way,
-        neither of them a re-applied burn-in: BUMPS re-runs its
-        burn-point detector over the whole extended chain and re-trims
-        the returned view (so the visible count can even shrink), and
-        DREAM advances in blocks of 10 generations, so the raw growth is
-        ``additional_samples`` rounded up to a multiple of ``10 *
-        n_chains`` (i.e. at least ``additional_samples / thin`` retained
-        rows). To see the chain itself, compare
-        ``results.state.draw(portion=1.0, outliers=True)`` before and
-        after, or run with ``sampler_kwargs={'trim': False}``. See the
-        ``Sampler`` class notes.
+        ``additional_samples / thin``. Two things get in the way, neither of
+        them a re-applied burn-in: BUMPS re-runs its burn-point detector over
+        the whole extended chain and re-trims the returned view (so the
+        visible count can even shrink), and DREAM advances in blocks of 10
+        generations, so the raw growth is ``additional_samples`` rounded up
+        to a multiple of ``10 * n_chains`` (i.e. at least
+        ``additional_samples / thin`` retained rows). To see the chain
+        itself, compare ``results.state.draw(portion=1.0, outliers=True)``
+        before and after, or run with ``sampler_kwargs={'trim': False}``. See
+        the ``Sampler`` class notes.
         """
         if self._state is None:
             raise RuntimeError('No chain to extend. Call sample() or load_state() first.')
@@ -742,15 +742,14 @@ class Sampler:
         )
 
     def save(self, path: str | os.PathLike) -> None:
-        """
-        Persist the chain state and metadata to disk.
+        """Persist the chain state and metadata to disk.
 
         Writes the BUMPS native files (``<path>-chain.mc.gz``,
         ``<path>-point.mc.gz`` and ``<path>-stats.mc.gz``) plus a
         ``<path>.params.json`` sidecar with the parameter names, the
-        easyscience version, and a fingerprint of the bound data
-        (verified with a warning on ``load_state()``). Use
-        ``load_chain`` to read the files back without a fitter.
+        easyscience version, and a fingerprint of the bound data (verified
+        with a warning on ``load_state()``). Use ``load_chain`` to read the
+        files back without the model.
 
         Parameters
         ----------
@@ -791,14 +790,13 @@ class Sampler:
             json.dump(sidecar, f, indent=2)
 
     def load_state(self, path: str | os.PathLike, skip: int = 0) -> SamplingResults:
-        """
-        Load a previously saved chain into this sampler.
+        """Load a previously saved chain into this sampler.
 
-        The sampler must be constructed with the same fitter and data
-        used to create the chain — ``extend()`` then continues the saved
-        chain. If the sidecar carries a data fingerprint and it does not
-        match this sampler's bound data, a warning is logged (extending
-        a chain against different data is undefined behaviour).
+        The sampler must be constructed with the same model and data used to
+        create the chain — ``extend()`` then continues the saved chain. If the
+        sidecar carries a data fingerprint and it does not match this
+        sampler's bound data, a warning is logged (extending a chain against
+        different data is undefined behaviour).
 
         Populates ``state`` and ``results`` (draws, log-posterior and
         parameter names) from the saved chain, so summaries and
@@ -809,8 +807,8 @@ class Sampler:
         path : str | os.PathLike
             File path prefix used in ``save()``.
         skip : int, default=0
-            Discard the first ``skip`` saved generations on load. Useful
-            for trimming additional burn-in without re-sampling.
+            Discard the first ``skip`` saved generations on load. Useful for
+            trimming additional burn-in without re-sampling.
 
         Returns
         -------
@@ -826,11 +824,11 @@ class Sampler:
 
         Notes
         -----
-        BUMPS does not persist its automatic trim point, so a reloaded
-        chain comes back **untrimmed**: this method reports more draws
-        than the ``sample()`` call that wrote the file, even though the
-        chain is identical. Use ``skip`` to discard leading generations
-        explicitly. See the ``Sampler`` class notes.
+        BUMPS does not persist its automatic trim point, so a reloaded chain
+        comes back **untrimmed**: this method reports more draws than the
+        ``sample()`` call that wrote the file, even though the chain is
+        identical. Use ``skip`` to discard leading generations explicitly.
+        See the ``Sampler`` class notes.
         """  # noqa: DOC502 -- raised in _validate_chain_path via load_chain
         state, param_names, sidecar = load_chain(path, skip=skip)
 

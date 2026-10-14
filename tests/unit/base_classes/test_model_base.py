@@ -9,7 +9,7 @@ from easyscience import DescriptorNumber
 from easyscience import Parameter
 from easyscience import global_object
 from easyscience.base_classes import ModelBase
-from easyscience.io import SerializerBase
+from easyscience.base_classes import SerializerBase
 from easyscience.variable import DescriptorStr
 
 
@@ -20,9 +20,11 @@ class MockModelComponent(ModelBase):
 
     def __init__(self, display_name=None, unique_name=None, temperature=0, room_temperature=22):
         super().__init__(display_name=display_name, unique_name=unique_name)
-        self._temperature = Parameter(name='temperature', value=temperature)
-        self._room_temperature = DescriptorNumber(name='room_temperature', value=room_temperature)
-        self._status = DescriptorStr(name='status', value='OK')
+        self._temperature = Parameter(display_name='temperature', value=temperature)
+        self._room_temperature = DescriptorNumber(
+            display_name='room_temperature', value=room_temperature
+        )
+        self._status = DescriptorStr(display_name='status', value='OK')
 
     @property
     def temperature(self):
@@ -56,8 +58,8 @@ class MockModelFull(ModelBase):
 
     def __init__(self, component=None, display_name=None, unique_name=None, pressure=0, area=1):
         super().__init__(display_name=display_name, unique_name=unique_name)
-        self._pressure = Parameter(name='pressure', value=pressure)
-        self._area = Parameter(name='area', value=area)
+        self._pressure = Parameter(display_name='pressure', value=pressure)
+        self._area = Parameter(display_name='area', value=area)
         if component is not None:
             self._component = component
         else:

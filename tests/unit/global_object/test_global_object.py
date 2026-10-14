@@ -33,13 +33,13 @@ class TestGlobalObject:
         global_object = GlobalObject()
         # Block the other_name_prefix_2 name
         keep_due_toweakref_1 = DescriptorBool(
-            name='test', value=True, unique_name='other_name_prefix_2'
+            display_name='test', value=True, unique_name='other_name_prefix_2'
         )
         keep_due_toweakref_2 = DescriptorBool(
-            name='test', value=True, unique_name='other_name_prefix_a_3'
+            display_name='test', value=True, unique_name='other_name_prefix_a_3'
         )
         keep_due_toweakref_3 = DescriptorBool(
-            name='test', value=True, unique_name='almost_other_name_prefix_3'
+            display_name='test', value=True, unique_name='almost_other_name_prefix_3'
         )
 
         # Then
@@ -109,9 +109,9 @@ class TestGlobalObject:
         # Given
         global_obj = GlobalObject()
         # Create objects with non-sequential names
-        keep1 = DescriptorBool(name='test', value=True, unique_name='prefix_0')
-        keep2 = DescriptorBool(name='test', value=True, unique_name='prefix_2')
-        keep3 = DescriptorBool(name='test', value=True, unique_name='prefix_5')
+        keep1 = DescriptorBool(display_name='test', value=True, unique_name='prefix_0')
+        keep2 = DescriptorBool(display_name='test', value=True, unique_name='prefix_2')
+        keep3 = DescriptorBool(display_name='test', value=True, unique_name='prefix_5')
 
         # When
         name = global_obj.generate_unique_name('prefix')
@@ -123,8 +123,8 @@ class TestGlobalObject:
         """Test that non-numeric suffixes are ignored"""
         # Given
         global_obj = GlobalObject()
-        keep1 = DescriptorBool(name='test', value=True, unique_name='prefix_abc')
-        keep2 = DescriptorBool(name='test', value=True, unique_name='prefix_1')
+        keep1 = DescriptorBool(display_name='test', value=True, unique_name='prefix_abc')
+        keep2 = DescriptorBool(display_name='test', value=True, unique_name='prefix_1')
 
         # When
         name = global_obj.generate_unique_name('prefix')
@@ -136,8 +136,8 @@ class TestGlobalObject:
         """Test that similar but different prefixes don't interfere"""
         # Given
         global_obj = GlobalObject()
-        keep1 = DescriptorBool(name='test', value=True, unique_name='test_param_5')
-        keep2 = DescriptorBool(name='test', value=True, unique_name='test_parameter_10')
+        keep1 = DescriptorBool(display_name='test', value=True, unique_name='test_param_5')
+        keep2 = DescriptorBool(display_name='test', value=True, unique_name='test_parameter_10')
 
         # When
         name1 = global_obj.generate_unique_name('test_param')
@@ -153,8 +153,8 @@ class TestGlobalObject:
         global_obj = GlobalObject()
 
         # When
-        param1 = Parameter(name='test1', value=1.0)
-        param2 = Parameter(name='test2', value=2.0)
+        param1 = Parameter(display_name='test1', value=1.0)
+        param2 = Parameter(display_name='test2', value=2.0)
 
         # Then
         assert len(global_obj.map.vertices()) == 2
@@ -164,14 +164,3 @@ class TestGlobalObject:
         # Test retrieval
         retrieved1 = global_obj.map.get_item_by_key(param1.unique_name)
         assert retrieved1 is param1
-
-    def test_script_manager_access(self):
-        """Test that script manager is accessible"""
-        # Given
-        global_obj = GlobalObject()
-
-        # Then
-        assert hasattr(global_obj, 'script')
-        from easyscience.global_object.hugger.hugger import ScriptManager
-
-        assert isinstance(global_obj.script, ScriptManager)

@@ -16,7 +16,7 @@ from typing import TypeVar
 from typing import overload
 
 from easyscience import global_object
-from easyscience.io.serializer_base import SerializerBase
+from easyscience.base_classes.serializer_base import SerializerBase
 from easyscience.variable.descriptor_base import DescriptorBase
 
 from .model_base import ModelBase
@@ -30,7 +30,7 @@ class EasyList(ModelBase, MutableSequence[ProtectedType_]):
     # we would have to overwrite "extend", "remove", "__iadd__", "count", "append", "__iter__" and "clear"
     def __init__(
         self,
-        *args: ProtectedType_ | list[ProtectedType_],
+        *args: ProtectedType_ | Iterable[ProtectedType_],
         protected_types: list[Type[NewBase]] | Type[NewBase] | None = None,
         unique_name: Optional[str] = None,
         display_name: Optional[str] = None,
@@ -41,11 +41,15 @@ class EasyList(ModelBase, MutableSequence[ProtectedType_]):
 
         Parameters
         ----------
-        *args : ProtectedType_ | list[ProtectedType_]
+        *args : ProtectedType_ | Iterable[ProtectedType_]
             Initial items to add to the list.
         protected_types : list[Type[NewBase]] | Type[NewBase] | None, default=None
             Types that are allowed in the list. Can be a single NewBase
-            subclass or a list of them. If None,. By default, None.
+            subclass or a list of them. If None, any ``NewBase`` object
+            is accepted, including descriptors and parameters. Both bare
+            descriptors and ``ModelBase`` items contribute to
+            ``get_all_variables`` and hence to fitting. By default,
+            None.
         unique_name : Optional[str], default=None
             Optional unique name for the list. By default, None.
         display_name : Optional[str], default=None
@@ -76,7 +80,7 @@ class EasyList(ModelBase, MutableSequence[ProtectedType_]):
 
         # Add initial items
         for item in args:
-            if isinstance(item, list):
+            if isinstance(item, (list, tuple)):
                 for sub_item in item:
                     self.append(sub_item)
             else:
@@ -266,12 +270,14 @@ class EasyList(ModelBase, MutableSequence[ProtectedType_]):
 
     def get_all_variables(self) -> List[DescriptorBase]:
         """
-        Get all ``Descriptor`` and ``Parameter`` objects from all
-        elements that are derived from ``ModelBase``.
+        Get all ``Descriptor`` and ``Parameter`` objects held by this
+        list.
 
-        For each element that is a ``ModelBase`` instance, the element's
-        own ``get_all_variables()`` method is called and the results are
-        collected into a single flat list.
+        Elements that are ``DescriptorBase`` instances (e.g. a bare
+        ``Parameter``) are collected directly, while elements derived
+        from ``ModelBase`` contribute the result of their own
+        ``get_all_variables()`` call. Everything is collected into a
+        single flat list.
 
         Returns
         -------
@@ -281,7 +287,9 @@ class EasyList(ModelBase, MutableSequence[ProtectedType_]):
         """
         all_vars: List[DescriptorBase] = []
         for item in self._data:
-            if isinstance(item, ModelBase):
+            if isinstance(item, DescriptorBase):
+                all_vars.append(item)
+            elif isinstance(item, ModelBase):
                 all_vars.extend(item.get_all_variables())
         return all_vars
 
@@ -360,11 +368,13 @@ class EasyList(ModelBase, MutableSequence[ProtectedType_]):
         """
         Convert the EasyList to a dictionary for serialization.
 
+        The serializer calls ``to_dict`` on nested EasyScience objects.
+
         Parameters
         ----------
         skip : list[str] | None, default=None
             List of field names as strings to skip when forming the
-            dictionary.
+            dictionary. By default, None.
 
         Returns
         -------
@@ -391,8 +401,8 @@ class EasyList(ModelBase, MutableSequence[ProtectedType_]):
         Parameters
         ----------
         obj_dict : Dict[str, Any]
-            Dictionary containing the serialized contents (from
-            ``SerializerDict``) of an EasyScience object.
+            Dictionary containing the serialized contents
+            of an EasyScience object.
 
         Returns
         -------
@@ -432,13 +442,8 @@ class EasyList(ModelBase, MutableSequence[ProtectedType_]):
                         )  # noqa: E501
             else:
                 protected_types = None
-            if 'data' not in temp_dict:
-                raise ValueError(
-                    'The provided dictionary does not represent an EasyList. Missing the "data" key.'
-                )
-            data_dicts = temp_dict.pop('data')
-            data = [SerializerBase._deserialize_value(value_dict) for value_dict in data_dicts]
             kwargs = SerializerBase.deserialize_dict(temp_dict)
+            data = kwargs.pop('data', [])
             return cls(data, protected_types=protected_types, **kwargs)
         else:
             raise ValueError(

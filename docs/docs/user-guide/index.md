@@ -11,3 +11,6 @@ icon: material/book-open-variant
   – How to suppress, filter, or redirect the messages that EasyScience
   produces. Covers the `EASYSCIENCE_LOG_LEVEL` environment variable, the
   logger hierarchy, context managers, and common recipes.
+- [:material-link-variant: Serializing Dependent Parameters](parameter-dependency-serialization.md)
+  – How to save and load parameters that depend on other parameters, and
+  how dependencies are resolved after loading.

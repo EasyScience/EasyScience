@@ -9,7 +9,7 @@ import scipp as sc
 from scipp import UnitError
 
 from easyscience import DescriptorNumber
-from easyscience import ObjBase
+from easyscience import ModelBase
 from easyscience import Parameter
 from easyscience import global_object
 
@@ -19,7 +19,6 @@ class TestParameter:
     def parameter(self) -> Parameter:
         self.mock_callback = MagicMock()
         parameter = Parameter(
-            name='name',
             value=1,
             unit='m',
             variance=0.01,
@@ -29,20 +28,12 @@ class TestParameter:
             url='url',
             display_name='display_name',
             callback=self.mock_callback,
-            parent=None,
         )
         return parameter
 
     @pytest.fixture
     def normal_parameter(self) -> Parameter:
-        parameter = Parameter(
-            name='name',
-            value=1,
-            unit='m',
-            variance=0.01,
-            min=0,
-            max=10,
-        )
+        parameter = Parameter(display_name='name', value=1, unit='m', variance=0.01, min=0, max=10)
         return parameter
 
     @pytest.fixture
@@ -71,7 +62,6 @@ class TestParameter:
         assert parameter._scalar.value == 1
         assert parameter._scalar.unit == 'm'
         assert parameter._scalar.variance == 0.01
-        assert parameter._name == 'name'
         assert parameter._description == 'description'
         assert parameter._url == 'url'
         assert parameter._display_name == 'display_name'
@@ -86,7 +76,6 @@ class TestParameter:
         # Then Expect
         with pytest.raises(ValueError):
             Parameter(
-                name='name',
                 value=value,
                 unit='m',
                 variance=0.01,
@@ -96,7 +85,6 @@ class TestParameter:
                 url='url',
                 display_name='display_name',
                 callback=mock_callback,
-                parent=None,
             )
 
     def test_init_value_max_exception(self):
@@ -107,7 +95,6 @@ class TestParameter:
         # Then Expect
         with pytest.raises(ValueError):
             Parameter(
-                name='name',
                 value=value,
                 unit='m',
                 variance=0.01,
@@ -117,13 +104,12 @@ class TestParameter:
                 url='url',
                 display_name='display_name',
                 callback=mock_callback,
-                parent=None,
             )
 
     def test_make_dependent_on(self, normal_parameter: Parameter):
         # When
         independent_parameter = Parameter(
-            name='independent', value=1, unit='m', variance=0.01, min=0, max=10
+            display_name='independent', value=1, unit='m', variance=0.01, min=0, max=10
         )
 
         # Then
@@ -150,7 +136,7 @@ class TestParameter:
         self.mock_callback.fget.side_effect = lambda: calculator['value']
         self.mock_callback.fset.side_effect = lambda value: calculator.update(value=value)
         independent_parameter = Parameter(
-            name='independent', value=1, unit='m', variance=0.01, min=0, max=10
+            display_name='independent', value=1, unit='m', variance=0.01, min=0, max=10
         )
 
         # Then
@@ -181,7 +167,7 @@ class TestParameter:
         self.mock_callback.fget.side_effect = lambda: calculator['value']
         self.mock_callback.fset.side_effect = lambda value: calculator.update(value=value)
         independent_parameter = Parameter(
-            name='independent', value=1, unit='m', variance=0.01, min=0, max=10
+            display_name='independent', value=1, unit='m', variance=0.01, min=0, max=10
         )
 
         # Then
@@ -207,7 +193,7 @@ class TestParameter:
     ):
         # When
         independent_parameter = Parameter(
-            name='independent', value=1, unit='m', variance=0.01, min=0, max=10
+            display_name='independent', value=1, unit='m', variance=0.01, min=0, max=10
         )
 
         # Then
@@ -287,7 +273,7 @@ class TestParameter:
     ):
         # When
         independent_parameter = Parameter(
-            name='independent', value=1, unit='m', variance=0.01, min=0, max=10
+            display_name='independent', value=1, unit='m', variance=0.01, min=0, max=10
         )
 
         # Then Expect
@@ -303,7 +289,7 @@ class TestParameter:
     ):
         # When
         independent_parameter = Parameter(
-            name='independent', value=1, unit='m', variance=0.01, min=0, max=10
+            display_name='independent', value=1, unit='m', variance=0.01, min=0, max=10
         )
 
         # Then Expect
@@ -319,7 +305,6 @@ class TestParameter:
     def test_parameter_from_dependency(self, normal_parameter: Parameter):
         # When Then
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
             dependency_expression='2*a',
             dependency_map={'a': normal_parameter},
             display_name='display_name',
@@ -329,7 +314,6 @@ class TestParameter:
         assert dependent_parameter._independent == False
         assert dependent_parameter.dependency_expression == '2*a'
         assert dependent_parameter.dependency_map == {'a': normal_parameter}
-        assert dependent_parameter.name == 'dependent'
         assert dependent_parameter.display_name == 'display_name'
         self.compare_parameters(dependent_parameter, 2 * normal_parameter)
 
@@ -342,7 +326,6 @@ class TestParameter:
     def test_parameter_from_dependency_with_desired_unit(self, normal_parameter: Parameter):
         # When Then
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
             dependency_expression='2*a',
             dependency_map={'a': normal_parameter},
             display_name='display_name',
@@ -353,7 +336,6 @@ class TestParameter:
         assert dependent_parameter._independent == False
         assert dependent_parameter.dependency_expression == '2*a'
         assert dependent_parameter.dependency_map == {'a': normal_parameter}
-        assert dependent_parameter.name == 'dependent'
         assert dependent_parameter.display_name == 'display_name'
 
         assert dependent_parameter.value == 200 * normal_parameter.value
@@ -386,7 +368,6 @@ class TestParameter:
         # When Then Expect
         with pytest.raises(UnitError):
             dependent_parameter = Parameter.from_dependency(
-                name='dependent',
                 dependency_expression='2*a',
                 dependency_map={'a': normal_parameter},
                 display_name='display_name',
@@ -396,8 +377,7 @@ class TestParameter:
     def test_dependent_parameter_with_unique_name(self, clear, normal_parameter: Parameter):
         # When Then
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
-            dependency_expression='2*"Parameter_0"',
+            display_name='dependent', dependency_expression='2*"Parameter_0"'
         )
 
         # Expect
@@ -416,7 +396,7 @@ class TestParameter:
     ):
         # When
         independent_parameter = Parameter(
-            name='independent',
+            display_name='independent',
             value=1,
             unit='m',
             variance=0.01,
@@ -438,7 +418,7 @@ class TestParameter:
     ):
         # When
         independent_parameter = Parameter(
-            name='independent',
+            display_name='independent',
             value=1,
             unit='m',
             variance=0.01,
@@ -447,7 +427,7 @@ class TestParameter:
             unique_name='Special_name',
         )
         independent_parameter_2 = Parameter(
-            name='independent_2',
+            display_name='independent_2',
             value=1,
             unit='m',
             variance=0.01,
@@ -489,7 +469,7 @@ class TestParameter:
     ):
         # When
         normal_parameter._dependency_map = {}
-        base_obj = ObjBase(name='ObjBase', unique_name='base_obj')
+        base_obj = ModelBase(unique_name='base_obj')
 
         # Then Expect
         with pytest.raises(
@@ -501,10 +481,10 @@ class TestParameter:
     @pytest.mark.parametrize(
         'dependency_expression, dependency_map',
         [
-            (2, {'a': Parameter(name='a', value=1)}),
-            ('2*a', ['a', Parameter(name='a', value=1)]),
-            ('2*a', {4: Parameter(name='a', value=1)}),
-            ('2*a', {'a': ObjBase(name='a')}),
+            (2, {'a': Parameter(display_name='a', value=1)}),
+            ('2*a', ['a', Parameter(display_name='a', value=1)]),
+            ('2*a', {4: Parameter(display_name='a', value=1)}),
+            ('2*a', {'a': ModelBase(display_name='a')}),
         ],
         ids=[
             'dependency_expression_not_a_string',
@@ -519,7 +499,7 @@ class TestParameter:
         # When Then Expect
         with pytest.raises(TypeError):
             Parameter.from_dependency(
-                name='dependent',
+                display_name='dependent',
                 dependency_expression=dependency_expression,
                 dependency_map=dependency_map,
             )
@@ -543,9 +523,11 @@ class TestParameter:
         self, normal_parameter, dependency_expression, error
     ):
         # When
-        independent_parameter = Parameter(name='independent', value=10, unit='s', variance=0.02)
+        independent_parameter = Parameter(
+            display_name='independent', value=10, unit='s', variance=0.02
+        )
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
+            display_name='dependent',
             dependency_expression='best',
             dependency_map={'best': independent_parameter},
         )
@@ -568,7 +550,9 @@ class TestParameter:
         self, normal_parameter
     ):
         # When
-        independent_parameter = Parameter(name='independent', value=10, unit='s', variance=0.02)
+        independent_parameter = Parameter(
+            display_name='independent', value=10, unit='s', variance=0.02
+        )
         # Then Expect
         # Check that the correct error is raised
         with pytest.raises(NameError):
@@ -585,7 +569,7 @@ class TestParameter:
     def test_dependent_parameter_updates(self, normal_parameter: Parameter):
         # When
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
+            display_name='dependent',
             dependency_expression='2*a',
             dependency_map={'a': normal_parameter},
         )
@@ -612,17 +596,17 @@ class TestParameter:
     def test_dependent_parameter_indirect_updates(self, normal_parameter: Parameter):
         # When
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
+            display_name='dependent',
             dependency_expression='2*a',
             dependency_map={'a': normal_parameter},
         )
         dependent_parameter_2 = Parameter.from_dependency(
-            name='dependent_2',
+            display_name='dependent_2',
             dependency_expression='10*a',
             dependency_map={'a': normal_parameter},
         )
         dependent_parameter_3 = Parameter.from_dependency(
-            name='dependent_3',
+            display_name='dependent_3',
             dependency_expression='b+c',
             dependency_map={'b': dependent_parameter, 'c': dependent_parameter_2},
         )
@@ -639,12 +623,12 @@ class TestParameter:
     def test_dependent_parameter_cyclic_dependencies(self, normal_parameter: Parameter):
         # When
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
+            display_name='dependent',
             dependency_expression='2*a',
             dependency_map={'a': normal_parameter},
         )
         dependent_parameter_2 = Parameter.from_dependency(
-            name='dependent_2',
+            display_name='dependent_2',
             dependency_expression='2*b',
             dependency_map={'b': dependent_parameter},
         )
@@ -664,7 +648,7 @@ class TestParameter:
     def test_dependent_parameter_logical_dependency(self, normal_parameter: Parameter):
         # When
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
+            display_name='dependent',
             dependency_expression='a if a.value > 0 else -a',
             dependency_map={'a': normal_parameter},
         )
@@ -678,11 +662,13 @@ class TestParameter:
 
     def test_dependent_parameter_return_is_descriptor_number(self):
         # When
-        descriptor_number = DescriptorNumber(name='descriptor', value=1, unit='m', variance=0.01)
+        descriptor_number = DescriptorNumber(
+            display_name='descriptor', value=1, unit='m', variance=0.01
+        )
 
         # Then
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
+            display_name='dependent',
             dependency_expression='2*descriptor',
             dependency_map={'descriptor': descriptor_number},
         )
@@ -702,12 +688,9 @@ class TestParameter:
         would work correctly.
         """
         # When
-        angstrom = DescriptorNumber('angstrom', 1e-10, unit='m')
+        angstrom = DescriptorNumber(1e-10, unit='m', display_name='angstrom')
         jump_length = Parameter(
-            name='jump_length',
-            value=float(1.0),
-            fixed=False,
-            unit='angstrom',
+            display_name='jump_length', value=float(1.0), fixed=False, unit='angstrom'
         )
 
         expression = 'jump_length / angstrom'
@@ -721,7 +704,7 @@ class TestParameter:
         expected_value = expected_result.value
 
         # Then - This should not raise an error
-        dependent_param = Parameter(name='a', value=1.0)
+        dependent_param = Parameter(display_name='a', value=1.0)
         dependent_param.make_dependent_on(
             dependency_expression=expression,
             dependency_map=dependency_map,
@@ -732,7 +715,7 @@ class TestParameter:
 
         # Also test the alternative expression that previously worked
         expression_alt = '1/angstrom * jump_length'
-        dependent_param_alt = Parameter(name='b', value=1.0)
+        dependent_param_alt = Parameter(display_name='b', value=1.0)
         dependent_param_alt.make_dependent_on(
             dependency_expression=expression_alt,
             dependency_map=dependency_map,
@@ -742,7 +725,7 @@ class TestParameter:
     def test_dependent_parameter_overwrite_dependency(self, normal_parameter: Parameter):
         # When
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
+            display_name='dependent',
             dependency_expression='2*a',
             dependency_map={'a': normal_parameter},
         )
@@ -750,7 +733,7 @@ class TestParameter:
 
         # Then
         normal_parameter_2 = Parameter(
-            name='a2', value=-2, unit='m', variance=0.01, min=-10, max=0
+            display_name='a2', value=-2, unit='m', variance=0.01, min=-10, max=0
         )
         dependent_parameter.make_dependent_on(
             dependency_expression='3*a2', dependency_map={'a2': normal_parameter_2}
@@ -766,7 +749,7 @@ class TestParameter:
     def test_make_independent(self, normal_parameter: Parameter):
         # When
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
+            display_name='dependent',
             dependency_expression='2*a',
             dependency_map={'a': normal_parameter},
         )
@@ -800,7 +783,7 @@ class TestParameter:
     def test_dependent_parameter_dependency_expression_setter(self, normal_parameter: Parameter):
         # When
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
+            display_name='dependent',
             dependency_expression='2*a',
             dependency_map={'a': normal_parameter},
         )
@@ -817,7 +800,7 @@ class TestParameter:
     def test_dependent_parameter_dependency_map_setter(self, normal_parameter: Parameter):
         # When
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
+            display_name='dependent',
             dependency_expression='2*a',
             dependency_map={'a': normal_parameter},
         )
@@ -842,7 +825,7 @@ class TestParameter:
     def test_set_min_dependent_parameter(self, normal_parameter: Parameter):
         # When
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
+            display_name='dependent',
             dependency_expression='2*a',
             dependency_map={'a': normal_parameter},
         )
@@ -866,7 +849,7 @@ class TestParameter:
     def test_set_max_dependent_parameter(self, normal_parameter: Parameter):
         # When
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
+            display_name='dependent',
             dependency_expression='2*a',
             dependency_map={'a': normal_parameter},
         )
@@ -893,7 +876,6 @@ class TestParameter:
     def test_set_desired_unit(self, normal_parameter: Parameter):
         # When Then
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
             dependency_expression='2*a',
             dependency_map={'a': normal_parameter},
             display_name='display_name',
@@ -931,7 +913,6 @@ class TestParameter:
     def test_set_desired_unit_incompatible_units_raises(self, normal_parameter: Parameter):
         # When Then
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
             dependency_expression='2*a',
             dependency_map={'a': normal_parameter},
             display_name='display_name',
@@ -947,7 +928,6 @@ class TestParameter:
     def test_set_desired_unit_None(self, normal_parameter: Parameter):
         # When Then
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
             dependency_expression='2*a',
             dependency_map={'a': normal_parameter},
             display_name='display_name',
@@ -975,7 +955,6 @@ class TestParameter:
     def test_set_desired_unit_incorrect_unit_type_raises(self, normal_parameter: Parameter):
         # When Then
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
             dependency_expression='2*a',
             dependency_map={'a': normal_parameter},
             display_name='display_name',
@@ -995,7 +974,7 @@ class TestParameter:
     def test_set_fixed_dependent_parameter(self, normal_parameter: Parameter):
         # When
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
+            display_name='dependent',
             dependency_expression='2*a',
             dependency_map={'a': normal_parameter},
         )
@@ -1034,7 +1013,9 @@ class TestParameter:
 
     def test_repr(self, parameter: Parameter):
         # When Then Expect
-        assert repr(parameter) == "<Parameter 'name': 1.0000 ± 0.1000 m, bounds=[0.0:10.0]>"
+        assert (
+            repr(parameter) == "<Parameter 'display_name': 1.0000 ± 0.1000 m, bounds=[0.0:10.0]>"
+        )
 
     def test_repr_fixed(self, parameter: Parameter):
         # When
@@ -1042,7 +1023,8 @@ class TestParameter:
 
         # Then Expect
         assert (
-            repr(parameter) == "<Parameter 'name': 1.0000 ± 0.1000 m (fixed), bounds=[0.0:10.0]>"
+            repr(parameter)
+            == "<Parameter 'display_name': 1.0000 ± 0.1000 m (fixed), bounds=[0.0:10.0]>"
         )
 
     def test_value_match_callback(self, parameter: Parameter):
@@ -1078,7 +1060,7 @@ class TestParameter:
     def test_set_value_dependent_parameter(self, normal_parameter: Parameter):
         # When
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
+            display_name='dependent',
             dependency_expression='2*a',
             dependency_map={'a': normal_parameter},
         )
@@ -1095,7 +1077,7 @@ class TestParameter:
     def test_set_variance_dependent_parameter(self, normal_parameter: Parameter):
         # When
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
+            display_name='dependent',
             dependency_expression='2*a',
             dependency_map={'a': normal_parameter},
         )
@@ -1107,7 +1089,7 @@ class TestParameter:
     def test_set_error_dependent_parameter(self, normal_parameter: Parameter):
         # When
         dependent_parameter = Parameter.from_dependency(
-            name='dependent',
+            display_name='dependent',
             dependency_expression='2*a',
             dependency_map={'a': normal_parameter},
         )
@@ -1126,7 +1108,6 @@ class TestParameter:
         assert id(parameter_copy._scalar) != id(parameter._scalar)
         assert isinstance(parameter_copy._callback, property)
 
-        assert parameter_copy._name == parameter._name
         assert parameter_copy._scalar == parameter._scalar
         assert parameter_copy._min == parameter._min
         assert parameter_copy._max == parameter._max
@@ -1140,19 +1121,32 @@ class TestParameter:
         'test, expected, expected_reverse',
         [
             (
-                Parameter('test', 2, 'm', 0.01, -10, 20),
-                Parameter('name + test', 3, 'm', 0.02, -10, 30),
-                Parameter('test + name', 3, 'm', 0.02, -10, 30),
+                Parameter(2, unit='m', variance=0.01, min=-10, max=20, display_name='test'),
+                Parameter(3, unit='m', variance=0.02, min=-10, max=30, display_name='name + test'),
+                Parameter(3, unit='m', variance=0.02, min=-10, max=30, display_name='test + name'),
             ),
             (
-                Parameter('test', 2, 'm', 0.01),
-                Parameter('name + test', 3, 'm', 0.02, min=-np.inf, max=np.inf),
-                Parameter('test + name', 3, 'm', 0.02, min=-np.inf, max=np.inf),
+                Parameter(2, unit='m', variance=0.01, display_name='test'),
+                Parameter(
+                    3, unit='m', variance=0.02, min=-np.inf, max=np.inf, display_name='name + test'
+                ),
+                Parameter(
+                    3, unit='m', variance=0.02, min=-np.inf, max=np.inf, display_name='test + name'
+                ),
             ),
             (
-                Parameter('test', 2, 'cm', 0.01, -10, 10),
-                Parameter('name + test', 1.02, 'm', 0.010001, -0.1, 10.1),
-                Parameter('test + name', 102, 'cm', 100.01, -10, 1010),
+                Parameter(2, unit='cm', variance=0.01, min=-10, max=10, display_name='test'),
+                Parameter(
+                    1.02,
+                    unit='m',
+                    variance=0.010001,
+                    min=-0.1,
+                    max=10.1,
+                    display_name='name + test',
+                ),
+                Parameter(
+                    102, unit='cm', variance=100.01, min=-10, max=1010, display_name='test + name'
+                ),
             ),
         ],
         ids=['regular', 'no_bounds', 'unit_conversion'],
@@ -1172,14 +1166,12 @@ class TestParameter:
         result_reverse = test + parameter
 
         # Expect
-        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
         assert result.min == expected.min
         assert result.max == expected.max
 
-        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
         assert result_reverse.variance == expected_reverse.variance
@@ -1190,21 +1182,19 @@ class TestParameter:
 
     def test_addition_with_scalar(self):
         # When
-        parameter = Parameter(name='name', value=1, variance=0.01, min=0, max=10)
+        parameter = Parameter(display_name='name', value=1, variance=0.01, min=0, max=10)
 
         # Then
         result = parameter + 1.0
         result_reverse = 1.0 + parameter
 
         # Expect
-        assert result.name == result.unique_name
         assert result.value == 2.0
         assert result.unit == 'dimensionless'
         assert result.variance == 0.01
         assert result.min == 1.0
         assert result.max == 11.0
 
-        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == 2.0
         assert result_reverse.unit == 'dimensionless'
         assert result_reverse.variance == 0.01
@@ -1214,7 +1204,7 @@ class TestParameter:
     def test_addition_with_descriptor_number(self, parameter: Parameter):
         # When
         parameter._callback = property()
-        descriptor_number = DescriptorNumber(name='test', value=1, variance=0.1, unit='cm')
+        descriptor_number = DescriptorNumber(display_name='test', value=1, variance=0.1, unit='cm')
 
         # Then
         result = parameter + descriptor_number
@@ -1222,7 +1212,6 @@ class TestParameter:
 
         # Expect
         assert type(result) == Parameter
-        assert result.name == result.unique_name
         assert result.value == 1.01
         assert result.unit == 'm'
         assert result.variance == 0.01001
@@ -1230,7 +1219,6 @@ class TestParameter:
         assert result.max == 10.01
 
         assert type(result_reverse) == Parameter
-        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == 101.0
         assert result_reverse.unit == 'cm'
         assert result_reverse.variance == 100.1
@@ -1244,11 +1232,7 @@ class TestParameter:
         'test',
         [
             1.0,
-            Parameter(
-                'test',
-                2,
-                's',
-            ),
+            Parameter(2, unit='s', display_name='test'),
         ],
         ids=['add_scalar_to_unit', 'incompatible_units'],
     )
@@ -1263,19 +1247,39 @@ class TestParameter:
         'test, expected, expected_reverse',
         [
             (
-                Parameter('test', 2, 'm', 0.01, -20, 20),
-                Parameter('name - test', -1, 'm', 0.02, -20, 30),
-                Parameter('test - name', 1, 'm', 0.02, -30, 20),
+                Parameter(2, unit='m', variance=0.01, min=-20, max=20, display_name='test'),
+                Parameter(
+                    -1, unit='m', variance=0.02, min=-20, max=30, display_name='name - test'
+                ),
+                Parameter(1, unit='m', variance=0.02, min=-30, max=20, display_name='test - name'),
             ),
             (
-                Parameter('test', 2, 'm', 0.01),
-                Parameter('name - test', -1, 'm', 0.02, min=-np.inf, max=np.inf),
-                Parameter('test - name', 1, 'm', 0.02, min=-np.inf, max=np.inf),
+                Parameter(2, unit='m', variance=0.01, display_name='test'),
+                Parameter(
+                    -1,
+                    unit='m',
+                    variance=0.02,
+                    min=-np.inf,
+                    max=np.inf,
+                    display_name='name - test',
+                ),
+                Parameter(
+                    1, unit='m', variance=0.02, min=-np.inf, max=np.inf, display_name='test - name'
+                ),
             ),
             (
-                Parameter('test', 2, 'cm', 0.01, -10, 10),
-                Parameter('name - test', 0.98, 'm', 0.010001, -0.1, 10.1),
-                Parameter('test - name', -98, 'cm', 100.01, -1010, 10),
+                Parameter(2, unit='cm', variance=0.01, min=-10, max=10, display_name='test'),
+                Parameter(
+                    0.98,
+                    unit='m',
+                    variance=0.010001,
+                    min=-0.1,
+                    max=10.1,
+                    display_name='name - test',
+                ),
+                Parameter(
+                    -98, unit='cm', variance=100.01, min=-1010, max=10, display_name='test - name'
+                ),
             ),
         ],
         ids=['regular', 'no_bounds', 'unit_conversion'],
@@ -1295,14 +1299,12 @@ class TestParameter:
         result_reverse = test - parameter
 
         # Expect
-        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
         assert result.min == expected.min
         assert result.max == expected.max
 
-        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
         assert result_reverse.variance == expected_reverse.variance
@@ -1313,22 +1315,20 @@ class TestParameter:
 
     def test_subtraction_with_parameter_nan_cases(self):
         # When
-        parameter = Parameter(name='name', value=1, variance=0.01, min=-np.inf, max=np.inf)
-        test = Parameter(name='test', value=2, variance=0.01, min=-np.inf, max=np.inf)
+        parameter = Parameter(display_name='name', value=1, variance=0.01, min=-np.inf, max=np.inf)
+        test = Parameter(display_name='test', value=2, variance=0.01, min=-np.inf, max=np.inf)
 
         # Then
         result = parameter - test
         result_reverse = test - parameter
 
         # Expect
-        assert result.name == result.unique_name
         assert result.value == -1.0
         assert result.unit == 'dimensionless'
         assert result.variance == 0.02
         assert result.min == -np.inf
         assert result.max == np.inf
 
-        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == 1.0
         assert result_reverse.unit == 'dimensionless'
         assert result_reverse.variance == 0.02
@@ -1337,21 +1337,19 @@ class TestParameter:
 
     def test_subtraction_with_scalar(self):
         # When
-        parameter = Parameter(name='name', value=2, variance=0.01, min=0, max=10)
+        parameter = Parameter(display_name='name', value=2, variance=0.01, min=0, max=10)
 
         # Then
         result = parameter - 1.0
         result_reverse = 1.0 - parameter
 
         # Expect
-        assert result.name == result.unique_name
         assert result.value == 1.0
         assert result.unit == 'dimensionless'
         assert result.variance == 0.01
         assert result.min == -1.0
         assert result.max == 9.0
 
-        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == -1.0
         assert result_reverse.unit == 'dimensionless'
         assert result_reverse.variance == 0.01
@@ -1361,7 +1359,7 @@ class TestParameter:
     def test_subtraction_with_descriptor_number(self, parameter: Parameter):
         # When
         parameter._callback = property()
-        descriptor_number = DescriptorNumber(name='test', value=1, variance=0.1, unit='cm')
+        descriptor_number = DescriptorNumber(display_name='test', value=1, variance=0.1, unit='cm')
 
         # Then
         result = parameter - descriptor_number
@@ -1369,7 +1367,6 @@ class TestParameter:
 
         # Expect
         assert type(result) == Parameter
-        assert result.name == result.unique_name
         assert result.value == 0.99
         assert result.unit == 'm'
         assert result.variance == 0.01001
@@ -1377,7 +1374,6 @@ class TestParameter:
         assert result.max == 9.99
 
         assert type(result_reverse) == Parameter
-        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == -99.0
         assert result_reverse.unit == 'cm'
         assert result_reverse.variance == 100.1
@@ -1391,11 +1387,7 @@ class TestParameter:
         'test',
         [
             1.0,
-            Parameter(
-                'test',
-                2,
-                's',
-            ),
+            Parameter(2, unit='s', display_name='test'),
         ],
         ids=['sub_scalar_to_unit', 'incompatible_units'],
     )
@@ -1410,19 +1402,41 @@ class TestParameter:
         'test, expected, expected_reverse',
         [
             (
-                Parameter('test', 2, 'm', 0.01, -10, 20),
-                Parameter('name * test', 2, 'm^2', 0.05, -100, 200),
-                Parameter('test * name', 2, 'm^2', 0.05, -100, 200),
+                Parameter(2, unit='m', variance=0.01, min=-10, max=20, display_name='test'),
+                Parameter(
+                    2, unit='m^2', variance=0.05, min=-100, max=200, display_name='name * test'
+                ),
+                Parameter(
+                    2, unit='m^2', variance=0.05, min=-100, max=200, display_name='test * name'
+                ),
             ),
             (
-                Parameter('test', 2, 'm', 0.01),
-                Parameter('name * test', 2, 'm^2', 0.05, min=-np.inf, max=np.inf),
-                Parameter('test * name', 2, 'm^2', 0.05, min=-np.inf, max=np.inf),
+                Parameter(2, unit='m', variance=0.01, display_name='test'),
+                Parameter(
+                    2,
+                    unit='m^2',
+                    variance=0.05,
+                    min=-np.inf,
+                    max=np.inf,
+                    display_name='name * test',
+                ),
+                Parameter(
+                    2,
+                    unit='m^2',
+                    variance=0.05,
+                    min=-np.inf,
+                    max=np.inf,
+                    display_name='test * name',
+                ),
             ),
             (
-                Parameter('test', 2, 'dm', 0.01, -10, 20),
-                Parameter('name * test', 0.2, 'm^2', 0.0005, -10, 20),
-                Parameter('test * name', 0.2, 'm^2', 0.0005, -10, 20),
+                Parameter(2, unit='dm', variance=0.01, min=-10, max=20, display_name='test'),
+                Parameter(
+                    0.2, unit='m^2', variance=0.0005, min=-10, max=20, display_name='name * test'
+                ),
+                Parameter(
+                    0.2, unit='m^2', variance=0.0005, min=-10, max=20, display_name='test * name'
+                ),
             ),
         ],
         ids=['regular', 'no_bounds', 'base_unit_conversion'],
@@ -1442,14 +1456,12 @@ class TestParameter:
         result_reverse = test * parameter
 
         # Expect
-        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == pytest.approx(expected.variance)
         assert result.min == expected.min
         assert result.max == expected.max
 
-        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
         assert result_reverse.variance == pytest.approx(expected_reverse.variance)
@@ -1460,35 +1472,61 @@ class TestParameter:
         'test, expected, expected_reverse',
         [
             (
-                Parameter('test', 0, '', 0.01, -10, 0),
-                Parameter('name * test', 0.0, 'dimensionless', 0.01, -np.inf, 0),
-                Parameter('test * name', 0, 'dimensionless', 0.01, -np.inf, 0),
+                Parameter(0, unit='', variance=0.01, min=-10, max=0, display_name='test'),
+                Parameter(
+                    0.0,
+                    unit='dimensionless',
+                    variance=0.01,
+                    min=-np.inf,
+                    max=0,
+                    display_name='name * test',
+                ),
+                Parameter(
+                    0,
+                    unit='dimensionless',
+                    variance=0.01,
+                    min=-np.inf,
+                    max=0,
+                    display_name='test * name',
+                ),
             ),
             (
-                Parameter('test', 0, '', 0.01, 0, 10),
-                Parameter('name * test', 0.0, 'dimensionless', 0.01, 0, np.inf),
-                Parameter('test * name', 0, 'dimensionless', 0.01, 0, np.inf),
+                Parameter(0, unit='', variance=0.01, min=0, max=10, display_name='test'),
+                Parameter(
+                    0.0,
+                    unit='dimensionless',
+                    variance=0.01,
+                    min=0,
+                    max=np.inf,
+                    display_name='name * test',
+                ),
+                Parameter(
+                    0,
+                    unit='dimensionless',
+                    variance=0.01,
+                    min=0,
+                    max=np.inf,
+                    display_name='test * name',
+                ),
             ),
         ],
         ids=['zero_min', 'zero_max'],
     )
     def test_multiplication_with_parameter_nan_cases(self, test, expected, expected_reverse):
         # When
-        parameter = Parameter(name='name', value=1, variance=0.01, min=1, max=np.inf)
+        parameter = Parameter(display_name='name', value=1, variance=0.01, min=1, max=np.inf)
 
         # Then
         result = parameter * test
         result_reverse = test * parameter
 
         # Expect
-        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
         assert result.min == expected.min
         assert result.max == expected.max
 
-        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
         assert result_reverse.variance == expected_reverse.variance
@@ -1499,14 +1537,18 @@ class TestParameter:
         'test, expected, expected_reverse',
         [
             (
-                DescriptorNumber(name='test', value=2, variance=0.1, unit='cm'),
-                Parameter('name * test', 2, 'dm^2', 0.14, 0, 20),
-                Parameter('test * name', 2, 'dm^2', 0.14, 0, 20),
+                DescriptorNumber(display_name='test', value=2, variance=0.1, unit='cm'),
+                Parameter(
+                    2, unit='dm^2', variance=0.14, min=0, max=20, display_name='name * test'
+                ),
+                Parameter(
+                    2, unit='dm^2', variance=0.14, min=0, max=20, display_name='test * name'
+                ),
             ),
             (
-                DescriptorNumber(name='test', value=0, variance=0.1, unit='cm'),
-                DescriptorNumber('name * test', 0, 'dm^2', 0.1),
-                DescriptorNumber('test * name', 0, 'dm^2', 0.1),
+                DescriptorNumber(display_name='test', value=0, variance=0.1, unit='cm'),
+                DescriptorNumber(0, unit='dm^2', variance=0.1, display_name='name * test'),
+                DescriptorNumber(0, unit='dm^2', variance=0.1, display_name='test * name'),
             ),
         ],
         ids=['regular', 'zero_value'],
@@ -1523,7 +1565,6 @@ class TestParameter:
 
         # Expect
         assert type(result) == type(expected)
-        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
@@ -1532,7 +1573,6 @@ class TestParameter:
             assert result.max == expected.max
 
         assert type(result_reverse) == type(expected_reverse)
-        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
         assert result_reverse.variance == expected_reverse.variance
@@ -1545,13 +1585,13 @@ class TestParameter:
         [
             (
                 2,
-                Parameter('name * 2', 2, 'm', 0.04, 0, 20),
-                Parameter('2 * name', 2, 'm', 0.04, 0, 20),
+                Parameter(2, unit='m', variance=0.04, min=0, max=20, display_name='name * 2'),
+                Parameter(2, unit='m', variance=0.04, min=0, max=20, display_name='2 * name'),
             ),
             (
                 0,
-                DescriptorNumber('name * 0', 0, 'm', 0),
-                DescriptorNumber('0 * name', 0, 'm', 0),
+                DescriptorNumber(0, unit='m', variance=0, display_name='name * 0'),
+                DescriptorNumber(0, unit='m', variance=0, display_name='0 * name'),
             ),
         ],
         ids=['regular', 'zero_value'],
@@ -1568,7 +1608,6 @@ class TestParameter:
 
         # Expect
         assert type(result) == type(expected)
-        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
@@ -1576,7 +1615,6 @@ class TestParameter:
             assert result.min == expected.min
             assert result.max == expected.max
 
-        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
         assert result_reverse.variance == expected_reverse.variance
@@ -1588,19 +1626,51 @@ class TestParameter:
         'test, expected, expected_reverse',
         [
             (
-                Parameter('test', 2, 's', 0.01, -10, 20),
-                Parameter('name / test', 0.5, 'm/s', 0.003125, -np.inf, np.inf),
-                Parameter('test / name', 2, 's/m', 0.05, -np.inf, np.inf),
+                Parameter(2, unit='s', variance=0.01, min=-10, max=20, display_name='test'),
+                Parameter(
+                    0.5,
+                    unit='m/s',
+                    variance=0.003125,
+                    min=-np.inf,
+                    max=np.inf,
+                    display_name='name / test',
+                ),
+                Parameter(
+                    2,
+                    unit='s/m',
+                    variance=0.05,
+                    min=-np.inf,
+                    max=np.inf,
+                    display_name='test / name',
+                ),
             ),
             (
-                Parameter('test', 2, 's', 0.01, 0, 20),
-                Parameter('name / test', 0.5, 'm/s', 0.003125, 0.0, np.inf),
-                Parameter('test / name', 2, 's/m', 0.05, 0.0, np.inf),
+                Parameter(2, unit='s', variance=0.01, min=0, max=20, display_name='test'),
+                Parameter(
+                    0.5,
+                    unit='m/s',
+                    variance=0.003125,
+                    min=0.0,
+                    max=np.inf,
+                    display_name='name / test',
+                ),
+                Parameter(
+                    2, unit='s/m', variance=0.05, min=0.0, max=np.inf, display_name='test / name'
+                ),
             ),
             (
-                Parameter('test', -2, 's', 0.01, -10, 0),
-                Parameter('name / test', -0.5, 'm/s', 0.003125, -np.inf, 0.0),
-                Parameter('test / name', -2, 's/m', 0.05, -np.inf, 0.0),
+                Parameter(-2, unit='s', variance=0.01, min=-10, max=0, display_name='test'),
+                Parameter(
+                    -0.5,
+                    unit='m/s',
+                    variance=0.003125,
+                    min=-np.inf,
+                    max=0.0,
+                    display_name='name / test',
+                ),
+                Parameter(
+                    -2, unit='s/m', variance=0.05, min=-np.inf, max=0.0, display_name='test / name'
+                ),
             ),
         ],
         ids=['crossing_zero', 'only_positive', 'only_negative'],
@@ -1615,7 +1685,6 @@ class TestParameter:
 
         # Expect
         assert type(result) == Parameter
-        assert result.name == result.unique_name
         assert result.value == pytest.approx(expected.value)
         assert result.unit == expected.unit
         assert result.variance == pytest.approx(expected.variance)
@@ -1623,7 +1692,6 @@ class TestParameter:
         assert result.max == expected.max
 
         assert type(result) == Parameter
-        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == pytest.approx(expected_reverse.value)
         assert result_reverse.unit == expected_reverse.unit
         assert result_reverse.variance == pytest.approx(expected_reverse.variance)
@@ -1634,19 +1702,35 @@ class TestParameter:
         'first, second, expected',
         [
             (
-                Parameter('name', 1, 'm', 0.01, -10, 20),
-                Parameter('test', -2, 's', 0.01, -10, 0),
-                Parameter('name / test', -0.5, 'm/s', 0.003125, -np.inf, np.inf),
+                Parameter(1, unit='m', variance=0.01, min=-10, max=20, display_name='name'),
+                Parameter(-2, unit='s', variance=0.01, min=-10, max=0, display_name='test'),
+                Parameter(
+                    -0.5,
+                    unit='m/s',
+                    variance=0.003125,
+                    min=-np.inf,
+                    max=np.inf,
+                    display_name='name / test',
+                ),
             ),
             (
-                Parameter('name', -10, 'm', 0.01, -20, -10),
-                Parameter('test', -2, 's', 0.01, -10, 0),
-                Parameter('name / test', 5.0, 'm/s', 0.065, 1, np.inf),
+                Parameter(-10, unit='m', variance=0.01, min=-20, max=-10, display_name='name'),
+                Parameter(-2, unit='s', variance=0.01, min=-10, max=0, display_name='test'),
+                Parameter(
+                    5.0, unit='m/s', variance=0.065, min=1, max=np.inf, display_name='name / test'
+                ),
             ),
             (
-                Parameter('name', 10, 'm', 0.01, 10, 20),
-                Parameter('test', -20, 's', 0.01, -20, -10),
-                Parameter('name / test', -0.5, 'm/s', 3.125e-5, -2, -0.5),
+                Parameter(10, unit='m', variance=0.01, min=10, max=20, display_name='name'),
+                Parameter(-20, unit='s', variance=0.01, min=-20, max=-10, display_name='test'),
+                Parameter(
+                    -0.5,
+                    unit='m/s',
+                    variance=3.125e-5,
+                    min=-2,
+                    max=-0.5,
+                    display_name='name / test',
+                ),
             ),
         ],
         ids=[
@@ -1660,7 +1744,6 @@ class TestParameter:
         result = first / second
 
         # Expect
-        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
@@ -1671,14 +1754,20 @@ class TestParameter:
         'test, expected, expected_reverse',
         [
             (
-                DescriptorNumber(name='test', value=2, variance=0.1, unit='s'),
-                Parameter('name / test', 0.5, 'm/s', 0.00875, 0, 5),
-                Parameter('test / name', 2, 's/m', 0.14, 0.2, np.inf),
+                DescriptorNumber(display_name='test', value=2, variance=0.1, unit='s'),
+                Parameter(
+                    0.5, unit='m/s', variance=0.00875, min=0, max=5, display_name='name / test'
+                ),
+                Parameter(
+                    2, unit='s/m', variance=0.14, min=0.2, max=np.inf, display_name='test / name'
+                ),
             ),
             (
                 2,
-                Parameter('name / 2', 0.5, 'm', 0.0025, 0, 5),
-                Parameter('2 / name', 2, 'm**-1', 0.04, 0.2, np.inf),
+                Parameter(0.5, unit='m', variance=0.0025, min=0, max=5, display_name='name / 2'),
+                Parameter(
+                    2, unit='m**-1', variance=0.04, min=0.2, max=np.inf, display_name='2 / name'
+                ),
             ),
         ],
         ids=['descriptor_number', 'number'],
@@ -1695,7 +1784,6 @@ class TestParameter:
 
         # Expect
         assert type(result) == Parameter
-        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
@@ -1703,7 +1791,6 @@ class TestParameter:
         assert result.max == expected.max
 
         assert type(result_reverse) == Parameter
-        assert result_reverse.name == result_reverse.unique_name
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
         assert result_reverse.variance == expected_reverse.variance
@@ -1714,10 +1801,10 @@ class TestParameter:
         'test, expected',
         [
             (
-                DescriptorNumber(name='test', value=0, variance=0.1, unit='s'),
-                DescriptorNumber('test / name', 0.0, 's/m', 0.1),
+                DescriptorNumber(display_name='test', value=0, variance=0.1, unit='s'),
+                DescriptorNumber(0.0, unit='s/m', variance=0.1, display_name='test / name'),
             ),
-            (0, DescriptorNumber('0 / name', 0.0, '1/m', 0.0)),
+            (0, DescriptorNumber(0.0, unit='1/m', variance=0.0, display_name='0 / name')),
         ],
         ids=['descriptor_number', 'number'],
     )
@@ -1730,7 +1817,6 @@ class TestParameter:
 
         # Expect
         assert type(result) == DescriptorNumber
-        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
@@ -1739,29 +1825,59 @@ class TestParameter:
         'first, second, expected',
         [
             (
-                DescriptorNumber('name', 1, 'm', 0.01),
-                Parameter('test', 2, 's', 0.1, -10, 10),
-                Parameter('name / test', 0.5, 'm/s', 0.00875, -np.inf, np.inf),
+                DescriptorNumber(1, unit='m', variance=0.01, display_name='name'),
+                Parameter(2, unit='s', variance=0.1, min=-10, max=10, display_name='test'),
+                Parameter(
+                    0.5,
+                    unit='m/s',
+                    variance=0.00875,
+                    min=-np.inf,
+                    max=np.inf,
+                    display_name='name / test',
+                ),
             ),
             (
-                DescriptorNumber('name', -1, 'm', 0.01),
-                Parameter('test', 2, 's', 0.1, 0, 10),
-                Parameter('name / test', -0.5, 'm/s', 0.00875, -np.inf, -0.1),
+                DescriptorNumber(-1, unit='m', variance=0.01, display_name='name'),
+                Parameter(2, unit='s', variance=0.1, min=0, max=10, display_name='test'),
+                Parameter(
+                    -0.5,
+                    unit='m/s',
+                    variance=0.00875,
+                    min=-np.inf,
+                    max=-0.1,
+                    display_name='name / test',
+                ),
             ),
             (
-                DescriptorNumber('name', 1, 'm', 0.01),
-                Parameter('test', -2, 's', 0.1, -10, 0),
-                Parameter('name / test', -0.5, 'm/s', 0.00875, -np.inf, -0.1),
+                DescriptorNumber(1, unit='m', variance=0.01, display_name='name'),
+                Parameter(-2, unit='s', variance=0.1, min=-10, max=0, display_name='test'),
+                Parameter(
+                    -0.5,
+                    unit='m/s',
+                    variance=0.00875,
+                    min=-np.inf,
+                    max=-0.1,
+                    display_name='name / test',
+                ),
             ),
             (
-                DescriptorNumber('name', -1, 'm', 0.01),
-                Parameter('test', -2, 's', 0.1, -10, 0),
-                Parameter('name / test', 0.5, 'm/s', 0.00875, 0.1, np.inf),
+                DescriptorNumber(-1, unit='m', variance=0.01, display_name='name'),
+                Parameter(-2, unit='s', variance=0.1, min=-10, max=0, display_name='test'),
+                Parameter(
+                    0.5,
+                    unit='m/s',
+                    variance=0.00875,
+                    min=0.1,
+                    max=np.inf,
+                    display_name='name / test',
+                ),
             ),
             (
-                DescriptorNumber('name', 1, 'm', 0.01),
-                Parameter('test', 2, 's', 0.1, 1, 10),
-                Parameter('name / test', 0.5, 'm/s', 0.00875, 0.1, 1),
+                DescriptorNumber(1, unit='m', variance=0.01, display_name='name'),
+                Parameter(2, unit='s', variance=0.1, min=1, max=10, display_name='test'),
+                Parameter(
+                    0.5, unit='m/s', variance=0.00875, min=0.1, max=1, display_name='name / test'
+                ),
             ),
         ],
         ids=[
@@ -1777,7 +1893,6 @@ class TestParameter:
         result = first / second
 
         # Expect
-        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
@@ -1786,7 +1901,7 @@ class TestParameter:
 
     @pytest.mark.parametrize(
         'test',
-        [0, DescriptorNumber('test', 0, 's', 0.1)],
+        [0, DescriptorNumber(0, unit='s', variance=0.1, display_name='test')],
         ids=['number', 'descriptor_number'],
     )
     def test_divide_parameter_by_zero(self, parameter: Parameter, test):
@@ -1799,8 +1914,8 @@ class TestParameter:
 
     def test_divide_by_zero_value_parameter(self):
         # When
-        descriptor = DescriptorNumber('test', 1, 's', 0.1)
-        parameter = Parameter('name', 0, 'm', 0.01)
+        descriptor = DescriptorNumber(1, unit='s', variance=0.1, display_name='test')
+        parameter = Parameter(0, unit='m', variance=0.01, display_name='name')
 
         # Then Expect
         with pytest.raises(ZeroDivisionError):
@@ -1809,14 +1924,41 @@ class TestParameter:
     @pytest.mark.parametrize(
         'test, expected',
         [
-            (3, Parameter('name ** 3', 125, 'm^3', 281.25, -125, 1000)),
-            (2, Parameter('name ** 2', 25, 'm^2', 5.0, 0, 100)),
-            (-1, Parameter('name ** -1', 0.2, '1/m', 8e-5, -np.inf, np.inf)),
-            (-2, Parameter('name ** -2', 0.04, '1/m^2', 1.28e-5, 0, np.inf)),
-            (0, DescriptorNumber('name ** 0', 1, 'dimensionless', 0)),
             (
-                DescriptorNumber('test', 2),
-                Parameter('name ** test', 25, 'm^2', 5.0, 0, 100),
+                3,
+                Parameter(
+                    125, unit='m^3', variance=281.25, min=-125, max=1000, display_name='name ** 3'
+                ),
+            ),
+            (2, Parameter(25, unit='m^2', variance=5.0, min=0, max=100, display_name='name ** 2')),
+            (
+                -1,
+                Parameter(
+                    0.2,
+                    unit='1/m',
+                    variance=8e-5,
+                    min=-np.inf,
+                    max=np.inf,
+                    display_name='name ** -1',
+                ),
+            ),
+            (
+                -2,
+                Parameter(
+                    0.04,
+                    unit='1/m^2',
+                    variance=1.28e-5,
+                    min=0,
+                    max=np.inf,
+                    display_name='name ** -2',
+                ),
+            ),
+            (0, DescriptorNumber(1, unit='dimensionless', variance=0, display_name='name ** 0')),
+            (
+                DescriptorNumber(2, display_name='test'),
+                Parameter(
+                    25, unit='m^2', variance=5.0, min=0, max=100, display_name='name ** test'
+                ),
             ),
         ],
         ids=[
@@ -1830,14 +1972,13 @@ class TestParameter:
     )
     def test_power_of_parameter(self, test, expected):
         # When
-        parameter = Parameter('name', 5, 'm', 0.05, -5, 10)
+        parameter = Parameter(5, unit='m', variance=0.05, min=-5, max=10, display_name='name')
 
         # Then
         result = parameter**test
 
         # Expect
         assert type(result) == type(expected)
-        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
@@ -1849,46 +1990,73 @@ class TestParameter:
         'test, exponent, expected',
         [
             (
-                Parameter('name', 5, 'm', 0.05, 0, 10),
+                Parameter(5, unit='m', variance=0.05, min=0, max=10, display_name='name'),
                 -1,
-                Parameter('name ** -1', 0.2, '1/m', 8e-5, 0.1, np.inf),
-            ),
-            (
-                Parameter('name', -5, 'm', 0.05, -5, 0),
-                -1,
-                Parameter('name ** -1', -0.2, '1/m', 8e-5, -np.inf, -0.2),
-            ),
-            (
-                Parameter('name', 5, 'm', 0.05, 5, 10),
-                -1,
-                Parameter('name ** -1', 0.2, '1/m', 8e-5, 0.1, 0.2),
-            ),
-            (
-                Parameter('name', -5, 'm', 0.05, -10, -5),
-                -1,
-                Parameter('name ** -1', -0.2, '1/m', 8e-5, -0.2, -0.1),
-            ),
-            (
-                Parameter('name', -5, 'm', 0.05, -10, -5),
-                -2,
-                Parameter('name ** -2', 0.04, '1/m^2', 1.28e-5, 0.01, 0.04),
-            ),
-            (
-                Parameter('name', 5, '', 0.1, 1, 10),
-                0.3,
                 Parameter(
-                    'name ** 0.3',
-                    1.6206565966927624,
-                    '',
-                    0.0009455500095853564,
-                    1,
-                    1.9952623149688795,
+                    0.2, unit='1/m', variance=8e-5, min=0.1, max=np.inf, display_name='name ** -1'
                 ),
             ),
             (
-                Parameter('name', 5, '', 0.1),
+                Parameter(-5, unit='m', variance=0.05, min=-5, max=0, display_name='name'),
+                -1,
+                Parameter(
+                    -0.2,
+                    unit='1/m',
+                    variance=8e-5,
+                    min=-np.inf,
+                    max=-0.2,
+                    display_name='name ** -1',
+                ),
+            ),
+            (
+                Parameter(5, unit='m', variance=0.05, min=5, max=10, display_name='name'),
+                -1,
+                Parameter(
+                    0.2, unit='1/m', variance=8e-5, min=0.1, max=0.2, display_name='name ** -1'
+                ),
+            ),
+            (
+                Parameter(-5, unit='m', variance=0.05, min=-10, max=-5, display_name='name'),
+                -1,
+                Parameter(
+                    -0.2, unit='1/m', variance=8e-5, min=-0.2, max=-0.1, display_name='name ** -1'
+                ),
+            ),
+            (
+                Parameter(-5, unit='m', variance=0.05, min=-10, max=-5, display_name='name'),
+                -2,
+                Parameter(
+                    0.04,
+                    unit='1/m^2',
+                    variance=1.28e-5,
+                    min=0.01,
+                    max=0.04,
+                    display_name='name ** -2',
+                ),
+            ),
+            (
+                Parameter(5, unit='', variance=0.1, min=1, max=10, display_name='name'),
+                0.3,
+                Parameter(
+                    1.6206565966927624,
+                    unit='',
+                    variance=0.0009455500095853564,
+                    min=1,
+                    max=1.9952623149688795,
+                    display_name='name ** 0.3',
+                ),
+            ),
+            (
+                Parameter(5, unit='', variance=0.1, display_name='name'),
                 0.5,
-                Parameter('name ** 0.5', 2.23606797749979, '', 0.005, 0, np.inf),
+                Parameter(
+                    2.23606797749979,
+                    unit='',
+                    variance=0.005,
+                    min=0,
+                    max=np.inf,
+                    display_name='name ** 0.5',
+                ),
             ),
         ],
         ids=[
@@ -1906,7 +2074,6 @@ class TestParameter:
         result = test**exponent
 
         # Expect
-        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
@@ -1917,17 +2084,17 @@ class TestParameter:
         'parameter, exponent, expected',
         [
             (
-                Parameter('name', 5, 'm'),
-                DescriptorNumber('test', 2, unit='s'),
+                Parameter(5, unit='m', display_name='name'),
+                DescriptorNumber(2, unit='s', display_name='test'),
                 UnitError,
             ),
             (
-                Parameter('name', 5, 'm'),
-                DescriptorNumber('test', 2, variance=0.01),
+                Parameter(5, unit='m', display_name='name'),
+                DescriptorNumber(2, variance=0.01, display_name='test'),
                 ValueError,
             ),
-            (Parameter('name', 5, 'm'), 0.5, UnitError),
-            (Parameter('name', -5, ''), 0.5, ValueError),
+            (Parameter(5, unit='m', display_name='name'), 0.5, UnitError),
+            (Parameter(-5, unit='', display_name='name'), 0.5, ValueError),
         ],
         ids=[
             'exponent_unit',
@@ -1943,13 +2110,12 @@ class TestParameter:
 
     def test_negation(self):
         # When
-        parameter = Parameter('name', 5, 'm', 0.05, -5, 10)
+        parameter = Parameter(5, unit='m', variance=0.05, min=-5, max=10, display_name='name')
 
         # Then
         result = -parameter
 
         # Expect
-        assert result.name == result.unique_name
         assert result.value == -5
         assert result.unit == 'm'
         assert result.variance == 0.05
@@ -1960,12 +2126,12 @@ class TestParameter:
         'test, expected',
         [
             (
-                Parameter('name', -5, 'm', 0.05, -10, -5),
-                Parameter('abs(name)', 5, 'm', 0.05, 5, 10),
+                Parameter(-5, unit='m', variance=0.05, min=-10, max=-5, display_name='name'),
+                Parameter(5, unit='m', variance=0.05, min=5, max=10, display_name='abs(name)'),
             ),
             (
-                Parameter('name', 5, 'm', 0.05, -10, 10),
-                Parameter('abs(name)', 5, 'm', 0.05, 0, 10),
+                Parameter(5, unit='m', variance=0.05, min=-10, max=10, display_name='name'),
+                Parameter(5, unit='m', variance=0.05, min=0, max=10, display_name='abs(name)'),
             ),
         ],
         ids=['pure_negative', 'crossing_zero'],
@@ -1975,9 +2141,27 @@ class TestParameter:
         result = abs(test)
 
         # Expect
-        assert result.name == result.unique_name
         assert result.value == expected.value
         assert result.unit == expected.unit
         assert result.variance == expected.variance
         assert result.min == expected.min
         assert result.max == expected.max
+
+
+@pytest.mark.parametrize('label', [None, '', 'label'], ids=['unset', 'empty', 'explicit'])
+def test_display_name_serialization_preserves_unset_state(label):
+    # Given
+    p = Parameter(2, display_name=label)
+
+    # When
+    encoded = p.to_dict()
+
+    # Then Expect: an unset label is omitted rather than stored as the fallback
+    if label is None:
+        assert 'display_name' not in encoded
+    else:
+        assert encoded['display_name'] == label
+
+    restored = Parameter.from_dict(p.to_dict(skip=['unique_name']))
+    assert restored.unique_name != p.unique_name
+    assert restored.display_name == (restored.unique_name if label is None else label)

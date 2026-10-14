@@ -39,8 +39,8 @@ angle. Each number has an uncertainty, and the result has one too:
 import easyscience as es
 from easyscience import DescriptorNumber
 
-wavelength = DescriptorNumber(name='wavelength', value=1.54, unit='angstrom', variance=0.01**2)
-angle = DescriptorNumber(name='angle', value=22.5, unit='deg', variance=0.1**2)
+wavelength = DescriptorNumber(value=1.54, unit='angstrom', variance=0.01**2)
+angle = DescriptorNumber(value=22.5, unit='deg', variance=0.1**2)
 
 d = wavelength / (2 * es.math.sin(angle))
 d.convert_unit('nm')

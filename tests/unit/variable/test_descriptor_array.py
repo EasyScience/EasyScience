@@ -16,28 +16,24 @@ class TestDescriptorArray:
     @pytest.fixture
     def descriptor(self):
         descriptor = DescriptorArray(
-            name='name',
             value=[[1.0, 2.0], [3.0, 4.0]],
             unit='m',
             variance=[[0.1, 0.2], [0.3, 0.4]],
             description='description',
             url='url',
             display_name='display_name',
-            parent=None,
         )
         return descriptor
 
     @pytest.fixture
     def descriptor_dimensionless(self):
         descriptor = DescriptorArray(
-            name='name',
             value=[[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
             unit='dimensionless',
             variance=[[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]],
             description='description',
             url='url',
             display_name='display_name',
-            parent=None,
         )
         return descriptor
 
@@ -52,7 +48,6 @@ class TestDescriptorArray:
         assert np.array_equal(descriptor._array.variances, np.array([[0.1, 0.2], [0.3, 0.4]]))
 
         # From super
-        assert descriptor._name == 'name'
         assert descriptor._description == 'description'
         assert descriptor._url == 'url'
         assert descriptor._display_name == 'display_name'
@@ -60,14 +55,12 @@ class TestDescriptorArray:
     def test_init_sc_unit(self):
         # When Then
         descriptor = DescriptorArray(
-            name='name',
             value=[[1.0, 2.0], [3.0, 4.0]],
             unit=sc.units.Unit('m'),
             variance=[[0.1, 0.2], [0.3, 0.4]],
             description='description',
             url='url',
             display_name='display_name',
-            parent=None,
         )
 
         # Expect
@@ -79,14 +72,12 @@ class TestDescriptorArray:
         # When Then Expect
         with pytest.raises(UnitError):
             DescriptorArray(
-                name='name',
                 value=[[1.0, 2.0], [3.0, 4.0]],
                 unit='unknown',
                 variance=[[0.1, 0.2], [0.3, 0.4]],
                 description='description',
                 url='url',
                 display_name='display_name',
-                parent=None,
             )
 
     @pytest.mark.parametrize('value', [True, 'string'])
@@ -96,14 +87,12 @@ class TestDescriptorArray:
         # Then Expect
         with pytest.raises(TypeError):
             DescriptorArray(
-                name='name',
                 value=value,
                 unit='m',
                 variance=[[0.1, 0.2], [0.3, 0.4]],
                 description='description',
                 url='url',
                 display_name='display_name',
-                parent=None,
             )
 
     def test_init_variance_exception(self):
@@ -112,14 +101,12 @@ class TestDescriptorArray:
         # Then Expect
         with pytest.raises(ValueError):
             DescriptorArray(
-                name='name',
                 value=[[1.0, 2.0], [3.0, 4.0]],
                 unit='m',
                 variance=variance,
                 description='description',
                 url='url',
                 display_name='display_name',
-                parent=None,
             )
 
     # test from_scipp
@@ -127,7 +114,7 @@ class TestDescriptorArray:
         # When
         full_value = sc.array(dims=['row', 'column'], values=[[1, 2], [3, 4]], unit='m')
         # Then
-        descriptor = DescriptorArray.from_scipp(name='name', full_value=full_value)
+        descriptor = DescriptorArray.from_scipp(display_name='name', full_value=full_value)
 
         # Expect
         assert np.array_equal(descriptor._array.values, [[1, 2], [3, 4]])
@@ -213,7 +200,7 @@ class TestDescriptorArray:
         # Expect
         assert (
             repr_str
-            == "<DescriptorArray 'name': values=[[1. 2.], [3. 4.]], errors=[[0.3162 0.4472], [0.5477 0.6325]], unit=m>"
+            == "<DescriptorArray 'display_name': values=[[1. 2.], [3. 4.]], errors=[[0.3162 0.4472], [0.5477 0.6325]], unit=m>"
         )
 
     def test_copy(self, descriptor: DescriptorArray):
@@ -232,7 +219,9 @@ class TestDescriptorArray:
     )
     def test_base_unit(self, unit_string, expected):
         # When
-        descriptor = DescriptorArray(name='name', value=[[1.0, 2.0], [3.0, 4.0]], unit=unit_string)
+        descriptor = DescriptorArray(
+            display_name='name', value=[[1.0, 2.0], [3.0, 4.0]], unit=unit_string
+        )
 
         # Then
         base_unit = descriptor._base_unit()
@@ -244,36 +233,47 @@ class TestDescriptorArray:
         'test, expected, raises_warning',
         [
             (
-                DescriptorNumber('test', 2, 'm', 0.01),
+                DescriptorNumber(2, unit='m', variance=0.01, display_name='test'),
                 DescriptorArray(
-                    'test + name', [[3.0, 4.0], [5.0, 6.0]], 'm', [[0.11, 0.21], [0.31, 0.41]]
+                    [[3.0, 4.0], [5.0, 6.0]],
+                    unit='m',
+                    variance=[[0.11, 0.21], [0.31, 0.41]],
+                    display_name='test + name',
                 ),
                 True,
             ),
             (
-                DescriptorNumber('test', 1, 'cm', 10),
+                DescriptorNumber(1, unit='cm', variance=10, display_name='test'),
                 DescriptorArray(
-                    'test + name',
                     [[1.01, 2.01], [3.01, 4.01]],
-                    'm',
-                    [[0.1010, 0.2010], [0.3010, 0.4010]],
+                    unit='m',
+                    variance=[[0.1010, 0.2010], [0.3010, 0.4010]],
+                    display_name='test + name',
                 ),
                 True,
             ),
             (
-                DescriptorArray('test', [[2.0, 3.0], [4.0, -5.0]], 'cm', [[1.0, 2.0], [3.0, 4.0]]),
                 DescriptorArray(
-                    'test + name',
+                    [[2.0, 3.0], [4.0, -5.0]],
+                    unit='cm',
+                    variance=[[1.0, 2.0], [3.0, 4.0]],
+                    display_name='test',
+                ),
+                DescriptorArray(
                     [[1.02, 2.03], [3.04, 3.95]],
-                    'm',
-                    [[0.1001, 0.2002], [0.3003, 0.4004]],
+                    unit='m',
+                    variance=[[0.1001, 0.2002], [0.3003, 0.4004]],
+                    display_name='test + name',
                 ),
                 False,
             ),
             (
-                DescriptorArray('test', [[2, 3], [4, -5]], 'cm'),
+                DescriptorArray([[2, 3], [4, -5]], unit='cm', display_name='test'),
                 DescriptorArray(
-                    'test + name', [[1.02, 2.03], [3.04, 3.95]], 'm', [[0.1, 0.2], [0.3, 0.4]]
+                    [[1.02, 2.03], [3.04, 3.95]],
+                    unit='m',
+                    variance=[[0.1, 0.2], [0.3, 0.4]],
+                    display_name='test + name',
                 ),
                 False,
             ),
@@ -296,7 +296,6 @@ class TestDescriptorArray:
             result = descriptor + test
         # Expect
         assert type(result) == DescriptorArray
-        assert result.name == result.unique_name
         assert np.array_equal(result.value, expected.value)
         assert result.unit == expected.unit
         assert np.allclose(result.variance, expected.variance)
@@ -308,19 +307,19 @@ class TestDescriptorArray:
             (
                 [[2.0, 3.0], [4.0, -5.0], [6.0, -8.0]],
                 DescriptorArray(
-                    'test',
                     [[3.0, 5.0], [7.0, -1.0], [11.0, -2.0]],
-                    'dimensionless',
-                    [[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]],
+                    unit='dimensionless',
+                    variance=[[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]],
+                    display_name='test',
                 ),
             ),
             (
                 1,
                 DescriptorArray(
-                    'test',
                     [[2.0, 3.0], [4.0, 5.0], [6.0, 7.0]],
-                    'dimensionless',
-                    [[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]],
+                    unit='dimensionless',
+                    variance=[[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]],
+                    display_name='test',
                 ),
             ),
         ],
@@ -341,39 +340,47 @@ class TestDescriptorArray:
         'test, expected, raises_warning',
         [
             (
-                DescriptorNumber('test', 2, 'm', 0.01),
+                DescriptorNumber(2, unit='m', variance=0.01, display_name='test'),
                 DescriptorArray(
-                    'test + name', [[3.0, 4.0], [5.0, 6.0]], 'm', [[0.11, 0.21], [0.31, 0.41]]
+                    [[3.0, 4.0], [5.0, 6.0]],
+                    unit='m',
+                    variance=[[0.11, 0.21], [0.31, 0.41]],
+                    display_name='test + name',
                 ),
                 True,
             ),
             (
-                DescriptorNumber('test', 1, 'cm', 10),
+                DescriptorNumber(1, unit='cm', variance=10, display_name='test'),
                 DescriptorArray(
-                    'test + name',
                     [[101.0, 201.0], [301.0, 401.0]],
-                    'cm',
-                    [[1010.0, 2010.0], [3010.0, 4010.0]],
+                    unit='cm',
+                    variance=[[1010.0, 2010.0], [3010.0, 4010.0]],
+                    display_name='test + name',
                 ),
                 True,
             ),
             (
-                DescriptorArray('test', [[2.0, 3.0], [4.0, -5.0]], 'cm', [[1.0, 2.0], [3.0, 4.0]]),
                 DescriptorArray(
-                    'test + name',
+                    [[2.0, 3.0], [4.0, -5.0]],
+                    unit='cm',
+                    variance=[[1.0, 2.0], [3.0, 4.0]],
+                    display_name='test',
+                ),
+                DescriptorArray(
                     [[102.0, 203.0], [304.0, 395.0]],
-                    'cm',
-                    [[1001.0, 2002.0], [3003.0, 4004.0]],
+                    unit='cm',
+                    variance=[[1001.0, 2002.0], [3003.0, 4004.0]],
+                    display_name='test + name',
                 ),
                 False,
             ),
             (
-                DescriptorArray('test', [[2, 3], [4, -5]], 'cm'),
+                DescriptorArray([[2, 3], [4, -5]], unit='cm', display_name='test'),
                 DescriptorArray(
-                    'test + name',
                     [[102.0, 203.0], [304.0, 395.0]],
-                    'cm',
-                    [[1000.0, 2000.0], [3000.0, 4000.0]],
+                    unit='cm',
+                    variance=[[1000.0, 2000.0], [3000.0, 4000.0]],
+                    display_name='test + name',
                 ),
                 False,
             ),
@@ -396,7 +403,6 @@ class TestDescriptorArray:
             result = test + descriptor
         # Expect
         assert type(result) == DescriptorArray
-        assert result.name == result.unique_name
         assert np.array_equal(result.value, expected.value)
         assert result.unit == expected.unit
         assert np.allclose(result.variance, expected.variance)
@@ -408,19 +414,19 @@ class TestDescriptorArray:
             (
                 [[2.0, 3.0], [4.0, -5.0], [6.0, -8.0]],
                 DescriptorArray(
-                    'test',
                     [[3.0, 5.0], [7.0, -1.0], [11.0, -2.0]],
-                    'dimensionless',
-                    [[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]],
+                    unit='dimensionless',
+                    variance=[[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]],
+                    display_name='test',
                 ),
             ),
             (
                 1,
                 DescriptorArray(
-                    'test',
                     [[2.0, 3.0], [4.0, 5.0], [6.0, 7.0]],
-                    'dimensionless',
-                    [[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]],
+                    unit='dimensionless',
+                    variance=[[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]],
+                    display_name='test',
                 ),
             ),
         ],
@@ -441,39 +447,47 @@ class TestDescriptorArray:
         'test, expected, raises_warning',
         [
             (
-                DescriptorNumber('test', 2, 'm', 0.01),
+                DescriptorNumber(2, unit='m', variance=0.01, display_name='test'),
                 DescriptorArray(
-                    'test + name', [[-1.0, 0.0], [1.0, 2.0]], 'm', [[0.11, 0.21], [0.31, 0.41]]
+                    [[-1.0, 0.0], [1.0, 2.0]],
+                    unit='m',
+                    variance=[[0.11, 0.21], [0.31, 0.41]],
+                    display_name='test + name',
                 ),
                 True,
             ),
             (
-                DescriptorNumber('test', 1, 'cm', 10),
+                DescriptorNumber(1, unit='cm', variance=10, display_name='test'),
                 DescriptorArray(
-                    'test + name',
                     [[0.99, 1.99], [2.99, 3.99]],
-                    'm',
-                    [[0.1010, 0.2010], [0.3010, 0.4010]],
+                    unit='m',
+                    variance=[[0.1010, 0.2010], [0.3010, 0.4010]],
+                    display_name='test + name',
                 ),
                 True,
             ),
             (
-                DescriptorArray('test', [[2.0, 3.0], [4.0, -5.0]], 'cm', [[1.0, 2.0], [3.0, 4.0]]),
                 DescriptorArray(
-                    'test + name',
+                    [[2.0, 3.0], [4.0, -5.0]],
+                    unit='cm',
+                    variance=[[1.0, 2.0], [3.0, 4.0]],
+                    display_name='test',
+                ),
+                DescriptorArray(
                     [[0.98, 1.97], [2.96, 4.05]],
-                    'm',
-                    [[0.1001, 0.2002], [0.3003, 0.4004]],
+                    unit='m',
+                    variance=[[0.1001, 0.2002], [0.3003, 0.4004]],
+                    display_name='test + name',
                 ),
                 False,
             ),
             (
-                DescriptorArray('test', [[2, 3], [4, -5]], 'cm'),
+                DescriptorArray([[2, 3], [4, -5]], unit='cm', display_name='test'),
                 DescriptorArray(
-                    'test + name',
                     [[0.98, 1.97], [2.96, 4.05]],
-                    'm',
-                    [[0.100, 0.200], [0.300, 0.400]],
+                    unit='m',
+                    variance=[[0.100, 0.200], [0.300, 0.400]],
+                    display_name='test + name',
                 ),
                 False,
             ),
@@ -496,7 +510,6 @@ class TestDescriptorArray:
             result = descriptor - test
         # Expect
         assert type(result) == DescriptorArray
-        assert result.name == result.unique_name
         assert np.array_equal(result.value, expected.value)
         assert result.unit == expected.unit
         assert np.allclose(result.variance, expected.variance)
@@ -508,19 +521,19 @@ class TestDescriptorArray:
             (
                 [[2.0, 3.0], [4.0, -5.0], [6.0, -8.0]],
                 DescriptorArray(
-                    'test',
                     [[-1.0, -1.0], [-1.0, 9.0], [-1, 14.0]],
-                    'dimensionless',
-                    [[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]],
+                    unit='dimensionless',
+                    variance=[[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]],
+                    display_name='test',
                 ),
             ),
             (
                 1,
                 DescriptorArray(
-                    'test',
                     [[0.0, 1.0], [2.0, 3.0], [4.0, 5.0]],
-                    'dimensionless',
-                    [[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]],
+                    unit='dimensionless',
+                    variance=[[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]],
+                    display_name='test',
                 ),
             ),
         ],
@@ -541,39 +554,47 @@ class TestDescriptorArray:
         'test, expected, raises_warning',
         [
             (
-                DescriptorNumber('test', 2, 'm', 0.01),
+                DescriptorNumber(2, unit='m', variance=0.01, display_name='test'),
                 DescriptorArray(
-                    'test + name', [[1.0, 0.0], [-1.0, -2.0]], 'm', [[0.11, 0.21], [0.31, 0.41]]
+                    [[1.0, 0.0], [-1.0, -2.0]],
+                    unit='m',
+                    variance=[[0.11, 0.21], [0.31, 0.41]],
+                    display_name='test + name',
                 ),
                 True,
             ),
             (
-                DescriptorNumber('test', 1, 'cm', 10),
+                DescriptorNumber(1, unit='cm', variance=10, display_name='test'),
                 DescriptorArray(
-                    'test + name',
                     [[-99.0, -199.0], [-299.0, -399.0]],
-                    'cm',
-                    [[1010.0, 2010.0], [3010.0, 4010.0]],
+                    unit='cm',
+                    variance=[[1010.0, 2010.0], [3010.0, 4010.0]],
+                    display_name='test + name',
                 ),
                 True,
             ),
             (
-                DescriptorArray('test', [[2.0, 3.0], [4.0, -5.0]], 'cm', [[1.0, 2.0], [3.0, 4.0]]),
                 DescriptorArray(
-                    'test + name',
+                    [[2.0, 3.0], [4.0, -5.0]],
+                    unit='cm',
+                    variance=[[1.0, 2.0], [3.0, 4.0]],
+                    display_name='test',
+                ),
+                DescriptorArray(
                     [[-98.0, -197.0], [-296.0, -405.0]],
-                    'cm',
-                    [[1001.0, 2002.0], [3003.0, 4004.0]],
+                    unit='cm',
+                    variance=[[1001.0, 2002.0], [3003.0, 4004.0]],
+                    display_name='test + name',
                 ),
                 False,
             ),
             (
-                DescriptorArray('test', [[2, 3], [4, -5]], 'cm'),
+                DescriptorArray([[2, 3], [4, -5]], unit='cm', display_name='test'),
                 DescriptorArray(
-                    'test + name',
                     [[-98.0, -197.0], [-296.0, -405.0]],
-                    'cm',
-                    [[1000.0, 2000.0], [3000.0, 4000.0]],
+                    unit='cm',
+                    variance=[[1000.0, 2000.0], [3000.0, 4000.0]],
+                    display_name='test + name',
                 ),
                 False,
             ),
@@ -598,7 +619,6 @@ class TestDescriptorArray:
             result = test - descriptor
         # Expect
         assert type(result) == DescriptorArray
-        assert result.name == result.unique_name
         assert np.array_equal(result.value, expected.value)
         assert result.unit == expected.unit
         assert np.allclose(result.variance, expected.variance)
@@ -610,19 +630,19 @@ class TestDescriptorArray:
             (
                 [[2.0, 3.0], [4.0, -5.0], [6.0, -8.0]],
                 DescriptorArray(
-                    'test',
                     [[1.0, 1.0], [1.0, -9.0], [1.0, -14.0]],
-                    'dimensionless',
-                    [[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]],
+                    unit='dimensionless',
+                    variance=[[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]],
+                    display_name='test',
                 ),
             ),
             (
                 1,
                 DescriptorArray(
-                    'test',
                     [[0.0, -1.0], [-2.0, -3.0], [-4.0, -5.0]],
-                    'dimensionless',
-                    [[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]],
+                    unit='dimensionless',
+                    variance=[[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]],
+                    display_name='test',
                 ),
             ),
         ],
@@ -643,69 +663,80 @@ class TestDescriptorArray:
         'test, expected, raises_warning',
         [
             (
-                DescriptorNumber('test', 2, 'm', 0.01),
+                DescriptorNumber(2, unit='m', variance=0.01, display_name='test'),
                 DescriptorArray(
-                    'test * name', [[2.0, 4.0], [6.0, 8.0]], 'm^2', [[0.41, 0.84], [1.29, 1.76]]
+                    [[2.0, 4.0], [6.0, 8.0]],
+                    unit='m^2',
+                    variance=[[0.41, 0.84], [1.29, 1.76]],
+                    display_name='test * name',
                 ),
                 True,
             ),
             (
-                DescriptorNumber('test', 1, 'cm', 10),
+                DescriptorNumber(1, unit='cm', variance=10, display_name='test'),
                 DescriptorArray(
-                    'test * name',
                     [[0.01, 0.02], [0.03, 0.04]],
-                    'm^2',
-                    [[0.00101, 0.00402], [0.00903, 0.01604]],
+                    unit='m^2',
+                    variance=[[0.00101, 0.00402], [0.00903, 0.01604]],
+                    display_name='test * name',
                 ),
                 True,
             ),
             (
-                DescriptorNumber('test', 1, 'kg', 10),
+                DescriptorNumber(1, unit='kg', variance=10, display_name='test'),
                 DescriptorArray(
-                    'test * name', [[1.0, 2.0], [3.0, 4.0]], 'kg*m', [[10.1, 40.2], [90.3, 160.4]]
+                    [[1.0, 2.0], [3.0, 4.0]],
+                    unit='kg*m',
+                    variance=[[10.1, 40.2], [90.3, 160.4]],
+                    display_name='test * name',
                 ),
                 True,
             ),
             (
-                DescriptorArray('test', [[2.0, 3.0], [4.0, -5.0]], 'cm', [[1.0, 2.0], [3.0, 4.0]]),
                 DescriptorArray(
-                    'test * name',
+                    [[2.0, 3.0], [4.0, -5.0]],
+                    unit='cm',
+                    variance=[[1.0, 2.0], [3.0, 4.0]],
+                    display_name='test',
+                ),
+                DescriptorArray(
                     [[0.02, 0.06], [0.12, -0.2]],
-                    'm^2',
-                    [[0.00014, 0.00098], [0.00318, 0.0074]],
+                    unit='m^2',
+                    variance=[[0.00014, 0.00098], [0.00318, 0.0074]],
+                    display_name='test * name',
                 ),
                 False,
             ),
             (
-                DescriptorArray('test', [[2, 3], [4, -5]], 'cm'),
+                DescriptorArray([[2, 3], [4, -5]], unit='cm', display_name='test'),
                 DescriptorArray(
-                    'test * name',
                     [[0.02, 0.06], [0.12, -0.2]],
-                    'm^2',
-                    [
+                    unit='m^2',
+                    variance=[
                         [0.1 * 2**2 * 1e-4, 0.2 * 3**2 * 1e-4],
                         [0.3 * 4**2 * 1e-4, 0.4 * 5**2 * 1e-4],
                     ],
+                    display_name='test * name',
                 ),
                 False,
             ),
             (
                 [[2.0, 3.0], [4.0, -5.0]],
                 DescriptorArray(
-                    'test * name',
                     [[2.0, 6.0], [12.0, -20.0]],
-                    'm',
-                    [[0.1 * 2**2, 0.2 * 3**2], [0.3 * 4**2, 0.4 * 5**2]],
+                    unit='m',
+                    variance=[[0.1 * 2**2, 0.2 * 3**2], [0.3 * 4**2, 0.4 * 5**2]],
+                    display_name='test * name',
                 ),
                 False,
             ),
             (
                 2.0,
                 DescriptorArray(
-                    'test * name',
                     [[2.0, 4.0], [6.0, 8.0]],
-                    'm',
-                    [[0.1 * 2**2, 0.2 * 2**2], [0.3 * 2**2, 0.4 * 2**2]],
+                    unit='m',
+                    variance=[[0.1 * 2**2, 0.2 * 2**2], [0.3 * 2**2, 0.4 * 2**2]],
+                    display_name='test * name',
                 ),
                 False,
             ),
@@ -731,7 +762,6 @@ class TestDescriptorArray:
             result = descriptor * test
         # Expect
         assert type(result) == DescriptorArray
-        assert result.name == result.unique_name
         assert np.array_equal(result.value, expected.value)
         assert result.unit == expected.unit
         assert np.allclose(result.variance, expected.variance)
@@ -743,19 +773,19 @@ class TestDescriptorArray:
             (
                 [[2.0, 3.0], [4.0, -5.0], [6.0, -8.0]],
                 DescriptorArray(
-                    'test',
                     [[2.0, 6.0], [12.0, -20.0], [30.0, -48.0]],
-                    'dimensionless',
-                    [[0.4, 1.8], [4.8, 10.0], [18.0, 38.4]],
+                    unit='dimensionless',
+                    variance=[[0.4, 1.8], [4.8, 10.0], [18.0, 38.4]],
+                    display_name='test',
                 ),
             ),
             (
                 1.5,
                 DescriptorArray(
-                    'test',
                     [[1.5, 3.0], [4.5, 6.0], [7.5, 9.0]],
-                    'dimensionless',
-                    [[0.225, 0.45], [0.675, 0.9], [1.125, 1.35]],
+                    unit='dimensionless',
+                    variance=[[0.225, 0.45], [0.675, 0.9], [1.125, 1.35]],
+                    display_name='test',
                 ),
             ),
         ],
@@ -776,66 +806,80 @@ class TestDescriptorArray:
         'test, expected, raises_warning',
         [
             (
-                DescriptorNumber('test', 2, 'm', 0.01),
+                DescriptorNumber(2, unit='m', variance=0.01, display_name='test'),
                 DescriptorArray(
-                    'test * name', [[2.0, 4.0], [6.0, 8.0]], 'm^2', [[0.41, 0.84], [1.29, 1.76]]
+                    [[2.0, 4.0], [6.0, 8.0]],
+                    unit='m^2',
+                    variance=[[0.41, 0.84], [1.29, 1.76]],
+                    display_name='test * name',
                 ),
                 True,
             ),
             (
-                DescriptorNumber('test', 1, 'cm', 10),
+                DescriptorNumber(1, unit='cm', variance=10, display_name='test'),
                 DescriptorArray(
-                    'test * name',
                     [[100.0, 200.0], [300.0, 400.0]],
-                    'cm^2',
-                    [[101000.0, 402000.0], [903000.0, 1604000.0]],
+                    unit='cm^2',
+                    variance=[[101000.0, 402000.0], [903000.0, 1604000.0]],
+                    display_name='test * name',
                 ),
                 True,
             ),
             (
-                DescriptorNumber('test', 1, 'kg', 10),
+                DescriptorNumber(1, unit='kg', variance=10, display_name='test'),
                 DescriptorArray(
-                    'test * name', [[1.0, 2.0], [3.0, 4.0]], 'kg*m', [[10.1, 40.2], [90.3, 160.4]]
+                    [[1.0, 2.0], [3.0, 4.0]],
+                    unit='kg*m',
+                    variance=[[10.1, 40.2], [90.3, 160.4]],
+                    display_name='test * name',
                 ),
                 True,
             ),
             (
-                DescriptorArray('test', [[2.0, 3.0], [4.0, -5.0]], 'cm', [[1.0, 2.0], [3.0, 4.0]]),
                 DescriptorArray(
-                    'test * name',
+                    [[2.0, 3.0], [4.0, -5.0]],
+                    unit='cm',
+                    variance=[[1.0, 2.0], [3.0, 4.0]],
+                    display_name='test',
+                ),
+                DescriptorArray(
                     [[200.0, 600.0], [1200.0, -2000.0]],
-                    'cm^2',
-                    [[14000.0, 98000.0], [318000.0, 740000.0]],
+                    unit='cm^2',
+                    variance=[[14000.0, 98000.0], [318000.0, 740000.0]],
+                    display_name='test * name',
                 ),
                 False,
             ),
             (
-                DescriptorArray('test', [[2, 3], [4, -5]], 'cm'),
+                DescriptorArray([[2, 3], [4, -5]], unit='cm', display_name='test'),
                 DescriptorArray(
-                    'test * name',
                     [[200.0, 600.0], [1200.0, -2000.0]],
-                    'cm^2',
-                    [[0.1 * 2**2 * 1e4, 0.2 * 3**2 * 1e4], [0.3 * 4**2 * 1e4, 0.4 * 5**2 * 1e4]],
+                    unit='cm^2',
+                    variance=[
+                        [0.1 * 2**2 * 1e4, 0.2 * 3**2 * 1e4],
+                        [0.3 * 4**2 * 1e4, 0.4 * 5**2 * 1e4],
+                    ],
+                    display_name='test * name',
                 ),
                 False,
             ),
             (
                 [[2.0, 3.0], [4.0, -5.0]],
                 DescriptorArray(
-                    'test * name',
                     [[2.0, 6.0], [12.0, -20.0]],
-                    'm',
-                    [[0.1 * 2**2, 0.2 * 3**2], [0.3 * 4**2, 0.4 * 5**2]],
+                    unit='m',
+                    variance=[[0.1 * 2**2, 0.2 * 3**2], [0.3 * 4**2, 0.4 * 5**2]],
+                    display_name='test * name',
                 ),
                 False,
             ),
             (
                 2.0,
                 DescriptorArray(
-                    'test * name',
                     [[2.0, 4.0], [6.0, 8.0]],
-                    'm',
-                    [[0.1 * 2**2, 0.2 * 2**2], [0.3 * 2**2, 0.4 * 2**2]],
+                    unit='m',
+                    variance=[[0.1 * 2**2, 0.2 * 2**2], [0.3 * 2**2, 0.4 * 2**2]],
+                    display_name='test * name',
                 ),
                 False,
             ),
@@ -863,7 +907,6 @@ class TestDescriptorArray:
             result = test * descriptor
         # Expect
         assert type(result) == DescriptorArray
-        assert result.name == result.unique_name
         assert np.array_equal(result.value, expected.value)
         assert result.unit == expected.unit
         assert np.allclose(result.variance, expected.variance)
@@ -875,19 +918,19 @@ class TestDescriptorArray:
             (
                 [[2.0, 3.0], [4.0, -5.0], [6.0, -8.0]],
                 DescriptorArray(
-                    'test',
                     [[2.0, 6.0], [12.0, -20.0], [30.0, -48.0]],
-                    'dimensionless',
-                    [[0.4, 1.8], [4.8, 10.0], [18.0, 38.4]],
+                    unit='dimensionless',
+                    variance=[[0.4, 1.8], [4.8, 10.0], [18.0, 38.4]],
+                    display_name='test',
                 ),
             ),
             (
                 1.5,
                 DescriptorArray(
-                    'test',
                     [[1.5, 3.0], [4.5, 6.0], [7.5, 9.0]],
-                    'dimensionless',
-                    [[0.225, 0.45], [0.675, 0.9], [1.125, 1.35]],
+                    unit='dimensionless',
+                    variance=[[0.225, 0.45], [0.675, 0.9], [1.125, 1.35]],
+                    display_name='test',
                 ),
             ),
         ],
@@ -908,12 +951,11 @@ class TestDescriptorArray:
         'test, expected, raises_warning',
         [
             (
-                DescriptorNumber('test', 2, 'm', 0.01),
+                DescriptorNumber(2, unit='m', variance=0.01, display_name='test'),
                 DescriptorArray(
-                    'name / test',
                     [[1.0 / 2.0, 2.0 / 2.0], [3.0 / 2.0, 4.0 / 2.0]],
-                    'dimensionless',
-                    [
+                    unit='dimensionless',
+                    variance=[
                         [
                             (0.1 + 0.01 * 1.0**2 / 2.0**2) / 2.0**2,
                             (0.2 + 0.01 * 2.0**2 / 2.0**2) / 2.0**2,
@@ -923,16 +965,16 @@ class TestDescriptorArray:
                             (0.4 + 0.01 * 4.0**2 / 2.0**2) / 2.0**2,
                         ],
                     ],
+                    display_name='name / test',
                 ),
                 True,
             ),
             (
-                DescriptorNumber('test', 1, 'cm', 10),
+                DescriptorNumber(1, unit='cm', variance=10, display_name='test'),
                 DescriptorArray(
-                    'name / test',
                     [[100.0, 200.0], [300.0, 400.0]],
-                    'dimensionless',
-                    [
+                    unit='dimensionless',
+                    variance=[
                         [
                             (0.1 + 10 * 1.0**2 / 1.0**2) / 1.0**2 * 1e4,
                             (0.2 + 10 * 2.0**2 / 1.0**2) / 1.0**2 * 1e4,
@@ -942,16 +984,16 @@ class TestDescriptorArray:
                             (0.4 + 10 * 4.0**2 / 1.0**2) / 1.0**2 * 1e4,
                         ],
                     ],
+                    display_name='name / test',
                 ),
                 True,
             ),
             (
-                DescriptorNumber('test', 1, 'kg', 10),
+                DescriptorNumber(1, unit='kg', variance=10, display_name='test'),
                 DescriptorArray(
-                    'name / test',
                     [[1.0, 2.0], [3.0, 4.0]],
-                    'm/kg',
-                    [
+                    unit='m/kg',
+                    variance=[
                         [
                             (0.1 + 10 * 1.0**2 / 1.0**2) / 1.0**2,
                             (0.2 + 10 * 2.0**2 / 1.0**2) / 1.0**2,
@@ -961,18 +1003,21 @@ class TestDescriptorArray:
                             (0.4 + 10 * 4.0**2 / 1.0**2) / 1.0**2,
                         ],
                     ],
+                    display_name='name / test',
                 ),
                 True,
             ),
             (
                 DescriptorArray(
-                    'test', [[2.0, 3.0], [4.0, -5.0]], 'cm^2', [[1.0, 2.0], [3.0, 4.0]]
+                    [[2.0, 3.0], [4.0, -5.0]],
+                    unit='cm^2',
+                    variance=[[1.0, 2.0], [3.0, 4.0]],
+                    display_name='test',
                 ),
                 DescriptorArray(
-                    'name / test',
                     [[1 / 2 * 1e4, 2 / 3 * 1e4], [3.0 / 4.0 * 1e4, -4.0 / 5.0 * 1e4]],
-                    '1/m',
-                    [
+                    unit='1/m',
+                    variance=[
                         [
                             (0.1 + 1.0 * 1.0**2 / 2.0**2) / 2.0**2 * 1e8,
                             (0.2 + 2.0 * 2.0**2 / 3.0**2) / 3.0**2 * 1e8,
@@ -982,39 +1027,40 @@ class TestDescriptorArray:
                             (0.4 + 4.0 * 4.0**2 / 5.0**2) / 5.0**2 * 1e8,
                         ],
                     ],
+                    display_name='name / test',
                 ),
                 False,
             ),
             (
-                DescriptorArray('test', [[2, 3], [4, -5]], 'cm^2'),
+                DescriptorArray([[2, 3], [4, -5]], unit='cm^2', display_name='test'),
                 DescriptorArray(
-                    'name / test',
                     [[1 / 2 * 1e4, 2 / 3 * 1e4], [3.0 / 4.0 * 1e4, -4.0 / 5.0 * 1e4]],
-                    '1/m',
-                    [
+                    unit='1/m',
+                    variance=[
                         [(0.1) / 2.0**2 * 1e8, (0.2) / 3.0**2 * 1e8],
                         [(0.3) / 4.0**2 * 1e8, (0.4) / 5.0**2 * 1e8],
                     ],
+                    display_name='name / test',
                 ),
                 False,
             ),
             (
                 [[2.0, 3.0], [4.0, -5.0]],
                 DescriptorArray(
-                    'name / name',
                     [[0.5, 2.0 / 3.0], [3.0 / 4.0, -4 / 5]],
-                    'm',
-                    [[0.1 / 2**2, 0.2 / 3.0**2], [0.3 / 4**2, 0.4 / 5.0**2]],
+                    unit='m',
+                    variance=[[0.1 / 2**2, 0.2 / 3.0**2], [0.3 / 4**2, 0.4 / 5.0**2]],
+                    display_name='name / name',
                 ),
                 False,
             ),
             (
                 2.0,
                 DescriptorArray(
-                    'name / test',
                     [[0.5, 1.0], [3.0 / 2.0, 2.0]],
-                    'm',
-                    [[0.1 / 2.0**2, 0.2 / 2.0**2], [0.3 / 2.0**2, 0.4 / 2.0**2]],
+                    unit='m',
+                    variance=[[0.1 / 2.0**2, 0.2 / 2.0**2], [0.3 / 2.0**2, 0.4 / 2.0**2]],
+                    display_name='name / test',
                 ),
                 False,
             ),
@@ -1040,7 +1086,6 @@ class TestDescriptorArray:
             result = descriptor / test
         # Expect
         assert type(result) == DescriptorArray
-        assert result.name == result.unique_name
         assert np.allclose(result.value, expected.value)
         assert result.unit == expected.unit
         assert np.allclose(result.variance, expected.variance)
@@ -1052,27 +1097,27 @@ class TestDescriptorArray:
             (
                 [[2.0, 3.0], [4.0, -5.0], [6.0, -8.0]],
                 DescriptorArray(
-                    'test',
                     [[1.0 / 2.0, 2.0 / 3.0], [3.0 / 4.0, -4.0 / 5.0], [5.0 / 6.0, -6.0 / 8.0]],
-                    'dimensionless',
-                    [
+                    unit='dimensionless',
+                    variance=[
                         [0.1 / 2.0**2, 0.2 / 3.0**2],
                         [0.3 / 4.0**2, 0.4 / 5.0**2],
                         [0.5 / 6.0**2, 0.6 / 8.0**2],
                     ],
+                    display_name='test',
                 ),
             ),
             (
                 2,
                 DescriptorArray(
-                    'test',
                     [[1.0 / 2.0, 2.0 / 2.0], [3.0 / 2.0, 4.0 / 2.0], [5.0 / 2.0, 6.0 / 2.0]],
-                    'dimensionless',
-                    [
+                    unit='dimensionless',
+                    variance=[
                         [0.1 / 2.0**2, 0.2 / 2.0**2],
                         [0.3 / 2.0**2, 0.4 / 2.0**2],
                         [0.5 / 2.0**2, 0.6 / 2.0**2],
                     ],
+                    display_name='test',
                 ),
             ),
         ],
@@ -1093,75 +1138,77 @@ class TestDescriptorArray:
         'test, expected, raises_warning',
         [
             (
-                DescriptorNumber('test', 2, 'm', 0.01),
+                DescriptorNumber(2, unit='m', variance=0.01, display_name='test'),
                 DescriptorArray(
-                    'test / name',
                     [[2.0, 1.0], [2.0 / 3.0, 0.5]],
-                    'dimensionless',
-                    [
+                    unit='dimensionless',
+                    variance=[
                         [0.41, 0.0525],
                         [
                             (0.01 + 0.3 * 2**2 / 3.0**2) / 3.0**2,
                             (0.01 + 0.4 * 2**2 / 4.0**2) / 4.0**2,
                         ],
                     ],
+                    display_name='test / name',
                 ),
                 True,
             ),
             (
-                DescriptorNumber('test', 1, 'cm', 10),
+                DescriptorNumber(1, unit='cm', variance=10, display_name='test'),
                 DescriptorArray(
-                    'test / name',
                     [[1.0 / 100.0, 1.0 / 200.0], [1.0 / 300.0, 1.0 / 400.0]],
-                    'dimensionless',
-                    [
+                    unit='dimensionless',
+                    variance=[
                         [1.01e-3, (1e-3 + 0.2 * 0.01**2 / 2**2) / 2**2],
                         [
                             (1e-3 + 0.3 * 0.01**2 / 3**2) / 3**2,
                             (1e-3 + 0.4 * 0.01**2 / 4**2) / 4**2,
                         ],
                     ],
+                    display_name='test / name',
                 ),
                 True,
             ),
             (
-                DescriptorNumber('test', 1, 'kg', 10),
+                DescriptorNumber(1, unit='kg', variance=10, display_name='test'),
                 DescriptorArray(
-                    'test / name',
                     [[1.0, 0.5], [1.0 / 3.0, 0.25]],
-                    'kg/m',
-                    [
+                    unit='kg/m',
+                    variance=[
                         [10.1, (10 + 0.2 * 1 / 2**2) / 2**2],
                         [(10 + 0.3 * 1 / 3**2) / 3**2, (10 + 0.4 * 1 / 4**2) / 4**2],
                     ],
+                    display_name='test / name',
                 ),
                 True,
             ),
             (
                 DescriptorArray(
-                    'test', [[2.0, 3.0], [4.0, -5.0]], 'cm^2', [[1.0, 2.0], [3.0, 4.0]]
+                    [[2.0, 3.0], [4.0, -5.0]],
+                    unit='cm^2',
+                    variance=[[1.0, 2.0], [3.0, 4.0]],
+                    display_name='test',
                 ),
                 DescriptorArray(
-                    'test / name',
                     [[2e-4, 1.5e-4], [4.0 / 3.0 * 1e-4, -1.25e-4]],
-                    'm',
-                    [
+                    unit='m',
+                    variance=[
                         [1.4e-8, 6.125e-9],
                         [
                             (3.0e-8 + 0.3 * (0.0004) ** 2 / 3**2) / 3**2,
                             (4.0e-8 + 0.4 * (0.0005) ** 2 / 4**2) / 4**2,
                         ],
                     ],
+                    display_name='test / name',
                 ),
                 False,
             ),
             (
-                DescriptorArray('test', [[2, 3], [4, -5]], 'cm^2'),
+                DescriptorArray([[2, 3], [4, -5]], unit='cm^2', display_name='test'),
                 DescriptorArray(
-                    'test / name',
                     [[2e-4, 1.5e-4], [4.0 / 3.0 * 1e-4, -1.25e-4]],
-                    'm',
-                    [
+                    unit='m',
+                    variance=[
                         [
                             (0.1 * 2.0**2 / 1.0**2) / 1.0**2 * 1e-8,
                             (0.2 * 3.0**2 / 2.0**2) / 2.0**2 * 1e-8,
@@ -1171,32 +1218,33 @@ class TestDescriptorArray:
                             (0.4 * 5.0**2 / 4.0**2) / 4.0**2 * 1e-8,
                         ],
                     ],
+                    display_name='test / name',
                 ),
                 False,
             ),
             (
                 [[2.0, 3.0], [4.0, -5.0]],
                 DescriptorArray(
-                    'test / name',
                     [[2, 1.5], [4.0 / 3.0, -1.25]],
-                    '1/m',
-                    [
+                    unit='1/m',
+                    variance=[
                         [0.1 * 2**2 / 1**4, 0.2 * 3.0**2 / 2.0**4],
                         [0.3 * 4**2 / 3**4, 0.4 * 5.0**2 / 4.0**4],
                     ],
+                    display_name='test / name',
                 ),
                 False,
             ),
             (
                 2.0,
                 DescriptorArray(
-                    'test / name',
                     [[2, 1.0], [2.0 / 3.0, 0.5]],
-                    '1/m',
-                    [
+                    unit='1/m',
+                    variance=[
                         [0.1 * 2**2 / 1**4, 0.2 * 2.0**2 / 2.0**4],
                         [0.3 * 2**2 / 3**4, 0.4 * 2.0**2 / 4.0**4],
                     ],
+                    display_name='test / name',
                 ),
                 False,
             ),
@@ -1222,7 +1270,6 @@ class TestDescriptorArray:
             result = test / descriptor
         # Expect
         assert type(result) == DescriptorArray
-        assert result.name == result.unique_name
         assert np.allclose(result.value, expected.value)
         assert result.unit == expected.unit
         assert np.allclose(result.variance, expected.variance)
@@ -1234,27 +1281,27 @@ class TestDescriptorArray:
             (
                 [[2.0, 3.0], [4.0, -5.0], [6.0, -8.0]],
                 DescriptorArray(
-                    'test',
                     [[2.0 / 1.0, 3.0 / 2.0], [4.0 / 3.0, -5.0 / 4.0], [6.0 / 5.0, -8.0 / 6.0]],
-                    'dimensionless',
-                    [
+                    unit='dimensionless',
+                    variance=[
                         [0.1 * 2.0**2, 0.2 * 3.0**2 / 2**4],
                         [0.3 * 4.0**2 / 3.0**4, 0.4 * 5.0**2 / 4**4],
                         [0.5 * 6.0**2 / 5**4, 0.6 * 8.0**2 / 6**4],
                     ],
+                    display_name='test',
                 ),
             ),
             (
                 2,
                 DescriptorArray(
-                    'test',
                     [[2.0, 1.0], [2.0 / 3.0, 0.5], [2.0 / 5.0, 1.0 / 3.0]],
-                    'dimensionless',
-                    [
+                    unit='dimensionless',
+                    variance=[
                         [0.1 * 2.0**2, 0.2 / 2**2],
                         [0.3 * 2**2 / 3**4, 0.4 * 2**2 / 4**4],
                         [0.5 * 2**2 / 5**4, 0.6 * 2**2 / 6**4],
                     ],
+                    display_name='test',
                 ),
             ),
         ],
@@ -1276,12 +1323,12 @@ class TestDescriptorArray:
         [
             [[2.0, 3.0], [4.0, -5.0], [6.0, 0.0]],
             0.0,
-            DescriptorNumber('test', 0, 'cm', 10),
+            DescriptorNumber(0, unit='cm', variance=10, display_name='test'),
             DescriptorArray(
-                'test',
                 [[1.5, 0.0], [4.5, 6.0], [7.5, 9.0]],
-                'dimensionless',
-                [[0.225, 0.45], [0.675, 0.9], [1.125, 1.35]],
+                unit='dimensionless',
+                variance=[[0.225, 0.45], [0.675, 0.9], [1.125, 1.35]],
+                display_name='test',
             ),
         ],
         ids=['list', 'number', 'DescriptorNumber', 'DescriptorArray'],
@@ -1293,10 +1340,10 @@ class TestDescriptorArray:
 
         # Also test reverse division where `self` is a DescriptorArray with a zero
         zero_descriptor = DescriptorArray(
-            'test',
             [[1.5, 0.0], [4.5, 6.0], [7.5, 0.0]],
-            'dimensionless',
-            [[0.225, 0.45], [0.675, 0.9], [1.125, 1.35]],
+            unit='dimensionless',
+            variance=[[0.225, 0.45], [0.675, 0.9], [1.125, 1.35]],
+            display_name='test',
         )
         with pytest.raises(ZeroDivisionError):
             test / zero_descriptor
@@ -1305,39 +1352,39 @@ class TestDescriptorArray:
         'test, expected',
         [
             (
-                DescriptorNumber('test', 2, 'dimensionless'),
+                DescriptorNumber(2, unit='dimensionless', display_name='test'),
                 DescriptorArray(
-                    'test ** name',
                     [[1.0, 4.0], [9.0, 16.0]],
-                    'm^2',
-                    [[4 * 0.1 * 1, 4 * 0.2 * 2**2], [4 * 0.3 * 3**2, 4 * 0.4 * 4**2]],
+                    unit='m^2',
+                    variance=[[4 * 0.1 * 1, 4 * 0.2 * 2**2], [4 * 0.3 * 3**2, 4 * 0.4 * 4**2]],
+                    display_name='test ** name',
                 ),
             ),
             (
-                DescriptorNumber('test', 3, 'dimensionless'),
+                DescriptorNumber(3, unit='dimensionless', display_name='test'),
                 DescriptorArray(
-                    'test ** name',
                     [[1.0, 8.0], [27, 64.0]],
-                    'm^3',
-                    [[9 * 0.1, 9 * 0.2 * 2**4], [9 * 0.3 * 3**4, 9 * 0.4 * 4**4]],
+                    unit='m^3',
+                    variance=[[9 * 0.1, 9 * 0.2 * 2**4], [9 * 0.3 * 3**4, 9 * 0.4 * 4**4]],
+                    display_name='test ** name',
                 ),
             ),
             (
-                DescriptorNumber('test', 0.0, 'dimensionless'),
+                DescriptorNumber(0.0, unit='dimensionless', display_name='test'),
                 DescriptorArray(
-                    'test ** name',
                     [[1.0, 1.0], [1.0, 1.0]],
-                    'dimensionless',
-                    [[0.0, 0.0], [0.0, 0.0]],
+                    unit='dimensionless',
+                    variance=[[0.0, 0.0], [0.0, 0.0]],
+                    display_name='test ** name',
                 ),
             ),
             (
                 0.0,
                 DescriptorArray(
-                    'test ** name',
                     [[1.0, 1.0], [1.0, 1.0]],
-                    'dimensionless',
-                    [[0.0, 0.0], [0.0, 0.0]],
+                    unit='dimensionless',
+                    variance=[[0.0, 0.0], [0.0, 0.0]],
+                    display_name='test ** name',
                 ),
             ),
         ],
@@ -1353,7 +1400,6 @@ class TestDescriptorArray:
         result = descriptor**test
         # Expect
         assert type(result) == DescriptorArray
-        assert result.name == result.unique_name
         assert np.array_equal(result.value, expected.value)
         assert result.unit == expected.unit
         assert np.allclose(result.variance, expected.variance)
@@ -1363,25 +1409,25 @@ class TestDescriptorArray:
         'test, expected',
         [
             (
-                DescriptorNumber('test', 0.1, 'dimensionless'),
+                DescriptorNumber(0.1, unit='dimensionless', display_name='test'),
                 DescriptorArray(
-                    'test ** name',
                     [[1, 2**0.1], [3**0.1, 4**0.1], [5**0.1, 6**0.1]],
-                    'dimensionless',
-                    [
+                    unit='dimensionless',
+                    variance=[
                         [0.1**2 * 0.1 * 1, 0.1**2 * 0.2 * 2 ** (-1.8)],
                         [0.1**2 * 0.3 * 3 ** (-1.8), 0.1**2 * 0.4 * 4 ** (-1.8)],
                         [0.1**2 * 0.5 * 5 ** (-1.8), 0.1**2 * 0.6 * 6 ** (-1.8)],
                     ],
+                    display_name='test ** name',
                 ),
             ),
             (
-                DescriptorNumber('test', 2.0, 'dimensionless'),
+                DescriptorNumber(2.0, unit='dimensionless', display_name='test'),
                 DescriptorArray(
-                    'test ** name',
                     [[1.0, 4.0], [9.0, 16.0], [25.0, 36.0]],
-                    'dimensionless',
-                    [[0.4, 3.2], [10.8, 25.6], [50.0, 86.4]],
+                    unit='dimensionless',
+                    variance=[[0.4, 3.2], [10.8, 25.6], [50.0, 86.4]],
+                    display_name='test ** name',
                 ),
             ),
         ],
@@ -1392,7 +1438,6 @@ class TestDescriptorArray:
         result = descriptor_dimensionless**test
         # Expect
         assert type(result) == DescriptorArray
-        assert result.name == result.unique_name
         assert np.allclose(result.value, expected.value)
         assert result.unit == expected.unit
         assert np.allclose(result.variance, expected.variance)
@@ -1401,13 +1446,16 @@ class TestDescriptorArray:
     @pytest.mark.parametrize(
         'test, exception',
         [
-            (DescriptorNumber('test', 2, 'm'), UnitError),
-            (DescriptorNumber('test', 2, 'dimensionless', 10), ValueError),
-            (DescriptorNumber('test', np.nan, 'dimensionless'), UnitError),
-            (DescriptorNumber('test', np.nan, 'dimensionless'), UnitError),
-            (DescriptorNumber('test', 1.5, 'dimensionless'), UnitError),
+            (DescriptorNumber(2, unit='m', display_name='test'), UnitError),
             (
-                DescriptorNumber('test', 0.5, 'dimensionless'),
+                DescriptorNumber(2, unit='dimensionless', variance=10, display_name='test'),
+                ValueError,
+            ),
+            (DescriptorNumber(np.nan, unit='dimensionless', display_name='test'), UnitError),
+            (DescriptorNumber(np.nan, unit='dimensionless', display_name='test'), UnitError),
+            (DescriptorNumber(1.5, unit='dimensionless', display_name='test'), UnitError),
+            (
+                DescriptorNumber(0.5, unit='dimensionless', display_name='test'),
                 UnitError,
             ),  # Square roots are not legal
         ],
@@ -1430,7 +1478,10 @@ class TestDescriptorArray:
 
     @pytest.mark.parametrize(
         'test',
-        [DescriptorNumber('test', 2, 's'), DescriptorArray('test', [[1, 2], [3, 4]], 's')],
+        [
+            DescriptorNumber(2, unit='s', display_name='test'),
+            DescriptorArray([[1, 2], [3, 4]], unit='s', display_name='test'),
+        ],
         ids=['add_array_to_unit', 'incompatible_units'],
     )
     def test_addition_exception(self, descriptor: DescriptorArray, test):
@@ -1442,7 +1493,10 @@ class TestDescriptorArray:
 
     @pytest.mark.parametrize(
         'test',
-        [DescriptorNumber('test', 2, 's'), DescriptorArray('test', [[1, 2], [3, 4]], 's')],
+        [
+            DescriptorNumber(2, unit='s', display_name='test'),
+            DescriptorArray([[1, 2], [3, 4]], unit='s', display_name='test'),
+        ],
         ids=['add_array_to_unit', 'incompatible_units'],
     )
     def test_sub_exception(self, descriptor: DescriptorArray, test):
@@ -1474,17 +1528,14 @@ class TestDescriptorArray:
 
         # Expect
         expected = DescriptorArray(
-            name='name',
             value=[[-1.0, -2.0], [-3.0, -4.0]],
             unit='m',
             variance=[[0.1, 0.2], [0.3, 0.4]],
             description='description',
             url='url',
             display_name='display_name',
-            parent=None,
         )
         assert type(result) == DescriptorArray
-        assert result.name == result.unique_name
         assert np.array_equal(result.value, expected.value)
         assert result.unit == expected.unit
         assert np.allclose(result.variance, expected.variance)
@@ -1493,14 +1544,12 @@ class TestDescriptorArray:
     def test_abs(self, descriptor):
         # When
         negated = DescriptorArray(
-            name='name',
             value=[[-1.0, -2.0], [-3.0, -4.0]],
             unit='m',
             variance=[[0.1, 0.2], [0.3, 0.4]],
             description='description',
             url='url',
             display_name='display_name',
-            parent=None,
         )
 
         # Then
@@ -1508,7 +1557,6 @@ class TestDescriptorArray:
 
         # Expect
         assert type(result) == DescriptorArray
-        assert result.name == result.unique_name
         assert np.array_equal(result.value, descriptor.value)
         assert result.unit == descriptor.unit
         assert np.allclose(result.variance, descriptor.variance)
@@ -1519,40 +1567,55 @@ class TestDescriptorArray:
         [
             (
                 DescriptorArray(
-                    'test + name', [[3.0, 4.0], [5.0, 6.0]], 'm', [[0.11, 0.21], [0.31, 0.41]]
+                    [[3.0, 4.0], [5.0, 6.0]],
+                    unit='m',
+                    variance=[[0.11, 0.21], [0.31, 0.41]],
+                    display_name='test + name',
                 ),
-                DescriptorNumber('test', 9, 'm', 0.52),
+                DescriptorNumber(9, unit='m', variance=0.52, display_name='test'),
             ),
             (
                 DescriptorArray(
-                    'test + name',
                     [[101.0, 201.0], [301.0, 401.0]],
-                    'dimensionless',
-                    [[1010.0, 2010.0], [3010.0, 4010.0]],
+                    unit='dimensionless',
+                    variance=[[1010.0, 2010.0], [3010.0, 4010.0]],
+                    display_name='test + name',
                 ),
-                DescriptorNumber('test', 502.0, 'dimensionless', 5020.0),
+                DescriptorNumber(
+                    502.0, unit='dimensionless', variance=5020.0, display_name='test'
+                ),
             ),
             (
-                DescriptorArray('test', np.ones((9, 9)), 'dimensionless', np.ones((9, 9))),
-                DescriptorNumber('test', 9.0, 'dimensionless', 9.0),
-            ),
-            (
-                DescriptorArray('test', np.ones((3, 3, 3)), 'dimensionless', np.ones((3, 3, 3))),
                 DescriptorArray(
-                    'test',
+                    np.ones((9, 9)),
+                    unit='dimensionless',
+                    variance=np.ones((9, 9)),
+                    display_name='test',
+                ),
+                DescriptorNumber(9.0, unit='dimensionless', variance=9.0, display_name='test'),
+            ),
+            (
+                DescriptorArray(
+                    np.ones((3, 3, 3)),
+                    unit='dimensionless',
+                    variance=np.ones((3, 3, 3)),
+                    display_name='test',
+                ),
+                DescriptorArray(
                     [3.0, 3.0, 3.0],
-                    'dimensionless',
-                    [
+                    unit='dimensionless',
+                    variance=[
                         3.0,
                         3.0,
                         3.0,
                     ],
                     dimensions=['dim2'],
+                    display_name='test',
                 ),
             ),
             (
-                DescriptorArray('test', [[2.0]], 'dimensionless'),
-                DescriptorNumber('test', 2.0, 'dimensionless'),
+                DescriptorArray([[2.0]], unit='dimensionless', display_name='test'),
+                DescriptorNumber(2.0, unit='dimensionless', display_name='test'),
             ),
         ],
         ids=['2d_unit', '2d_dimensionless', '2d_large', '3d_dimensionless', '1d_dimensionless'],
@@ -1560,7 +1623,6 @@ class TestDescriptorArray:
     def test_trace(self, test: DescriptorArray, expected: DescriptorNumber):
         result = test.trace()
         assert type(result) == type(expected)
-        assert result.name == result.unique_name
         assert np.array_equal(result.value, expected.value)
         assert result.unit == expected.unit
         if test.variance is not None:
@@ -1573,14 +1635,17 @@ class TestDescriptorArray:
         [
             (
                 DescriptorArray(
-                    'test', np.ones((3, 3, 4, 5)), 'dimensionless', np.ones((3, 3, 4, 5))
+                    np.ones((3, 3, 4, 5)),
+                    unit='dimensionless',
+                    variance=np.ones((3, 3, 4, 5)),
+                    display_name='test',
                 ),
                 DescriptorArray(
-                    'test',
                     3 * np.ones((3, 4)),
-                    'dimensionless',
-                    3 * np.ones((3, 4)),
+                    unit='dimensionless',
+                    variance=3 * np.ones((3, 4)),
                     dimensions=['dim0', 'dim2'],
+                    display_name='test',
                 ),
                 ('dim1', 'dim3'),
             )
@@ -1592,7 +1657,6 @@ class TestDescriptorArray:
     ):
         result = test.trace(dimension1=dimensions[0], dimension2=dimensions[1])
         assert type(result) == type(expected)
-        assert result.name == result.unique_name
         assert np.array_equal(result.value.shape, expected.value.shape)
         assert np.array_equal(result.value, expected.value)
         assert result.unit == expected.unit
@@ -1602,17 +1666,32 @@ class TestDescriptorArray:
         'test,dimensions,message',
         [
             (
-                DescriptorArray('test', np.ones((3, 3, 3)), 'dimensionless', np.ones((3, 3, 3))),
+                DescriptorArray(
+                    np.ones((3, 3, 3)),
+                    unit='dimensionless',
+                    variance=np.ones((3, 3, 3)),
+                    display_name='test',
+                ),
                 ('dim0', None),
                 'Either both or none',
             ),
             (
-                DescriptorArray('test', np.ones((3, 3, 3)), 'dimensionless', np.ones((3, 3, 3))),
+                DescriptorArray(
+                    np.ones((3, 3, 3)),
+                    unit='dimensionless',
+                    variance=np.ones((3, 3, 3)),
+                    display_name='test',
+                ),
                 ('dim0', 'dim0'),
                 'must be different',
             ),
             (
-                DescriptorArray('test', np.ones((3, 3, 3)), 'dimensionless', np.ones((3, 3, 3))),
+                DescriptorArray(
+                    np.ones((3, 3, 3)),
+                    unit='dimensionless',
+                    variance=np.ones((3, 3, 3)),
+                    display_name='test',
+                ),
                 ('dim0', 'dim1337'),
                 'does not exist',
             ),
@@ -1635,9 +1714,10 @@ class TestDescriptorArray:
         assert type(last_value) == DescriptorArray
         assert type(second_array) == DescriptorArray
 
-        assert first_value.name != descriptor.unique_name
-        assert last_value.name != descriptor.unique_name
-        assert second_array.name != descriptor.unique_name
+        # Slices are fresh objects with their own identity, not the sliced parent.
+        assert first_value.unique_name != descriptor.unique_name
+        assert last_value.unique_name != descriptor.unique_name
+        assert second_array.unique_name != descriptor.unique_name
 
         assert np.array_equal(
             first_value.full_value.values, descriptor.full_value['dim0', 0].values
@@ -1680,26 +1760,31 @@ class TestDescriptorArray:
         [
             (
                 DescriptorArray(
-                    'test + name', [[3.0, 4.0], [5.0, 6.0]], 'm', [[0.11, 0.21], [0.31, 0.41]]
+                    [[3.0, 4.0], [5.0, 6.0]],
+                    unit='m',
+                    variance=[[0.11, 0.21], [0.31, 0.41]],
+                    display_name='test + name',
                 ),
-                DescriptorNumber('test', 18, 'm', 1.04),
+                DescriptorNumber(18, unit='m', variance=1.04, display_name='test'),
             ),
             (
                 DescriptorArray(
-                    'test + name',
                     [[101.0, 201.0], [301.0, 401.0]],
-                    'cm',
-                    [[1010.0, 2010.0], [3010.0, 4010.0]],
+                    unit='cm',
+                    variance=[[1010.0, 2010.0], [3010.0, 4010.0]],
+                    display_name='test + name',
                 ),
-                DescriptorNumber('test', 1004.0, 'cm', 10040.0),
+                DescriptorNumber(1004.0, unit='cm', variance=10040.0, display_name='test'),
             ),
             (
-                DescriptorArray('test', [[2.0, 3.0]], 'dimensionless', [[1.0, 2.0]]),
-                DescriptorNumber('test', 5.0, 'dimensionless', 3.0),
+                DescriptorArray(
+                    [[2.0, 3.0]], unit='dimensionless', variance=[[1.0, 2.0]], display_name='test'
+                ),
+                DescriptorNumber(5.0, unit='dimensionless', variance=3.0, display_name='test'),
             ),
             (
-                DescriptorArray('test', [[2.0, 3.0]], 'dimensionless'),
-                DescriptorNumber('test', 5.0, 'dimensionless'),
+                DescriptorArray([[2.0, 3.0]], unit='dimensionless', display_name='test'),
+                DescriptorNumber(5.0, unit='dimensionless', display_name='test'),
             ),
         ],
         ids=[
@@ -1712,7 +1797,6 @@ class TestDescriptorArray:
     def test_sum(self, test, expected):
         result = test.sum()
         assert type(result) == DescriptorNumber
-        assert result.name == result.unique_name
         assert np.array_equal(result.value, expected.value)
         assert result.unit == expected.unit
         if test.variance is not None:
@@ -1721,15 +1805,20 @@ class TestDescriptorArray:
     @pytest.mark.parametrize(
         'expected, dim',
         [
-            (DescriptorArray('test', [4.0, 6.0], 'm', [0.4, 0.6]), 'dim0'),
-            (DescriptorArray('test', [3.0, 7.0], 'm', [0.3, 0.7]), 'dim1'),
+            (
+                DescriptorArray([4.0, 6.0], unit='m', variance=[0.4, 0.6], display_name='test'),
+                'dim0',
+            ),
+            (
+                DescriptorArray([3.0, 7.0], unit='m', variance=[0.3, 0.7], display_name='test'),
+                'dim1',
+            ),
         ],
         ids=['descriptor_array_dim0', 'descriptor_array_dim1'],
     )
     def test_sum_over_subset(self, descriptor, expected, dim):
         result = descriptor.sum(dim)
         assert type(result) == type(expected)
-        assert result.name == result.unique_name
         assert np.array_equal(result.value, expected.value)
         assert result.unit == expected.unit
         assert np.allclose(result.variance, expected.variance)
@@ -1737,25 +1826,40 @@ class TestDescriptorArray:
     @pytest.mark.parametrize(
         'test, dimensions',
         [
-            (DescriptorArray('test', [1.0], 'dimensionless', [1.0]), ['dim0']),
             (
-                DescriptorArray('test', [[1.0, 1.0]], 'dimensionless', [[1.0, 1.0]]),
+                DescriptorArray([1.0], unit='dimensionless', variance=[1.0], display_name='test'),
+                ['dim0'],
+            ),
+            (
+                DescriptorArray(
+                    [[1.0, 1.0]], unit='dimensionless', variance=[[1.0, 1.0]], display_name='test'
+                ),
                 ['dim0', 'dim1'],
             ),
             (
-                DescriptorArray('test', [[1.0], [1.0]], 'dimensionless', [[1.0], [1.0]]),
+                DescriptorArray(
+                    [[1.0], [1.0]],
+                    unit='dimensionless',
+                    variance=[[1.0], [1.0]],
+                    display_name='test',
+                ),
                 ['dim0', 'dim1'],
             ),
             (
-                DescriptorArray('test', [[[1.0, 1.0, 1.0]]], 'dimensionless', [[[1.0, 1.0, 1.0]]]),
+                DescriptorArray(
+                    [[[1.0, 1.0, 1.0]]],
+                    unit='dimensionless',
+                    variance=[[[1.0, 1.0, 1.0]]],
+                    display_name='test',
+                ),
                 ['dim0', 'dim1', 'dim2'],
             ),
             (
                 DescriptorArray(
-                    'test',
                     [[[1.0]], [[1.0]], [[1.0]]],
-                    'dimensionless',
-                    [[[1.0]], [[1.0]], [[1.0]]],
+                    unit='dimensionless',
+                    variance=[[[1.0]], [[1.0]], [[1.0]]],
+                    display_name='test',
                 ),
                 ['dim0', 'dim1', 'dim2'],
             ),
@@ -1770,7 +1874,9 @@ class TestDescriptorArray:
             descriptor.dimensions = ['too_few']
         assert 'must have the same shape'
         with pytest.raises(ValueError) as e:
-            DescriptorArray('test', [[1.0]], 'm', [[1.0]], dimensions=['dim'])
+            DescriptorArray(
+                [[1.0]], unit='m', variance=[[1.0]], dimensions=['dim'], display_name='test'
+            )
         assert 'Length of dimensions' in str(e)
 
     def test_array_set_integer_value(self, descriptor):
@@ -1793,7 +1899,9 @@ class TestDescriptorArray:
         value = [[1, 2], [3, 4]]
         variance = [[0.1, 0.2], [0.3, 0.4]]
         # Then Expect
-        descriptor = DescriptorArray('test', value, 'dimensionless', variance)  # Should not raise
+        descriptor = DescriptorArray(
+            value, unit='dimensionless', variance=variance, display_name='test'
+        )  # Should not raise
         assert isinstance(descriptor.value[0][0], float)
         assert isinstance(descriptor.variance[0][0], float)
 

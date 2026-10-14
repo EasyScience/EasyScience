@@ -3,22 +3,27 @@
 
 from abc import ABCMeta
 from abc import abstractmethod
+from typing import Optional
 
 import numpy as np
 
+from ..base_classes.model_base import ModelBase
 from ..fitting.minimizers import MinimizerBase
-from ..legacy.obj_base import ObjBase
 
 
-class AnalysisBase(ObjBase, metaclass=ABCMeta):
+class AnalysisBase(ModelBase, metaclass=ABCMeta):
     """
     This virtual class allows for the creation of technique-specific
     Analysis objects.
     """
 
-    def __init__(self, name: str, interface=None, *args, **kwargs):
-        super(AnalysisBase, self).__init__(name, *args, **kwargs)
-        self.name = name
+    def __init__(
+        self,
+        display_name: Optional[str] = None,
+        interface=None,
+        unique_name: Optional[str] = None,
+    ):
+        super(AnalysisBase, self).__init__(unique_name=unique_name, display_name=display_name)
         self._calculator = None
         self._minimizer = None
         self._fitter = None
@@ -34,7 +39,7 @@ class AnalysisBase(ObjBase, metaclass=ABCMeta):
 
     @property
     def calculator(self) -> str:
-        if self._calculator is None:
+        if self._calculator is None and self.interface is not None:
             self._calculator = self.interface.current_interface_name
         return self._calculator
 
@@ -53,4 +58,4 @@ class AnalysisBase(ObjBase, metaclass=ABCMeta):
 
     # required dunder methods
     def __str__(self):
-        return f'Analysis: {self.name}'
+        return f'Analysis: {self.display_name}'
