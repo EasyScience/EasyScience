@@ -207,7 +207,7 @@ nav:
           - Correlation: tutorials/basics/maths-correlation.ipynb
       - Fitting:
           - Fitting: tutorials/fitting/index.md
-          - Fitting introduction: tutorials/fitting-intro.ipynb
+          - Fitting introduction: tutorials/fitting/fitting-intro.ipynb
           - SANS sphere: tutorials/fitting/sans-sphere.ipynb
           - QENS Lorentzian: tutorials/fitting/qens-lorentzian.ipynb
           - Bayesian QENS: tutorials/fitting/bayesian-qens.ipynb

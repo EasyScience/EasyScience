@@ -12,9 +12,9 @@ their uncertainties, computed with the arithmetic and the functions of
 
 ## A suggested path
 
-- [Fitting introduction](../fitting-intro.ipynb) – Fit a straight line
-  to simulated data, then work out quantities that follow from the
-  fitted slope. _Start here._
+- [Fitting introduction](fitting-intro.ipynb) – Fit a straight line to
+  simulated data, then work out quantities that follow from the fitted
+  slope. _Start here._
 - [SANS sphere](sans-sphere.ipynb) – Fit the scattering of spheres to
   small-angle neutron scattering data, then derive the diameter, the
   volume, the radius of gyration and a Guinier approximation. _Next._

@@ -44,8 +44,8 @@ Read the ones you need; each stands alone.
   further._
 
 When you are comfortable with these, continue with the
-[Fitting introduction](../fitting-intro.ipynb), which uses the same
-numbers on the result of a fit.
+[Fitting introduction](../fitting/fitting-intro.ipynb), which uses the
+same numbers on the result of a fit.
 
 ## How the notebooks work
 
