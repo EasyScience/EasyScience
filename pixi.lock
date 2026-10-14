@@ -264,6 +264,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/c6/3d/020a6b6248c3d4a37797db068256f0b3f15b01bc481327ba888c50309aa8/mkdocs_plugin_inline_svg-0.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/c7/7b/14882602ddee241d7984a742fcb423cb4a30fb0d6efc546ac3129fba475a/python_discovery-1.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/c7/a0/5ff05d1919ca249508012cad89f08fdc6cfbdaa15b41651c5fe6dffaf1d3/dfo_ls-1.6.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/c8/d8/90e376a19d98e8d27f3850575a020bae1d39d3dda9836a256e0533511324/iminuit-2.33.0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/ca/31/d4e37e9e550c2b92a9cbc2e4d0b7420a27224968580b5a447f420847c975/pytest_xdist-3.8.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cb/b1/3846dd7f199d53cb17f49cba7e651e9ce294d8497c8c150530ed11865bb8/iniconfig-2.3.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cd/90/c52e12e0d862e9572f2a33aa227409143520abe53111e9a6babbac7b4af8/ruff-0.16.1-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
@@ -560,6 +561,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/f6/f0/10642828a8dfb741e5f3fbaac830550a518a775c7fff6f04a007259b0548/py-1.11.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/f7/ec/67fbef5d497f86283db54c22eec6f6140243aae73265799baaaa19cd17fb/ghp_import-2.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/f9/33/bd5b9137445ea4b680023eb0469b2bb969d61303dedb2aac6560ff3d14a1/notebook_shim-0.2.4-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/f9/4f/44e5f431c64764354e9fa71aa0415b89d11fc8585132c25a5eb4798994aa/iminuit-2.33.0-cp314-cp314-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/fa/bc/8b8ec5a4bfc5b9cf3ce27a118339e994f88410be5677c96493e0ea28e76d/dunamai-1.26.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/fb/49/bc925106abcdac498074f2cbe6137e94e09f418dd2b7775df5b577dc0313/pre_commit-4.6.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/fb/76/641ae371508676492379f16e2fa48f4e2c11741bd63c48be4b12a6b09cba/aiosignal-1.4.0-py3-none-any.whl
@@ -698,6 +700,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/c9/6869a1dcf4aaf309b9543ec070be3ec3adebee7c9bec9af8c230494134b9/interrogate-1.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/95/cf3f7fe4910cf0365fa8ea0c731f4b8a624d97cd76ea777913ac8d0868e2/mkdocs_jupyter-0.26.3-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/b0/02b3fc6df69aa21075b8186d3e253dfa2a22338f8f5d31bbd25cf005aca9/iminuit-2.33.0-cp314-cp314-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/16/f1/467b81e98b24dd3885d7b1857728797b4ffc76a7a7483af4fb321a07de3c/msgpack-1.2.1-cp314-cp314-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/1c/59/964ecb8008722d27d8a835baea81f56a91cea8e097b3be992bc6ccde6367/versioningit-3.3.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1c/cf/e5f9b68a5b0e939a2fb933a66c20180d0c9241bf8927f7a47fa48c1675e9/backrefs-8.0-py314-none-any.whl
@@ -1009,6 +1012,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/54/20/4d324d65cc6d9205fabedc306948156824eb9f0ee1633355a8f7ec5c66bf/pluggy-1.6.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/56/6d/0d9848617b9f753b87f214f1c682592f7ca42de085f564352f10f0843026/ipywidgets-8.1.8-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/5a/56/21b27c560c13822ed93133f08aa6372c53a8e067f11fbed37b4adcdac922/multidict-6.7.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/5b/52/0f69072839e3b78733b37590503771968ef2406cbdcfac2fa76c927d675c/iminuit-2.33.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/5b/54/662a4743aa81d9582ee9339d4ffa3c8fd40a4965e033d77b9da9774d3960/mkdocs_material_extensions-1.3.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/5b/69/93b34728cc386efdde0c342f8c680b9187dea7beb7adaf6b58a0713be101/mpld3-0.5.12-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/5b/96/82f6328e410515fab21d5602ba35b9377a47b5a141a0c1f9efa00ce21eb4/python_engineio-4.13.3-py3-none-any.whl
@@ -1320,6 +1324,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/ad/21/17c1bc9e6f47c972ad66fb2ac2568f99f90f1207eeb6fc3b34d094dba7b5/mkdocs_material-9.7.7-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ad/40/40a40ee0ddf7ceb782c49af278894b686e586d65d8c1889c8b5da01a3d7d/numpy-2.4.6-cp311-cp311-macosx_14_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/ae/6f/aa064a3e74b5745afbdf250594f38e7ead05e2d651bcb35994b9417a0d4d/pydantic_core-2.46.4-cp311-cp311-macosx_11_0_arm64.whl
+      - pypi: https://files.pythonhosted.org/packages/b1/bd/3baabc7006ab64fcb52d536d6581a3270369eed4921675e8ff5fdb3409f7/iminuit-2.33.0-cp311-cp311-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/b2/5b/a02d30018abd97ced9f5a6c63d28597694a00d066516b9c1c6de45859fc9/pillow-12.3.0-cp311-cp311-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b3/52/bc858b1665d0dec3a2511f4e6f5c18ea85c0977563d624d597c95d6d0fd7/jupyterquiz-2.9.6.4-py2.py3-none-any.whl
@@ -1496,6 +1501,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/c9/6869a1dcf4aaf309b9543ec070be3ec3adebee7c9bec9af8c230494134b9/interrogate-1.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/95/cf3f7fe4910cf0365fa8ea0c731f4b8a624d97cd76ea777913ac8d0868e2/mkdocs_jupyter-0.26.3-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/17/e2/4f718ff25feae3259d07c8c88e73044b4ec4d812f0552d4da690a2894a65/iminuit-2.33.0-cp311-cp311-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/1c/59/964ecb8008722d27d8a835baea81f56a91cea8e097b3be992bc6ccde6367/versioningit-3.3.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/20/16/e777eadfa0c0305878c36fae1d5e6db474fbb15dae202b9ec378809dfb4d/nbstripout-0.9.1-py3-none-any.whl
@@ -1867,6 +1873,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/c6/3d/020a6b6248c3d4a37797db068256f0b3f15b01bc481327ba888c50309aa8/mkdocs_plugin_inline_svg-0.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/c7/7b/14882602ddee241d7984a742fcb423cb4a30fb0d6efc546ac3129fba475a/python_discovery-1.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/c7/a0/5ff05d1919ca249508012cad89f08fdc6cfbdaa15b41651c5fe6dffaf1d3/dfo_ls-1.6.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/c8/d8/90e376a19d98e8d27f3850575a020bae1d39d3dda9836a256e0533511324/iminuit-2.33.0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/ca/31/d4e37e9e550c2b92a9cbc2e4d0b7420a27224968580b5a447f420847c975/pytest_xdist-3.8.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cb/b1/3846dd7f199d53cb17f49cba7e651e9ce294d8497c8c150530ed11865bb8/iniconfig-2.3.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cd/90/c52e12e0d862e9572f2a33aa227409143520abe53111e9a6babbac7b4af8/ruff-0.16.1-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
@@ -2163,6 +2170,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/f6/f0/10642828a8dfb741e5f3fbaac830550a518a775c7fff6f04a007259b0548/py-1.11.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/f7/ec/67fbef5d497f86283db54c22eec6f6140243aae73265799baaaa19cd17fb/ghp_import-2.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/f9/33/bd5b9137445ea4b680023eb0469b2bb969d61303dedb2aac6560ff3d14a1/notebook_shim-0.2.4-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/f9/4f/44e5f431c64764354e9fa71aa0415b89d11fc8585132c25a5eb4798994aa/iminuit-2.33.0-cp314-cp314-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/fa/bc/8b8ec5a4bfc5b9cf3ce27a118339e994f88410be5677c96493e0ea28e76d/dunamai-1.26.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/fb/49/bc925106abcdac498074f2cbe6137e94e09f418dd2b7775df5b577dc0313/pre_commit-4.6.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/fb/76/641ae371508676492379f16e2fa48f4e2c11741bd63c48be4b12a6b09cba/aiosignal-1.4.0-py3-none-any.whl
@@ -2301,6 +2309,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/c9/6869a1dcf4aaf309b9543ec070be3ec3adebee7c9bec9af8c230494134b9/interrogate-1.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/95/cf3f7fe4910cf0365fa8ea0c731f4b8a624d97cd76ea777913ac8d0868e2/mkdocs_jupyter-0.26.3-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/b0/02b3fc6df69aa21075b8186d3e253dfa2a22338f8f5d31bbd25cf005aca9/iminuit-2.33.0-cp314-cp314-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/16/f1/467b81e98b24dd3885d7b1857728797b4ffc76a7a7483af4fb321a07de3c/msgpack-1.2.1-cp314-cp314-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/1c/59/964ecb8008722d27d8a835baea81f56a91cea8e097b3be992bc6ccde6367/versioningit-3.3.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1c/cf/e5f9b68a5b0e939a2fb933a66c20180d0c9241bf8927f7a47fa48c1675e9/backrefs-8.0-py314-none-any.whl
@@ -6878,6 +6887,7 @@ packages:
   - asteval
   - bumps>=1.0.4
   - dfo-ls
+  - iminuit>=2.30
   - lmfit
   - numpy
   - scipp
@@ -7331,6 +7341,23 @@ packages:
   - nbconvert>=7.2.9,<8
   - pygments>2.12.0
   requires_python: '>=3.9'
+- pypi: https://files.pythonhosted.org/packages/13/b0/02b3fc6df69aa21075b8186d3e253dfa2a22338f8f5d31bbd25cf005aca9/iminuit-2.33.0-cp314-cp314-win_amd64.whl
+  name: iminuit
+  version: 2.33.0
+  sha256: f8b366e90c3f5a940acc4a1213ebd8faa17461eea857b8bb7ebc22fe20304226
+  requires_dist:
+  - numpy>=1.21
+  - scipy>=1.9 ; extra == 'scipy'
+  - matplotlib>=3.5 ; extra == 'plot'
+  - numba>=0.55 ; extra == 'numba'
+  - ipywidgets>=7.7.4 ; extra == 'ipywidgets'
+  - matplotlib>=3.5 ; extra == 'ipywidgets'
+  - pyside6>=6.2 ; extra == 'qt'
+  - matplotlib>=3.5 ; extra == 'qt'
+  - iminuit[ipywidgets,qt] ; extra == 'interactive'
+  - unicodeitplus>=0.1 ; extra == 'unicode'
+  - iminuit[ipywidgets,numba,plot,qt,scipy,unicode] ; extra == 'all'
+  requires_python: '>=3.9'
 - pypi: https://files.pythonhosted.org/packages/14/4b/d3c79495dee4831b8bebca2790e72cb90f0c5849c940570a7c7e5b70b952/chardet-7.4.3-cp311-cp311-macosx_11_0_arm64.whl
   name: chardet
   version: 7.4.3
@@ -7346,6 +7373,23 @@ packages:
   version: 1.2.1
   sha256: 74847557e28ce71bd3c438a447ca90e4b507e997ddbdef8a12a7b283b86c156b
   requires_python: '>=3.10'
+- pypi: https://files.pythonhosted.org/packages/17/e2/4f718ff25feae3259d07c8c88e73044b4ec4d812f0552d4da690a2894a65/iminuit-2.33.0-cp311-cp311-win_amd64.whl
+  name: iminuit
+  version: 2.33.0
+  sha256: e491d4b5e216806715f239545df1599b5619005be9577397082acc1ccccf4590
+  requires_dist:
+  - numpy>=1.21
+  - scipy>=1.9 ; extra == 'scipy'
+  - matplotlib>=3.5 ; extra == 'plot'
+  - numba>=0.55 ; extra == 'numba'
+  - ipywidgets>=7.7.4 ; extra == 'ipywidgets'
+  - matplotlib>=3.5 ; extra == 'ipywidgets'
+  - pyside6>=6.2 ; extra == 'qt'
+  - matplotlib>=3.5 ; extra == 'qt'
+  - iminuit[ipywidgets,qt] ; extra == 'interactive'
+  - unicodeitplus>=0.1 ; extra == 'unicode'
+  - iminuit[ipywidgets,numba,plot,qt,scipy,unicode] ; extra == 'all'
+  requires_python: '>=3.9'
 - pypi: https://files.pythonhosted.org/packages/18/a9/a07f76f3c44e02b25cc743af5ef93eef27f7013eadca770451b6a6ccb5db/yarl-1.24.5-cp314-cp314-macosx_11_0_arm64.whl
   name: yarl
   version: 1.24.5
@@ -8181,6 +8225,23 @@ packages:
   sha256: 439cbebd499f92e9aa6793016a8acaa161dfa749ae86d20960189f5398a19144
   requires_dist:
   - typing-extensions>=4.1.0 ; python_full_version < '3.11'
+  requires_python: '>=3.9'
+- pypi: https://files.pythonhosted.org/packages/5b/52/0f69072839e3b78733b37590503771968ef2406cbdcfac2fa76c927d675c/iminuit-2.33.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+  name: iminuit
+  version: 2.33.0
+  sha256: 189279e7b7765402919689cd30c9a3aad46d346e6c99583e5bfe45bd098d3d5e
+  requires_dist:
+  - numpy>=1.21
+  - scipy>=1.9 ; extra == 'scipy'
+  - matplotlib>=3.5 ; extra == 'plot'
+  - numba>=0.55 ; extra == 'numba'
+  - ipywidgets>=7.7.4 ; extra == 'ipywidgets'
+  - matplotlib>=3.5 ; extra == 'ipywidgets'
+  - pyside6>=6.2 ; extra == 'qt'
+  - matplotlib>=3.5 ; extra == 'qt'
+  - iminuit[ipywidgets,qt] ; extra == 'interactive'
+  - unicodeitplus>=0.1 ; extra == 'unicode'
+  - iminuit[ipywidgets,numba,plot,qt,scipy,unicode] ; extra == 'all'
   requires_python: '>=3.9'
 - pypi: https://files.pythonhosted.org/packages/5b/54/662a4743aa81d9582ee9339d4ffa3c8fd40a4965e033d77b9da9774d3960/mkdocs_material_extensions-1.3.1-py3-none-any.whl
   name: mkdocs-material-extensions
@@ -9585,6 +9646,23 @@ packages:
   version: 7.4.3
   sha256: b95c934b9ad59e2ba8abb9be49df70d3ad1b0d95d864b9fdb7588d4fa8bd921c
   requires_python: '>=3.10'
+- pypi: https://files.pythonhosted.org/packages/b1/bd/3baabc7006ab64fcb52d536d6581a3270369eed4921675e8ff5fdb3409f7/iminuit-2.33.0-cp311-cp311-macosx_11_0_arm64.whl
+  name: iminuit
+  version: 2.33.0
+  sha256: 1ca5be65fbf0a79fb654c85143b5918a3c8a587e4f91155ab1069dad667f0d4d
+  requires_dist:
+  - numpy>=1.21
+  - scipy>=1.9 ; extra == 'scipy'
+  - matplotlib>=3.5 ; extra == 'plot'
+  - numba>=0.55 ; extra == 'numba'
+  - ipywidgets>=7.7.4 ; extra == 'ipywidgets'
+  - matplotlib>=3.5 ; extra == 'ipywidgets'
+  - pyside6>=6.2 ; extra == 'qt'
+  - matplotlib>=3.5 ; extra == 'qt'
+  - iminuit[ipywidgets,qt] ; extra == 'interactive'
+  - unicodeitplus>=0.1 ; extra == 'unicode'
+  - iminuit[ipywidgets,numba,plot,qt,scipy,unicode] ; extra == 'all'
+  requires_python: '>=3.9'
 - pypi: https://files.pythonhosted.org/packages/b2/5b/a02d30018abd97ced9f5a6c63d28597694a00d066516b9c1c6de45859fc9/pillow-12.3.0-cp311-cp311-macosx_11_0_arm64.whl
   name: pillow
   version: 12.3.0
@@ -9895,6 +9973,23 @@ packages:
   - trove-classifiers>=2024.10.12 ; extra == 'tests'
   - defusedxml ; extra == 'xmp'
   requires_python: '>=3.10'
+- pypi: https://files.pythonhosted.org/packages/c8/d8/90e376a19d98e8d27f3850575a020bae1d39d3dda9836a256e0533511324/iminuit-2.33.0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+  name: iminuit
+  version: 2.33.0
+  sha256: fae1f1efb8770b7a7a49b0e9643e493149d3f5391f7ae47b60319be2e2e808aa
+  requires_dist:
+  - numpy>=1.21
+  - scipy>=1.9 ; extra == 'scipy'
+  - matplotlib>=3.5 ; extra == 'plot'
+  - numba>=0.55 ; extra == 'numba'
+  - ipywidgets>=7.7.4 ; extra == 'ipywidgets'
+  - matplotlib>=3.5 ; extra == 'ipywidgets'
+  - pyside6>=6.2 ; extra == 'qt'
+  - matplotlib>=3.5 ; extra == 'qt'
+  - iminuit[ipywidgets,qt] ; extra == 'interactive'
+  - unicodeitplus>=0.1 ; extra == 'unicode'
+  - iminuit[ipywidgets,numba,plot,qt,scipy,unicode] ; extra == 'all'
+  requires_python: '>=3.9'
 - pypi: https://files.pythonhosted.org/packages/c9/68/f16a3a8ba6f7b6dc92a1f19669c0810bd2c43fc5a02da13b1cbf8e253845/multidict-6.7.1-cp311-cp311-win_amd64.whl
   name: multidict
   version: 6.7.1
@@ -10399,6 +10494,23 @@ packages:
   - pytest-jupyter ; extra == 'test'
   - pytest-tornasync ; extra == 'test'
   requires_python: '>=3.7'
+- pypi: https://files.pythonhosted.org/packages/f9/4f/44e5f431c64764354e9fa71aa0415b89d11fc8585132c25a5eb4798994aa/iminuit-2.33.0-cp314-cp314-macosx_11_0_arm64.whl
+  name: iminuit
+  version: 2.33.0
+  sha256: f7e660dd87ef8f8b9063a81ce0b2a1b83b47acc2382a95fbfd127576d6be2a59
+  requires_dist:
+  - numpy>=1.21
+  - scipy>=1.9 ; extra == 'scipy'
+  - matplotlib>=3.5 ; extra == 'plot'
+  - numba>=0.55 ; extra == 'numba'
+  - ipywidgets>=7.7.4 ; extra == 'ipywidgets'
+  - matplotlib>=3.5 ; extra == 'ipywidgets'
+  - pyside6>=6.2 ; extra == 'qt'
+  - matplotlib>=3.5 ; extra == 'qt'
+  - iminuit[ipywidgets,qt] ; extra == 'interactive'
+  - unicodeitplus>=0.1 ; extra == 'unicode'
+  - iminuit[ipywidgets,numba,plot,qt,scipy,unicode] ; extra == 'all'
+  requires_python: '>=3.9'
 - pypi: https://files.pythonhosted.org/packages/fa/9a/31f4983f191af51ab2a8f2d0c7b33dff3a84da26533f982fff02c2f9e28b/pandas-3.0.5-cp311-cp311-win_amd64.whl
   name: pandas
   version: 3.0.5
