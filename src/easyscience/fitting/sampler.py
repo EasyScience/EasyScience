@@ -20,9 +20,12 @@ from easyscience import global_object
 from .engine_base import PARAMETER_PREFIX
 from .reshaping import inject_x_multi
 from .reshaping import reshape_datasets
+from .samplers.covariance import posterior_covariance
 
 if TYPE_CHECKING:  # avoid import cycles; only needed for type hints
     from bumps.dream.state import MCMCDraw
+
+    from easyscience.variable.covariance import ParameterCovariance
 
     from .fitter import Fitter
 
@@ -251,12 +254,18 @@ class SamplingResults:
         Log-posterior values, shape ``(n_samples,)``.
     state : MCMCDraw
         The raw BUMPS chain state, holding the full untrimmed chain.
+    covariance : ParameterCovariance | None, default=None
+        The covariance of ``draws``, in the order of ``param_names``
+        (``source='posterior'``, with the draws). It is *not* attached
+        to the parameters; call ``covariance.attach()`` to make it the
+        covariance of the parameters. None if it could not be built.
     """
 
     draws: np.ndarray
     param_names: list[str]
     logp: np.ndarray
     state: MCMCDraw
+    covariance: ParameterCovariance | None = None
 
 
 class Sampler:
@@ -610,6 +619,9 @@ class Sampler:
             param_names=result['param_names'],
             logp=result['logp'],
             state=result['internal_bumps_object'],
+            covariance=posterior_covariance(
+                engine._cached_pars, result['param_names'], result['draws']
+            ),
         )
         self._state = results.state
         self._results = results
@@ -902,6 +914,11 @@ class Sampler:
             param_names=param_names,
             logp=_draw.logp,
             state=state,
+            covariance=posterior_covariance(
+                {p.unique_name: p for p in self._fit_object.get_fit_parameters()},
+                param_names,
+                _draw.points,
+            ),
         )
         self._state = state
         self._results = results

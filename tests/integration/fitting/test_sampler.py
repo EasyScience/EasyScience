@@ -126,6 +126,23 @@ class TestSampler:
         assert sampler.param_names == results.param_names
 
     @pytest.mark.filterwarnings('ignore::UserWarning')
+    def test_sample_returns_the_posterior_covariance(self):
+        """The results hold the covariance of the draws, not attached to the parameters."""
+        sp, x, y, weights = _model_and_data()
+        sampler = Sampler(sp, sp, x, y, weights)
+
+        results = sampler.sample(samples=100, burn=20, thin=2)
+
+        record = results.covariance
+        assert record is not None
+        assert record.source == 'posterior'
+        assert [p.unique_name for p in record.parameters] == results.param_names
+        np.testing.assert_allclose(
+            record.covariance, np.atleast_2d(np.cov(results.draws, rowvar=False))
+        )
+        assert all(p.covariance is None for p in sp.get_fit_parameters())
+
+    @pytest.mark.filterwarnings('ignore::UserWarning')
     def test_sample_multi_dataset(self):
         """Multi-dataset sampling has correct param_names."""
         ref_sin_1 = AbsSin(0.2, np.pi)
