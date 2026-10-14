@@ -55,8 +55,8 @@ the inputs are independent. Two consequences follow:
 A **model** is a class derived from `ModelBase` that holds its
 parameters as properties and is called with the independent variable. A
 **`Fitter`** takes the model and finds the free parameters that make it
-describe the data. The available minimizers are LMFit, Bumps and DFO,
-selected with `AvailableMinimizers`.
+describe the data. The available minimizers are LMFit, Bumps, DFO and
+Minuit, selected with `AvailableMinimizers`.
 
 After a fit every free parameter holds its fitted value and its
 uncertainty, and can be used like any other number. A **`Sampler`**
