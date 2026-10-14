@@ -103,8 +103,8 @@ class Minuit(MinimizerBase):
         scale_covar : bool, default=False
             Multiply the variances written to the parameters by the
             reduced chi-square, as lmfit does. The ``errors`` and the
-            ``covariance`` of the Minuit object in ``engine_result``
-            are never scaled. By default, False.
+            ``covariance`` of the Minuit object in ``engine_result`` are
+            never scaled. By default, False.
         **kwargs :
             Not used. Any additional keyword argument raises a
             ``TypeError``.
@@ -126,9 +126,10 @@ class Minuit(MinimizerBase):
         ``engine_result`` of the returned ``FitResults`` is the Minuit
         object, so ``hesse()``, ``minos()`` and ``covariance`` are
         available. Its cost function writes the values it evaluates into
-        the ``Parameter`` objects, so after ``hesse()`` or ``minos()`` the
-        parameters sit at the last evaluated point. Restore the fitted
-        values with ``result.engine_result.fcn(list(result.engine_result.values))``.
+        the ``Parameter`` objects, so after ``hesse()`` or ``minos()``
+        the parameters sit at the last evaluated point. Restore the
+        fitted values with
+        ``result.engine_result.fcn(list(result.engine_result.values))``.
         """
         if kwargs:
             raise TypeError(f'Unexpected keyword arguments for Minuit: {sorted(kwargs)}.')
@@ -280,8 +281,8 @@ class Minuit(MinimizerBase):
             The diagonal of the covariance matrix, or None for a method
             without a covariance (the errors of Minuit are then only
             step sizes) and for a minimum that is not valid (for example
-            when ``max_evaluations`` was reached, where the covariance is
-            only a rough starting estimate).
+            when ``max_evaluations`` was reached, where the covariance
+            is only a rough starting estimate).
         """
         if method != 'migrad' or not fit_result.valid or fit_result.covariance is None:
             return None
