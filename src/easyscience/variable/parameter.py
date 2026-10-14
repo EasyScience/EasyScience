@@ -7,6 +7,7 @@ import copy
 import numbers
 import re
 import weakref
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Dict
 from typing import List
@@ -25,6 +26,9 @@ from easyscience.global_object.undo_redo import property_stack
 
 from .descriptor_number import DescriptorNumber
 from .descriptor_number import notify_observers
+
+if TYPE_CHECKING:
+    from .covariance import ParameterCovariance
 
 
 class Parameter(DescriptorNumber):
@@ -1011,6 +1015,51 @@ class Parameter(DescriptorNumber):
             param._pending_desired_unit = desired_unit
 
         return param
+
+    _covariance_record: ParameterCovariance | None = None
+
+    @property
+    def covariance(self) -> ParameterCovariance | None:
+        """
+        The covariance of the fit or sampling run this parameter is part
+        of, or None. It is only reported while it is current: if the
+        value or error of a participant was changed since, or a
+        participant was fixed or the fit undone, it is None.
+        """
+        record = self._covariance_record
+        if record is not None and record.is_current:
+            return record
+        return None
+
+    def correlation_with(self, other: Parameter) -> float:
+        """
+        Correlation coefficient with another parameter.
+
+        Parameters
+        ----------
+        other : Parameter
+            The other parameter.
+
+        Returns
+        -------
+        float
+            1.0 for the parameter itself, the correlation coefficient
+            if both are part of the same current fit or sampling
+            covariance, otherwise 0.0 (independent as far as known).
+
+        Raises
+        ------
+        TypeError
+            If ``other`` is not a Parameter.
+        """
+        if not isinstance(other, Parameter):
+            raise TypeError(f'Expected a Parameter, got {type(other).__name__}')
+        if other is self:
+            return 1.0
+        record = self.covariance
+        if record is None or other.covariance is not record:
+            return 0.0
+        return record.correlation_of(self, other)
 
     def __copy__(self) -> Parameter:
         new_obj = super().__copy__()
