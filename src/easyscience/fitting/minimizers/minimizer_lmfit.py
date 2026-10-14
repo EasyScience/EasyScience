@@ -134,6 +134,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         x, y, weights = np.asarray(x), np.asarray(y), np.asarray(weights)
 
         self.validate_arrays(x, y, weights)
+        self._warn_priors_ignored()
 
         if engine_kwargs is None:
             engine_kwargs = {}

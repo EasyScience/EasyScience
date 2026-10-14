@@ -249,6 +249,33 @@ class TestAttachment:
         assert changed is None
 
 
+class TestStaleness:
+    def test_restoring_the_error_keeps_the_record_current(self, pair):
+        # When
+        first, _ = pair
+        first.variance = 0.0123456789
+        ParameterCovariance(pair, COVARIANCE).attach()
+
+        # Then
+        first.error = first.error
+
+        # Expect
+        assert first.covariance is not None
+
+    def test_a_scaled_record_has_no_draws(self, pair):
+        # When
+        samples = np.random.default_rng(0).multivariate_normal([1, 2], COVARIANCE, size=100)
+        record = ParameterCovariance.from_samples(pair, samples)
+
+        # Then
+        scaled = record.scaled(2.0)
+
+        # Expect
+        assert record.samples is not None
+        assert scaled.samples is None
+        np.testing.assert_allclose(scaled.covariance, 2 * record.covariance)
+
+
 class TestLifetime:
     def test_the_record_does_not_keep_parameters_alive(self):
         # When
@@ -263,7 +290,8 @@ class TestLifetime:
         # Expect
         assert record.parameters[0] is None
         assert record.parameters[1] is second
-        assert record.is_current
+        assert not record.is_current
+        assert second.covariance is None
 
     def test_copies_pickles_and_serialization_do_not_carry_it(self, pair):
         # When

@@ -26,6 +26,11 @@ from easyscience.global_object.undo_redo import property_stack
 
 from .descriptor_number import DescriptorNumber
 from .descriptor_number import notify_observers
+from .prior import Prior
+from .prior import validate_prior
+from .propagation import adopt
+from .propagation import contributions_of
+from .propagation import derive
 
 if TYPE_CHECKING:
     from .covariance import ParameterCovariance
@@ -47,6 +52,7 @@ class Parameter(DescriptorNumber):
         min: Optional[numbers.Number] = -np.inf,
         max: Optional[numbers.Number] = np.inf,
         fixed: Optional[bool] = False,
+        prior: Optional[Dict[str, Any]] = None,
         unique_name: Optional[str] = None,
         description: Optional[str] = None,
         url: Optional[str] = None,
@@ -79,6 +85,13 @@ class Parameter(DescriptorNumber):
         fixed : Optional[bool], default=False
             If the parameter is free to vary during fitting. By default,
             False.
+        prior : Optional[Dict[str, Any]], default=None
+            The prior distribution as plain data, for example
+            ``{'distribution': 'norm', 'loc': 1.0, 'scale': 0.1}``: the
+            name of a continuous distribution of ``scipy.stats`` and its
+            keyword arguments. By default (None) the prior is uniform
+            between ``min`` and ``max``. The bounds always truncate the
+            prior. By default, None.
         unique_name : Optional[str], default=None
             Unique identifier for this object. By default, None.
         description : Optional[str], default=None
@@ -99,8 +112,8 @@ class Parameter(DescriptorNumber):
         TypeError
             If any numeric or boolean input has the wrong type.
         ValueError
-            If ``value`` falls outside the provided bounds or if the
-            bounds are invalid.
+            If ``value`` falls outside the provided bounds, if the
+            bounds are invalid or if the prior is not valid.
         """
         # Extract and ignore serialization-specific fields from kwargs
         kwargs.pop('_dependency_string', None)
@@ -123,6 +136,9 @@ class Parameter(DescriptorNumber):
             )
         if not isinstance(fixed, bool):
             raise TypeError('`fixed` must be either True or False')
+        self._prior = None if prior is None else validate_prior(prior)
+        if self._prior is not None:
+            Prior(self._prior, float(min), float(max))
         self._independent = True
         self._fixed = fixed  # For fitting, but must be initialized before super().__init__
         self._min = sc.scalar(float(min), unit=unit)
@@ -204,6 +220,7 @@ class Parameter(DescriptorNumber):
             self._scalar.value = temporary_parameter.value
             self._scalar.unit = temporary_parameter.unit
             self._scalar.variance = temporary_parameter.variance
+            adopt(self, temporary_parameter)
             self._min.value = (
                 temporary_parameter.min
                 if isinstance(temporary_parameter, Parameter)
@@ -438,6 +455,7 @@ class Parameter(DescriptorNumber):
             del self._dependency_string
             del self._clean_dependency_string
             del self._desired_unit
+            self._derivation = None
         else:
             raise AttributeError('This parameter is already independent.')
 
@@ -836,6 +854,65 @@ class Parameter(DescriptorNumber):
             )
 
     @property
+    def prior(self) -> Optional[Dict[str, Any]]:
+        """
+        The prior distribution as plain data, or None for the default
+        uniform prior between ``min`` and ``max``.
+
+        Returns
+        -------
+        Optional[Dict[str, Any]]
+            A copy of the prior, for example ``{'distribution': 'norm',
+            'loc': 1.0, 'scale': 0.1}``.
+        """
+        return None if self._prior is None else dict(self._prior)
+
+    @prior.setter
+    @property_stack
+    def prior(self, prior: Optional[Dict[str, Any]]) -> None:
+        """
+        Set the prior distribution.
+
+        - implements undo/redo functionality.
+
+        Parameters
+        ----------
+        prior : Optional[Dict[str, Any]]
+            The prior as plain data, or None for a uniform prior.
+
+        Raises
+        ------
+        AttributeError
+            If the parameter is dependent.
+        TypeError
+            If the prior is not a dictionary or has a non-numeric
+            argument.
+        ValueError
+            If the distribution is unknown or has invalid arguments, or
+            has no probability between ``min`` and ``max``.
+        """  # noqa: DOC503 -- raised by validate_prior and Prior
+        if not self._independent:
+            raise AttributeError('This is a dependent parameter, it has no prior.')
+        if prior is not None:
+            prior = validate_prior(prior)
+            Prior(prior, float(self.min), float(self.max))
+        self._prior = prior
+
+    @property
+    def prior_distribution(self) -> Prior:
+        """
+        The prior as a distribution truncated to ``min`` and ``max``.
+
+        Returns
+        -------
+        Prior
+            The truncated prior, with ``logpdf``, ``cdf`` and the prior
+            transform ``ppf``. Uniform between the bounds if the
+            parameter has no prior.
+        """
+        return Prior(self._prior, float(self.min), float(self.max))
+
+    @property
     def fixed(self) -> bool:
         """
         Can the parameter vary while fitting?
@@ -1057,7 +1134,7 @@ class Parameter(DescriptorNumber):
         if other is self:
             return 1.0
         record = self.covariance
-        if record is None or other.covariance is not record:
+        if record is None or other._covariance_record is not record:
             return 0.0
         return record.correlation_of(self, other)
 
@@ -1090,6 +1167,7 @@ class Parameter(DescriptorNumber):
             new_full_value = self.full_value + other
             min_value = self.min + other
             max_value = self.max + other
+            terms = [(self, 1.0)]
         elif isinstance(
             other, DescriptorNumber
         ):  # Parameter inherits from DescriptorNumber and is also handled here
@@ -1107,10 +1185,13 @@ class Parameter(DescriptorNumber):
             max_value = (
                 self.max + other.max if isinstance(other, Parameter) else self.max + other.value
             )
+            terms = [(self, 1.0), (contributions_of(other), 1.0)]
             other._convert_unit(other_unit)
         else:
             return NotImplemented
-        return Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value)
+        return derive(
+            Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value), terms
+        )
 
     def __radd__(self, other: Union[DescriptorNumber, numbers.Number]) -> Parameter:
         if isinstance(other, numbers.Number):
@@ -1119,6 +1200,7 @@ class Parameter(DescriptorNumber):
             new_full_value = self.full_value + other
             min_value = self.min + other
             max_value = self.max + other
+            terms = [(self, 1.0)]
         elif isinstance(
             other, DescriptorNumber
         ):  # Parameter inherits from DescriptorNumber and is also handled here
@@ -1132,10 +1214,13 @@ class Parameter(DescriptorNumber):
             new_full_value = self.full_value + other.full_value
             min_value = self.min + other.value
             max_value = self.max + other.value
+            terms = [(contributions_of(self), 1.0), (other, 1.0)]
             self._convert_unit(original_unit)
         else:
             return NotImplemented
-        return Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value)
+        return derive(
+            Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value), terms
+        )
 
     def __sub__(self, other: Union[DescriptorNumber, Parameter, numbers.Number]) -> Parameter:
         if isinstance(other, numbers.Number):
@@ -1144,6 +1229,7 @@ class Parameter(DescriptorNumber):
             new_full_value = self.full_value - other
             min_value = self.min - other
             max_value = self.max - other
+            terms = [(self, 1.0)]
         elif isinstance(
             other, DescriptorNumber
         ):  # Parameter inherits from DescriptorNumber and is also handled here
@@ -1161,10 +1247,13 @@ class Parameter(DescriptorNumber):
             else:
                 min_value = self.min - other.value
                 max_value = self.max - other.value
+            terms = [(self, 1.0), (contributions_of(other), -1.0)]
             other._convert_unit(other_unit)
         else:
             return NotImplemented
-        return Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value)
+        return derive(
+            Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value), terms
+        )
 
     def __rsub__(self, other: Union[DescriptorNumber, numbers.Number]) -> Parameter:
         if isinstance(other, numbers.Number):
@@ -1173,6 +1262,7 @@ class Parameter(DescriptorNumber):
             new_full_value = other - self.full_value
             min_value = other - self.max
             max_value = other - self.min
+            terms = [(self, -1.0)]
         elif isinstance(
             other, DescriptorNumber
         ):  # Parameter inherits from DescriptorNumber and is also handled here
@@ -1186,10 +1276,13 @@ class Parameter(DescriptorNumber):
             new_full_value = other.full_value - self.full_value
             min_value = other.value - self.max
             max_value = other.value - self.min
+            terms = [(contributions_of(self), -1.0), (other, 1.0)]
             self._convert_unit(original_unit)
         else:
             return NotImplemented
-        return Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value)
+        return derive(
+            Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value), terms
+        )
 
     def __mul__(self, other: Union[DescriptorNumber, Parameter, numbers.Number]) -> Parameter:
         if isinstance(other, numbers.Number):
@@ -1197,6 +1290,7 @@ class Parameter(DescriptorNumber):
             if other == 0:
                 return DescriptorNumber.from_scipp(full_value=new_full_value)
             combinations = [self.min * other, self.max * other]
+            terms = [(self, float(other))]
         elif isinstance(
             other, DescriptorNumber
         ):  # Parameter inherits from DescriptorNumber and is also handled here
@@ -1221,11 +1315,14 @@ class Parameter(DescriptorNumber):
                         combinations.append(first * second)
             else:
                 combinations = [self.min * other.value, self.max * other.value]
+            terms = [(self, float(other.value)), (other, float(self.value))]
         else:
             return NotImplemented
         min_value = min(combinations)
         max_value = max(combinations)
-        parameter = Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value)
+        parameter = derive(
+            Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value), terms
+        )
         parameter._convert_unit(parameter._base_unit())
         return parameter
 
@@ -1235,6 +1332,7 @@ class Parameter(DescriptorNumber):
             if other == 0:
                 return DescriptorNumber.from_scipp(full_value=new_full_value)
             combinations = [other * self.min, other * self.max]
+            terms = [(self, float(other))]
         elif isinstance(
             other, DescriptorNumber
         ):  # Parameter inherits from DescriptorNumber and is also handled here
@@ -1242,11 +1340,14 @@ class Parameter(DescriptorNumber):
             if other.value == 0:
                 return DescriptorNumber.from_scipp(full_value=new_full_value)
             combinations = [self.min * other.value, self.max * other.value]
+            terms = [(self, float(other.value)), (other, float(self.value))]
         else:
             return NotImplemented
         min_value = min(combinations)
         max_value = max(combinations)
-        parameter = Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value)
+        parameter = derive(
+            Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value), terms
+        )
         parameter._convert_unit(parameter._base_unit())
         return parameter
 
@@ -1256,6 +1357,7 @@ class Parameter(DescriptorNumber):
                 raise ZeroDivisionError('Cannot divide by zero')
             new_full_value = self.full_value / other
             combinations = [self.min / other, self.max / other]
+            terms = [(self, 1.0 / other)]
         elif isinstance(
             other, DescriptorNumber
         ):  # Parameter inherits from DescriptorNumber and is also handled here
@@ -1289,11 +1391,17 @@ class Parameter(DescriptorNumber):
                     ]
             else:
                 combinations = [self.min / other.value, self.max / other.value]
+            terms = [
+                (self, 1.0 / float(other_value)),
+                (other, -float(self.value) / float(other_value) ** 2),
+            ]
         else:
             return NotImplemented
         min_value = min(combinations)
         max_value = max(combinations)
-        parameter = Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value)
+        parameter = derive(
+            Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value), terms
+        )
         parameter._convert_unit(parameter._base_unit())
         return parameter
 
@@ -1315,6 +1423,9 @@ class Parameter(DescriptorNumber):
                 return DescriptorNumber.from_scipp(full_value=new_full_value)
         else:
             return NotImplemented
+        terms = [(self, -float(other_value) / float(original_self) ** 2)]
+        if isinstance(other, DescriptorNumber):
+            terms.append((other, 1.0 / float(original_self)))
         if self.min < 0 and self.max > 0:
             combinations = [-np.inf, np.inf]
         elif self.min == 0:
@@ -1331,7 +1442,9 @@ class Parameter(DescriptorNumber):
             combinations = [other_value / self.min, other_value / self.max]
         min_value = min(combinations)
         max_value = max(combinations)
-        parameter = Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value)
+        parameter = derive(
+            Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value), terms
+        )
         parameter._convert_unit(parameter._base_unit())
         return parameter
 
@@ -1356,6 +1469,8 @@ class Parameter(DescriptorNumber):
 
         if np.isnan(new_full_value.value):
             raise ValueError('The result of the exponentiation is not a number')
+        with np.errstate(all='ignore'):
+            terms = [(self, float(exponent * np.power(float(self.value), exponent - 1)))]
         if exponent == 0:
             return DescriptorNumber.from_scipp(full_value=new_full_value)
         elif exponent < 0:
@@ -1379,13 +1494,18 @@ class Parameter(DescriptorNumber):
             combinations = [combination for combination in combinations if combination >= 0]
         min_value = min(combinations)
         max_value = max(combinations)
-        return Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value)
+        return derive(
+            Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value), terms
+        )
 
     def __neg__(self) -> Parameter:
         new_full_value = -self.full_value
         min_value = -self.max
         max_value = -self.min
-        return Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value)
+        return derive(
+            Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value),
+            [(self, -1.0)],
+        )
 
     def __abs__(self) -> Parameter:
         new_full_value = abs(self.full_value)
@@ -1394,7 +1514,10 @@ class Parameter(DescriptorNumber):
             combinations.append(0.0)
         min_value = min(combinations)
         max_value = max(combinations)
-        return Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value)
+        return derive(
+            Parameter.from_scipp(full_value=new_full_value, min=min_value, max=max_value),
+            [(self, float(np.sign(self.value)))],
+        )
 
     def resolve_pending_dependencies(self) -> None:
         """

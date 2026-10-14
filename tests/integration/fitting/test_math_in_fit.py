@@ -638,18 +638,14 @@ class TestCostOfDerivingInsideCall:
 
 
 # ----------------------------------------------------------------------
-# Known limitation: Parameter variances carry no covariance
+# Parameters that are correlated after a fit
 # ----------------------------------------------------------------------
 
 
-class TestCorrelatedParametersKnownLimitation:
+class TestCorrelatedParameters:
     """
-    A ``Parameter`` stores a variance but no covariance with other parameters. The slope and
-    intercept of a line are strongly anticorrelated (about -0.87 here), so a function of both
-    (``arctan2``) is propagated as if they were independent and its variance is wrong.
-
-    ``strict=True``: if covariance support is ever added, this XPASSes and fails, which is the
-    signal to remove the marker.
+    The slope and intercept of a line are strongly anticorrelated (about -0.87 here). The
+    covariance of the fit is used when a function of both (``arctan2``) is propagated.
     """
 
     def test_premise_slope_and_intercept_are_strongly_correlated(self, fitted_line):
@@ -664,11 +660,6 @@ class TestCorrelatedParametersKnownLimitation:
         # EXPECT
         assert correlation < -0.8
 
-    @pytest.mark.xfail(
-        strict=True,
-        raises=AssertionError,
-        reason='Known limitation: Parameter variances carry no covariance (deferred).',
-    )
     def test_arctan2_of_correlated_parameters_matches_the_full_covariance(self, fitted_line):
         # WHEN
         model, x = fitted_line

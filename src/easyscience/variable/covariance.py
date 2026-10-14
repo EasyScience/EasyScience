@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import math
 import weakref
 from typing import TYPE_CHECKING
 from typing import Sequence
@@ -15,6 +16,31 @@ if TYPE_CHECKING:
 SOURCES = ('hessian', 'posterior', 'user')
 
 _SYMMETRY_TOLERANCE = 1e-8
+
+
+def _refresh_dependents(parameters: Sequence[Parameter | None]) -> None:
+    """
+    Recalculate the dependent parameters of ``parameters``, which use the
+    covariance of their sources for their variance.
+    """
+    seen = set()
+    for parameter in parameters:
+        if parameter is None:
+            continue
+        for observer in list(parameter._observers):
+            if id(observer) not in seen:
+                seen.add(id(observer))
+                observer._update()
+
+
+def _same(current: float | None, stamped: float | None) -> bool:
+    """
+    Whether a value or variance is still the one that was stamped; a
+    round trip through ``error`` changes a variance by rounding only.
+    """
+    if current is None or stamped is None:
+        return current is stamped
+    return math.isclose(current, stamped, rel_tol=1e-12, abs_tol=0.0)
 
 
 def _none() -> None:
@@ -208,15 +234,16 @@ class ParameterCovariance:
     @property
     def is_current(self) -> bool:
         """
-        Whether the live participants still have the value and variance
-        they had when the record was attached, and none is fixed.
+        Whether every participant still exists, still has the value and
+        variance it had when the record was attached (to rounding) and is
+        not fixed.
         """
         if self._stamp is None:
             return False
         for parameter, stamp in zip(self.parameters, self._stamp):
-            if parameter is None or stamp is None:
-                continue
-            if parameter.fixed or (parameter.value, parameter.variance) != stamp:
+            if parameter is None or stamp is None or parameter.fixed:
+                return False
+            if not _same(parameter.value, stamp[0]) or not _same(parameter.variance, stamp[1]):
                 return False
         return True
 
@@ -282,7 +309,10 @@ class ParameterCovariance:
         i, j = self.index_of(first), self.index_of(second)
         if i is None or j is None:
             return 0.0
-        return float(self.correlation[i, j])
+        denominator = math.sqrt(self._cov[i, i] * self._cov[j, j])
+        if not denominator > 0:
+            return 0.0
+        return float(np.clip(self._cov[i, j] / denominator, -1.0, 1.0))
 
     def submatrix(self, parameters: Sequence[Parameter]) -> np.ndarray:
         """
@@ -314,7 +344,8 @@ class ParameterCovariance:
     def scaled(self, factor: float) -> ParameterCovariance:
         """
         A new record with the covariance multiplied by a factor, for
-        example the reduced chi-square. It is not attached.
+        example the reduced chi-square. It is not attached and has no
+        draws.
 
         Parameters
         ----------
@@ -329,20 +360,17 @@ class ParameterCovariance:
         Raises
         ------
         ValueError
-            If the factor is negative or not finite.
+            If the factor is negative or not finite, or a parameter no
+            longer exists.
         """
         if not np.isfinite(factor) or factor < 0:
             raise ValueError('The scale factor must be finite and not negative')
-        samples = None if self._samples is None else self._samples.copy()
         parameters = self.parameters
         if any(parameter is None for parameter in parameters):
             raise ValueError('A parameter of this covariance no longer exists')
+        # The draws are not scaled, so the scaled record has none.
         return ParameterCovariance(
-            parameters,
-            self._cov * factor,
-            source=self._source,
-            samples=samples,
-            names=self._names,
+            parameters, self._cov * factor, source=self._source, names=self._names
         )
 
     def attach(self) -> ParameterCovariance:
@@ -364,13 +392,16 @@ class ParameterCovariance:
         for parameter in parameters:
             if parameter is not None:
                 parameter._covariance_record = self
+        _refresh_dependents(parameters)
         return self
 
     def detach(self) -> None:
         """Remove this record from the parameters that still hold it."""
-        for parameter in self.parameters:
+        parameters = self.parameters
+        for parameter in parameters:
             if parameter is not None and parameter._covariance_record is self:
                 parameter._covariance_record = None
+        _refresh_dependents(parameters)
 
     def __len__(self) -> int:
         return len(self._refs)

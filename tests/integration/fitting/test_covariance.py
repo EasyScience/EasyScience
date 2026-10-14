@@ -130,6 +130,7 @@ class TestEveryBackend:
         assert model.slope.covariance is None
         assert model.slope.correlation_with(model.intercept) == 0.0
         assert result.covariance is not None
+        assert not result.covariance.is_current
 
     def test_a_refit_replaces_the_record(self, line_data, enum):
         # When
@@ -270,7 +271,7 @@ def test_a_fit_does_not_keep_the_parameters_alive(line_data):
 
     # Expect
     assert all(parameter is None for parameter in record.parameters)
-    assert record.is_current
+    assert not record.is_current
 
 
 @pytest.mark.parametrize('engine', ['LMFit', 'Bumps', 'DFO', 'Minuit'])

@@ -38,17 +38,33 @@ another unit.
 
 Arithmetic and the functions of `es.math` return a **new** number. Its
 value, unit, uncertainty and bounds are worked out from the numbers that
-went in. The uncertainty is propagated to first order and assumes that
-the inputs are independent. Two consequences follow:
+went in. The uncertainty is propagated to first order. A result
+remembers which numbers it was calculated from, so a number that occurs
+several times in a formula counts once and cancels where it should, and
+numbers that share a covariance are propagated with it. A fit leaves one
+on its parameters, and `ParameterCovariance` states one yourself. Numbers
+without a shared covariance are treated as independent. Two
+consequences follow:
 
 - a result is a **snapshot**: it does not change when a number it came
   from changes afterwards,
-- a quantity that depends on the same number more than once, or on
-  correlated numbers, can have an unreliable uncertainty. The notebooks
-  on
+- the propagation is first order, and the bounds of a result are still
+  combined as if the numbers were independent. The notebooks on
   [error propagation](../tutorials/basics/maths-error-propagation.ipynb)
   and [correlation](../tutorials/basics/maths-correlation.ipynb) show
-  when and by how much.
+  what this means in practice.
+
+## Priors
+
+The `min` and `max` of a parameter are the bounds of a fit and also its
+prior for Bayesian sampling: uniform between them. Another prior is
+given as plain data, the name of a continuous distribution of
+`scipy.stats` and its arguments, for example
+`Parameter(1.0, prior={'distribution': 'norm', 'loc': 1.0, 'scale': 0.1})`.
+The bounds always truncate the prior. The Bumps minimizers and the
+`Sampler` use it; the other minimizers use the bounds only and say so.
+`PriorTransform` maps the unit cube to the parameters through the priors,
+which is what nested samplers need.
 
 ## Models and fitting
 

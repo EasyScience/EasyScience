@@ -23,6 +23,8 @@ from easyscience.variable import Parameter
 
 from ...engine_base import PARAMETER_PREFIX
 from .eval_counter import EvalCounter
+from .prior import PriorBounds
+from .prior import PriorParameter
 
 if TYPE_CHECKING:
     from ...engine_base import EngineBase
@@ -42,14 +44,25 @@ def to_bumps_parameter(par: Parameter) -> BumpsParameter:
     -------
     BumpsParameter
         Bumps Parameter compatible object, named ``PARAMETER_PREFIX +
-        par.unique_name``.
+        par.unique_name``. Its prior is uniform between ``min`` and
+        ``max``, or the prior of ``par`` truncated to them.
     """
-    return BumpsParameter(
+    if par.prior is None:
+        return BumpsParameter(
+            name=PARAMETER_PREFIX + par.unique_name,
+            value=par.value,
+            bounds=[par.min, par.max],
+            fixed=par.fixed,
+        )
+    bumps_parameter = PriorParameter(
         name=PARAMETER_PREFIX + par.unique_name,
         value=par.value,
         bounds=[par.min, par.max],
         fixed=par.fixed,
     )
+    bumps_parameter.easyscience_prior = PriorBounds(par.prior_distribution)
+    bumps_parameter.reset_prior()
+    return bumps_parameter
 
 
 def build_curve_problem(

@@ -46,7 +46,6 @@ def _quadrature(*terms: float) -> float:
 
 
 _PI_GRAVITY = math.pi**2  # 4 pi^2 * 1 m / (2 s)^2
-_PLATE_WIDTH_SIGMA = _quadrature(0.01 / 2, 0.01)
 _FIT_VARIANCE = (18 * 0.02) ** 2 + 0.3**2
 
 # (notebook, exercise number) -> [(label, value, error, unit and bounds as printed), ...]
@@ -69,7 +68,7 @@ RESULT_LINES = {
         (
             'by_operators',
             0.4,
-            _quadrature((1.3 - 0.8) * 0.01, 0.8 * _PLATE_WIDTH_SIGMA),
+            _quadrature((1.3 - 2 * 0.8) * 0.01, 0.8 / 2 * 0.01),
             'm^2',
         ),
         (
@@ -177,7 +176,7 @@ class TestTheTableExample:
         assert namespace['area_1'].value == pytest.approx(3.0)
         assert namespace['area_1'].error == pytest.approx(0.025)
 
-    def test_the_operators_overestimate_when_a_measurement_is_used_twice(self, namespace):
+    def test_the_operators_agree_with_the_helper_when_a_measurement_is_used_twice(self, namespace):
         operators = namespace['by_operators']
         correct = namespace['propagate'](
             lambda length, perimeter: length * (perimeter / 2 - length),
@@ -185,23 +184,25 @@ class TestTheTableExample:
             [0.01, 0.01],
         )
 
-        assert operators.error == pytest.approx(
-            _quadrature((3.5 - 2.0) * 0.01, 2.0 * _quadrature(0.005, 0.01)), abs=1e-9
-        )
+        assert operators.error == pytest.approx(correct[1], rel=1e-6)
         assert correct[1] == pytest.approx(_quadrature((3.5 - 4.0) * 0.01, 1.0 * 0.01))
-        assert operators.error > 2 * correct[1]
+        assert operators.error < 0.5 * _quadrature(
+            (3.5 - 2.0) * 0.01, 2.0 * _quadrature(0.005, 0.01)
+        )
 
     def test_the_small_example_of_the_text(self, namespace):
         assert namespace['x'].value == pytest.approx(3.0)
-        assert (namespace['x'] * (1 + namespace['x'])).error == pytest.approx(0.5)
+        assert (namespace['x'] * (1 + namespace['x'])).error == pytest.approx(0.7)
         value, uncertainty = namespace['propagate'](lambda x: x * (1 + x), [3.0], [0.1])
         assert (value, uncertainty) == pytest.approx((12.0, 0.7))
 
-    def test_the_same_object_on_both_sides_is_exact(self, namespace):
+    def test_the_same_quantity_by_different_routes_is_exact(self, namespace):
         x = namespace['x']
 
         assert (x * x).error == pytest.approx(2 * 3.0 * 0.1)
         assert (x - x).error == pytest.approx(0.0)
+        assert (x * x - x**2).error == pytest.approx(0.0, abs=1e-12)
+        assert ((x + 1) - x).error == pytest.approx(0.0, abs=1e-12)
 
 
 class TestTheCorrelationHelper:
@@ -245,6 +246,22 @@ class TestTheCorrelationHelper:
         assert namespace['correlation'] < -0.97
         assert namespace['at_20'].error > 3 * 0.1115
 
+    def test_operators_with_the_covariance_agree_with_the_helper(self, namespace):
+        rod, propagate = namespace['rod'], namespace['propagate']
+        correct = propagate(lambda a, b: a + b, [1.2, 0.8], [0.02, 0.03], [[1, 0.9], [0.9, 1]])
+
+        assert rod.value == pytest.approx(correct[0])
+        assert rod.error == pytest.approx(correct[1], rel=1e-9)
+        assert namespace['left_section'].correlation_with(namespace['right_section']) == (
+            pytest.approx(0.9)
+        )
+
+    def test_the_fit_prediction_with_the_covariance_is_the_correct_one(self, namespace):
+        with_covariance = namespace['at_20_with_covariance']
+
+        assert with_covariance.error == pytest.approx(namespace['with_covariance'], rel=1e-6)
+        assert with_covariance.error < 0.3 * namespace['at_20'].error
+
     def test_the_fit_prediction_matches_the_closed_form(self, namespace):
         covariance = namespace['covariance']
         x = 20.0
@@ -269,11 +286,12 @@ class TestWording:
 
         assert 'uncertainty' in text
 
-    def test_the_correlation_notebook_says_what_the_operators_assume(self):
+    def test_the_correlation_notebook_says_how_to_state_a_correlation(self):
         text = '\n'.join(source_of(cell) for cell in load_notebook(CORRELATION)['cells'])
 
-        assert 'stores a variance and no covariance' in text
+        assert 'ParameterCovariance' in text
         assert r'\rho = 0' in text
+        assert 'stores a variance and no covariance' not in text
 
     @pytest.mark.parametrize('name', [PROPAGATION, CORRELATION])
     def test_the_basics_hub_lists_the_notebook(self, name):

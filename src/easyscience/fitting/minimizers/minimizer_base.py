@@ -150,7 +150,8 @@ class MinimizerBase(EngineBase):
             np.all(np.isfinite(normal_matrix))
             and np.linalg.cond(normal_matrix) < 1 / np.finfo(float).eps
         ):
-            return np.linalg.inv(normal_matrix)
+            covariance = np.linalg.inv(normal_matrix)
+            return (covariance + covariance.T) / 2
         global_object.log.getLogger('fitting').warning(
             'The Jacobian is singular or not finite; no covariance or errors are available.'
         )
@@ -214,5 +215,7 @@ class MinimizerBase(EngineBase):
         if record is None:
             return None, []
         keys = {id(parameter): key for key, parameter in self._cached_pars.items()}
-        labels = [keys[id(parameter)] for parameter in record.parameters if id(parameter) in keys]
+        labels = [keys.get(id(parameter)) for parameter in record.parameters]
+        if None in labels:
+            return None, []
         return record, [PARAMETER_PREFIX + str(label) for label in labels]

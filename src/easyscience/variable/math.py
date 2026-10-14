@@ -8,7 +8,8 @@ Every public function takes one or more ``Parameter`` objects and
 returns a new ``Parameter`` holding
 
 * the **value**, evaluated by Scipp (which also validates the units),
-* the propagated **variance** (first-order "delta method", uncorrelated inputs), and
+* the propagated **variance** (first-order "delta method", with the covariance of
+  the inputs where there is one), and
 * the **fitting bounds**, i.e. the exact range the function can take when its
   argument stays inside the argument's own bounds.
 
@@ -53,13 +54,15 @@ class GaussianPeak(ModelBase):
         return self.amplitude.value * np.exp(-shift / (2 * sigma**2))
 ```
 
-Two things to keep in mind. Propagated variances assume uncorrelated
-inputs, because a ``Parameter`` stores a variance but no covariance; a
-function of two strongly correlated fit parameters (for example
-``arctan2`` of the slope and intercept of a line) can be off by a large
-factor. And a fit reports different uncertainties for different
-minimizers, so every derived variance is only as good as the variance it
-starts from.
+Two things to keep in mind. A result remembers which parameters it was
+calculated from, so a parameter that occurs several times in a formula
+(``sin(a)**2 + cos(a)**2``) is one variable, and parameters that share a
+covariance, as the parameters of one fit do, are propagated with it; see
+``ParameterCovariance``. Parameters without a shared covariance are
+treated as independent. The propagation is first order, so a strongly
+non-linear function of an uncertain argument needs another method. And a
+fit reports different uncertainties for different minimizers, so every
+derived variance is only as good as the variance it starts from.
 
 Implementation: each function is described by a small, immutable
 ``_MathOp`` specification (which Scipp function to call, which domain it
@@ -85,6 +88,9 @@ import scipp as sc
 
 from easyscience.variable.descriptor_number import DescriptorNumber
 from easyscience.variable.parameter import Parameter
+from easyscience.variable.propagation import merge
+from easyscience.variable.propagation import record
+from easyscience.variable.propagation import variance_of
 
 # A closed interval ``(lo, hi)`` of an argument, in the unit the bounds strategy works in.
 _Interval = tuple[float, float]
@@ -879,8 +885,8 @@ def arctan2(y: DescriptorNumber, x: DescriptorNumber, *, unit: str = 'rad') -> D
     Notes
     -----
     Scipp does not propagate variances through ``atan2``. EasyScience
-    does it with the delta method, assuming ``y`` and ``x`` are
-    uncorrelated.
+    does it with the delta method, including the covariance of ``y`` and
+    ``x`` if they share one.
 
     The bounds are the exact range of the angle over the box ``[y.min,
     y.max] x [x.min, x.max]``. If the box touches the branch cut (``y =
@@ -1430,8 +1436,8 @@ def _apply(op: _MathOp, *params: DescriptorNumber) -> DescriptorNumber:
             )
 
     # 1. Scipp first: it owns the unit rules, so a unit error is reported before anything else.
-    manual_variance = op.jacobian is not None
-    sc_args = [_to_scipp_scalar(param, strip_variance=manual_variance) for param in params]
+    #    It only computes the value; the variance comes from the propagation below.
+    sc_args = [_to_scipp_scalar(param, strip_variance=True) for param in params]
     sc_result = op.sc_func(*sc_args)
 
     # 2. Values are validated strictly: a bad value would break a fit loop.
@@ -1444,9 +1450,11 @@ def _apply(op: _MathOp, *params: DescriptorNumber) -> DescriptorNumber:
     if op.guard is not None:
         op.guard(*params)
 
-    # 3. Variance for functions Scipp cannot handle: the delta method.
-    if manual_variance:
-        variance = _delta_method_variance(op, params)
+    # 3. Variance: first-order propagation through the sources of the arguments, so that a
+    #    source that occurs in several arguments (sin(a)**2 + cos(a)**2) is one variable.
+    merged = merge(list(zip(params, _partials(op, params), strict=True)))
+    if any(_variance(param) > 0 for param in params):
+        variance = variance_of(merged)
         if variance is not None:
             sc_result.variance = variance
 
@@ -1459,9 +1467,11 @@ def _apply(op: _MathOp, *params: DescriptorNumber) -> DescriptorNumber:
 
     # A plain DescriptorNumber has no bounds, so neither has a result made only from those.
     if not any(isinstance(param, Parameter) for param in params):
-        return DescriptorNumber.from_scipp(
+        result = DescriptorNumber.from_scipp(
             display_name=f'{op.name}({label})', full_value=sc_result
         )
+        record(result, merged)
+        return result
 
     # 4. Bounds are permissive: clip to the domain, convert, and let the strategy decide.
     intervals = [_native_interval(op, param) for param in params]
@@ -1472,12 +1482,14 @@ def _apply(op: _MathOp, *params: DescriptorNumber) -> DescriptorNumber:
     # Parameter rejects (nearly) identical bounds, so bounds that collapsed are padded.
     new_min, new_max = _pad_if_collapsed(new_min, new_max, sc_result.value)
 
-    return Parameter.from_scipp(
+    result = Parameter.from_scipp(
         display_name=f'{op.name}({label})',
         full_value=sc_result,
         min=new_min,
         max=new_max,
     )
+    record(result, merged)
+    return result
 
 
 # TODO(): ``rtol=1e-9`` below mirrors the literal tolerance in the min/max setters of ``Parameter``,
@@ -1561,20 +1573,16 @@ def _to_scipp_scalar(param: DescriptorNumber, strip_variance: bool = False) -> s
     return sc.scalar(**kwargs)
 
 
-def _delta_method_variance(op: _MathOp, params: tuple[DescriptorNumber, ...]) -> float | None:
+def _partials(op: _MathOp, params: tuple[DescriptorNumber, ...]) -> list[float]:
     """
-    First-order error propagation, ``var(y) = sum_i (dy/dx_i)**2 *
-    var(x_i)``.
-
-    Only arguments that have a variance contribute (this avoids ``0 *
-    inf``). Returns ``None`` if no argument has a variance.
+    The partial derivatives of ``op`` with respect to each argument, in
+    the unit the argument currently has and with the sign they have.
     """
-    variances = [_variance(p) for p in params]
-    if not any(variances):
-        return None
+    jacobian = op.jacobian or _JACOBIANS[op.name]
+    factors = [_native_factor(str(param.unit), op.native_unit) for param in params]
     with np.errstate(all='ignore'):
-        partials = op.jacobian(*(np.float64(p.value) for p in params))
-        return float(sum(j**2 * v for j, v in zip(partials, variances, strict=True) if v > 0))
+        native = jacobian(*(np.float64(p.value * f) for p, f in zip(params, factors, strict=True)))
+        return [float(j * f) for j, f in zip(native, factors, strict=True)]
 
 
 def _is_finite(value: float | None) -> bool:
@@ -1869,6 +1877,37 @@ def _erf_jacobian(x: np.float64) -> tuple[np.float64]:
 
 def _erfc_jacobian(x: np.float64) -> tuple[np.float64]:
     return (-2.0 / np.sqrt(np.pi) * np.exp(-(x**2)),)
+
+
+def _sinc_jacobian(x: np.float64) -> tuple[np.float64]:
+    # d/dx sin(x)/x = (x cos x - sin x) / x**2, which is 0 at the origin
+    if x == 0:
+        return (np.float64(0.0),)
+    return ((x * np.cos(x) - np.sin(x)) / x**2,)
+
+
+_JACOBIANS = {
+    'exp': lambda x: (np.exp(x),),
+    'log': lambda x: (1.0 / x,),
+    'log10': lambda x: (1.0 / (x * np.log(10.0)),),
+    'sqrt': lambda x: (0.5 / np.sqrt(x),),
+    'erf': _erf_jacobian,
+    'erfc': _erfc_jacobian,
+    'sin': lambda x: (np.cos(x),),
+    'cos': lambda x: (-np.sin(x),),
+    'tan': lambda x: (1.0 / np.cos(x) ** 2,),
+    'arcsin': lambda x: (1.0 / np.sqrt(1.0 - x**2),),
+    'arccos': lambda x: (-1.0 / np.sqrt(1.0 - x**2),),
+    'arctan': lambda x: (1.0 / (1.0 + x**2),),
+    'arctan2': _arctan2_jacobian,
+    'sinc': _sinc_jacobian,
+    'sinh': lambda x: (np.cosh(x),),
+    'cosh': lambda x: (np.sinh(x),),
+    'tanh': lambda x: (1.0 - np.tanh(x) ** 2,),
+    'arcsinh': lambda x: (1.0 / np.sqrt(x**2 + 1.0),),
+    'arccosh': lambda x: (1.0 / np.sqrt(x**2 - 1.0),),
+    'arctanh': lambda x: (1.0 / (1.0 - x**2),),
+}
 
 
 # ==========================================

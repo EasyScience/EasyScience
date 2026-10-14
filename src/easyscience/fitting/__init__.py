@@ -4,6 +4,7 @@
 from .available_minimizers import AvailableMinimizers
 from .fitter import Fitter
 from .minimizers.utils import FitResults
+from .prior_transform import PriorTransform
 from .sampler import Sampler
 from .sampler import SamplingResults
 

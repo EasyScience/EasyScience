@@ -123,6 +123,7 @@ class DFO(MinimizerBase):
         x, y, weights = np.asarray(x), np.asarray(y), np.asarray(weights)
 
         self.validate_arrays(x, y, weights)
+        self._warn_priors_ignored()
 
         # Bridge progress_callback into the DFO callback mechanism
         if progress_callback is not None and callback is None:

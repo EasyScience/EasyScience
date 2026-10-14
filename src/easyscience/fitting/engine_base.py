@@ -42,6 +42,27 @@ class EngineBase(metaclass=ABCMeta):
         self._cached_pars_vals: Dict[str, Tuple[float, float]] = {}
         self._fit_function = None
 
+    def _warn_priors_ignored(self) -> None:
+        """
+        Warn if a free parameter has a prior that this engine can not
+        use: a least-squares or simplex minimizer uses the bounds only.
+        """
+        get_parameters = getattr(self._object, 'get_fit_parameters', None)
+        if get_parameters is None:
+            return
+        names = [
+            parameter.display_name
+            for parameter in get_parameters()
+            if isinstance(getattr(parameter, 'prior', None), dict)
+        ]
+        if names:
+            from easyscience import global_object
+
+            global_object.log.getLogger('fitting').warning(
+                f'{self.__class__.__name__} ignores the priors of {", ".join(names)} and uses '
+                'their bounds only. Use a Bumps method or the Sampler to use the priors.'
+            )
+
     def _restore_parameter_values(self) -> None:
         for key in self._cached_pars.keys():
             self._cached_pars[key].value = self._cached_pars_vals[key][0]

@@ -30,7 +30,7 @@ class TestDescriptorNumber:
         # When Then Expect
         assert descriptor._scalar.value == 1
         assert descriptor._scalar.unit == 'm'
-        assert descriptor._scalar.variance == 0.1
+        assert descriptor._scalar.variance == pytest.approx(0.1, rel=1e-12)
         assert descriptor._observers == []
 
         # From super
@@ -52,7 +52,7 @@ class TestDescriptorNumber:
         # Expect
         assert descriptor._scalar.value == 1
         assert descriptor._scalar.unit == 'm'
-        assert descriptor._scalar.variance == 0.1
+        assert descriptor._scalar.variance == pytest.approx(0.1, rel=1e-12)
 
     def test_init_sc_unit_unknown(self):
         # When Then Expect
@@ -148,18 +148,18 @@ class TestDescriptorNumber:
         # Expect
         assert descriptor._scalar.unit == 'mm'
         assert descriptor._scalar.value == 1000
-        assert descriptor._scalar.variance == 100000
+        assert descriptor._scalar.variance == pytest.approx(100000, rel=1e-12)
 
     def test_variance(self, descriptor: DescriptorNumber):
         # When Then Expect
-        assert descriptor.variance == 0.1
+        assert descriptor.variance == pytest.approx(0.1, rel=1e-12)
 
     def test_set_variance(self, descriptor: DescriptorNumber):
         # When Then
         descriptor.variance = 0.2
 
         # Expect
-        assert descriptor._scalar.variance == 0.2
+        assert descriptor._scalar.variance == pytest.approx(0.2, rel=1e-12)
         assert descriptor.error == 0.4472135954999579
 
     def test_error(self, descriptor: DescriptorNumber):
@@ -172,7 +172,7 @@ class TestDescriptorNumber:
 
         # Expect
         assert descriptor.error == 0.31622776601683794
-        assert descriptor.variance == 0.1
+        assert descriptor.variance == pytest.approx(0.1, rel=1e-12)
 
     def test_value(self, descriptor: DescriptorNumber):
         # When Then Expect
@@ -238,7 +238,7 @@ class TestDescriptorNumber:
         assert type(result) == DescriptorNumber
         assert result.value == expected.value
         assert result.unit == expected.unit
-        assert result.variance == expected.variance
+        assert result.variance == pytest.approx(expected.variance, rel=1e-12)
 
         assert descriptor.unit == 'm'
 
@@ -254,12 +254,12 @@ class TestDescriptorNumber:
         assert type(result) == DescriptorNumber
         assert result.value == 2.0
         assert result.unit == 'dimensionless'
-        assert result.variance == 0.1
+        assert result.variance == pytest.approx(0.1, rel=1e-12)
 
         assert type(result_reverse) == DescriptorNumber
         assert result_reverse.value == 2.0
         assert result_reverse.unit == 'dimensionless'
-        assert result_reverse.variance == 0.1
+        assert result_reverse.variance == pytest.approx(0.1, rel=1e-12)
 
     @pytest.mark.parametrize(
         'test',
@@ -298,7 +298,7 @@ class TestDescriptorNumber:
         assert type(result) == DescriptorNumber
         assert result.value == expected.value
         assert result.unit == expected.unit
-        assert result.variance == expected.variance
+        assert result.variance == pytest.approx(expected.variance, rel=1e-12)
 
         assert descriptor.unit == 'm'
 
@@ -314,12 +314,12 @@ class TestDescriptorNumber:
         assert type(result) == DescriptorNumber
         assert result.value == 1.0
         assert result.unit == 'dimensionless'
-        assert result.variance == 0.1
+        assert result.variance == pytest.approx(0.1, rel=1e-12)
 
         assert type(result_reverse) == DescriptorNumber
         assert result_reverse.value == -1.0
         assert result_reverse.unit == 'dimensionless'
-        assert result_reverse.variance == 0.1
+        assert result_reverse.variance == pytest.approx(0.1, rel=1e-12)
 
     @pytest.mark.parametrize(
         'test',
@@ -369,12 +369,12 @@ class TestDescriptorNumber:
         assert type(result) == DescriptorNumber
         assert result.value == 2.0
         assert result.unit == 'm'
-        assert result.variance == 0.4
+        assert result.variance == pytest.approx(0.4, rel=1e-12)
 
         assert type(result_reverse) == DescriptorNumber
         assert result_reverse.value == 2.0
         assert result_reverse.unit == 'm'
-        assert result_reverse.variance == 0.4
+        assert result_reverse.variance == pytest.approx(0.4, rel=1e-12)
 
     @pytest.mark.parametrize(
         'test, expected, expected_reverse',
@@ -452,7 +452,7 @@ class TestDescriptorNumber:
         assert type(result) == DescriptorNumber
         assert result.value == expected.value
         assert result.unit == expected.unit
-        assert result.variance == expected.variance
+        assert result.variance == pytest.approx(expected.variance, rel=1e-12)
 
     def test_power_of_dimensionless_descriptor(self):
         # When
@@ -531,7 +531,7 @@ class TestDescriptorNumber:
         assert type(result) == DescriptorNumber
         assert result.value == -2
         assert result.unit == 'm'
-        assert result.variance == 0.1
+        assert result.variance == pytest.approx(0.1, rel=1e-12)
 
     def test_abs(self):
         # When
@@ -544,4 +544,4 @@ class TestDescriptorNumber:
         assert type(result) == DescriptorNumber
         assert result.value == 2
         assert result.unit == 'm'
-        assert result.variance == 0.1
+        assert result.variance == pytest.approx(0.1, rel=1e-12)

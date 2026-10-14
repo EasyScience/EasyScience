@@ -135,6 +135,7 @@ class Minuit(MinimizerBase):
             raise TypeError(f'Unexpected keyword arguments for Minuit: {sorted(kwargs)}.')
         x, y, weights = np.asarray(x), np.asarray(y), np.asarray(weights)
         self.validate_arrays(x, y, weights)
+        self._warn_priors_ignored()
         method = self._get_method_kwargs(method).get('method', 'migrad')
 
         # Why do we do this? Because a fitting template has to have global_object instantiated outside pre-runtime

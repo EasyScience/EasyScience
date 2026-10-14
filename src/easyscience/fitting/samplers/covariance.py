@@ -45,7 +45,7 @@ def posterior_covariance(
     draws = np.asarray(draws, dtype=float)
     log = global_object.log.getLogger('fitting')
     if any(name not in parameters_by_name for name in param_names):
-        log.debug('No posterior covariance: a sampled parameter is not known.')
+        log.warning('No posterior covariance: a sampled parameter is not known.')
         return None
     if draws.ndim != 2 or draws.shape[0] < 2 or draws.shape[1] != len(param_names):
         log.debug('No posterior covariance: the draws have an unexpected shape.')

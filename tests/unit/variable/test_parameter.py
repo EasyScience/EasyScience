@@ -43,7 +43,7 @@ class TestParameter:
     def compare_parameters(self, parameter1: Parameter, parameter2: Parameter):
         assert parameter1.value == parameter2.value
         assert parameter1.unit == parameter2.unit
-        assert parameter1.variance == parameter2.variance
+        assert parameter1.variance == pytest.approx(parameter2.variance, rel=1e-12)
         assert parameter1.min == parameter2.min
         assert parameter1.max == parameter2.max
         assert parameter1._min.unit == parameter2._min.unit
@@ -61,7 +61,7 @@ class TestParameter:
         # From super
         assert parameter._scalar.value == 1
         assert parameter._scalar.unit == 'm'
-        assert parameter._scalar.variance == 0.01
+        assert parameter._scalar.variance == pytest.approx(0.01, rel=1e-12)
         assert parameter._description == 'description'
         assert parameter._url == 'url'
         assert parameter._display_name == 'display_name'
@@ -210,8 +210,8 @@ class TestParameter:
 
         assert normal_parameter.value == 200 * independent_parameter.value
         assert normal_parameter.unit == 'cm'
-        assert (
-            normal_parameter.variance == independent_parameter.variance * 4 * 10000
+        assert normal_parameter.variance == pytest.approx(
+            independent_parameter.variance * 4 * 10000, rel=1e-12
         )  # unit conversion from m to cm squared
         assert normal_parameter.min == 200 * independent_parameter.min
         assert normal_parameter.max == 200 * independent_parameter.max
@@ -224,8 +224,8 @@ class TestParameter:
         # Expect
         assert normal_parameter.value == 200 * independent_parameter.value
         assert normal_parameter.unit == 'cm'
-        assert (
-            normal_parameter.variance == independent_parameter.variance * 4 * 10000
+        assert normal_parameter.variance == pytest.approx(
+            independent_parameter.variance * 4 * 10000, rel=1e-12
         )  # unit conversion from m to cm squared
         assert normal_parameter.min == 200 * independent_parameter.min
         assert normal_parameter.max == 200 * independent_parameter.max
@@ -246,8 +246,8 @@ class TestParameter:
 
         assert normal_parameter.value == 3000 * independent_parameter.value
         assert normal_parameter.unit == 'mm'
-        assert (
-            normal_parameter.variance == independent_parameter.variance * 9 * 1000000
+        assert normal_parameter.variance == pytest.approx(
+            independent_parameter.variance * 9 * 1000000, rel=1e-12
         )  # unit conversion from m to mm squared
         assert normal_parameter.min == 3000 * independent_parameter.min
         assert normal_parameter.max == 3000 * independent_parameter.max
@@ -260,8 +260,8 @@ class TestParameter:
         # Expect
         assert normal_parameter.value == 3000 * independent_parameter.value
         assert normal_parameter.unit == 'mm'
-        assert (
-            normal_parameter.variance == independent_parameter.variance * 9 * 1000000
+        assert normal_parameter.variance == pytest.approx(
+            independent_parameter.variance * 9 * 1000000, rel=1e-12
         )  # unit conversion from m to mm squared
         assert normal_parameter.min == 3000 * independent_parameter.min
         assert normal_parameter.max == 3000 * independent_parameter.max
@@ -340,8 +340,8 @@ class TestParameter:
 
         assert dependent_parameter.value == 200 * normal_parameter.value
         assert dependent_parameter.unit == 'cm'
-        assert (
-            dependent_parameter.variance == normal_parameter.variance * 4 * 10000
+        assert dependent_parameter.variance == pytest.approx(
+            normal_parameter.variance * 4 * 10000, rel=1e-12
         )  # unit conversion from m to cm squared
         assert dependent_parameter.min == 200 * normal_parameter.min
         assert dependent_parameter.max == 200 * normal_parameter.max
@@ -354,8 +354,8 @@ class TestParameter:
         # Expect
         assert dependent_parameter.value == 200 * normal_parameter.value
         assert dependent_parameter.unit == 'cm'
-        assert (
-            dependent_parameter.variance == normal_parameter.variance * 4 * 10000
+        assert dependent_parameter.variance == pytest.approx(
+            normal_parameter.variance * 4 * 10000, rel=1e-12
         )  # unit conversion from m to cm squared
         assert dependent_parameter.min == 200 * normal_parameter.min
         assert dependent_parameter.max == 200 * normal_parameter.max
@@ -676,7 +676,7 @@ class TestParameter:
         # Expect
         assert dependent_parameter.value == 2 * descriptor_number.value
         assert dependent_parameter.unit == descriptor_number.unit
-        assert dependent_parameter.variance == 0.04
+        assert dependent_parameter.variance == pytest.approx(0.04, rel=1e-12)
         assert dependent_parameter.min == 2 * descriptor_number.value
         assert dependent_parameter.max == 2 * descriptor_number.value
 
@@ -888,8 +888,8 @@ class TestParameter:
 
         assert dependent_parameter.value == 200 * normal_parameter.value
         assert dependent_parameter.unit == 'cm'
-        assert (
-            dependent_parameter.variance == normal_parameter.variance * 4 * 10000
+        assert dependent_parameter.variance == pytest.approx(
+            normal_parameter.variance * 4 * 10000, rel=1e-12
         )  # unit conversion from m to cm squared
         assert dependent_parameter.min == 200 * normal_parameter.min
         assert dependent_parameter.max == 200 * normal_parameter.max
@@ -902,8 +902,8 @@ class TestParameter:
         # Expect
         assert dependent_parameter.value == 200 * normal_parameter.value
         assert dependent_parameter.unit == 'cm'
-        assert (
-            dependent_parameter.variance == normal_parameter.variance * 4 * 10000
+        assert dependent_parameter.variance == pytest.approx(
+            normal_parameter.variance * 4 * 10000, rel=1e-12
         )  # unit conversion from m to cm squared
         assert dependent_parameter.min == 200 * normal_parameter.min
         assert dependent_parameter.max == 200 * normal_parameter.max
@@ -999,7 +999,7 @@ class TestParameter:
 
         # Then Expect
         assert parameter.error == 10
-        assert parameter._scalar.variance == 100
+        assert parameter._scalar.variance == pytest.approx(100, rel=1e-12)
 
     def test_set_error_exception(self, parameter: Parameter):
         # When Then Expect
@@ -1168,13 +1168,13 @@ class TestParameter:
         # Expect
         assert result.value == expected.value
         assert result.unit == expected.unit
-        assert result.variance == expected.variance
+        assert result.variance == pytest.approx(expected.variance, rel=1e-12)
         assert result.min == expected.min
         assert result.max == expected.max
 
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
-        assert result_reverse.variance == expected_reverse.variance
+        assert result_reverse.variance == pytest.approx(expected_reverse.variance, rel=1e-12)
         assert result_reverse.min == expected_reverse.min
         assert result_reverse.max == expected_reverse.max
 
@@ -1191,13 +1191,13 @@ class TestParameter:
         # Expect
         assert result.value == 2.0
         assert result.unit == 'dimensionless'
-        assert result.variance == 0.01
+        assert result.variance == pytest.approx(0.01, rel=1e-12)
         assert result.min == 1.0
         assert result.max == 11.0
 
         assert result_reverse.value == 2.0
         assert result_reverse.unit == 'dimensionless'
-        assert result_reverse.variance == 0.01
+        assert result_reverse.variance == pytest.approx(0.01, rel=1e-12)
         assert result_reverse.min == 1.0
         assert result_reverse.max == 11.0
 
@@ -1214,14 +1214,14 @@ class TestParameter:
         assert type(result) == Parameter
         assert result.value == 1.01
         assert result.unit == 'm'
-        assert result.variance == 0.01001
+        assert result.variance == pytest.approx(0.01001, rel=1e-12)
         assert result.min == 0.01
         assert result.max == 10.01
 
         assert type(result_reverse) == Parameter
         assert result_reverse.value == 101.0
         assert result_reverse.unit == 'cm'
-        assert result_reverse.variance == 100.1
+        assert result_reverse.variance == pytest.approx(100.1, rel=1e-12)
         assert result_reverse.min == 1
         assert result_reverse.max == 1001
 
@@ -1301,13 +1301,13 @@ class TestParameter:
         # Expect
         assert result.value == expected.value
         assert result.unit == expected.unit
-        assert result.variance == expected.variance
+        assert result.variance == pytest.approx(expected.variance, rel=1e-12)
         assert result.min == expected.min
         assert result.max == expected.max
 
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
-        assert result_reverse.variance == expected_reverse.variance
+        assert result_reverse.variance == pytest.approx(expected_reverse.variance, rel=1e-12)
         assert result_reverse.min == expected_reverse.min
         assert result_reverse.max == expected_reverse.max
 
@@ -1325,13 +1325,13 @@ class TestParameter:
         # Expect
         assert result.value == -1.0
         assert result.unit == 'dimensionless'
-        assert result.variance == 0.02
+        assert result.variance == pytest.approx(0.02, rel=1e-12)
         assert result.min == -np.inf
         assert result.max == np.inf
 
         assert result_reverse.value == 1.0
         assert result_reverse.unit == 'dimensionless'
-        assert result_reverse.variance == 0.02
+        assert result_reverse.variance == pytest.approx(0.02, rel=1e-12)
         assert result_reverse.min == -np.inf
         assert result_reverse.max == np.inf
 
@@ -1346,13 +1346,13 @@ class TestParameter:
         # Expect
         assert result.value == 1.0
         assert result.unit == 'dimensionless'
-        assert result.variance == 0.01
+        assert result.variance == pytest.approx(0.01, rel=1e-12)
         assert result.min == -1.0
         assert result.max == 9.0
 
         assert result_reverse.value == -1.0
         assert result_reverse.unit == 'dimensionless'
-        assert result_reverse.variance == 0.01
+        assert result_reverse.variance == pytest.approx(0.01, rel=1e-12)
         assert result_reverse.min == -9.0
         assert result_reverse.max == 1.0
 
@@ -1369,14 +1369,14 @@ class TestParameter:
         assert type(result) == Parameter
         assert result.value == 0.99
         assert result.unit == 'm'
-        assert result.variance == 0.01001
+        assert result.variance == pytest.approx(0.01001, rel=1e-12)
         assert result.min == -0.01
         assert result.max == 9.99
 
         assert type(result_reverse) == Parameter
         assert result_reverse.value == -99.0
         assert result_reverse.unit == 'cm'
-        assert result_reverse.variance == 100.1
+        assert result_reverse.variance == pytest.approx(100.1, rel=1e-12)
         assert result_reverse.min == -999
         assert result_reverse.max == 1
 
@@ -1523,13 +1523,13 @@ class TestParameter:
         # Expect
         assert result.value == expected.value
         assert result.unit == expected.unit
-        assert result.variance == expected.variance
+        assert result.variance == pytest.approx(expected.variance, rel=1e-12)
         assert result.min == expected.min
         assert result.max == expected.max
 
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
-        assert result_reverse.variance == expected_reverse.variance
+        assert result_reverse.variance == pytest.approx(expected_reverse.variance, rel=1e-12)
         assert result_reverse.min == expected_reverse.min
         assert result_reverse.max == expected_reverse.max
 
@@ -1567,7 +1567,7 @@ class TestParameter:
         assert type(result) == type(expected)
         assert result.value == expected.value
         assert result.unit == expected.unit
-        assert result.variance == expected.variance
+        assert result.variance == pytest.approx(expected.variance, rel=1e-12)
         if isinstance(result, Parameter):
             assert result.min == expected.min
             assert result.max == expected.max
@@ -1575,7 +1575,7 @@ class TestParameter:
         assert type(result_reverse) == type(expected_reverse)
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
-        assert result_reverse.variance == expected_reverse.variance
+        assert result_reverse.variance == pytest.approx(expected_reverse.variance, rel=1e-12)
         if isinstance(result_reverse, Parameter):
             assert result_reverse.min == expected_reverse.min
             assert result_reverse.max == expected_reverse.max
@@ -1610,14 +1610,14 @@ class TestParameter:
         assert type(result) == type(expected)
         assert result.value == expected.value
         assert result.unit == expected.unit
-        assert result.variance == expected.variance
+        assert result.variance == pytest.approx(expected.variance, rel=1e-12)
         if isinstance(result, Parameter):
             assert result.min == expected.min
             assert result.max == expected.max
 
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
-        assert result_reverse.variance == expected_reverse.variance
+        assert result_reverse.variance == pytest.approx(expected_reverse.variance, rel=1e-12)
         if isinstance(result_reverse, Parameter):
             assert result_reverse.min == expected_reverse.min
             assert result_reverse.max == expected_reverse.max
@@ -1746,7 +1746,7 @@ class TestParameter:
         # Expect
         assert result.value == expected.value
         assert result.unit == expected.unit
-        assert result.variance == expected.variance
+        assert result.variance == pytest.approx(expected.variance, rel=1e-12)
         assert result.min == expected.min
         assert result.max == expected.max
 
@@ -1786,14 +1786,14 @@ class TestParameter:
         assert type(result) == Parameter
         assert result.value == expected.value
         assert result.unit == expected.unit
-        assert result.variance == expected.variance
+        assert result.variance == pytest.approx(expected.variance, rel=1e-12)
         assert result.min == expected.min
         assert result.max == expected.max
 
         assert type(result_reverse) == Parameter
         assert result_reverse.value == expected_reverse.value
         assert result_reverse.unit == expected_reverse.unit
-        assert result_reverse.variance == expected_reverse.variance
+        assert result_reverse.variance == pytest.approx(expected_reverse.variance, rel=1e-12)
         assert result_reverse.min == expected_reverse.min
         assert result_reverse.max == expected_reverse.max
 
@@ -1819,7 +1819,7 @@ class TestParameter:
         assert type(result) == DescriptorNumber
         assert result.value == expected.value
         assert result.unit == expected.unit
-        assert result.variance == expected.variance
+        assert result.variance == pytest.approx(expected.variance, rel=1e-12)
 
     @pytest.mark.parametrize(
         'first, second, expected',
@@ -1895,7 +1895,7 @@ class TestParameter:
         # Expect
         assert result.value == expected.value
         assert result.unit == expected.unit
-        assert result.variance == expected.variance
+        assert result.variance == pytest.approx(expected.variance, rel=1e-12)
         assert result.min == expected.min
         assert result.max == expected.max
 
@@ -1981,7 +1981,7 @@ class TestParameter:
         assert type(result) == type(expected)
         assert result.value == expected.value
         assert result.unit == expected.unit
-        assert result.variance == expected.variance
+        assert result.variance == pytest.approx(expected.variance, rel=1e-12)
         if isinstance(result, Parameter):
             assert result.min == expected.min
             assert result.max == expected.max
@@ -2076,7 +2076,7 @@ class TestParameter:
         # Expect
         assert result.value == expected.value
         assert result.unit == expected.unit
-        assert result.variance == expected.variance
+        assert result.variance == pytest.approx(expected.variance, rel=1e-12)
         assert result.min == expected.min
         assert result.max == expected.max
 
@@ -2118,7 +2118,7 @@ class TestParameter:
         # Expect
         assert result.value == -5
         assert result.unit == 'm'
-        assert result.variance == 0.05
+        assert result.variance == pytest.approx(0.05, rel=1e-12)
         assert result.min == -10
         assert result.max == 5
 
@@ -2143,7 +2143,7 @@ class TestParameter:
         # Expect
         assert result.value == expected.value
         assert result.unit == expected.unit
-        assert result.variance == expected.variance
+        assert result.variance == pytest.approx(expected.variance, rel=1e-12)
         assert result.min == expected.min
         assert result.max == expected.max
 
