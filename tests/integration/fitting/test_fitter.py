@@ -118,6 +118,7 @@ def check_fit_results(result, sp_sin, ref_sin, x, expect_error=True, **kwargs):
         AvailableMinimizers.LMFit,
         AvailableMinimizers.Bumps,
         AvailableMinimizers.DFO,
+        AvailableMinimizers.Minuit,
     ],
 )
 def test_basic_fit(fit_engine: AvailableMinimizers):
@@ -156,6 +157,7 @@ def test_basic_fit(fit_engine: AvailableMinimizers):
         AvailableMinimizers.LMFit,
         AvailableMinimizers.Bumps,
         AvailableMinimizers.DFO,
+        AvailableMinimizers.Minuit,
     ],
 )
 def test_fit_result(fit_engine):
@@ -198,6 +200,7 @@ def test_fit_result(fit_engine):
         AvailableMinimizers.LMFit,
         AvailableMinimizers.Bumps,
         AvailableMinimizers.DFO,
+        AvailableMinimizers.Minuit,
     ],
 )
 def test_basic_max_evaluations(fit_engine):
@@ -232,6 +235,7 @@ def test_basic_max_evaluations(fit_engine):
         AvailableMinimizers.LMFit,
         AvailableMinimizers.Bumps,
         AvailableMinimizers.DFO,
+        AvailableMinimizers.Minuit,
     ],
 )
 def test_max_evaluations_populates_fit_result_fields(fit_engine):
@@ -299,6 +303,8 @@ def test_bumps_max_evaluations_counts_objective_calls() -> None:
         (AvailableMinimizers.LMFit, 10),
         (AvailableMinimizers.Bumps, 10),
         (AvailableMinimizers.DFO, 0.1),
+        # The tolerance of Minuit scales its distance to the minimum, so a loose one is much larger.
+        (AvailableMinimizers.Minuit, 1000),
     ],
 )
 def test_basic_tolerance(fit_engine, tolerance):
@@ -399,7 +405,12 @@ def test_bumps_fit_emits_no_fitness_deprecation_warning():
 @pytest.mark.fast
 @pytest.mark.parametrize(
     'fit_engine',
-    [AvailableMinimizers.LMFit, AvailableMinimizers.Bumps, AvailableMinimizers.DFO],
+    [
+        AvailableMinimizers.LMFit,
+        AvailableMinimizers.Bumps,
+        AvailableMinimizers.DFO,
+        AvailableMinimizers.Minuit,
+    ],
 )
 def test_dependent_parameter(fit_engine):
     ref_sin = AbsSin(np.pi * 0.45, 0.45 * np.pi * 0.5)
@@ -438,6 +449,7 @@ def test_dependent_parameter(fit_engine):
         AvailableMinimizers.LMFit,
         AvailableMinimizers.Bumps,
         AvailableMinimizers.DFO,
+        AvailableMinimizers.Minuit,
     ],
 )
 def test_2D_vectorized(fit_engine):
@@ -477,6 +489,7 @@ def test_2D_vectorized(fit_engine):
         AvailableMinimizers.LMFit,
         AvailableMinimizers.Bumps,
         AvailableMinimizers.DFO,
+        AvailableMinimizers.Minuit,
     ],
 )
 def test_2D_non_vectorized(fit_engine):
@@ -516,6 +529,7 @@ def test_2D_non_vectorized(fit_engine):
         AvailableMinimizers.LMFit,
         AvailableMinimizers.Bumps,
         AvailableMinimizers.DFO,
+        AvailableMinimizers.Minuit,
     ],
 )
 def test_fixed_parameter_does_not_change(fit_engine):
@@ -579,6 +593,7 @@ def test_fitter_new_model_base_integration():
         AvailableMinimizers.LMFit,
         AvailableMinimizers.Bumps,
         AvailableMinimizers.DFO,
+        AvailableMinimizers.Minuit,
     ],
 )
 def test_fitter_variable_weights(fit_engine):
@@ -648,6 +663,7 @@ def _analytic_wls(design: np.ndarray, y: np.ndarray, point_weights: np.ndarray):
         AvailableMinimizers.LMFit,
         AvailableMinimizers.Bumps,
         AvailableMinimizers.DFO,
+        AvailableMinimizers.Minuit,
     ],
 )
 def test_weight_convention_matches_analytic_wls(fit_engine):

@@ -479,7 +479,13 @@ class TestFittedQuadrature:
 # estimate is wrong is a question for the lead developer. A derived variance is only as good as the
 # variance it starts from, so these tests compare a derived variance only with the variance of the
 # same engine's fit, never across engines.
-ENGINES = [None, AvailableMinimizers.LMFit, AvailableMinimizers.Bumps, AvailableMinimizers.DFO]
+ENGINES = [
+    None,
+    AvailableMinimizers.LMFit,
+    AvailableMinimizers.Bumps,
+    AvailableMinimizers.DFO,
+    AvailableMinimizers.Minuit,
+]
 
 
 def count_parameters() -> int:

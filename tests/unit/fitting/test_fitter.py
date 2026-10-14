@@ -130,6 +130,9 @@ class TestFitter:
             'Bumps_lm',
             'DFO',
             'DFO_leastsq',
+            'Minuit',
+            'Minuit_migrad',
+            'Minuit_simplex',
         ]
 
     def test_minimizer(self, fitter: Fitter):

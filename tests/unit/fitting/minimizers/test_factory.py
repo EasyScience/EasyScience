@@ -50,6 +50,40 @@ class TestFactory:
 
     @pytest.mark.parametrize(
         'minimizer_method,minimizer_enum',
+        [
+            ('migrad', AvailableMinimizers.Minuit),
+            ('migrad', AvailableMinimizers.Minuit_migrad),
+            ('simplex', AvailableMinimizers.Minuit_simplex),
+        ],
+    )
+    def test_factory_minuit_fit(self, minimizer_method, minimizer_enum):
+        minimizer = self.pull_minminizer(minimizer_enum)
+        assert minimizer._method == minimizer_method
+        assert minimizer.package == 'minuit'
+
+    def test_minuit_enum_members(self):
+        assert [
+            (member.package, member.method, member.enum_id)
+            for member in (
+                AvailableMinimizers.Minuit,
+                AvailableMinimizers.Minuit_migrad,
+                AvailableMinimizers.Minuit_simplex,
+            )
+        ] == [('minuit', 'migrad', 41), ('minuit', 'migrad', 42), ('minuit', 'simplex', 43)]
+
+    @pytest.mark.parametrize(
+        'name,expected',
+        [
+            ('Minuit', 'Minuit'),
+            ('Minuit_migrad', 'Minuit_migrad'),
+            ('Minuit_simplex', 'Minuit_simplex'),
+        ],
+    )
+    def test_minuit_from_string_to_enum(self, name, expected):
+        assert from_string_to_enum(name) is AvailableMinimizers[expected]
+
+    @pytest.mark.parametrize(
+        'minimizer_method,minimizer_enum',
         [('leastsq', AvailableMinimizers.DFO), ('leastsq', AvailableMinimizers.DFO_leastsq)],
     )
     def test_factory_dfo_fit(self, minimizer_method, minimizer_enum):
@@ -107,4 +141,7 @@ def test_available_minimizers():
     assert AvailableMinimizers.Bumps_lm
     assert AvailableMinimizers.DFO
     assert AvailableMinimizers.DFO_leastsq
-    assert len(AvailableMinimizers) == 12
+    assert AvailableMinimizers.Minuit
+    assert AvailableMinimizers.Minuit_migrad
+    assert AvailableMinimizers.Minuit_simplex
+    assert len(AvailableMinimizers) == 15

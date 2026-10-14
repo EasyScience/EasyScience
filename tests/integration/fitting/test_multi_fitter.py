@@ -71,7 +71,7 @@ class AbsSin2D(AbsSin):
         )
 
 
-@pytest.mark.parametrize('fit_engine', [None, 'LMFit', 'Bumps', 'DFO'])
+@pytest.mark.parametrize('fit_engine', [None, 'LMFit', 'Bumps', 'DFO', 'Minuit'])
 def test_multi_fit(fit_engine):
     ref_sin_1 = AbsSin(0.2, np.pi)
     sp_sin_1 = AbsSin(0.354, 3.05)
@@ -121,7 +121,7 @@ def test_multi_fit(fit_engine):
         assert result.residual == pytest.approx(F_real[idx](X[idx]) - F_ref[idx](X[idx]), abs=1e-2)
 
 
-@pytest.mark.parametrize('fit_engine', [None, 'LMFit', 'Bumps', 'DFO'])
+@pytest.mark.parametrize('fit_engine', [None, 'LMFit', 'Bumps', 'DFO', 'Minuit'])
 def test_multi_fit_propagates_iteration_metadata_and_message(fit_engine):
     """Verify that fit metadata and message are copied into each per-dataset result."""
     ref_sin_1 = AbsSin(0.2, np.pi)
@@ -164,7 +164,7 @@ def test_multi_fit_propagates_iteration_metadata_and_message(fit_engine):
         assert isinstance(result.message, str)
 
 
-@pytest.mark.parametrize('fit_engine', [None, 'LMFit', 'Bumps', 'DFO'])
+@pytest.mark.parametrize('fit_engine', [None, 'LMFit', 'Bumps', 'DFO', 'Minuit'])
 def test_multi_fit2(fit_engine):
     ref_sin_1 = AbsSin(0.2, np.pi)
     sp_sin_1 = AbsSin(0.354, 3.05)
@@ -229,7 +229,7 @@ def test_multi_fit2(fit_engine):
         assert result.residual == pytest.approx(F_ref[idx](X[idx]) - F_real[idx](X[idx]), abs=1e-2)
 
 
-@pytest.mark.parametrize('fit_engine', [None, 'LMFit', 'Bumps', 'DFO'])
+@pytest.mark.parametrize('fit_engine', [None, 'LMFit', 'Bumps', 'DFO', 'Minuit'])
 def test_multi_fit_1D_2D(fit_engine):
     # Generate fit and reference objects
     ref_sin1D = AbsSin(0.2, np.pi)
