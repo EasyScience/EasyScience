@@ -40,6 +40,16 @@ except ImportError:
         'DFO minimization is not available. Probably dfols has not been installed.'
     )
 
+iminuit_engine_available = False
+try:
+    import iminuit  # noqa: F401
+
+    iminuit_engine_available = True
+except ImportError:
+    global_object.log.getLogger('fitting').warning(
+        'Minuit minimization is not available. Probably iminuit has not been installed.'
+    )
+
 
 @dataclass
 class AvailableMinimizer:
@@ -66,6 +76,11 @@ class AvailableMinimizers(AvailableMinimizer, Enum):
     if dfo_engine_available:
         DFO = 'dfo', 'leastsq', 31
         DFO_leastsq = 'dfo', 'leastsq', 32
+
+    if iminuit_engine_available:
+        Minuit = 'minuit', 'migrad', 41
+        Minuit_migrad = 'minuit', 'migrad', 42
+        Minuit_simplex = 'minuit', 'simplex', 43
 
 
 # Temporary solution to convert string to enum
@@ -96,6 +111,13 @@ def from_string_to_enum(minimizer_name: str) -> AvailableMinimizers:
         minmizer_enum = AvailableMinimizers.DFO
     elif minimizer_name == 'DFO_leastsq':
         minmizer_enum = AvailableMinimizers.DFO_leastsq
+
+    elif minimizer_name == 'Minuit':
+        minmizer_enum = AvailableMinimizers.Minuit
+    elif minimizer_name == 'Minuit_migrad':
+        minmizer_enum = AvailableMinimizers.Minuit_migrad
+    elif minimizer_name == 'Minuit_simplex':
+        minmizer_enum = AvailableMinimizers.Minuit_simplex
     else:
         raise ValueError(
             f'Invalid minimizer name: {minimizer_name}. The following minimizers are available: {[minimize.name for minimize in AvailableMinimizers]}'  # noqa: E501

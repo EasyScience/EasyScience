@@ -13,6 +13,8 @@ if available_minimizers.dfo_engine_available:
     from .minimizer_dfo import DFO
 if available_minimizers.bumps_engine_available:
     from .minimizer_bumps import Bumps
+if available_minimizers.iminuit_engine_available:
+    from .minimizer_minuit import Minuit
 
 
 def factory(
@@ -26,5 +28,10 @@ def factory(
 
     elif minimizer_enum.package == 'dfo':
         minimizer = DFO(obj=fit_object, fit_function=fit_function, minimizer_enum=minimizer_enum)
+
+    elif minimizer_enum.package == 'minuit':
+        minimizer = Minuit(
+            obj=fit_object, fit_function=fit_function, minimizer_enum=minimizer_enum
+        )
 
     return minimizer
