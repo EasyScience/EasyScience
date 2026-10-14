@@ -191,6 +191,7 @@ nav:
       - Installation & Setup: installation-and-setup/index.md
   - User Guide:
       - User Guide: user-guide/index.md
+      - Concepts: user-guide/concepts.md
       - Controlling Log Output: user-guide/controlling-log-output.md
   - Tutorials:
       - Tutorials: tutorials/index.md
