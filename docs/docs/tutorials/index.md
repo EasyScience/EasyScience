@@ -17,41 +17,26 @@ The tutorials are organized into the following categories:
 
 ## Basics
 
-Short examples of how to do maths with EasyScience parameters, with
-exercises. Units, uncertainties and bounds are propagated for you.
+- [Basics](basics/index.md) – Short notebooks on working with numbers
+  that carry units, uncertainties and bounds: arithmetic, the functions
+  of `es.math`, how the choice of formula changes an uncertainty, and
+  what correlation does to it. Each part ends with exercises with hints
+  and solutions.
 
-- [Arithmetic](basics/maths-arithmetic.ipynb) – Addition, subtraction,
-  multiplication, division and powers of numbers with units,
-  uncertainties and bounds.
-- [Exponential and logarithm](basics/maths-exp-log.ipynb) – `exp`,
-  `log`, `log10`, `sqrt` and the error functions `erf` and `erfc`.
-- [Trigonometric functions](basics/maths-trigonometric.ipynb) – `sin`,
-  `cos`, `tan` and `sinc`, with Bragg's law as the running example.
-- [Inverse trigonometric functions](basics/maths-inverse-trigonometric.ipynb)
-  – `arcsin`, `arccos`, `arctan` and `arctan2`, and their domains.
-- [Hyperbolic functions](basics/maths-hyperbolic.ipynb) – `sinh`,
-  `cosh`, `tanh` and their inverses.
-- [Error propagation](basics/maths-error-propagation.ipynb) – How the
-  choice of formula changes the uncertainty of a result, with the area of
-  a table as the running example.
-- [Correlation](basics/maths-correlation.ipynb) – Correlated
-  measurements and fit parameters, and what ignoring the correlation
-  costs.
+## Fitting
+
+- [Fitting](fitting/index.md) – Fit a straight line, spheres in
+  small-angle scattering and a quasi-elastic line, then derive
+  quantities from the fit with their uncertainties. A last notebook
+  compares those uncertainties with the full Bayesian posterior.
 
 ## Workshops & Schools
 
-- [Fitting introduction](fitting-intro.ipynb) – A short introduction to
-  fitting: fit a straight line, then compute quantities that derive from
-  the fitted parameters, with their uncertainty.
-- [Fitting QENS](fitting-qens.ipynb) – A tutorial demonstrating how to
-  fit a quasielastic neutron scattering (QENS) data using EasyScience
-  framework.
-- [Fitting SANS](fitting-sans.ipynb) – A tutorial demonstrating how to
-  fit a small-angle neutron scattering (SANS) data using EasyScience
-  framework.
-- [Bayesian analysis](fitting-bayesian.ipynb) – A tutorial showing how
-  to run Bayesian MCMC sampling on a model with EasyScience to obtain
-  full posterior distributions for the parameters.
-- [Progress Callback](progress-callback.ipynb) – A tutorial showing how
-  to monitor fitting progress across minimizer backends and update a
-  notebook UI while a fit is running.
+- [Workshops & Schools](workshops/index.md) – The notebooks that follow
+  the analysis of one QENS and one SANS data set step by step, written
+  as exercises for a group.
+
+## Advanced Topics
+
+- [Advanced Topics](advanced/index.md) – Bayesian sampling of the
+  posterior and monitoring the progress of a fit.

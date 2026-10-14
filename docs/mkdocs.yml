@@ -195,21 +195,29 @@ nav:
   - Tutorials:
       - Tutorials: tutorials/index.md
       - Basics:
-          - Maths:
-              - Arithmetic: tutorials/basics/maths-arithmetic.ipynb
-              - Exponential and logarithm: tutorials/basics/maths-exp-log.ipynb
-              - Trigonometric functions: tutorials/basics/maths-trigonometric.ipynb
-              - Inverse trigonometric functions:
-                  tutorials/basics/maths-inverse-trigonometric.ipynb
-              - Hyperbolic functions: tutorials/basics/maths-hyperbolic.ipynb
-              - Error propagation: tutorials/basics/maths-error-propagation.ipynb
-              - Correlation: tutorials/basics/maths-correlation.ipynb
-      - Fitting introduction: tutorials/fitting-intro.ipynb
-      - Bayesian analysis: tutorials/fitting-bayesian.ipynb
-      - Progress Callback: tutorials/progress-callback.ipynb
+          - Basics: tutorials/basics/index.md
+          - Arithmetic: tutorials/basics/maths-arithmetic.ipynb
+          - Exponential and logarithm: tutorials/basics/maths-exp-log.ipynb
+          - Trigonometric functions: tutorials/basics/maths-trigonometric.ipynb
+          - Inverse trigonometric functions:
+              tutorials/basics/maths-inverse-trigonometric.ipynb
+          - Hyperbolic functions: tutorials/basics/maths-hyperbolic.ipynb
+          - Error propagation: tutorials/basics/maths-error-propagation.ipynb
+          - Correlation: tutorials/basics/maths-correlation.ipynb
+      - Fitting:
+          - Fitting: tutorials/fitting/index.md
+          - Fitting introduction: tutorials/fitting-intro.ipynb
+          - SANS sphere: tutorials/fitting/sans-sphere.ipynb
+          - QENS Lorentzian: tutorials/fitting/qens-lorentzian.ipynb
+          - Bayesian QENS: tutorials/fitting/bayesian-qens.ipynb
       - Workshops & Schools:
+          - Workshops & Schools: tutorials/workshops/index.md
           - Fitting QENS: tutorials/fitting-qens.ipynb
           - Fitting SANS: tutorials/fitting-sans.ipynb
+      - Advanced Topics:
+          - Advanced Topics: tutorials/advanced/index.md
+          - Bayesian analysis: tutorials/fitting-bayesian.ipynb
+          - Progress Callback: tutorials/progress-callback.ipynb
   - API Reference:
       - API Reference: api-reference/index.md
       - base_classes: api-reference/base_classes.md

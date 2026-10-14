@@ -34,6 +34,15 @@ PROPAGATION_NOTEBOOKS = [
 FITTING_NOTEBOOKS = ['fitting-intro']
 NOTEBOOKS = MATHS_NOTEBOOKS + PROPAGATION_NOTEBOOKS + FITTING_NOTEBOOKS
 
+# These notebooks download their data, so the unit tests read them but never run them. The
+# tutorial CI job executes every notebook, including these.
+NETWORK_NOTEBOOKS = [
+    'fitting/sans-sphere',
+    'fitting/qens-lorentzian',
+    'fitting/bayesian-qens',
+]
+STRUCTURE_NOTEBOOKS = NOTEBOOKS + NETWORK_NOTEBOOKS
+
 # Number of exercises (and so of folded solutions) in each notebook.
 EXERCISES = {
     'basics/maths-arithmetic': 4,
@@ -44,6 +53,9 @@ EXERCISES = {
     'basics/maths-error-propagation': 4,
     'basics/maths-correlation': 4,
     'fitting-intro': 2,
+    'fitting/sans-sphere': 4,
+    'fitting/qens-lorentzian': 4,
+    'fitting/bayesian-qens': 3,
 }
 
 SOLUTION_MAGIC = '%%solution'
