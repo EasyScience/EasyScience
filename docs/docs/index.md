@@ -11,8 +11,8 @@ Here is a brief overview of the main documentation sections:
   – Guides users through system requirements, environment configuration,
   and the installation process.
 - [:material-book-open-variant: User Guide](user-guide/index.md) –
-  Covers core concepts, key terminology, workflow steps, and essential
-  parameters for effective use of EasyScience.
+  Explains the core concepts of EasyScience and how to control its log
+  output.
 - [:material-school: Tutorials](tutorials/index.md) – Offers practical,
   step-by-step examples, from the basics of working with parameters and
   maths functions to common workflows and data analysis tasks.
