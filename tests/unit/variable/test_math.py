@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 """
-Unit tests for ``easyscience.variable.math``.
+Unit tests for ``easyscience.math``.
 
 Conventions encoded here (agreed with the lead developer):
 
@@ -30,8 +30,8 @@ import easyscience.variable as es_variable
 from easyscience import DescriptorNumber
 from easyscience import Parameter
 from easyscience import global_object
+from easyscience import math as es_math
 from easyscience.variable import DescriptorArray
-from easyscience.variable import math as es_math
 
 INF = np.inf
 SINC_GLOBAL_MIN = -0.21723362821122166  # sinc(x) at its first minimum, x ~ 4.4934
@@ -1225,7 +1225,7 @@ class TestInputTypes:
         x = 0.5
 
         # EXPECT
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(TypeError):
             fn(name)(x)
 
     def test_scipp_variable_is_not_supported(self):
@@ -1233,7 +1233,7 @@ class TestInputTypes:
         x = sc.scalar(0.5, unit='rad')
 
         # EXPECT
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(TypeError):
             es_math.sin(x)
 
     @pytest.mark.parametrize(('y', 'x'), [(1.0, 2.0), (1.0, make(2.0)), (make(1.0), 2.0)])
@@ -1242,7 +1242,7 @@ class TestInputTypes:
         # (y, x) contain at least one plain number
 
         # EXPECT
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(TypeError):
             es_math.arctan2(y, x)
 
 
@@ -1352,7 +1352,7 @@ class TestPublicApi:
     @pytest.mark.parametrize('name', ALL_FUNCTIONS)
     def test_function_is_exported_from_easyscience_variable(self, name):
         # WHEN THEN
-        exported = getattr(es_variable, name)
+        exported = getattr(es_math, name)
 
         # EXPECT
         assert callable(exported)
@@ -1369,9 +1369,9 @@ class TestPublicApi:
         # EXPECT
         assert docstring and docstring.strip()
 
-    def test_variable_all_contains_only_strings(self):
+    def test_math_all_contains_only_strings(self):
         # WHEN
-        exported_names = es_variable.__all__
+        exported_names = es_math.__all__
 
         # THEN
         all_are_strings = all(isinstance(entry, str) for entry in exported_names)
@@ -1539,20 +1539,29 @@ class TestAliases:
         assert alias_function is getattr(es_math, canonical)
 
     @pytest.mark.parametrize(('alias', 'canonical'), ALIASES.items())
-    def test_alias_is_exported_from_easyscience_variable(self, alias, canonical):
+    def test_alias_is_exported_from_easyscience_math(self, alias, canonical):
         # WHEN THEN
-        exported = getattr(es_variable, alias)
+        exported = getattr(es_math, alias)
 
         # EXPECT
-        assert exported is getattr(es_variable, canonical)
-        assert alias in es_variable.__all__
+        assert exported is getattr(es_math, canonical)
+        assert alias in es_math.__all__
+
+    def test_math_names_are_not_exported_from_easyscience_variable(self):
+        # WHEN
+        # THEN
+        exported = set(es_variable.__all__)
+
+        # EXPECT
+        assert exported.isdisjoint(ALL_FUNCTIONS)
+        assert exported.isdisjoint(ALIASES)
 
     def test_result_is_named_after_the_canonical_function(self):
         # WHEN
         x = make(0.4, name='x')
 
         # THEN
-        result = es_variable.asin(x)
+        result = es_math.asin(x)
 
         # EXPECT
         assert result.name == 'arcsin(x)'
@@ -1562,7 +1571,7 @@ class TestAliases:
         x = make(0.5, min=0.0, max=1.0)
 
         # THEN
-        result = es_variable.asin(x, unit='deg')
+        result = es_math.asin(x, unit='deg')
 
         # EXPECT
         assert result.unit == 'deg'
@@ -1574,7 +1583,7 @@ class TestAliases:
         x = make(-1.0, name='x')
 
         # THEN
-        result = es_variable.atan2(y, x)
+        result = es_math.atan2(y, x)
 
         # EXPECT
         assert result.value == pytest.approx(3 * np.pi / 4)
@@ -1729,12 +1738,12 @@ class TestInheritance:
         ],
         ids=['float', 'ndarray', 'scipp-variable', 'descriptor-array'],
     )
-    def test_other_types_still_raise_not_implemented(self, unsupported):
+    def test_other_types_still_raise_type_error(self, unsupported):
         # WHEN THEN
         argument = unsupported
 
         # EXPECT
-        with pytest.raises(NotImplementedError, match='DescriptorNumber'):
+        with pytest.raises(TypeError, match='DescriptorNumber'):
             es_math.sin(argument)
 
 
@@ -1781,10 +1790,15 @@ class TestEsMathNamespace:
 
     def test_es_math_exposes_nothing_beyond_the_public_names(self):
         # WHEN THEN
-        public_attributes = {name for name in dir(es.math) if not name.startswith('_')}
+        # Names imported into the module (helpers, typing) are not part of the namespace.
+        defined_here = {
+            name
+            for name, value in vars(es.math).items()
+            if not name.startswith('_') and getattr(value, '__module__', None) == es.math.__name__
+        }
 
         # EXPECT
-        assert public_attributes == set(es_math.__all__)
+        assert defined_here == set(es_math.__all__)
 
     def test_math_is_not_exported_by_a_star_import_of_the_package(self):
         # WHEN THEN
@@ -1793,13 +1807,6 @@ class TestEsMathNamespace:
         # EXPECT
         # `from easyscience import *` would otherwise replace the standard-library `math`.
         assert 'math' not in top_level_all
-
-    def test_variable_still_exports_every_math_name(self):
-        # WHEN THEN
-        math_names = set(es_math.__all__)
-
-        # EXPECT
-        assert math_names <= set(es_variable.__all__)
 
     def test_from_import_works(self):
         # WHEN THEN
