@@ -6,7 +6,6 @@ import pytest
 
 from easyscience import global_object
 from easyscience.base_classes import ModelBase
-from easyscience.fitting.calculators.interface_factory import InterfaceFactoryTemplate
 from easyscience.job import AnalysisBase
 from easyscience.job import ExperimentBase
 from easyscience.job import JobBase
@@ -48,20 +47,6 @@ class Job(JobBase):
         return super().fit(*args, **kwargs)
 
 
-class CalculatorA:
-    name = 'A'
-
-    def create(self, model):
-        return []
-
-    def fit_func(self, *args, **kwargs):
-        return None
-
-
-class CalculatorB(CalculatorA):
-    name = 'B'
-
-
 @pytest.mark.parametrize('cls', [Analysis, ExperimentBase, Job, TheoreticalModelBase])
 def test_job_classes_are_model_bases(cls):
     obj = cls(display_name='name', unique_name=f'{cls.__name__}_unique')
@@ -76,25 +61,25 @@ class TestAnalysisBase:
     def test_defaults(self):
         analysis = Analysis(display_name='analysis')
 
-        assert analysis.interface is None
         assert analysis.calculator is None
         assert analysis.minimizer is None
         assert str(analysis) == 'Analysis: analysis'
 
-    def test_calculator_comes_from_interface(self):
-        interface = InterfaceFactoryTemplate([CalculatorA, CalculatorB])
+    def test_calculator_setter(self):
+        analysis = Analysis()
+        calculator = object()
 
-        analysis = Analysis(interface=interface)
+        analysis.calculator = calculator
 
-        assert analysis.calculator == 'A'
+        assert analysis.calculator is calculator
 
-    def test_calculator_setter_switches_interface(self):
-        interface = InterfaceFactoryTemplate([CalculatorA, CalculatorB])
-        analysis = Analysis(interface=interface)
+    def test_interface_argument_removed(self):
+        with pytest.raises(TypeError):
+            Analysis(interface=object())
 
-        analysis.calculator = 'B'
-
-        assert interface.current_interface_name == 'B'
+    def test_arguments_are_keyword_only(self):
+        with pytest.raises(TypeError):
+            Analysis('analysis')
 
     def test_minimizer_setter(self):
         analysis = Analysis()

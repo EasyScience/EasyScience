@@ -20,9 +20,7 @@ class DescriptorBase(NewBase, metaclass=abc.ABCMeta):
 
     It contains all information to describe a single unique property of
     an object. This description includes a value as well as optionally a
-    unit, description and url (for reference material). Also implemented
-    is a callback so that the value can be read/set from a linked
-    library object.
+    unit, description and url (for reference material).
 
     A ``Descriptor`` is typically something which describes part of a
     model and is non-fittable and generally changes the state of an

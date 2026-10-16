@@ -11,3 +11,7 @@ icon: material/book-open-variant
 - [:material-link-variant: Serializing Dependent Parameters](parameter-dependency-serialization.md)
   – How to save and load parameters that depend on other parameters, and
   how dependencies are resolved after loading.
+- [:material-calculator-variant: Connecting an External Calculator](external-calculators.md)
+  – How a technique library connects its own calculator to an
+  EasyScience model and to `Fitter`, and what to change when migrating
+  from `InterfaceFactoryTemplate`.

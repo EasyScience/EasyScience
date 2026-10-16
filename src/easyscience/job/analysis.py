@@ -3,6 +3,7 @@
 
 from abc import ABCMeta
 from abc import abstractmethod
+from typing import Any
 from typing import Optional
 
 import numpy as np
@@ -19,15 +20,13 @@ class AnalysisBase(ModelBase, metaclass=ABCMeta):
 
     def __init__(
         self,
+        *,
         display_name: Optional[str] = None,
-        interface=None,
         unique_name: Optional[str] = None,
     ):
         super(AnalysisBase, self).__init__(unique_name=unique_name, display_name=display_name)
         self._calculator = None
         self._minimizer = None
-        self._fitter = None
-        self.interface = interface
 
     @abstractmethod
     def calculate_theory(self, x: np.ndarray, **kwargs) -> np.ndarray:
@@ -38,15 +37,19 @@ class AnalysisBase(ModelBase, metaclass=ABCMeta):
         raise NotImplementedError('fit not implemented')
 
     @property
-    def calculator(self) -> str:
-        if self._calculator is None and self.interface is not None:
-            self._calculator = self.interface.current_interface_name
+    def calculator(self) -> Any:
+        """
+        The calculator chosen by the technique library.
+
+        Core does not interpret this object; its type and meaning are
+        defined by the library implementing the analysis.
+        """
         return self._calculator
 
     @calculator.setter
-    def calculator(self, value) -> None:
+    def calculator(self, value: Any) -> None:
         # TODO: check if the calculator is available for the given JobType
-        self.interface.switch(value, fitter=self._fitter)
+        self._calculator = value
 
     @property
     def minimizer(self) -> MinimizerBase:

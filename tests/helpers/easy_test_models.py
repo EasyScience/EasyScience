@@ -27,7 +27,7 @@ class CoefficientModel(ModelBase):
     A minimal model holding its parameters in an ``EasyList``.
 
     It exercises nested containers in serialization, copying, fitting
-    parameter discovery and calculator bindings. Plain numbers become
+    parameter discovery and external calculators. Plain numbers become
     ``Parameter`` objects named ``c0``, ``c1``, ... The model evaluates
     as a polynomial with the coefficients in ``numpy.polyval`` order.
 

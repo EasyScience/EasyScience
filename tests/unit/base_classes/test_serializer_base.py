@@ -315,16 +315,28 @@ class TestSerializerBase:
         assert result['value'] == 10
         assert 'special_attr' not in result
 
-    def test_convert_to_dict_nested_parameter_omits_callback(self, serializer, clear):
-        """A Parameter nested in a model serializes without its callback"""
-        model = MockModelWithParameter(p=Parameter(2.0, display_name='p'))
+    def test_convert_to_dict_nested_parameter_round_trip(self, serializer, clear):
+        """A Parameter nested in a model survives a dict round trip"""
+        model = MockModelWithParameter(
+            p=Parameter(2.0, unit='m', variance=0.1, min=0, max=5, fixed=True, display_name='p')
+        )
         result = serializer._convert_to_dict(model)
 
         nested = result['p']
         assert nested['@class'] == 'Parameter'
-        assert nested['value'] == 2.0
-        assert 'callback' not in nested
         json.dumps(nested)
+
+        global_object.map._clear()
+        restored = Parameter.from_dict(nested)
+
+        assert restored is not model._p
+        assert restored.value == 2.0
+        assert restored.unit == 'm'
+        assert restored.variance == 0.1
+        assert restored.min == 0
+        assert restored.max == 5
+        assert restored.fixed is True
+        assert restored.display_name == 'p'
 
     def test_convert_to_dict_with_custom_convert_to_dict(self, serializer, clear):
         """Test _convert_to_dict with custom _convert_to_dict method"""

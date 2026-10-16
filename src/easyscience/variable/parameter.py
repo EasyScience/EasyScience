@@ -3,10 +3,8 @@
 
 from __future__ import annotations
 
-import copy
 import numbers
 import re
-import weakref
 from typing import Any
 from typing import Dict
 from typing import List
@@ -20,7 +18,6 @@ from scipp import UnitError
 from scipp import Variable
 
 from easyscience import global_object
-from easyscience.base_classes.serializer_base import SerializerBase
 from easyscience.global_object.undo_redo import property_stack
 
 from .descriptor_number import DescriptorNumber
@@ -47,7 +44,6 @@ class Parameter(DescriptorNumber):
         description: Optional[str] = None,
         url: Optional[str] = None,
         display_name: Optional[str] = None,
-        callback: property = property(),
         **kwargs: Any,  # Additional keyword arguments (used for (de)serialization)
     ):
         """
@@ -84,9 +80,6 @@ class Parameter(DescriptorNumber):
         display_name : Optional[str], default=None
             The name of the object as it should be displayed. Falls back
             to ``unique_name`` when not given. By default, None.
-        callback : property, default=property()
-            Callback used to synchronize the parameter with an external
-            model.
         **kwargs : Any
             Additional keyword arguments used during serialization.
 
@@ -135,13 +128,6 @@ class Parameter(DescriptorNumber):
             display_name=display_name,
             **kwargs,  # Additional keyword arguments (used for (de)serialization)
         )
-
-        self._callback = callback  # Callback is used by interface to link to model
-        if self._callback.fdel is not None:
-            weakref.finalize(self, self._callback.fdel)
-
-        # Create additional fitting elements
-        self._initial_scalar = copy.deepcopy(self._scalar)
 
     @classmethod
     def from_dependency(
@@ -216,9 +202,6 @@ class Parameter(DescriptorNumber):
 
             if self._desired_unit is not None:
                 self._convert_unit(self._desired_unit)
-
-            if self._callback.fset is not None:
-                self._callback.fset(self._scalar.value)
 
             self._notify_observers()
         else:
@@ -509,18 +492,6 @@ class Parameter(DescriptorNumber):
         )
 
     @property
-    def value_no_call_back(self) -> numbers.Number:
-        """
-        Get the currently hold value of self suppressing call back.
-
-        Returns
-        -------
-        numbers.Number
-            Value of self without unit.
-        """
-        return self._scalar.value
-
-    @property
     def full_value(self) -> Variable:
         """
         Get the value of self as a scipp scalar.
@@ -552,10 +523,6 @@ class Parameter(DescriptorNumber):
         numbers.Number
             Value of self without unit.
         """
-        if self._callback.fget is not None:
-            existing_value = self._callback.fget()
-            if existing_value != self._scalar.value:
-                self._scalar.value = existing_value
         return self._scalar.value
 
     @value.setter
@@ -589,9 +556,6 @@ class Parameter(DescriptorNumber):
                 value = self._max.value
 
             self._scalar.value = value
-
-            if self._callback.fset is not None:
-                self._callback.fset(self._scalar.value)
 
             # Notify observers of the change
             self._notify_observers()
@@ -885,17 +849,6 @@ class Parameter(DescriptorNumber):
     def free(self, value: bool) -> None:
         self.fixed = not value
 
-    @property
-    def _arg_spec(self) -> List[str]:
-        """
-        Names of the constructor arguments the serializer has to collect.
-
-        ``callback`` links to a calculator object.
-          Holds a ``property`` that cannot be serialized.
-        """
-        _, args = SerializerBase.get_arg_spec(self.__class__.__init__)
-        return [name for name in args if name != 'callback']
-
     def to_dict(self, skip: Optional[List[str]] = None) -> Dict[str, Any]:
         """
         Overwrite the to_dict method to handle dependency information.
@@ -1011,11 +964,6 @@ class Parameter(DescriptorNumber):
             param._pending_desired_unit = desired_unit
 
         return param
-
-    def __copy__(self) -> Parameter:
-        new_obj = super().__copy__()
-        new_obj._callback = property()
-        return new_obj
 
     def __repr__(self) -> str:
         """Return printable representation of a Parameter object."""
