@@ -47,7 +47,7 @@ class Fitter:
     # TODO: remove this method when we are ready to adjust the dependent products
     def initialize(self, fit_object: object, fit_function: Callable) -> None:
         """
-        Set the model and callable in the calculator interface.
+        Set the model and callable.
 
         Parameters
         ----------

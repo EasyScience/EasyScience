@@ -61,17 +61,8 @@ class TestAnalysisBase:
     def test_defaults(self):
         analysis = Analysis(display_name='analysis')
 
-        assert analysis.calculator is None
         assert analysis.minimizer is None
         assert str(analysis) == 'Analysis: analysis'
-
-    def test_calculator_setter(self):
-        analysis = Analysis()
-        calculator = object()
-
-        analysis.calculator = calculator
-
-        assert analysis.calculator is calculator
 
     def test_interface_argument_removed(self):
         with pytest.raises(TypeError):
