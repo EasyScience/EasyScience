@@ -164,9 +164,12 @@ outside the fit, as an explicit step the user can see.
 
 Because the calculator only reads the model, it is not the place to
 watch a fit's progress. To see the parameter values at each iteration,
-pass a `progress_callback` to `fit()`. Continuing the minimal example:
+pass a `progress_callback` to `fit()`. Starting again from a fresh,
+independent line (the dependent intercept from the previous section
+would not be in the payload, see below):
 
 ```python
+model = Line(slope=1.0, intercept=0.0)
 history = []
 
 
@@ -197,6 +200,11 @@ The callback receives a dictionary with these keys:
 | `parameter_values`          | Values of the fitted parameters at the reported point, indexed by `unique_name` |
 | `refresh_plots`, `finished` | Hints for user interfaces                                                       |
 
+`parameter_values` holds exactly the parameters returned by
+`model.get_fit_parameters()`: the free, independent ones. Fixed and
+dependent parameters are not in it. To report a dependent value, read it
+from the model or recompute it from the free values in the payload.
+
 Its return value is ignored. To stop a fit from the callback, see
 [Stopping a Fit](#stopping-a-fit).
 
@@ -209,11 +217,13 @@ minimizer:
 | Bumps     | once per optimizer step      | the optimizer's current point for that step |
 | DFO       | on every function evaluation | the best point found so far                 |
 
-With LMFit you will see iteration `-1` for the starting point, small
-steps of about 1e-5 while LMFit estimates the gradient numerically, and
-the last iteration number twice. Skip `iteration < 0` and repeated
-numbers to keep only real steps. With DFO the reported values change
-only when an evaluation improves on the best point.
+With LMFit `iteration` is an evaluation counter, not a step index: it
+starts at `-1`, the first few callbacks all describe the starting point,
+the small steps of about 1e-5 are LMFit estimating the gradient
+numerically, and the last number is reported twice. Compare the values
+rather than the counter if you only want real steps. With DFO the
+reported values change only when an evaluation improves on the best
+point.
 
 If you need a hook on every evaluation rather than every iteration, put
 it in the fit function your calculator returns: it is called each time
@@ -224,12 +234,12 @@ and reads the current values from the model.
 EasyScience has no single cancel switch that works the same way on every
 minimizer. The options and how each minimizer responds:
 
-| How                                  | LMFit                    | Bumps                                            | DFO                                 |
-| ------------------------------------ | ------------------------ | ------------------------------------------------ | ----------------------------------- |
-| Raise from `progress_callback`       | stops, raises `FitError` | stops, raises `FitError`                         | stops, raises `FitError`            |
-| Raise from the fit function          | stops, raises `FitError` | stops only after logging every failed evaluation | stops, raises `FitError`            |
-| `abort_test=` passed to `fit()`      | ignored with a warning   | stops, returns `success=False`                   | raises `FitError` (unknown keyword) |
-| `max_evaluations=` passed to `fit()` | stops at the limit       | stops at the limit                               | stops at the limit                  |
+| How                               | LMFit                     | Bumps                                            | DFO                                 |
+| --------------------------------- | ------------------------- | ------------------------------------------------ | ----------------------------------- |
+| Raise from `progress_callback`    | stops, raises `FitError`  | stops, raises `FitError`                         | stops, raises `FitError`            |
+| Raise from the fit function       | stops, raises `FitError`  | stops only after logging every failed evaluation | stops, raises `FitError`            |
+| `abort_test=` passed to `fit()`   | ignored with a warning    | stops, returns `success=False`                   | raises `FitError` (unknown keyword) |
+| `fitter.max_evaluations` property | stops after N evaluations | stops after N optimizer steps                    | stops after N evaluations           |
 
 ### Raising from the progress callback
 
@@ -298,6 +308,47 @@ to the end, and DFO rejects it with a `FitError`.
 
 ### Limiting the number of evaluations
 
-`max_evaluations` stops a fit after a fixed number of evaluations on
-every minimizer. It is a budget, not a cancel button, but it keeps a fit
-from running for longer than you are prepared to wait.
+Set the budget on the `Fitter` before calling `fit()`. Do not pass
+`max_evaluations=` (or `tolerance=`) as a keyword to `fit()`: the
+`Fitter` already forwards its own value, and a second one raises
+`TypeError: got multiple values for keyword argument` on every
+minimizer.
+
+```python
+fitter.max_evaluations = 100
+result = fitter.fit(x=x, y=y, weights=np.ones_like(x))
+if not result.success:
+    print(result.message)
+```
+
+The budget means different things to the minimizers. For LMFit and DFO
+it is a limit on function evaluations. For Bumps it is forwarded as the
+optimizer's `steps` setting, and one step can contain several
+evaluations, so the calculator may be called many more times than the
+number you set. The `iterations` reported in the result and in the
+progress payload count the same quantity as the budget for each
+minimizer, so they are not comparable across minimizers. It is a budget,
+not a cancel button, and it does not bound elapsed time when an
+evaluation is slow.
+
+## Migrating from `InterfaceFactoryTemplate`
+
+EasyScience 3.0 removes the calculator factory and the parameter
+callbacks that let a backend own parameter state. Libraries built on the
+old mechanism need these changes:
+
+- Replace imports of `easyscience.fitting.calculators`
+  (`InterfaceFactoryTemplate`, `ItemContainer`) with calculator code
+  owned by your library. Backend selection and switching live there too.
+- Remove `Parameter(..., callback=...)`. It is no longer accepted and
+  raises `TypeError`. Read the current value with `Parameter.value`
+  inside your fit function instead; `value_no_call_back` is gone because
+  `value` no longer calls a backend.
+- Remove binding generation. The only thing EasyScience needs from your
+  library is the callable handed to `Fitter(model, fit_function)`.
+- `AnalysisBase` no longer takes an `interface` argument. Its
+  constructor arguments are keyword-only, and `AnalysisBase.calculator`
+  stores whatever object your library chooses.
+- If your code replaced a calculator instance after creating a `Fitter`,
+  hand the fitter a new fit function. A closure created earlier still
+  captures the previous calculator.
