@@ -15,13 +15,11 @@ from easyscience.variable import DescriptorBool
 
 
 class Container(ModelBase):
-    """ModelBase holding arbitrary named children, linked in the global map."""
+    """ModelBase holding arbitrary named children."""
 
     def __init__(self, display_name=None, **children):
         super().__init__(display_name=display_name)
         self._children = children
-        for child in children.values():
-            global_object.map.add_edge(self, child)
 
     def __getattr__(self, key):
         children = self.__dict__.get('_children', {})
@@ -53,9 +51,7 @@ class TestGlobalObjectIntegration:
         param = Parameter(display_name='test_param', value=10.0, unit='m')
 
         # Then - Should be registered in global map
-        assert global_obj.map.is_known(param)
         assert param.unique_name in global_obj.map.vertices()
-        assert 'created' in global_obj.map.find_type(param)
 
         # When - Modify parameter with undo/redo enabled
         if not global_obj.stack:
@@ -102,14 +98,13 @@ class TestGlobalObjectIntegration:
         obj = Container(display_name='rectangle', length=param1, width=param2)
 
         # Then - All should be in global map
-        assert global_obj.map.is_known(obj)
-        assert global_obj.map.is_known(param1)
-        assert global_obj.map.is_known(param2)
+        assert obj.unique_name in global_obj.map.vertices()
+        assert param1.unique_name in global_obj.map.vertices()
+        assert param2.unique_name in global_obj.map.vertices()
 
-        # Check relationships in map
-        obj_edges = global_obj.map.get_edges(obj)
-        assert param1.unique_name in obj_edges
-        assert param2.unique_name in obj_edges
+        # Check that the container holds the parameters
+        assert obj.length is param1
+        assert obj.width is param2
 
         # When - Modify through the container
         if not global_obj.stack:
@@ -150,34 +145,6 @@ class TestGlobalObjectIntegration:
         assert obj.unique_name == 'Container_0'
         assert desc.unique_name == 'DescriptorBool_0'
 
-    def test_map_vertex_type_management(self, clear_all):
-        """Test comprehensive vertex type management"""
-        # Given
-        global_obj = GlobalObject()
-        param = Parameter(display_name='test', value=1.0)
-
-        # When - Check initial type
-        initial_types = global_obj.map.find_type(param)
-        assert 'created' in initial_types
-
-        # When - Change type
-        global_obj.map.change_type(param, 'argument')
-        updated_types = global_obj.map.find_type(param)
-        assert 'created' in updated_types
-        assert 'argument' in updated_types
-
-        # When - Reset type
-        global_obj.map.reset_type(param, 'returned')
-        final_types = global_obj.map.find_type(param)
-        assert final_types == ['returned']
-
-        # When - Filter by type
-        returned_objs = global_obj.map.returned_objs
-        assert param.unique_name in returned_objs
-
-        created_objs = global_obj.map.created_objs
-        assert param.unique_name not in created_objs
-
     @pytest.mark.skip(reason='Weak reference timing can be inconsistent in tests')
     def test_weak_reference_cleanup_integration(self, clear_all):
         """Test that weak references properly clean up the map"""
@@ -194,9 +161,9 @@ class TestGlobalObjectIntegration:
         obj_name = obj.unique_name
 
         # Then - All should be present
-        assert global_obj.map.is_known(param1)
-        assert global_obj.map.is_known(param2)
-        assert global_obj.map.is_known(obj)
+        assert param1_name in global_obj.map.vertices()
+        assert param2_name in global_obj.map.vertices()
+        assert obj_name in global_obj.map.vertices()
 
         # When - Delete objects
         del param1
@@ -262,55 +229,6 @@ class TestGlobalObjectIntegration:
         assert box.length.value == 15.0
         assert box.width.value == 7.0
         assert box.height.value == 4.0
-
-    def test_map_path_finding_integration(self, clear_all):
-        """Test map path finding with real object relationships"""
-        # Given
-        global_obj = GlobalObject()
-
-        # Create a hierarchy: container -> sub_container -> parameter
-        param = Parameter(display_name='value', value=42.0)
-        sub_container = Container(display_name='sub', value=param)
-        main_container = Container(display_name='main', sub=sub_container)
-
-        # When - Find path from main to parameter
-        path = global_obj.map.find_path(main_container.unique_name, param.unique_name)
-
-        # Then - Should find the path through the hierarchy
-        assert len(path) >= 2
-        assert path[0] == main_container.unique_name
-        assert path[-1] == param.unique_name
-
-        # When - Find reverse path
-        reverse_path = global_obj.map.reverse_route(param.unique_name, main_container.unique_name)
-
-        # Then - Should be the reverse
-        assert reverse_path[0] == param.unique_name
-        assert reverse_path[-1] == main_container.unique_name
-
-    def test_map_connectivity_with_isolated_objects(self, clear_all):
-        """Test map connectivity detection"""
-        # Given
-        global_obj = GlobalObject()
-
-        # When - Create connected objects
-        param1 = Parameter(display_name='connected1', value=1.0)
-        param2 = Parameter(display_name='connected2', value=2.0)
-        container = Container(display_name='container', p1=param1, p2=param2)
-
-        # Then - Map should be connected
-        # TODO: Depending on implementation, connectivity might vary
-        # assert global_obj.map.is_connected()
-
-        # When - Create isolated object
-        isolated = Parameter(display_name='isolated', value=99.0)
-        # Remove its automatic connection by clearing edges
-        # (In real usage, isolated objects would be rare)
-
-        # Then - Map might still be connected depending on implementation
-        # This tests the connectivity algorithm
-        connectivity = global_obj.map.is_connected()
-        assert isinstance(connectivity, bool)
 
     def test_error_handling_integration(self, clear_all):
         """Test error handling across the global object system"""
@@ -391,8 +309,8 @@ class TestGlobalObjectIntegration:
 
         # Then - Should be registered in global map again
         assert len(global_obj.map.vertices()) >= 2
-        assert global_obj.map.is_known(new_param)
-        assert global_obj.map.is_known(new_obj)
+        assert new_param.unique_name in global_obj.map.vertices()
+        assert new_obj.unique_name in global_obj.map.vertices()
 
         # Objects should be functionally equivalent
         assert new_param.display_name == param.display_name

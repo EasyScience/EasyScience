@@ -16,7 +16,7 @@ class TestDesciptorBase:
         # This avoids the error: TypeError: Can't instantiate abstract class DescriptorBase with abstract methods __init__
         DescriptorBase.__abstractmethods__ = set()
         DescriptorBase.__repr__ = lambda x: 'DescriptorBase'
-        self.objs_before_new_descriptor = len(global_object.map.created_objs)
+        self.objs_before_new_descriptor = len(global_object.map.vertices())
         descriptor = DescriptorBase(
             description='description',
             url='url',
@@ -89,7 +89,7 @@ class TestDesciptorBase:
         assert descriptor._description == 'description'
         assert descriptor._url == 'url'
         assert descriptor._display_name == 'display_name'
-        assert len(global_object.map.created_objs) - self.objs_before_new_descriptor == 1
+        assert len(global_object.map.vertices()) - self.objs_before_new_descriptor == 1
 
     def test_display_name(self, descriptor: DescriptorBase):
         # When Then Expect

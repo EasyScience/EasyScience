@@ -28,8 +28,6 @@ class TestParameterDependencySerialization:
         and dependency resolution that are particularly sensitive
         to global state contamination.
         """
-        # The global map uses weakref.WeakValueDictionary() for object storage,
-        # but also maintains strong references in __type_dict that need explicit cleanup.
         global_object.map._clear()
         yield
         # final cleanup after test

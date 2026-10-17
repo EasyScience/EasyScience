@@ -36,7 +36,7 @@ class NewBase:
         if not isinstance(unique_name, str):
             raise TypeError('Unique name has to be a string.')
         self._unique_name = unique_name
-        self._global_object.map.add_vertex(self, obj_type='created')
+        self._global_object.map.add_vertex(self)
         if display_name is not None and not isinstance(display_name, str):
             raise TypeError('Display name must be a string or None')
         self._display_name = display_name

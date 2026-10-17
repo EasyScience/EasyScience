@@ -1340,7 +1340,7 @@ class Parameter(DescriptorNumber):
         Find a parameter by its serializer_id from all parameters in the
         global map.
         """
-        for obj in self._global_object.map._store.values():
+        for obj in self._global_object.map.objects():
             if isinstance(obj, DescriptorNumber) and hasattr(
                 obj, '_DescriptorNumber__serializer_id'
             ):
