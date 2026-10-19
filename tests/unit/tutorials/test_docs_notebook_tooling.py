@@ -47,16 +47,18 @@ def write_notebook(path, with_outputs=False):
     }
     notebook = {'cells': [cell], 'metadata': {}, 'nbformat': 4, 'nbformat_minor': 5}
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(notebook))
+    path.write_text(json.dumps(notebook), encoding='utf-8')
 
 
 def stored_outputs(path):
-    return json.loads(path.read_text())['cells'][0]['outputs']
+    return json.loads(path.read_text(encoding='utf-8'))['cells'][0]['outputs']
 
 
 def run(command, **kwargs):
     """Run a command and fail with its own output, which ``check=True`` would hide."""
-    result = subprocess.run(command, capture_output=True, text=True, **kwargs)
+    result = subprocess.run(
+        command, capture_output=True, encoding='utf-8', errors='replace', **kwargs
+    )
     assert result.returncode == 0, f'{command} failed:\n{result.stdout}\n{result.stderr}'
 
 
@@ -66,7 +68,7 @@ def test_colab_link_points_at_the_published_notebook(tmp_path, use_directory_url
     pytest.importorskip('material')
     for notebook in TUTORIALS:
         write_notebook(tmp_path / 'docs' / 'tutorials' / notebook)
-    (tmp_path / 'docs' / 'index.md').write_text('# Test\n')
+    (tmp_path / 'docs' / 'index.md').write_text('# Test\n', encoding='utf-8')
     (tmp_path / 'mkdocs.yml').write_text(
         f"""site_name: Test
 site_url: https://easyscience.github.io/core
@@ -82,7 +84,8 @@ extra:
   vars:
     github_repository: easyscience/core
     docs_version: dev
-"""
+""",
+        encoding='utf-8',
     )
 
     run([sys.executable, '-m', 'mkdocs', 'build', '-q', '-f', str(tmp_path / 'mkdocs.yml')])
@@ -95,7 +98,7 @@ extra:
             if use_directory_urls
             else site / folder / f'{stem}.html'
         )
-        links = re.findall(r'href="(https://colab[^"]*)"', page.read_text())
+        links = re.findall(r'href="(https://colab[^"]*)"', page.read_text(encoding='utf-8'))
 
         assert len(links) == 1, page
         assert links[0].startswith(COLAB_BASE), links[0]
@@ -117,13 +120,15 @@ def test_notebook_strip_clears_outputs_at_every_depth(tmp_path):
     pixi = shutil.which('pixi')
     if pixi is None or shutil.which('nbstripout') is None:
         pytest.skip('needs pixi and nbstripout')
-    command = tomllib.loads((PROJECT_ROOT / 'pixi.toml').read_text())['tasks']['notebook-strip']
+    manifest = (PROJECT_ROOT / 'pixi.toml').read_text(encoding='utf-8')
+    command = tomllib.loads(manifest)['tasks']['notebook-strip']
     (tmp_path / 'pixi.toml').write_text(
         '[workspace]\n'
         'name = "strip"\n'
         'channels = []\n'
         f'platforms = ["{pixi_platform()}"]\n\n'
-        f'[tasks]\nstrip = {json.dumps(command)}\n'
+        f'[tasks]\nstrip = {json.dumps(command)}\n',
+        encoding='utf-8',
     )
     tutorials = tmp_path / 'docs' / 'docs' / 'tutorials'
     stripped = [
