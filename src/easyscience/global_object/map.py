@@ -44,7 +44,7 @@ class Map:
         self._store.pop(key, None)
 
     def _clear(self) -> None:
-        """Empty the map. Used by tests and by downstream project resets."""
+        """Empty the map. Used by tests and potentially by project resets."""
         self._store.clear()
 
     def __repr__(self) -> str:
