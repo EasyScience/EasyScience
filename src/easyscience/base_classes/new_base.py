@@ -36,7 +36,7 @@ class NewBase:
         if not isinstance(unique_name, str):
             raise TypeError('Unique name has to be a string.')
         self._unique_name = unique_name
-        self._global_object.map.add_vertex(self)
+        self._global_object.registry.add(self)
         if display_name is not None and not isinstance(display_name, str):
             raise TypeError('Display name must be a string or None')
         self._display_name = display_name
@@ -51,7 +51,7 @@ class NewBase:
         """
         Set a new unique name for the object.
 
-        The old name is still kept in the map.
+        The old name is still kept in the registry.
 
         Parameters
         ----------
@@ -66,7 +66,7 @@ class NewBase:
         if not isinstance(new_unique_name, str):
             raise TypeError('Unique name has to be a string.')
         self._unique_name = new_unique_name
-        self._global_object.map.add_vertex(self)
+        self._global_object.registry.add(self)
         self._default_unique_name = False
 
     @property

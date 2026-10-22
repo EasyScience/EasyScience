@@ -99,11 +99,11 @@ class TestSerializerBase:
     @pytest.fixture
     def clear(self):
         """Clear everything before and after each test"""
-        global_object.map._clear()
+        global_object.registry.clear()
         if global_object.stack:
             global_object.stack.clear()
         yield
-        global_object.map._clear()
+        global_object.registry.clear()
         if global_object.stack:
             global_object.stack.clear()
 
@@ -326,7 +326,7 @@ class TestSerializerBase:
         assert nested['@class'] == 'Parameter'
         json.dumps(nested)
 
-        global_object.map._clear()
+        global_object.registry.clear()
         restored = Parameter.from_dict(nested)
 
         assert restored is not model._p
@@ -570,7 +570,7 @@ class TestSerializerBase:
         assert encoded['value'] == 100
 
         # Test decode
-        global_object.map._clear()  # Clear before decode
+        global_object.registry.clear()  # Clear before decode
         decoded = ConcreteSerializer.decode(encoded)
         assert isinstance(decoded, MockSerializableObj)
         assert decoded.name == 'concrete_test'

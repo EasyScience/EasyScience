@@ -3,7 +3,7 @@
 
 from ..utils.classUtils import singleton
 from .logger import Logger
-from .map import Map
+from .object_registry import ObjectRegistry
 
 
 @singleton
@@ -16,7 +16,7 @@ class GlobalObject:
     """
 
     __log = Logger()
-    __map = Map()
+    __registry = ObjectRegistry()
     __stack = None
     __debug = False
 
@@ -27,8 +27,8 @@ class GlobalObject:
         self.debug: bool = self.__debug
         # Stack. This is where the undo/redo operations are stored.
         self.stack = self.__stack
-        # Map. This is the conduit database between all global object species
-        self.map: Map = self.__map
+        # Registry. All live EasyScience objects, looked up by unique name
+        self.registry: ObjectRegistry = self.__registry
 
     def instantiate_stack(self):
         """
@@ -56,9 +56,7 @@ class GlobalObject:
         str
             Generated unique name.
         """
-        names_with_prefix = [
-            name for name in self.map.vertices() if name.startswith(name_prefix + '_')
-        ]
+        names_with_prefix = [name for name in self.registry if name.startswith(name_prefix + '_')]
         if names_with_prefix:
             name_with_prefix_count = [0]
             for name in names_with_prefix:

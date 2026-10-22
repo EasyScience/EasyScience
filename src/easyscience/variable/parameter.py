@@ -916,15 +916,15 @@ class Parameter(DescriptorNumber):
         inputted_unique_names += re.findall('(".+?")', dependency_expression)
 
         clean_dependency_string = dependency_expression
-        existing_unique_names = self._global_object.map.vertices()
         # Add the unique names of the parameters to the ASTEVAL interpreter
         for name in inputted_unique_names:
             stripped_name = name.strip('\'"')
-            if stripped_name not in existing_unique_names:
+            try:
+                dependent_parameter = self._global_object.registry[stripped_name]
+            except KeyError:
                 raise ValueError(
                     f'A Parameter with unique_name {stripped_name} does not exist. Please check your dependency expression.'
-                )  # noqa: E501
-            dependent_parameter = self._global_object.map.get_item_by_key(stripped_name)
+                ) from None  # noqa: E501
             if isinstance(dependent_parameter, DescriptorNumber):
                 self._dependency_map['__' + stripped_name + '__'] = dependent_parameter
                 clean_dependency_string = clean_dependency_string.replace(
@@ -1338,9 +1338,9 @@ class Parameter(DescriptorNumber):
     def _find_parameter_by_serializer_id(self, serializer_id: str) -> Optional['DescriptorNumber']:
         """
         Find a parameter by its serializer_id from all parameters in the
-        global map.
+        object registry.
         """
-        for obj in self._global_object.map.objects():
+        for obj in self._global_object.registry.objects():
             if isinstance(obj, DescriptorNumber) and hasattr(
                 obj, '_DescriptorNumber__serializer_id'
             ):

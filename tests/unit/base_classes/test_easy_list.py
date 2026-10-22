@@ -76,7 +76,7 @@ class MockModelNested(ModelBase):
 class TestEasyList:
     @pytest.fixture(autouse=True)
     def clear(self):
-        global_object.map._clear()
+        global_object.registry.clear()
 
     @pytest.fixture
     def populated_list(self):
@@ -560,8 +560,8 @@ class TestEasyList:
         a2 = Alpha(unique_name='a2')
         el = EasyList(a1, a2, unique_name='my_list', protected_types=Alpha)
         d = el.to_dict()
-        # Clear the global map so deserialized objects can reuse the same unique names
-        global_object.map._clear()
+        # Clear the global registry so deserialized objects can reuse the same unique names
+        global_object.registry.clear()
         el2 = EasyList.from_dict(d)
         assert len(el2) == 2
         assert el2[0].unique_name == 'a1'
@@ -620,7 +620,7 @@ class TestEasyList:
         assert nested['protected_types'][0]['@class'] == 'Alpha'
         assert nested['data'][0]['unique_name'] == 'a1'
 
-        global_object.map._clear()
+        global_object.registry.clear()
         outer2 = EasyList.from_dict(d)
         assert isinstance(outer2[0], EasyList)
         assert outer2[0]._protected_types == [Alpha]
@@ -632,7 +632,7 @@ class TestEasyList:
         d = el.to_dict()
         assert d['unique_name'] == 'my_list'
         assert d['display_name'] == 'My list'
-        global_object.map._clear()
+        global_object.registry.clear()
         el2 = EasyList.from_dict(d)
         assert el2.unique_name == 'my_list'
         assert el2.display_name == 'My list'

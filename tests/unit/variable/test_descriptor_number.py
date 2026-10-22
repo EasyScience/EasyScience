@@ -24,7 +24,7 @@ class TestDescriptorNumber:
 
     @pytest.fixture
     def clear(self):
-        global_object.map._clear()
+        global_object.registry.clear()
 
     def test_init(self, descriptor: DescriptorNumber):
         # When Then Expect

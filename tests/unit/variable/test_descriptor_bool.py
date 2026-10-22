@@ -20,7 +20,7 @@ class TestDescriptorBool:
 
     @pytest.fixture
     def clear(self):
-        global_object.map._clear()
+        global_object.registry.clear()
 
     def test_init(self, descriptor: DescriptorBool):
         # When Then Expect
