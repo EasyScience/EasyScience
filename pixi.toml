@@ -3,14 +3,13 @@
 ###########
 
 [workspace]
-
 # Supported platforms for the lock file (pixi.lock)
 platforms = [
   'win-64',
   # Set minimum supported version for glibc to be 2.35 to ensure packages
   # like `crysfml` that only have wheels for glibc 2.35+
   # (manylinux_2_35_x86_64) are used.
-  #libc = { family = 'glibc', version = '2.35' }
+  # libc = { family = 'glibc', version = '2.35' }
   { platform = 'linux-64', glibc = '2.35' },
   # Set minimum supported version for macOS to be 14.0 to ensure packages
   # like `scipp` that only have wheels for macOS 14.0+ (macosx_14_0_arm64)
@@ -44,8 +43,8 @@ python = '3.14.*'
 # editable installations.
 
 [feature.dev.dependencies]
-nodejs = '*'      # Required for Prettier (non-Python formatting)
-pixi-kernel = '*' # Pixi Jupyter kernel
+nodejs = '*'  # Required for Prettier (non-Python formatting)
+pixi-kernel = '*'  # Pixi Jupyter kernel
 
 [feature.dev.pypi-dependencies]
 pip = '*'
@@ -55,7 +54,7 @@ easyscience = { path = '.', editable = true, extras = ['dev'] }
 # of editable installations.
 
 [feature.user.dependencies]
-pixi-kernel = '*' # Pixi Jupyter kernel
+pixi-kernel = '*'  # Pixi Jupyter kernel
 
 [feature.user.pypi-dependencies]
 pip = '*'
@@ -66,7 +65,6 @@ easyscience = '*'
 ##############
 
 [environments]
-
 # The `default` feature is always included in all environments.
 # Additional features can be specified per environment.
 
@@ -87,7 +85,6 @@ user = { features = ['py-max', 'user'] }
 #######
 
 [tasks]
-
 ##################
 # 🧪 Testing Tasks
 ##################
@@ -172,9 +169,9 @@ notebook-tweak = 'python tools/tweak_notebooks.py docs/docs/tutorials/'
 notebook-exec = 'python -m pytest --nbmake docs/docs/tutorials/ --nbmake-timeout=1200 --overwrite --color=yes -n auto -v'
 
 notebook-prepare = { depends-on = [
-  #'notebook-convert',
+  # 'notebook-convert',
   'notebook-strip',
-  #'notebook-tweak',
+  # 'notebook-tweak',
 ] }
 
 ########################
@@ -266,7 +263,7 @@ clean-pycache = "find . -type d -name '__pycache__' -prune -exec rm -rf '{}' +"
 post-install = { depends-on = [
   'npm-config',
   'prettier-install',
-  #'pre-commit-setup',
+  # 'pre-commit-setup',
 ] }
 
 ##########################
