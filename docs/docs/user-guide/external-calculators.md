@@ -53,8 +53,7 @@ across is a callable.
 - **Reading a parameter has no side effects.** `Parameter.value` returns
   the stored value; it never calls into a calculator.
 - **Evaluation does not change the model.** Calculating leaves values,
-  uncertainties, bounds, fixed flags, dependencies and the undo history
-  as they were. Only the fitting engine writes parameter values during a
+  uncertainties, bounds, fixed flags and dependencies as they were. Only the fitting engine writes parameter values during a
   fit, through the ordinary `value` setter.
 - **Structural edits are seen by the next evaluation.** Adding or
   removing a part of the model needs no extra step, because the
@@ -112,8 +111,7 @@ print(model.slope.value, model.intercept.value)  # close to 3.0 and 1.5
 ```
 
 During the fit, the engine sets the parameter values and then calls the
-fit function, so the calculator always sees the values being tried. With
-the undo stack enabled, the final values are committed as one undo step.
+fit function, so the calculator always sees the values being tried.
 
 Dependent parameters need no special handling. If the intercept is made
 dependent on the slope, the engine fits only the slope and the
@@ -246,7 +244,7 @@ minimizer. The options and how each minimizer responds:
 This is the one approach that works on all three minimizers. Each
 minimizer catches the exception, puts the fitted parameters back to the
 values they had before the fit, and raises `FitError` with your
-exception as its argument. No undo entry is recorded.
+exception as its argument.
 
 A user interface can set a flag from its "Stop" button and let the
 callback check it:

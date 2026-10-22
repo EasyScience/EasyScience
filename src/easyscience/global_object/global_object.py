@@ -17,7 +17,6 @@ class GlobalObject:
 
     __log = Logger()
     __registry = ObjectRegistry()
-    __stack = None
     __debug = False
 
     def __init__(self):
@@ -25,20 +24,8 @@ class GlobalObject:
         self.log: Logger = self.__log
         # Debug. Global debugging level
         self.debug: bool = self.__debug
-        # Stack. This is where the undo/redo operations are stored.
-        self.stack = self.__stack
         # Registry. All live EasyScience objects, looked up by unique name
         self.registry: ObjectRegistry = self.__registry
-
-    def instantiate_stack(self):
-        """
-        The undo/redo stack references the collective.
-
-        Hence it has to be imported after initialization.
-        """
-        from easyscience.global_object.undo_redo import UndoStack
-
-        self.stack = UndoStack()
 
     def generate_unique_name(self, name_prefix: str) -> str:
         """

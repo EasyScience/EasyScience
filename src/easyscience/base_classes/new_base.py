@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 
 from easyscience import global_object
 
-from ..global_object.undo_redo import property_stack
 from .serializer_base import SerializerBase
 
 
@@ -85,7 +84,6 @@ class NewBase:
         return display_name
 
     @display_name.setter
-    @property_stack
     def display_name(self, name: str | None) -> None:
         """
         Set the pretty display name.

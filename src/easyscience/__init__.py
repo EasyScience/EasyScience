@@ -7,8 +7,6 @@ from .global_object import GlobalObject
 
 # Must be executed before any other imports
 global_object = GlobalObject()
-global_object.instantiate_stack()
-global_object.stack.enabled = False
 
 
 from .base_classes import EasyList  # noqa: E402

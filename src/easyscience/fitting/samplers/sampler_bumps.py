@@ -213,11 +213,6 @@ class DreamSampler(EngineBase):
         )
         driver.clip()
 
-        from easyscience import global_object
-
-        stack_status = global_object.stack.enabled
-        global_object.stack.enabled = False
-
         try:
             fit_kwargs = {}
             if resume_state is not None:
@@ -234,8 +229,6 @@ class DreamSampler(EngineBase):
         except Exception:
             self._restore_parameter_values()
             raise
-        finally:
-            global_object.stack.enabled = stack_status
 
         _draw = result_state.draw()
 

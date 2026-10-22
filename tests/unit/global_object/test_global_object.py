@@ -17,7 +17,6 @@ class TestGlobalObject:
         # Expect
         assert global_object.log == GlobalObject().log
         assert global_object.registry == GlobalObject().registry
-        assert global_object.stack == GlobalObject().stack
         assert global_object.debug == GlobalObject().debug
 
     def test_generate_unique_name(self):
@@ -67,19 +66,14 @@ class TestGlobalObject:
         assert obj1.registry is obj2.registry
         assert obj1.log is obj2.log
 
-    def test_instantiate_stack(self, clear_global_map):
-        """Test stack instantiation"""
+    def test_no_undo_stack(self):
+        """Undo/redo support has been removed from the GlobalObject"""
         # Given
         global_obj = GlobalObject()
 
-        # When
-        global_obj.instantiate_stack()
-
         # Then
-        assert global_obj.stack is not None
-        from easyscience.global_object.undo_redo import UndoStack
-
-        assert isinstance(global_obj.stack, UndoStack)
+        assert not hasattr(global_obj, 'stack')
+        assert not hasattr(global_obj, 'instantiate_stack')
 
     def test_debug_property(self):
         """Test debug property access"""

@@ -115,10 +115,6 @@ class TestLMFit:
 
     def test_fit(self, minimizer: LMFit) -> None:
         # When
-        from easyscience import global_object
-
-        global_object.stack.enabled = False
-
         mock_model = MagicMock()
         mock_model.fit = MagicMock(return_value='fit')
         minimizer._make_model = MagicMock(return_value=mock_model)
@@ -135,7 +131,7 @@ class TestLMFit:
         )
         assert callable(mock_model.fit.call_args.kwargs['iter_cb'])
         minimizer._make_model.assert_called_once_with()
-        minimizer._set_parameter_fit_result.assert_called_once_with('fit', False)
+        minimizer._set_parameter_fit_result.assert_called_once_with('fit')
         minimizer._gen_fit_results.assert_called_once_with('fit', iterations=None)
 
     def test_fit_method(self, minimizer: LMFit) -> None:
@@ -405,7 +401,7 @@ class TestLMFit:
         assert len(caplog.records) == 0
         assert result.success is True
 
-    def test_set_parameter_fit_result_no_stack_status(self, minimizer: LMFit) -> None:
+    def test_set_parameter_fit_result(self, minimizer: LMFit) -> None:
         # When
         minimizer._cached_pars = {
             'a': MagicMock(),
@@ -425,7 +421,7 @@ class TestLMFit:
         mock_fit_result.errorbars = True
 
         # Then
-        minimizer._set_parameter_fit_result(mock_fit_result, False)
+        minimizer._set_parameter_fit_result(mock_fit_result)
 
         # Expect
         assert minimizer._cached_pars['a'].value == 1.0
@@ -433,7 +429,7 @@ class TestLMFit:
         assert minimizer._cached_pars['b'].value == 2.0
         assert minimizer._cached_pars['b'].error == 0.2
 
-    def test_set_parameter_fit_result_no_stack_status_no_error(self, minimizer: LMFit) -> None:
+    def test_set_parameter_fit_result_no_error(self, minimizer: LMFit) -> None:
         # When
         minimizer._cached_pars = {
             'a': MagicMock(),
@@ -453,7 +449,7 @@ class TestLMFit:
         mock_fit_result.errorbars = False
 
         # Then
-        minimizer._set_parameter_fit_result(mock_fit_result, False)
+        minimizer._set_parameter_fit_result(mock_fit_result)
 
         # Expect
         assert minimizer._cached_pars['a'].value == 1.0

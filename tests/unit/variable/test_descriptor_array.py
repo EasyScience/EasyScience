@@ -172,6 +172,14 @@ class TestDescriptorArray:
         assert np.array_equal(descriptor.variance, np.array([[0.2, 0.3], [0.4, 0.5]]))
         assert np.array_equal(descriptor.error, np.sqrt(np.array([[0.2, 0.3], [0.4, 0.5]])))
 
+    def test_set_variance_none(self, descriptor: DescriptorArray):
+        # When Then
+        descriptor.variance = None
+
+        # Expect
+        assert descriptor.variance is None
+        assert descriptor.error is None
+
     def test_error(self, descriptor: DescriptorArray):
         # When Then Expect
         assert np.array_equal(descriptor.error, np.sqrt(np.array([[0.1, 0.2], [0.3, 0.4]])))

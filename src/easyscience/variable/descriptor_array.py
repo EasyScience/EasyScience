@@ -18,9 +18,6 @@ import scipp as sc
 from scipp import UnitError
 from scipp import Variable
 
-from easyscience.global_object.undo_redo import PropertyStack
-from easyscience.global_object.undo_redo import property_stack
-
 from .descriptor_base import DescriptorBase
 from .descriptor_number import DescriptorNumber
 
@@ -203,7 +200,6 @@ class DescriptorArray(DescriptorBase):
         return self._array.values
 
     @value.setter
-    @property_stack
     def value(self, value: Union[list, np.ndarray]) -> None:
         """
         Set the value of self.
@@ -317,7 +313,6 @@ class DescriptorArray(DescriptorBase):
         return self._array.variances
 
     @variance.setter
-    @property_stack
     def variance(self, variance: Union[list, np.ndarray]) -> None:
         """
         Set the variance of self.
@@ -353,8 +348,9 @@ class DescriptorArray(DescriptorBase):
             if not np.all(variance >= 0):
                 raise ValueError(f'{variance=} must only contain non-negative values.')
 
-        # Values must be floats for optimization
-        self._array.variances = variance.astype('float')
+            # Values must be floats for optimization
+            variance = variance.astype('float')
+        self._array.variances = variance
 
     @property
     def error(self) -> Optional[np.ndarray]:
@@ -373,7 +369,6 @@ class DescriptorArray(DescriptorBase):
         return np.sqrt(self._array.variances)
 
     @error.setter
-    @property_stack
     def error(self, error: Union[list, np.ndarray]) -> None:
         """
         Set the standard deviation for the parameter, which updates the
@@ -429,25 +424,11 @@ class DescriptorArray(DescriptorBase):
             raise TypeError(f'{unit_str=} must be a string representing a valid scipp unit')
         new_unit = sc.Unit(unit_str)
 
-        # Save the current state for undo/redo
-        old_array = self._array
-
         # Perform the unit conversion
         try:
             new_array = self._array.to(unit=new_unit)
         except Exception as e:
             raise UnitError(f'Failed to convert unit: {e}') from e
-
-        # Define the setter function for the undo stack
-        def set_array(obj, scalar):
-            obj._array = scalar
-
-        # Push to undo stack
-        self._global_object.stack.push(
-            PropertyStack(
-                self, set_array, old_array, new_array, text=f'Convert unit to {unit_str}'
-            )
-        )
 
         # Update the array
         self._array = new_array

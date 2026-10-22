@@ -149,21 +149,12 @@ class TestDesciptorBase:
         with pytest.raises(TypeError):
             descriptor.url = url
 
-    @pytest.mark.parametrize('stack_enabled,stack_elements', [(False, 0), (True, 1)])
-    def test_set_display_name_without_global_object_stack(
-        self, descriptor: DescriptorBase, stack_enabled, stack_elements
-    ):
-        # When
-        descriptor.__repr__ = lambda x: 'DescriptorBase'
-        global_object.stack.clear()
-        global_object.stack._enabled = stack_enabled
-
-        # Then
+    def test_set_display_name(self, descriptor: DescriptorBase):
+        # When Then
         descriptor.display_name = 'new_display_name'
 
         # Expect
         assert descriptor.display_name == 'new_display_name'
-        assert len(global_object.stack.history) == stack_elements
 
     def test_copy(self, descriptor: DescriptorBase):
         # When Then

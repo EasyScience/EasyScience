@@ -66,10 +66,6 @@ class TestDreamSamplerRun:
             a regular MagicMock (non-None).  Pass ``ABORT`` to set it to ``None``
             and simulate user abort.
         """
-        from easyscience import global_object
-
-        global_object.stack.enabled = False
-
         mock_driver = MagicMock()
         mock_driver.clip = MagicMock()
 

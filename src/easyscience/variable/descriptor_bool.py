@@ -5,8 +5,6 @@ from __future__ import annotations
 
 from typing import Optional
 
-from easyscience.global_object.undo_redo import property_stack
-
 from .descriptor_base import DescriptorBase
 
 
@@ -69,7 +67,6 @@ class DescriptorBool(DescriptorBase):
         return self._bool_value
 
     @value.setter
-    @property_stack
     def value(self, value: bool) -> None:
         """
         Set the value of self.

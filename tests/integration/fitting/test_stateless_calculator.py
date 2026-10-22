@@ -44,9 +44,6 @@ def clear():
     global_object.registry.clear()
     yield
     global_object.registry.clear()
-    if global_object.stack:
-        global_object.stack.clear()
-        global_object.stack.enabled = False
 
 
 def noise(x: np.ndarray) -> np.ndarray:
@@ -139,39 +136,3 @@ def test_multi_fit_with_shared_parameter(fit_engine):
     assert model_2.coefficients[0].value == pytest.approx(-3.0, abs=1e-2)
     assert shared.value == pytest.approx(-1.0, abs=1e-2)
     assert model_1.coefficients[1] is model_2.coefficients[1]
-
-
-def test_fit_is_one_undo_step():
-    # When
-    if not global_object.stack:
-        global_object.instantiate_stack()
-    global_object.stack.enabled = True
-    slope = Parameter(1.0, display_name='slope', min=-10, max=10)
-    intercept = Parameter(0.0, display_name='intercept', min=-10, max=10)
-    model = CoefficientModel(coefficients=[slope, intercept])
-    calculator = PolynomialCalculator()
-    x = np.linspace(0, 10, 50)
-    y = 3.0 * x + 1.5
-    global_object.stack.clear()
-
-    fitter = Fitter(model, calculator.fit_func_for(model))
-
-    # Then
-    result = fitter.fit(x=x, y=y, weights=np.ones_like(x))
-
-    # Expect
-    assert result.success
-    fitted = (slope.value, intercept.value)
-    assert len(global_object.stack.history) == 1
-
-    # Then
-    global_object.stack.undo()
-
-    # Expect
-    assert (slope.value, intercept.value) == (1.0, 0.0)
-
-    # Then
-    global_object.stack.redo()
-
-    # Expect
-    assert (slope.value, intercept.value) == fitted

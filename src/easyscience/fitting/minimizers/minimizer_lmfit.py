@@ -141,12 +141,6 @@ class LMFit(MinimizerBase):  # noqa: S101
         method_kwargs = self._get_method_kwargs(method)
         fit_kws_dict = self._get_fit_kws(method, tolerance, minimizer_kwargs)
 
-        # Why do we do this? Because a fitting template has to have global_object instantiated outside pre-runtime
-        from easyscience import global_object
-
-        stack_status = global_object.stack.enabled
-        global_object.stack.enabled = False
-
         try:
             model = self._make_model()
 
@@ -163,13 +157,11 @@ class LMFit(MinimizerBase):  # noqa: S101
                 **engine_kwargs,
                 **kwargs,
             )
-            self._set_parameter_fit_result(model_results, stack_status)
+            self._set_parameter_fit_result(model_results)
             results = self._gen_fit_results(model_results, iterations=self._last_iteration)
         except Exception as e:
             self._restore_parameter_values()
             raise FitError(e)
-        finally:
-            global_object.stack.enabled = stack_status
         return results
 
     def _create_iter_callback(
@@ -278,7 +270,7 @@ class LMFit(MinimizerBase):  # noqa: S101
         self._cached_model = model
         return model
 
-    def _set_parameter_fit_result(self, fit_result: ModelResult, stack_status: bool) -> None:
+    def _set_parameter_fit_result(self, fit_result: ModelResult) -> None:
         """
         Update parameters to their final values and assign a std error
         to them.
@@ -287,16 +279,8 @@ class LMFit(MinimizerBase):  # noqa: S101
         ----------
         fit_result : ModelResult
             Fit object which contains info on the fit.
-        stack_status : bool
-            Whether the undo stack was enabled.
         """
-        from easyscience import global_object
-
         pars = self._cached_pars
-        if stack_status:
-            self._restore_parameter_values()
-            global_object.stack.enabled = True
-            global_object.stack.beginMacro('Fitting routine')
         for name in pars.keys():
             pars[name].value = fit_result.params[PARAMETER_PREFIX + str(name)].value
             if fit_result.errorbars:
@@ -307,8 +291,6 @@ class LMFit(MinimizerBase):  # noqa: S101
                 # genuine zero uncertainty and clears any stale error from a
                 # previous fit.
                 pars[name].error = None
-        if stack_status:
-            global_object.stack.endMacro()
 
     def _gen_fit_results(self, fit_results: ModelResult, **kwargs: Any) -> FitResults:
         """

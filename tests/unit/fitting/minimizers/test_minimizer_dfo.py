@@ -46,10 +46,6 @@ class TestDFOFit:
 
     def test_fit(self, minimizer: DFO) -> None:
         # When
-        from easyscience import global_object
-
-        global_object.stack.enabled = False
-
         mock_model = MagicMock()
         mock_model_function = MagicMock(return_value=mock_model)
         minimizer._make_model = MagicMock(return_value=mock_model_function)
@@ -71,15 +67,11 @@ class TestDFOFit:
             cached_pars, mock_model, user_params={'logging.save_diagnostic_info': True}
         )
         minimizer._make_model.assert_called_once_with(callback=None)
-        minimizer._set_parameter_fit_result.assert_called_once_with('fit', False)
+        minimizer._set_parameter_fit_result.assert_called_once_with('fit')
         minimizer._gen_fit_results.assert_called_once_with('fit', 1)
         mock_model_function.assert_called_once_with(1.0, 2.0, 1)
 
     def test_fit_passes_callback_to_model_builder(self, minimizer: DFO) -> None:
-        from easyscience import global_object
-
-        global_object.stack.enabled = False
-
         mock_model = MagicMock()
         mock_model_function = MagicMock(return_value=mock_model)
         minimizer._make_model = MagicMock(return_value=mock_model_function)
@@ -223,7 +215,7 @@ class TestDFOFit:
 
         assert mock_fit_function.call_args.kwargs == {'palpha': 1111.0}
 
-    def test_set_parameter_fit_result_no_stack_status(self, minimizer: DFO):
+    def test_set_parameter_fit_result(self, minimizer: DFO):
         # When
         minimizer._cached_pars = {
             'a': MagicMock(),
@@ -240,7 +232,7 @@ class TestDFOFit:
         minimizer._error_from_jacobian = MagicMock(return_value=np.array([[0.1, 0.0], [0.0, 0.2]]))
 
         # Then
-        minimizer._set_parameter_fit_result(mock_fit_result, False)
+        minimizer._set_parameter_fit_result(mock_fit_result)
 
         # Expect
         assert minimizer._cached_pars['a'].value == 1.0
@@ -537,10 +529,6 @@ class TestDFOFit:
     ) -> None:
         """When _dfo_fit raises a non-FitError exception, fit() must reset
         parameter values to cached originals and re-raise as FitError."""
-        from easyscience import global_object
-
-        global_object.stack.enabled = True
-
         mock_model = MagicMock()
         mock_model_function = MagicMock(return_value=mock_model)
         minimizer._make_model = MagicMock(return_value=mock_model_function)
@@ -558,14 +546,9 @@ class TestDFOFit:
 
         assert cached_par_1.value == 1.0
         assert cached_par_2.value == 2.0
-        assert global_object.stack.enabled is True
 
     def test_fit_fit_error_resets_parameters_and_reraises(self, minimizer: DFO) -> None:
         """When _dfo_fit raises FitError, fit() must reset parameter values and re-raise it."""
-        from easyscience import global_object
-
-        global_object.stack.enabled = False
-
         mock_model = MagicMock()
         mock_model_function = MagicMock(return_value=mock_model)
         minimizer._make_model = MagicMock(return_value=mock_model_function)
@@ -608,10 +591,6 @@ class TestDFOFit:
     ) -> None:
         """When progress_callback is provided without an explicit callback,
         fit() should auto-create a DFO callback adapter."""
-        from easyscience import global_object
-
-        global_object.stack.enabled = False
-
         mock_model = MagicMock()
         mock_model_function = MagicMock(return_value=mock_model)
         minimizer._make_model = MagicMock(return_value=mock_model_function)
@@ -654,10 +633,6 @@ class TestDFOFit:
     def test_progress_callback_not_used_when_explicit_callback_given(self, minimizer: DFO) -> None:
         """When both progress_callback and callback are given, the explicit
         callback takes precedence and progress_callback is ignored."""
-        from easyscience import global_object
-
-        global_object.stack.enabled = False
-
         mock_model = MagicMock()
         mock_model_function = MagicMock(return_value=mock_model)
         minimizer._make_model = MagicMock(return_value=mock_model_function)
