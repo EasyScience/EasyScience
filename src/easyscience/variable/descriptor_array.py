@@ -23,9 +23,12 @@ from easyscience.global_object.undo_redo import property_stack
 
 from .descriptor_base import DescriptorBase
 from .descriptor_number import DescriptorNumber
+from .units import UnitSpellingMixin
+from .units import normalisation_target
+from .units import set_unit_state
 
 
-class DescriptorArray(DescriptorBase):
+class DescriptorArray(UnitSpellingMixin, DescriptorBase):
     """
     A ``Descriptor`` for Array values with units.
 
@@ -97,6 +100,7 @@ class DescriptorArray(DescriptorBase):
         except Exception as message:
             raise UnitError(message)
             # TODO: handle 1xn and nx1 arrays
+        self._remember_unit(unit)
 
         super().__init__(
             name=name,
@@ -107,12 +111,22 @@ class DescriptorArray(DescriptorBase):
             parent=parent,
         )
 
-        # Call convert_unit during initialization to ensure that the unit has no numbers in it, and to ensure unit consistency.
-        if self.unit is not None:
-            self.convert_unit(self._base_unit())
+        # Make sure no magnitude is left hiding inside the unit, e.g. that a unit of
+        # 'm/mm' becomes a dimensionless value scaled by 1000. This must not be recorded
+        # on the undo stack: it is part of building the object.
+        target_unit = normalisation_target(
+            self._array.unit, has_spelling=self._input_unit is not None
+        )
+        if target_unit is not None:
+            self.convert_unit(target_unit, record_undo=False)
+            # The normalised unit is scipp's choice, not the user's, so there is no
+            # spelling to remember for it.
+            self._remember_unit(None)
 
     @classmethod
-    def from_scipp(cls, name: str, full_value: Variable, **kwargs: Any) -> DescriptorArray:
+    def from_scipp(
+        cls, name: str, full_value: Variable, sources: tuple = (), **kwargs: Any
+    ) -> DescriptorArray:
         """
         Create a DescriptorArray from a scipp array.
 
@@ -122,6 +136,10 @@ class DescriptorArray(DescriptorBase):
             Name of the descriptor.
         full_value : Variable
             Value of the descriptor as a scipp variable.
+        sources : tuple, default=()
+            Operands of the operation which produced ``full_value``, if
+            any. Used to display the result with the unit spelling its
+            operands were given.
         **kwargs : Any
             Additional parameters for the descriptor.
 
@@ -140,7 +158,7 @@ class DescriptorArray(DescriptorBase):
         return cls(
             name=name,
             value=full_value.values,
-            unit=full_value.unit,
+            unit=cls._spelling_from_sources(full_value.unit, sources),
             variance=full_value.variances,
             dimensions=full_value.dims,
             **kwargs,
@@ -266,12 +284,26 @@ class DescriptorArray(DescriptorBase):
         """
         Get the unit.
 
+        The unit is reported with the spelling it was given, rather than
+        with scipp's preferred name for it, so that an array created
+        with 'angstrom' does not report 'Å'. The remembered spelling is
+        only used while it still describes the array we hold; if the
+        array has since been converted or normalised, scipp's own name
+        is reported instead.
+
         Returns
         -------
         str
             Unit as a string.
+
+        Notes
+        -----
+        As this is a display string, the same unit can be reported with
+        different spellings, e.g. 'angstrom' and 'Å' or '1/m' and
+        'm**-1'. To test whether two units are the same, compare
+        ``full_value.unit`` (a ``sc.Unit``) rather than this string.
         """
-        return str(self._array.unit)
+        return self._spelled_unit(self._array.unit)
 
     @unit.setter
     def unit(self, unit_str: str) -> None:
@@ -387,7 +419,7 @@ class DescriptorArray(DescriptorBase):
         else:
             self._array.variances = None
 
-    def convert_unit(self, unit_str: str) -> None:
+    def convert_unit(self, unit_str: str, record_undo: bool = True) -> None:
         """
         Convert the value from one unit system to another.
 
@@ -395,6 +427,10 @@ class DescriptorArray(DescriptorBase):
         ----------
         unit_str : str
             New unit in string form.
+        record_undo : bool, default=True
+            Whether to push the conversion onto the undo stack. False
+            while constructing the object, where there is nothing to
+            undo back to.
 
         Raises
         ------
@@ -408,7 +444,7 @@ class DescriptorArray(DescriptorBase):
         new_unit = sc.Unit(unit_str)
 
         # Save the current state for undo/redo
-        old_array = self._array
+        old_state = self._unit_state()
 
         # Perform the unit conversion
         try:
@@ -416,19 +452,43 @@ class DescriptorArray(DescriptorBase):
         except Exception as e:
             raise UnitError(f'Failed to convert unit: {e}') from e
 
-        # Define the setter function for the undo stack
-        def set_array(obj, scalar):
-            obj._array = scalar
-
-        # Push to undo stack
-        self._global_object.stack.push(
-            PropertyStack(
-                self, set_array, old_array, new_array, text=f'Convert unit to {unit_str}'
-            )
-        )
-
-        # Update the array
         self._array = new_array
+        self._remember_unit(unit_str)
+
+        if record_undo:
+            self._global_object.stack.push(
+                PropertyStack(
+                    self,
+                    set_unit_state,
+                    old_state,
+                    self._unit_state(),
+                    text=f'Convert unit to {unit_str}',
+                )
+            )
+
+    def _unit_state(self) -> tuple:
+        """
+        Capture everything a unit conversion changes, so that it can be
+        undone as one.
+
+        Returns
+        -------
+        tuple
+            Opaque state, to be passed back to ``_restore_unit_state``.
+        """
+        return (self._array, self._spelling_state())
+
+    def _restore_unit_state(self, state: tuple) -> None:
+        """
+        Restore state captured by ``_unit_state``.
+
+        Parameters
+        ----------
+        state : tuple
+            State to restore.
+        """
+        self._array, spelling_state = state
+        self._restore_spelling_state(spelling_state)
 
     def __copy__(self) -> DescriptorArray:
         """Return a copy of the current DescriptorArray."""
@@ -481,7 +541,7 @@ class DescriptorArray(DescriptorBase):
         """
         raw_dict = super().as_dict(skip=skip)
         raw_dict['value'] = self._array.values
-        raw_dict['unit'] = str(self._array.unit)
+        raw_dict['unit'] = self.unit
         raw_dict['variance'] = self._array.variances
         raw_dict['dimensions'] = self._array.dims
         return raw_dict
@@ -591,7 +651,9 @@ class DescriptorArray(DescriptorBase):
         else:
             return NotImplemented
 
-        descriptor_array = DescriptorArray.from_scipp(name=self.name, full_value=new_full_value)
+        descriptor_array = DescriptorArray.from_scipp(
+            name=self.name, full_value=new_full_value, sources=(self, other)
+        )
         descriptor_array.name = descriptor_array.unique_name
         return descriptor_array
 
@@ -887,7 +949,9 @@ class DescriptorArray(DescriptorBase):
             raise message from None
         if np.any(np.isnan(new_value.values)):
             raise ValueError('The result of the exponentiation is not a number')
-        descriptor_number = DescriptorArray.from_scipp(name=self.name, full_value=new_value)
+        descriptor_number = DescriptorArray.from_scipp(
+            name=self.name, full_value=new_value, sources=(self, other)
+        )
         descriptor_number.name = descriptor_number.unique_name
         return descriptor_number
 
@@ -903,7 +967,9 @@ class DescriptorArray(DescriptorBase):
     def __neg__(self) -> DescriptorArray:
         """Negate all values in the DescriptorArray."""
         new_value = -self.full_value
-        descriptor_array = DescriptorArray.from_scipp(name=self.name, full_value=new_value)
+        descriptor_array = DescriptorArray.from_scipp(
+            name=self.name, full_value=new_value, sources=(self,)
+        )
         descriptor_array.name = descriptor_array.unique_name
         return descriptor_array
 
@@ -916,7 +982,9 @@ class DescriptorArray(DescriptorBase):
         DescriptorArray.
         """
         new_value = abs(self.full_value)
-        descriptor_array = DescriptorArray.from_scipp(name=self.name, full_value=new_value)
+        descriptor_array = DescriptorArray.from_scipp(
+            name=self.name, full_value=new_value, sources=(self,)
+        )
         descriptor_array.name = descriptor_array.unique_name
         return descriptor_array
 
@@ -927,7 +995,7 @@ class DescriptorArray(DescriptorBase):
         Defer slicing to scipp.
         """
         descriptor = DescriptorArray.from_scipp(
-            name=self.name, full_value=self.full_value.__getitem__(a)
+            name=self.name, full_value=self.full_value.__getitem__(a), sources=(self,)
         )
         descriptor.name = descriptor.unique_name
         return descriptor
@@ -1027,7 +1095,7 @@ class DescriptorArray(DescriptorBase):
             )
             constructor = DescriptorArray.from_scipp
 
-        descriptor = constructor(name=self.name, full_value=trace)
+        descriptor = constructor(name=self.name, full_value=trace, sources=(self,))
         descriptor.name = descriptor.unique_name
         return descriptor
 
@@ -1057,7 +1125,7 @@ class DescriptorArray(DescriptorBase):
         else:
             constructor = DescriptorArray.from_scipp
 
-        descriptor = constructor(name=self.name, full_value=new_full_value)
+        descriptor = constructor(name=self.name, full_value=new_full_value, sources=(self,))
         descriptor.name = descriptor.unique_name
         return descriptor
 
@@ -1084,18 +1152,3 @@ class DescriptorArray(DescriptorBase):
     #
     #     other = sc.array(dims=self._array.dims, values=other)
     #     new_full_value = operation(self._array, other)  # Let scipp handle operation for uncertainty propagation
-
-    def _base_unit(self) -> str:
-        """
-        Returns the base unit of the current array.
-
-        For example, if the unit is ``100m``, returns ``m``.
-        """
-        string = str(self._array.unit)
-        for i, letter in enumerate(string):
-            if letter == 'e':
-                if string[i : i + 2] not in ['e+', 'e-']:
-                    return string[i:]
-            elif letter not in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '+', '-']:
-                return string[i:]
-        return ''

@@ -422,6 +422,11 @@ class TestGlobalObjectIntegration:
         # Given
         global_obj = GlobalObject()
         results = []
+        # The map holds only weak references, so the objects must be kept alive for the
+        # checks below. The test used to pass without this only because an undo stack
+        # entry created in the constructor formed a reference cycle with each Parameter,
+        # delaying its collection until the cyclic garbage collector ran.
+        created = []
         errors = []
 
         def create_objects(thread_id, count=10):
@@ -429,6 +434,7 @@ class TestGlobalObjectIntegration:
             try:
                 for i in range(count):
                     param = Parameter(name=f'thread_{thread_id}_param_{i}', value=float(i))
+                    created.append(param)
                     results.append(param.unique_name)
                     time.sleep(0.001)  # Small delay to encourage race conditions
             except Exception as e:

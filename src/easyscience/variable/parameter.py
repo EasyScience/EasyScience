@@ -231,6 +231,9 @@ class Parameter(DescriptorNumber):
             )  # noqa: E501
             self._min.unit = temporary_parameter.unit
             self._max.unit = temporary_parameter.unit
+            # The scalar's unit was relabelled directly above, so the remembered
+            # spelling has to follow it.
+            self._remember_unit(temporary_parameter.unit)
 
             if self._desired_unit is not None:
                 self._convert_unit(self._desired_unit)
@@ -662,21 +665,43 @@ class Parameter(DescriptorNumber):
                 'This is a dependent parameter, its error cannot be set directly.'
             )
 
-    def _convert_unit(self, unit_str: str) -> None:
+    def _apply_unit_conversion(self, new_unit: sc.Unit) -> None:
         """
-        Perform unit conversion.
-
-        The value, max and min can change on unit change.
+        Convert the value and the bounds to ``new_unit``.
 
         Parameters
         ----------
-        unit_str : str
-            New unit.
+        new_unit : sc.Unit
+            Unit to convert to.
         """
-        super()._convert_unit(unit_str=unit_str)
-        new_unit = sc.Unit(unit_str)  # unit_str is tested in super method
+        super()._apply_unit_conversion(new_unit)
         self._min = self._min.to(unit=new_unit)
         self._max = self._max.to(unit=new_unit)
+
+    def _unit_state(self) -> tuple:
+        """
+        Capture the bounds along with the base class' unit state, so
+        that undoing a unit conversion returns the value and the bounds
+        together.
+
+        Returns
+        -------
+        tuple
+            Opaque state, to be passed back to ``_restore_unit_state``.
+        """
+        return (super()._unit_state(), self._min, self._max)
+
+    def _restore_unit_state(self, state: tuple) -> None:
+        """
+        Restore state captured by ``_unit_state``.
+
+        Parameters
+        ----------
+        state : tuple
+            State to restore.
+        """
+        base_state, self._min, self._max = state
+        super()._restore_unit_state(base_state)
 
     @notify_observers
     def convert_unit(self, unit_str: str) -> None:
@@ -1067,7 +1092,11 @@ class Parameter(DescriptorNumber):
         else:
             return NotImplemented
         parameter = Parameter.from_scipp(
-            name=self.name, full_value=new_full_value, min=min_value, max=max_value
+            name=self.name,
+            full_value=new_full_value,
+            min=min_value,
+            max=max_value,
+            sources=(self, other),
         )
         parameter.name = parameter.unique_name
         return parameter
@@ -1096,7 +1125,11 @@ class Parameter(DescriptorNumber):
         else:
             return NotImplemented
         parameter = Parameter.from_scipp(
-            name=self.name, full_value=new_full_value, min=min_value, max=max_value
+            name=self.name,
+            full_value=new_full_value,
+            min=min_value,
+            max=max_value,
+            sources=(self, other),
         )
         parameter.name = parameter.unique_name
         return parameter
@@ -1129,7 +1162,11 @@ class Parameter(DescriptorNumber):
         else:
             return NotImplemented
         parameter = Parameter.from_scipp(
-            name=self.name, full_value=new_full_value, min=min_value, max=max_value
+            name=self.name,
+            full_value=new_full_value,
+            min=min_value,
+            max=max_value,
+            sources=(self, other),
         )
         parameter.name = parameter.unique_name
         return parameter
@@ -1158,7 +1195,11 @@ class Parameter(DescriptorNumber):
         else:
             return NotImplemented
         parameter = Parameter.from_scipp(
-            name=self.name, full_value=new_full_value, min=min_value, max=max_value
+            name=self.name,
+            full_value=new_full_value,
+            min=min_value,
+            max=max_value,
+            sources=(self, other),
         )
         parameter.name = parameter.unique_name
         return parameter
@@ -1168,7 +1209,7 @@ class Parameter(DescriptorNumber):
             new_full_value = self.full_value * other
             if other == 0:
                 descriptor_number = DescriptorNumber.from_scipp(
-                    name=self.name, full_value=new_full_value
+                    name=self.name, full_value=new_full_value, sources=(self, other)
                 )
                 descriptor_number.name = descriptor_number.unique_name
                 return descriptor_number
@@ -1181,7 +1222,7 @@ class Parameter(DescriptorNumber):
                 other.value == 0 and type(other) is DescriptorNumber
             ):  # Only return DescriptorNumber if other is strictly 0, i.e. not a parameter  # noqa: E501
                 descriptor_number = DescriptorNumber.from_scipp(
-                    name=self.name, full_value=new_full_value
+                    name=self.name, full_value=new_full_value, sources=(self, other)
                 )
                 descriptor_number.name = descriptor_number.unique_name
                 return descriptor_number
@@ -1206,9 +1247,12 @@ class Parameter(DescriptorNumber):
         min_value = min(combinations)
         max_value = max(combinations)
         parameter = Parameter.from_scipp(
-            name=self.name, full_value=new_full_value, min=min_value, max=max_value
+            name=self.name,
+            full_value=new_full_value,
+            min=min_value,
+            max=max_value,
+            sources=(self, other),
         )
-        parameter._convert_unit(parameter._base_unit())
         parameter.name = parameter.unique_name
         return parameter
 
@@ -1217,7 +1261,7 @@ class Parameter(DescriptorNumber):
             new_full_value = other * self.full_value
             if other == 0:
                 descriptor_number = DescriptorNumber.from_scipp(
-                    name=self.name, full_value=new_full_value
+                    name=self.name, full_value=new_full_value, sources=(self, other)
                 )
                 descriptor_number.name = descriptor_number.unique_name
                 return descriptor_number
@@ -1228,7 +1272,7 @@ class Parameter(DescriptorNumber):
             new_full_value = other.full_value * self.full_value
             if other.value == 0:
                 descriptor_number = DescriptorNumber.from_scipp(
-                    name=self.name, full_value=new_full_value
+                    name=self.name, full_value=new_full_value, sources=(self, other)
                 )
                 descriptor_number.name = descriptor_number.unique_name
                 return descriptor_number
@@ -1238,9 +1282,12 @@ class Parameter(DescriptorNumber):
         min_value = min(combinations)
         max_value = max(combinations)
         parameter = Parameter.from_scipp(
-            name=self.name, full_value=new_full_value, min=min_value, max=max_value
+            name=self.name,
+            full_value=new_full_value,
+            min=min_value,
+            max=max_value,
+            sources=(self, other),
         )
-        parameter._convert_unit(parameter._base_unit())
         parameter.name = parameter.unique_name
         return parameter
 
@@ -1288,9 +1335,12 @@ class Parameter(DescriptorNumber):
         min_value = min(combinations)
         max_value = max(combinations)
         parameter = Parameter.from_scipp(
-            name=self.name, full_value=new_full_value, min=min_value, max=max_value
+            name=self.name,
+            full_value=new_full_value,
+            min=min_value,
+            max=max_value,
+            sources=(self, other),
         )
-        parameter._convert_unit(parameter._base_unit())
         parameter.name = parameter.unique_name
         return parameter
 
@@ -1303,7 +1353,7 @@ class Parameter(DescriptorNumber):
             other_value = other
             if other_value == 0:
                 descriptor_number = DescriptorNumber.from_scipp(
-                    name=self.name, full_value=new_full_value
+                    name=self.name, full_value=new_full_value, sources=(self, other)
                 )
                 descriptor_number.name = descriptor_number.unique_name
                 return descriptor_number
@@ -1314,7 +1364,7 @@ class Parameter(DescriptorNumber):
             other_value = other.value
             if other_value == 0:
                 descriptor_number = DescriptorNumber.from_scipp(
-                    name=self.name, full_value=new_full_value
+                    name=self.name, full_value=new_full_value, sources=(self, other)
                 )
                 descriptor_number.name = descriptor_number.unique_name
                 return descriptor_number
@@ -1337,9 +1387,12 @@ class Parameter(DescriptorNumber):
         min_value = min(combinations)
         max_value = max(combinations)
         parameter = Parameter.from_scipp(
-            name=self.name, full_value=new_full_value, min=min_value, max=max_value
+            name=self.name,
+            full_value=new_full_value,
+            min=min_value,
+            max=max_value,
+            sources=(self, other),
         )
-        parameter._convert_unit(parameter._base_unit())
         parameter.name = parameter.unique_name
         return parameter
 
@@ -1366,7 +1419,7 @@ class Parameter(DescriptorNumber):
             raise ValueError('The result of the exponentiation is not a number')
         if exponent == 0:
             descriptor_number = DescriptorNumber.from_scipp(
-                name=self.name, full_value=new_full_value
+                name=self.name, full_value=new_full_value, sources=(self, other)
             )
             descriptor_number.name = descriptor_number.unique_name
             return descriptor_number
@@ -1392,7 +1445,11 @@ class Parameter(DescriptorNumber):
         min_value = min(combinations)
         max_value = max(combinations)
         parameter = Parameter.from_scipp(
-            name=self.name, full_value=new_full_value, min=min_value, max=max_value
+            name=self.name,
+            full_value=new_full_value,
+            min=min_value,
+            max=max_value,
+            sources=(self, other),
         )
         parameter.name = parameter.unique_name
         return parameter
@@ -1402,7 +1459,11 @@ class Parameter(DescriptorNumber):
         min_value = -self.max
         max_value = -self.min
         parameter = Parameter.from_scipp(
-            name=self.name, full_value=new_full_value, min=min_value, max=max_value
+            name=self.name,
+            full_value=new_full_value,
+            min=min_value,
+            max=max_value,
+            sources=(self,),
         )
         parameter.name = parameter.unique_name
         return parameter
@@ -1415,7 +1476,11 @@ class Parameter(DescriptorNumber):
         min_value = min(combinations)
         max_value = max(combinations)
         parameter = Parameter.from_scipp(
-            name=self.name, full_value=new_full_value, min=min_value, max=max_value
+            name=self.name,
+            full_value=new_full_value,
+            min=min_value,
+            max=max_value,
+            sources=(self,),
         )
         parameter.name = parameter.unique_name
         return parameter

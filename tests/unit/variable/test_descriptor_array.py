@@ -226,19 +226,21 @@ class TestDescriptorArray:
         assert descriptor_copy._array.unit == descriptor._array.unit
 
     @pytest.mark.parametrize(
-        'unit_string, expected',
-        [('1e+9', 'dimensionless'), ('1000', 'dimensionless'), ('10dm^2', 'm^2')],
+        'unit_string, expected_unit, factor',
+        [
+            ('1e+9', 'dimensionless', 1e9),
+            ('1000', 'dimensionless', 1000.0),
+            ('10dm^2', 'm^2', 0.1),
+        ],
         ids=['scientific_notation', 'numbers', 'unit_prefix'],
     )
-    def test_base_unit(self, unit_string, expected):
+    def test_numeric_factor_is_folded_into_value(self, unit_string, expected_unit, factor):
         # When
         descriptor = DescriptorArray(name='name', value=[[1.0, 2.0], [3.0, 4.0]], unit=unit_string)
 
-        # Then
-        base_unit = descriptor._base_unit()
-
-        # Expect
-        assert base_unit == expected
+        # Expect: the magnitude ends up in the values, never inside the unit
+        assert descriptor.unit == expected_unit
+        assert descriptor.value == pytest.approx(np.array([[1.0, 2.0], [3.0, 4.0]]) * factor)
 
     @pytest.mark.parametrize(
         'test, expected, raises_warning',
@@ -662,7 +664,7 @@ class TestDescriptorArray:
             (
                 DescriptorNumber('test', 1, 'kg', 10),
                 DescriptorArray(
-                    'test * name', [[1.0, 2.0], [3.0, 4.0]], 'kg*m', [[10.1, 40.2], [90.3, 160.4]]
+                    'test * name', [[1.0, 2.0], [3.0, 4.0]], 'm*kg', [[10.1, 40.2], [90.3, 160.4]]
                 ),
                 True,
             ),
@@ -795,7 +797,7 @@ class TestDescriptorArray:
             (
                 DescriptorNumber('test', 1, 'kg', 10),
                 DescriptorArray(
-                    'test * name', [[1.0, 2.0], [3.0, 4.0]], 'kg*m', [[10.1, 40.2], [90.3, 160.4]]
+                    'test * name', [[1.0, 2.0], [3.0, 4.0]], 'm*kg', [[10.1, 40.2], [90.3, 160.4]]
                 ),
                 True,
             ),

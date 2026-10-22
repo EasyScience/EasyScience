@@ -213,19 +213,21 @@ class TestDescriptorNumber:
         assert descriptor_copy._scalar.unit == descriptor._scalar.unit
 
     @pytest.mark.parametrize(
-        'unit_string, expected',
-        [('1e+9', 'dimensionless'), ('1000', 'dimensionless'), ('10dm^2', 'm^2')],
+        'unit_string, expected_unit, expected_value',
+        [
+            ('1e+9', 'dimensionless', 1e9),
+            ('1000', 'dimensionless', 1000.0),
+            ('10dm^2', 'm^2', 0.1),
+        ],
         ids=['scientific_notation', 'numbers', 'unit_prefix'],
     )
-    def test_base_unit(self, unit_string, expected):
+    def test_numeric_factor_is_folded_into_value(self, unit_string, expected_unit, expected_value):
         # When
         descriptor = DescriptorNumber(name='name', value=1, unit=unit_string)
 
-        # Then
-        base_unit = descriptor._base_unit()
-
-        # Expect
-        assert base_unit == expected
+        # Expect: the magnitude ends up in the value, never inside the unit
+        assert descriptor.unit == expected_unit
+        assert descriptor.value == pytest.approx(expected_value)
 
     @pytest.mark.parametrize(
         'test, expected',

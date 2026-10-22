@@ -1678,7 +1678,7 @@ class TestParameter:
             (
                 2,
                 Parameter('name / 2', 0.5, 'm', 0.0025, 0, 5),
-                Parameter('2 / name', 2, 'm**-1', 0.04, 0.2, np.inf),
+                Parameter('2 / name', 2, '1/m', 0.04, 0.2, np.inf),
             ),
         ],
         ids=['descriptor_number', 'number'],
