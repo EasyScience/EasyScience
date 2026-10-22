@@ -41,7 +41,7 @@ Zenodo, each with a version-specific Digital Object Identifier (DOI).
 
 Citation details in various styles (e.g., APA, MLA) and formats (e.g.,
 BibTeX, JSON) are available on the
-[Zenodo archive page](https://doi.org/10.5281/zenodo.18163581).
+[Zenodo archive page](https://doi.org/10.5281/zenodo.19918609).
 
 ## Contributing
 
