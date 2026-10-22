@@ -328,25 +328,3 @@ progress payload count the same quantity as the budget for each
 minimizer, so they are not comparable across minimizers. It is a budget,
 not a cancel button, and it does not bound elapsed time when an
 evaluation is slow.
-
-## Migrating from `InterfaceFactoryTemplate`
-
-EasyScience 3.0 removes the calculator factory and the parameter
-callbacks that let a backend own parameter state. Libraries built on the
-old mechanism need these changes:
-
-- Replace imports of `easyscience.fitting.calculators`
-  (`InterfaceFactoryTemplate`, `ItemContainer`) with calculator code
-  owned by your library. Backend selection and switching live there too.
-- Remove `Parameter(..., callback=...)`. It is no longer accepted and
-  raises `TypeError`. Read the current value with `Parameter.value`
-  inside your fit function instead; `value_no_call_back` is gone because
-  `value` no longer calls a backend.
-- Remove binding generation. The only thing EasyScience needs from your
-  library is the callable handed to `Fitter(model, fit_function)`.
-- `AnalysisBase` no longer takes an `interface` argument. Its
-  constructor arguments are keyword-only, and `AnalysisBase.calculator`
-  stores whatever object your library chooses.
-- If your code replaced a calculator instance after creating a `Fitter`,
-  hand the fitter a new fit function. A closure created earlier still
-  captures the previous calculator.
