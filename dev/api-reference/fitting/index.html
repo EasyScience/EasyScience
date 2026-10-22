@@ -5810,11 +5810,10 @@ flattening multi-dataset arrays.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Number of raw samples to draw across all chains, before
-thinning. A guaranteed minimum, not an exact count: DREAM
-advances in blocks of 10 generations (one generation = one
-draw per chain) and stops at the first block boundary at or
-past <code>samples</code>.</p>
+                <p>Number of raw samples to draw across all chains, before thinning.
+A guaranteed minimum, not an exact count: DREAM advances in
+blocks of 10 generations (one generation = one draw per chain)
+and stops at the first block boundary at or past <code>samples</code>.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -5834,8 +5833,8 @@ past <code>samples</code>.</p>
             <td>
               <div class="doc-md-description">
                 <p>Burn-in generations to discard. BUMPS counts <code>burn</code> in
-generations while <code>samples</code> counts raw draws, so
-<code>burn=500</code> discards <code>500 * n_chains</code> raw samples.</p>
+generations while <code>samples</code> counts raw draws, so <code>burn=500</code>
+discards <code>500 * n_chains</code> raw samples.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -5854,8 +5853,7 @@ generations while <code>samples</code> counts raw draws, so
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Thinning interval — only every <code>thin</code>-th generation is
-stored.</p>
+                <p>Thinning interval — only every <code>thin</code>-th generation is stored.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -5874,9 +5872,8 @@ stored.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>BUMPS DREAM population count per parameter (number of
-parallel chains): BUMPS creates <code>ceil(population *
-n_parameters)</code> chains.</p>
+                <p>BUMPS DREAM population count per parameter (number of parallel
+chains): BUMPS creates <code>ceil(population * n_parameters)</code> chains.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -5896,23 +5893,23 @@ n_parameters)</code> chains.</p>
             <td>
               <div class="doc-md-description">
                 <p>A BUMPS <code>MCMCDraw</code> state object from a previous
-<code>mcmc_sample()</code> call (e.g.
-<code>PosteriorResults.sampler_state</code>). When provided, DREAM
-<strong>continues</strong> the saved chain instead of starting cold.  The
-population, parameter count, and parameter names must match
-the current model — a <code>ValueError</code> is raised otherwise.</p>
-<p><code>samples</code> must be the <strong>total</strong> number of raw samples, not
-an increment: to extend an existing chain of <code>N</code> raw
-samples by <code>M</code>, pass <code>samples=N + M</code> (DREAM keeps only
-the last <code>samples</code> draws in its buffer). The
-<code>Sampler.extend</code> helper computes this for you.</p>
-<p><code>burn</code> is forced to 0 on resume: a previously-converged
-chain is never re-burned.</p>
-<p>The <code>population</code> and <code>initializer</code> parameters have <strong>no
-effect</strong> when <code>resume_state</code> is provided — they are
-determined by the saved state.</p>
-<p>Resuming against <em>different</em> data is undefined behaviour
-(the chain's likelihood changes underneath it).</p>
+<code>mcmc_sample()</code> call (e.g. <code>PosteriorResults.sampler_state</code>).
+When provided, DREAM <strong>continues</strong> the saved chain instead of
+starting cold.  The population, parameter count, and parameter
+names must match the current model — a <code>ValueError</code> is raised
+otherwise.</p>
+<p><code>samples</code> must be the <strong>total</strong> number of raw samples, not an
+increment: to extend an existing chain of <code>N</code> raw samples by
+<code>M</code>, pass <code>samples=N + M</code> (DREAM keeps only the last
+<code>samples</code> draws in its buffer). The <code>Sampler.extend</code> helper
+computes this for you.</p>
+<p><code>burn</code> is forced to 0 on resume: a previously-converged chain is
+never re-burned.</p>
+<p>The <code>population</code> and <code>initializer</code> parameters
+have <strong>no effect</strong> when <code>resume_state</code> is provided — they
+are determined by the saved state.</p>
+<p>Resuming against <em>different</em> data is undefined behaviour (the
+chain's likelihood changes underneath it).</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -6031,9 +6028,9 @@ DREAM sampling loop.</p>
             <td>
               <div class="doc-md-description">
                 <p>If the input shapes or weights are invalid, if
-<code>progress_callback</code> is not callable, or if
-<code>resume_state</code> is incompatible with the current model
-(parameter count, names/order, or population mismatch).</p>
+<code>progress_callback</code> is not callable, or if <code>resume_state</code>
+is incompatible with the current model (parameter count,
+names/order, or population mismatch).</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -9338,7 +9335,7 @@ early.</p>
   &lt;/span&gt; (&lt;code&gt;easyscience.fitting.sampler.SamplingResults&lt;/code&gt;)" href="#easyscience.fitting.sampler.SamplingResults">SamplingResults</a></code></td>
             <td>
               <div class="doc-md-description">
-                <p>Structured result of an MCMC sampling run (analogous to</p>
+                <p>Structured result of an MCMC sampling run (analogous to <code>FitResults</code>).</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -9349,7 +9346,7 @@ early.</p>
             <td><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;Sampler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fitter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;weights&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vectorized&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;False&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sampler_kwargs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt; (&lt;code&gt;easyscience.fitting.sampler.Sampler&lt;/code&gt;)" href="#easyscience.fitting.sampler.Sampler">Sampler</a></code></td>
             <td>
               <div class="doc-md-description">
-                <p>Bayesian MCMC sampler for one dataset, backed by a Fitter's BUMPS</p>
+                <p>Bayesian MCMC sampler for one dataset, backed by a Fitter's BUMPS minimizer.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -9417,8 +9414,7 @@ early.</p>
 
 
 
-        <p>Structured result of an MCMC sampling run (analogous to
-<code>FitResults</code>).</p>
+        <p>Structured result of an MCMC sampling run (analogous to <code>FitResults</code>).</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -9441,11 +9437,10 @@ early.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Posterior samples, shape <code>(n_samples, n_params)</code>. For results
-from <code>Sampler.sample()</code>/<code>Sampler.extend()</code> this is a
-<em>trimmed, outlier-filtered</em> view of the chain, not the raw
-buffer, so it holds fewer rows than <code>samples / thin</code> — see the
-notes on <code>Sampler</code>.</p>
+                <p>Posterior samples, shape <code>(n_samples, n_params)</code>. For results from
+<code>Sampler.sample()</code>/<code>Sampler.extend()</code> this is a <em>trimmed,
+outlier-filtered</em> view of the chain, not the raw buffer, so it holds
+fewer rows than <code>samples / thin</code> — see the notes on <code>Sampler</code>.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -9591,30 +9586,27 @@ notes on <code>Sampler</code>.</p>
 
 
 
-        <p>Bayesian MCMC sampler for one dataset, backed by a Fitter's BUMPS
-minimizer.</p>
-<p>One <code>Sampler</code> instance represents one chain over one <code>(x, y,
-weights)</code> dataset. The data is bound at construction; <code>sample()</code>
-and <code>extend()</code> take no data arguments, so a chain can never be
-extended against different data (undefined behaviour in BUMPS). The
-bound data is a defensive, read-only copy of the caller's arrays,
-exposed via the <code>x</code>, <code>y</code> and <code>weights</code> properties — mutating
-the originals after construction has no effect on the sampler, and
-there are deliberately no setters: to sample different data, create
-a new <code>Sampler</code>.</p>
-<p>Construct directly with a configured <code>Fitter</code> (or <code>MultiFitter</code>)
-whose minimizer has been switched to <code>AvailableMinimizers.Bumps</code>.
-<strong>Running a fit first is not required</strong> — the <code>Fitter</code> supplies
-the model and the minimizer, not a fit result, and sampling from the
-initial parameter values works fine.</p>
-<p>It is often worth fitting first anyway. DREAM seeds its whole
-starting population inside a tiny ball around the parameters'
-<em>current</em> values (BUMPS' default <code>init='eps'</code>), so sampling from
-fitted values starts the chain in the right region and shortens the
-burn-in needed to reach the typical set. From a poor initial guess,
-expect to burn for longer.</p>
-<p>The sampler is BUMPS/DREAM-specific for now: the BUMPS check in
-<code>_run()</code> is the seam where another backend would plug in.</p>
+        <p>Bayesian MCMC sampler for one dataset, backed by a Fitter's BUMPS minimizer.</p>
+<p>One <code>Sampler</code> instance represents one chain over one <code>(x, y, weights)</code>
+dataset. The data is bound at construction; <code>sample()</code> and <code>extend()</code>
+take no data arguments, so a chain can never be extended against different
+data (undefined behaviour in BUMPS). The bound data is a defensive,
+read-only copy of the caller's arrays, exposed via the <code>x</code>, <code>y</code> and
+<code>weights</code> properties — mutating the originals after construction has no
+effect on the sampler, and there are deliberately no setters: to sample
+different data, create a new <code>Sampler</code>.</p>
+<p>Construct directly with a configured <code>Fitter</code> (or <code>MultiFitter</code>) whose
+minimizer has been switched to <code>AvailableMinimizers.Bumps</code>. <strong>Running a
+fit first is not required</strong> — the <code>Fitter</code> supplies the model and the
+minimizer, not a fit result, and sampling from the initial parameter values
+works fine.</p>
+<p>It is often worth fitting first anyway. DREAM seeds its whole starting
+population inside a tiny ball around the parameters' <em>current</em> values
+(BUMPS' default <code>init='eps'</code>), so sampling from fitted values starts the
+chain in the right region and shortens the burn-in needed to reach the
+typical set. From a poor initial guess, expect to burn for longer.</p>
+<p>The sampler is BUMPS/DREAM-specific for now: the BUMPS check in <code>_run()</code>
+is the seam where another backend would plug in.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -9636,12 +9628,12 @@ expect to burn for longer.</p>
                 <code>fitter</code>
             </td>
             <td>
-                  <code>&#39;Fitter&#39;</code>
+                  <code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;Fitter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fit_object&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fit_function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt; (&lt;code&gt;easyscience.fitting.fitter.Fitter&lt;/code&gt;)" href="#easyscience.fitting.fitter.Fitter">Fitter</a></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>A configured <code>Fitter</code> (or <code>MultiFitter</code>) whose minimizer has
-been switched to <code>AvailableMinimizers.Bumps</code>.</p>
+                <p>A configured <code>Fitter</code> (or <code>MultiFitter</code>) whose minimizer has been
+switched to <code>AvailableMinimizers.Bumps</code>.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -9660,8 +9652,7 @@ been switched to <code>AvailableMinimizers.Bumps</code>.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Independent variable array (or list of arrays for
-<code>MultiFitter</code>).</p>
+                <p>Independent variable array (or list of arrays for <code>MultiFitter</code>).</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -9680,8 +9671,7 @@ been switched to <code>AvailableMinimizers.Bumps</code>.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Dependent variable array (or list of arrays for
-<code>MultiFitter</code>).</p>
+                <p>Dependent variable array (or list of arrays for <code>MultiFitter</code>).</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -9739,9 +9729,9 @@ been switched to <code>AvailableMinimizers.Bumps</code>.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Per-instance default keyword arguments forwarded to the BUMPS
-DREAM sampler on every run, merged with (and overridden by)
-per-call <code>sampler_kwargs</code>.</p>
+                <p>Per-instance default keyword arguments forwarded to the BUMPS DREAM
+sampler on every run, merged with (and overridden by) per-call
+<code>sampler_kwargs</code>.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -9770,10 +9760,10 @@ per-call <code>sampler_kwargs</code>.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If <code>fitter</code> is not Fitter-shaped (no
-<code>minimizer</code>/<code>fit_function</code>), if any dataset in
-<code>x</code>/<code>y</code>/<code>weights</code> is not a numeric array (e.g. a string),
-or <code>vectorized</code>/<code>sampler_kwargs</code> have the wrong type.</p>
+                <p>If <code>fitter</code> is not Fitter-shaped (no <code>minimizer</code>/<code>fit_function</code>),
+if any dataset in <code>x</code>/<code>y</code>/<code>weights</code> is not a numeric array
+(e.g. a string), or <code>vectorized</code>/<code>sampler_kwargs</code> have the wrong
+type.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -9804,40 +9794,38 @@ scalar or empty array.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end --></summary>
-  <p><strong>The retained draws are a trimmed view, not the whole chain.</strong>
-BUMPS' DREAM sampler defaults to <code>trim=True</code>: once sampling
-finishes it runs a convergence-based burn-point detector over the
-chain and returns only the portion after that point.
-<code>state.draw()</code> additionally drops chains flagged as outliers. So
-<code>results.draws</code> is usually <em>smaller</em> than the chain, and its
-length is not deterministic — the detector re-runs from scratch on
-every <code>sample()</code> and <code>extend()</code> call and may place the burn
-point differently each time. Read the count off the array; do not
-predict it.</p>
-<p>Nor is the chain itself exactly <code>samples / thin</code> rows: <code>samples</code>
-is a guaranteed minimum, not an exact count. DREAM advances in
-blocks of 10 generations (one generation = one draw per chain) and
-only checks its stopping condition between blocks, so the raw chain
-length is <code>samples</code> rounded up to a multiple of <code>10 * n_chains</code>.</p>
-<p>The trimming is only a <em>view</em> — nothing is dropped from the buffer.
-To read the full untrimmed chain::</p>
+  <p><strong>The retained draws are a trimmed view, not the whole chain.</strong> BUMPS'
+DREAM sampler defaults to <code>trim=True</code>: once sampling finishes it runs a
+convergence-based burn-point detector over the chain and returns only the
+portion after that point. <code>state.draw()</code> additionally drops chains
+flagged as outliers. So <code>results.draws</code> is usually <em>smaller</em> than the
+chain, and its length is not deterministic — the detector re-runs from
+scratch on every <code>sample()</code> and <code>extend()</code> call and may place the burn
+point differently each time. Read the count off the array; do not predict
+it.</p>
+<p>Nor is the chain itself exactly <code>samples / thin</code> rows: <code>samples</code> is a
+guaranteed minimum, not an exact count. DREAM advances in blocks of 10
+generations (one generation = one draw per chain) and only checks its
+stopping condition between blocks, so the raw chain length is <code>samples</code>
+rounded up to a multiple of <code>10 * n_chains</code>.</p>
+<p>The trimming is only a <em>view</em> — nothing is dropped from the buffer. To
+read the full untrimmed chain::</p>
 <div class="language-text highlight"><pre><span></span><code>results = sampler.sample(samples=10000, burn=500, thin=2)
 full = results.state.draw(portion=1.0, outliers=True)
 full.points  # (n_chain_rows, n_params)
 full.logp
 </code></pre></div>
-<p>To switch the automatic trimming off entirely, pass BUMPS' own
-<code>trim</code> option straight through <code>sampler_kwargs</code>;
-<code>results.draws</code> then holds the whole chain::</p>
+<p>To switch the automatic trimming off entirely, pass BUMPS' own <code>trim</code>
+option straight through <code>sampler_kwargs</code>; <code>results.draws</code> then holds
+the whole chain::</p>
 <div class="language-text highlight"><pre><span></span><code>sampler = Sampler(
     fitter, x, y, weights=w, sampler_kwargs={&#39;trim&#39;: False}
 )
 </code></pre></div>
-<p>Note also that trimming does not survive a
-<code>save()</code>/<code>load_state()</code> round-trip: BUMPS does not persist the
-trim point, so a reloaded chain comes back untrimmed and
-<code>load_state()</code> reports <em>more</em> draws than the <code>sample()</code> call
-that created it. The chain itself is identical.</p>
+<p>Note also that trimming does not survive a <code>save()</code>/<code>load_state()</code>
+round-trip: BUMPS does not persist the trim point, so a reloaded chain
+comes back untrimmed and <code>load_state()</code> reports <em>more</em> draws than the
+<code>sample()</code> call that created it. The chain itself is identical.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -10342,9 +10330,9 @@ that created it. The chain itself is identical.</p>
     <div class="doc doc-contents ">
 
         <p>Run fresh Bayesian MCMC sampling on the bound data.</p>
-<p>Calling <code>sample()</code> on a sampler that already holds a chain
-starts a <strong>fresh</strong> chain — the previous state and results are
-replaced. Use <code>extend()</code> to continue an existing chain.</p>
+<p>Calling <code>sample()</code> on a sampler that already holds a chain starts a
+<strong>fresh</strong> chain — the previous state and results are replaced. Use
+<code>extend()</code> to continue an existing chain.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -10370,11 +10358,10 @@ replaced. Use <code>extend()</code> to continue an existing chain.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Number of raw samples to draw across all chains, before
-thinning. This is a guaranteed minimum, not an exact count:
-DREAM advances in blocks of 10 generations (one generation =
-one draw per chain) and stops at the first block boundary at
-or past <code>samples</code>.</p>
+                <p>Number of raw samples to draw across all chains, before thinning.
+This is a guaranteed minimum, not an exact count: DREAM advances
+in blocks of 10 generations (one generation = one draw per chain)
+and stops at the first block boundary at or past <code>samples</code>.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -10393,10 +10380,9 @@ or past <code>samples</code>.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Burn-in generations to discard before collecting samples.
-Note BUMPS counts <code>burn</code> in generations while <code>samples</code>
-counts raw draws, so <code>burn=500</code> discards <code>500 *
-n_chains</code> raw samples.</p>
+                <p>Burn-in generations to discard before collecting samples. Note
+BUMPS counts <code>burn</code> in generations while <code>samples</code> counts raw
+draws, so <code>burn=500</code> discards <code>500 * n_chains</code> raw samples.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -10415,9 +10401,8 @@ n_chains</code> raw samples.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Thinning interval — only every <code>thin</code>-th generation is
-kept, which reduces autocorrelation between consecutive
-draws.</p>
+                <p>Thinning interval — only every <code>thin</code>-th generation is kept,
+which reduces autocorrelation between consecutive draws.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -10436,9 +10421,8 @@ draws.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>DREAM population <strong>scale factor</strong> (not an absolute chain
-count): BUMPS creates <code>ceil(population * n_parameters)</code>
-parallel chains.</p>
+                <p>DREAM population <strong>scale factor</strong> (not an absolute chain count):
+BUMPS creates <code>ceil(population * n_parameters)</code> parallel chains.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -10477,8 +10461,8 @@ sampler (merged over the instance defaults).</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Optional callback invoked at each DREAM generation. The
-payload dict includes <code>iteration</code> and <code>sampling: True</code>.</p>
+                <p>Optional callback invoked at each DREAM generation. The payload
+dict includes <code>iteration</code> and <code>sampling: True</code>.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -10497,8 +10481,7 @@ payload dict includes <code>iteration</code> and <code>sampling: True</code>.</p
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Optional callable that returns <code>True</code> to abort sampling
-early.</p>
+                <p>Optional callable that returns <code>True</code> to abort sampling early.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -10547,15 +10530,13 @@ early.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end --></summary>
-  <p><code>results.draws</code> is a trimmed, outlier-filtered view of the
-chain, so it is usually smaller than the chain and its length is
-not predictable from <code>samples</code>/<code>thin</code>. See the <code>Sampler</code>
-class notes for how to read the full chain or switch trimming
-off.</p>
+  <p><code>results.draws</code> is a trimmed, outlier-filtered view of the chain,
+so it is usually smaller than the chain and its length is not
+predictable from <code>samples</code>/<code>thin</code>. See the <code>Sampler</code> class notes
+for how to read the full chain or switch trimming off.</p>
 <p>Exceptions propagate from the sampling engine: <code>ValueError</code> if
-<code>samples</code>, <code>burn</code>, or <code>thin</code> are invalid, and
-<code>RuntimeError</code> if the active minimizer is not a BUMPS
-instance.</p>
+<code>samples</code>, <code>burn</code>, or <code>thin</code> are invalid, and <code>RuntimeError</code>
+if the active minimizer is not a BUMPS instance.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -10578,14 +10559,13 @@ instance.</p>
 
         <p>Continue the existing chain with additional samples.</p>
 <p>DREAM stores draws in a fixed-size ring buffer sized to its
-<code>samples</code> parameter; this method does the ring-buffer
-arithmetic for you (<code>samples = stored_generations * population
-+ additional_samples</code>) so no existing draws are dropped from
-the buffer, regardless of the thinning interval. Runs with
-<code>burn=0</code> — re-burning a converged chain is usually a mistake,
-and BUMPS forces it to 0 on resume in any case. The DREAM
-population is recovered from the saved state and cannot be
-changed on extend.</p>
+<code>samples</code> parameter; this method does the ring-buffer arithmetic
+for you (<code>samples = stored_generations * population +
+additional_samples</code>) so no existing draws are dropped from the
+buffer, regardless of the thinning interval. Runs with <code>burn=0</code> —
+re-burning a converged chain is usually a mistake, and BUMPS forces
+it to 0 on resume in any case. The DREAM population is recovered from
+the saved state and cannot be changed on extend.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -10611,12 +10591,11 @@ changed on extend.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Number of additional DREAM samples to draw, in the same
-units as <code>samples</code> in <code>sample()</code>. This grows the ring
-buffer by exactly <code>additional_samples</code>; how many of the
-new draws become <em>visible</em> in <code>results.draws</code> depends on
-the thinning interval and on BUMPS' automatic trimming (see
-Notes).</p>
+                <p>Number of additional DREAM samples to draw, in the same units
+as <code>samples</code> in <code>sample()</code>. This grows the ring buffer by
+exactly <code>additional_samples</code>; how many of the new draws become
+<em>visible</em> in <code>results.draws</code> depends on the thinning interval
+and on BUMPS' automatic trimming (see Notes).</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -10654,10 +10633,9 @@ Notes).</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Advanced: total retained samples requested from the ring
-buffer, <strong>overriding</strong> the <code>additional_samples</code>
-arithmetic. With <code>total_samples=N</code>, only the last N draws
-are retained.</p>
+                <p>Advanced: total retained samples requested from the ring buffer,
+<strong>overriding</strong> the <code>additional_samples</code> arithmetic. With
+<code>total_samples=N</code>, only the last N draws are retained.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -10715,8 +10693,7 @@ sampler (merged over the instance defaults).</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Optional callable that returns <code>True</code> to abort sampling
-early.</p>
+                <p>Optional callable that returns <code>True</code> to abort sampling early.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -10793,17 +10770,16 @@ early.</p>
 
 <!-- prettier-ignore-end --></summary>
   <p><code>results.draws</code> will <strong>not</strong> grow by exactly
-<code>additional_samples / thin</code>. Two things get in the way,
-neither of them a re-applied burn-in: BUMPS re-runs its
-burn-point detector over the whole extended chain and re-trims
-the returned view (so the visible count can even shrink), and
-DREAM advances in blocks of 10 generations, so the raw growth is
-<code>additional_samples</code> rounded up to a multiple of <code>10 *
-n_chains</code> (i.e. at least <code>additional_samples / thin</code> retained
-rows). To see the chain itself, compare
-<code>results.state.draw(portion=1.0, outliers=True)</code> before and
-after, or run with <code>sampler_kwargs={'trim': False}</code>. See the
-<code>Sampler</code> class notes.</p>
+<code>additional_samples / thin</code>. Two things get in the way, neither of
+them a re-applied burn-in: BUMPS re-runs its burn-point detector over
+the whole extended chain and re-trims the returned view (so the
+visible count can even shrink), and DREAM advances in blocks of 10
+generations, so the raw growth is <code>additional_samples</code> rounded up
+to a multiple of <code>10 * n_chains</code> (i.e. at least
+<code>additional_samples / thin</code> retained rows). To see the chain
+itself, compare <code>results.state.draw(portion=1.0, outliers=True)</code>
+before and after, or run with <code>sampler_kwargs={'trim': False}</code>. See
+the <code>Sampler</code> class notes.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -10828,9 +10804,9 @@ after, or run with <code>sampler_kwargs={'trim': False}</code>. See the
 <p>Writes the BUMPS native files (<code>&lt;path&gt;-chain.mc.gz</code>,
 <code>&lt;path&gt;-point.mc.gz</code> and <code>&lt;path&gt;-stats.mc.gz</code>) plus a
 <code>&lt;path&gt;.params.json</code> sidecar with the parameter names, the
-easyscience version, and a fingerprint of the bound data
-(verified with a warning on <code>load_state()</code>). Use
-<code>load_chain</code> to read the files back without a fitter.</p>
+easyscience version, and a fingerprint of the bound data (verified
+with a warning on <code>load_state()</code>). Use <code>load_chain</code> to read the
+files back without a fitter.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -10925,11 +10901,11 @@ easyscience version, and a fingerprint of the bound data
     <div class="doc doc-contents ">
 
         <p>Load a previously saved chain into this sampler.</p>
-<p>The sampler must be constructed with the same fitter and data
-used to create the chain — <code>extend()</code> then continues the saved
-chain. If the sidecar carries a data fingerprint and it does not
-match this sampler's bound data, a warning is logged (extending
-a chain against different data is undefined behaviour).</p>
+<p>The sampler must be constructed with the same fitter and data used to
+create the chain — <code>extend()</code> then continues the saved chain. If the
+sidecar carries a data fingerprint and it does not match this
+sampler's bound data, a warning is logged (extending a chain against
+different data is undefined behaviour).</p>
 <p>Populates <code>state</code> and <code>results</code> (draws, log-posterior and
 parameter names) from the saved chain, so summaries and
 <code>PosteriorResults.from_sampler()</code> work without resampling.</p>
@@ -10977,8 +10953,8 @@ parameter names) from the saved chain, so summaries and
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Discard the first <code>skip</code> saved generations on load. Useful
-for trimming additional burn-in without re-sampling.</p>
+                <p>Discard the first <code>skip</code> saved generations on load. Useful for
+trimming additional burn-in without re-sampling.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -11066,11 +11042,11 @@ for trimming additional burn-in without re-sampling.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end --></summary>
-  <p>BUMPS does not persist its automatic trim point, so a reloaded
-chain comes back <strong>untrimmed</strong>: this method reports more draws
-than the <code>sample()</code> call that wrote the file, even though the
-chain is identical. Use <code>skip</code> to discard leading generations
-explicitly. See the <code>Sampler</code> class notes.</p>
+  <p>BUMPS does not persist its automatic trim point, so a reloaded chain
+comes back <strong>untrimmed</strong>: this method reports more draws than the
+<code>sample()</code> call that wrote the file, even though the chain is
+identical. Use <code>skip</code> to discard leading generations explicitly.
+See the <code>Sampler</code> class notes.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -11101,12 +11077,11 @@ explicitly. See the <code>Sampler</code> class notes.</p>
     <div class="doc doc-contents ">
 
         <p>Reload a DREAM chain state saved by <code>Sampler.save</code>.</p>
-<p>This is the standalone reader: unlike <code>Sampler.load_state</code> it
-needs no fitter, model or data, so a saved chain can be inspected or
-post-processed on a machine that does not have the model. Parameter
-names are restored from the sidecar when available (schema versions
-1 and 2), falling back to the state's labels with the minimizer
-prefix stripped.</p>
+<p>This is the standalone reader: unlike <code>Sampler.load_state</code> it needs no
+fitter, model or data, so a saved chain can be inspected or post-processed
+on a machine that does not have the model. Parameter names are restored
+from the sidecar when available (schema versions 1 and 2), falling back to
+the state's labels with the minimizer prefix stripped.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -11151,8 +11126,8 @@ prefix stripped.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Discard the first <code>skip</code> saved generations on load, forwarded
-to <code>bumps.dream.state.load_state</code>.</p>
+                <p>Discard the first <code>skip</code> saved generations on load, forwarded to
+<code>bumps.dream.state.load_state</code>.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -11181,9 +11156,9 @@ to <code>bumps.dream.state.load_state</code>.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The reloaded BUMPS chain state, the parameter names (or <code>None</code>
-if neither sidecar nor labels yielded them), and the raw sidecar
-dict (empty if absent/unreadable).</p>
+                <p>The reloaded BUMPS chain state, the parameter names (or <code>None</code> if
+neither sidecar nor labels yielded them), and the raw sidecar dict
+(empty if absent/unreadable).</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
