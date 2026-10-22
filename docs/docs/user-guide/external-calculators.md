@@ -53,8 +53,9 @@ across is a callable.
 - **Reading a parameter has no side effects.** `Parameter.value` returns
   the stored value; it never calls into a calculator.
 - **Evaluation does not change the model.** Calculating leaves values,
-  uncertainties, bounds, fixed flags and dependencies as they were. Only the fitting engine writes parameter values during a
-  fit, through the ordinary `value` setter.
+  uncertainties, bounds, fixed flags and dependencies as they were. Only
+  the fitting engine writes parameter values during a fit, through the
+  ordinary `value` setter.
 - **Structural edits are seen by the next evaluation.** Adding or
   removing a part of the model needs no extra step, because the
   calculator reads the model fresh.
