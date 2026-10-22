@@ -4,7 +4,7 @@
 
 [project]
 name = 'easyscience'
-dynamic = ['version'] # Use versioningit to manage the version
+dynamic = ['version']  # Use versioningit to manage the version
 description = 'Core building blocks for EasyScience'
 authors = [{ name = 'EasyScience contributors' }]
 readme = 'README.md'
@@ -24,54 +24,54 @@ classifiers = [
 ]
 requires-python = '>=3.11'
 dependencies = [
-  'asteval',      # Safely evaluate Python expressions from strings
-  'lmfit',        # Non-linear least squares fitting
-  'bumps>=1.0.4', # Bayesian uncertainty estimation
-  'dfo-ls',       # Derivative-free optimization
-  'numpy',        # Numerical computing
-  'scipp',        # Handling and analysis of scientific data
+  'asteval',  # Safely evaluate Python expressions from strings
+  'lmfit',  # Non-linear least squares fitting
+  'bumps>=1.0.4',  # Bayesian uncertainty estimation
+  'dfo-ls',  # Derivative-free optimization
+  'numpy',  # Numerical computing
+  'scipp',  # Handling and analysis of scientific data
 ]
 
 [project.optional-dependencies]
 dev = [
-  'pooch',                           # Data downloader
-  'matplotlib',                      # Plotting library
-  'jupyterlab',                      # Jupyter notebooks
-  'ipykernel',                       # Jupyter kernel (required for running notebooks)
-  'ipywidgets',                      # Widgets (needed for interactive matplotlib backends)
-  'ipympl',                          # Matplotlib Jupyter widget backend (%matplotlib widget)
-  'IPython',                         # Interactive Python shell
-  'GitPython',                       # Interact with Git repositories
-  'build',                           # Building the package
-  'pre-commit',                      # Pre-commit hooks
-  'jinja2',                          # Templating
-  'nbmake',                          # Building notebooks
-  'nbstripout',                      # Strip output from notebooks
-  'nbqa',                            # Linting and formatting notebooks
-  'pytest',                          # Testing
-  'pytest-cov',                      # Test coverage
-  'pytest-xdist',                    # Enable parallel testing
-  'ruff',                            # Linting and formatting code
-  'radon',                           # Code complexity and maintainability
-  'validate-pyproject[all]',         # Validate pyproject.toml
-  'versioningit',                    # Automatic versioning from git tags
-  'jupytext',                        # Jupyter notebook text format support
-  'jupyterquiz',                     # Quizzes in Jupyter notebooks
-  'pydoclint',                       # Docstring linter
-  'format-docstring',                # Docstring formatter
-  'docstripy',                       # Convert docstrings to other formats
-  'interrogate',                     # Docstring coverage checker
-  'copier',                          # Template management
-  'mike',                            # MkDocs: Versioned documentation support
-  'mkdocs',                          # Static site generator
-  'mkdocs-material',                 # Documentation framework on top of MkDocs
-  'mkdocs-autorefs',                 # MkDocs: Auto-references support
-  'mkdocs-jupyter',                  # MkDocs: Jupyter notebook support
-  'mkdocs-plugin-inline-svg',        # MkDocs: Inline SVG support
-  'mkdocs-markdownextradata-plugin', # MkDocs: Markdown extra data support, such as global variables
-  'mkdocstrings-python',             # MkDocs: Python docstring support
-  'pyyaml',                          # YAML parser
-  'spdx-headers',                    # SPDX license header validation
+  'pooch',  # Data downloader
+  'matplotlib',  # Plotting library
+  'jupyterlab',  # Jupyter notebooks
+  'ipykernel',  # Jupyter kernel (required for running notebooks)
+  'ipywidgets',  # Widgets (needed for interactive matplotlib backends)
+  'ipympl',  # Matplotlib Jupyter widget backend (%matplotlib widget)
+  'IPython',  # Interactive Python shell
+  'GitPython',  # Interact with Git repositories
+  'build',  # Building the package
+  'pre-commit',  # Pre-commit hooks
+  'jinja2',  # Templating
+  'nbmake',  # Building notebooks
+  'nbstripout',  # Strip output from notebooks
+  'nbqa',  # Linting and formatting notebooks
+  'pytest',  # Testing
+  'pytest-cov',  # Test coverage
+  'pytest-xdist',  # Enable parallel testing
+  'ruff',  # Linting and formatting code
+  'radon',  # Code complexity and maintainability
+  'validate-pyproject[all]',  # Validate pyproject.toml
+  'versioningit',  # Automatic versioning from git tags
+  'jupytext',  # Jupyter notebook text format support
+  'jupyterquiz',  # Quizzes in Jupyter notebooks
+  'pydoclint',  # Docstring linter
+  'format-docstring',  # Docstring formatter
+  'docstripy',  # Convert docstrings to other formats
+  'interrogate',  # Docstring coverage checker
+  'copier',  # Template management
+  'mike',  # MkDocs: Versioned documentation support
+  'mkdocs',  # Static site generator
+  'mkdocs-material',  # Documentation framework on top of MkDocs
+  'mkdocs-autorefs',  # MkDocs: Auto-references support
+  'mkdocs-jupyter',  # MkDocs: Jupyter notebook support
+  'mkdocs-plugin-inline-svg',  # MkDocs: Inline SVG support
+  'mkdocs-markdownextradata-plugin',  # MkDocs: Markdown extra data support, such as global variables
+  'mkdocstrings-python',  # MkDocs: Python docstring support
+  'pyyaml',  # YAML parser
+  'spdx-headers',  # SPDX license header validation
 ]
 
 [project.urls]
@@ -102,7 +102,7 @@ packages = ['src/easyscience']
 allow-direct-references = true
 
 [tool.hatch.version]
-source = 'versioningit' # Use versioningit to manage the version
+source = 'versioningit'  # Use versioningit to manage the version
 
 ################################
 # Configuration for versioningit
@@ -118,9 +118,9 @@ source = 'versioningit' # Use versioningit to manage the version
 # pixi.lock update without any changes to the source code.
 
 [tool.versioningit.format]
-distance = '{base_version}+dev{distance}'            # example: 1.2.3.post4+dev3
-dirty = '{base_version}+dirty{distance}'             # example: 0.5.8+dirty3
-distance-dirty = '{base_version}+devdirty{distance}' # example: 0.5.8+devdirty3
+distance = '{base_version}+dev{distance}'  # example: 1.2.3.post4+dev3
+dirty = '{base_version}+dirty{distance}'  # example: 0.5.8+dirty3
+distance-dirty = '{base_version}+devdirty{distance}'  # example: 0.5.8+devdirty3
 
 # Configure how versioningit detects versions from Git
 # - 'match' ensures it only considers tags starting with 'v'
@@ -138,7 +138,7 @@ default-tag = 'v999.0.0'
 # https://interrogate.readthedocs.io/en/latest/
 
 [tool.interrogate]
-fail-under = 45                      # Minimum docstring coverage percentage to pass
+fail-under = 45  # Minimum docstring coverage percentage to pass
 verbose = 1
 exclude = ['src/easyscience/legacy']
 
@@ -150,13 +150,13 @@ exclude = ['src/easyscience/legacy']
 # https://coverage.readthedocs.io/en/latest/
 
 [tool.coverage.run]
-branch = true    # Measure branch coverage as well
-source = ['src'] # Limit coverage to the source code directory
+branch = true  # Measure branch coverage as well
+source = ['src']  # Limit coverage to the source code directory
 
 [tool.coverage.report]
 show_missing = true  # Show missing lines
-skip_covered = false # Skip files with 100% coverage in the report
-fail_under = 80      # Minimum coverage percentage to pass
+skip_covered = false  # Skip files with 100% coverage in the report
+fail_under = 80  # Minimum coverage percentage to pass
 
 ##########################
 # Configuration for pytest
@@ -180,31 +180,31 @@ testpaths = ['tests']
 [tool.ruff]
 exclude = ['tests', 'legacy', 'src/easyscience/legacy']
 indent-width = 4
-line-length = 99 # See also `max-line-length` in [tool.ruff.lint.pycodestyle]
-preview = true # Enable new rules that are not yet stable, like DOC
+line-length = 99  # See also `max-line-length` in [tool.ruff.lint.pycodestyle]
+preview = true  # Enable new rules that are not yet stable, like DOC
 builtins = [
   'display',
-] # Clutch-fix/patch to https://github.com/nbQA-dev/nbQA/issues/882
+]  # Clutch-fix/patch to https://github.com/nbQA-dev/nbQA/issues/882
 # Formatting options for Ruff
 
 [tool.ruff.format]
-docstring-code-format = true    # Whether to format code snippets in docstrings
-docstring-code-line-length = 72 # Line length for code snippets in docstrings
-indent-style = 'space'          # PEP 8 recommends using spaces over tabs
-quote-style = 'single'          # But double quotes in docstrings (PEP 8, PEP 257)
+docstring-code-format = true  # Whether to format code snippets in docstrings
+docstring-code-line-length = 72  # Line length for code snippets in docstrings
+indent-style = 'space'  # PEP 8 recommends using spaces over tabs
+quote-style = 'single'  # But double quotes in docstrings (PEP 8, PEP 257)
 
 # Linting rules to use with Ruff
 
 [tool.ruff.lint]
 select = [
-  #  'E',   # General PEP 8 style errors
-  'E9', # Runtime errors (e.g., syntax errors, undefined names)
-  #  'F',   # Pyflakes-specific checks (e.g., unused variables, imports)
-  'F63', # Issues related to invalid escape sequences in strings
+  # 'E',   # General PEP 8 style errors
+  'E9',  # Runtime errors (e.g., syntax errors, undefined names)
+  # 'F',   # Pyflakes-specific checks (e.g., unused variables, imports)
+  'F63',  # Issues related to invalid escape sequences in strings
   'F7',  # Type-related errors (e.g., mismatched argument types, unsupported operations)
-  'F82', # Import-related errors (e.g., unresolved imports, reimported modules)
-  'I',   # Import sorting issues (e.g., unsorted imports)
-  #  'S',   # Security-related issues (e.g., use of insecure functions or libraries)
+  'F82',  # Import-related errors (e.g., unresolved imports, reimported modules)
+  'I',  # Import sorting issues (e.g., unsorted imports)
+  # 'S',   # Security-related issues (e.g., use of insecure functions or libraries)
   #  'W',   # General PEP 8 warnings (e.g., lines too long, trailing whitespace)
 ]
 
@@ -212,31 +212,31 @@ select = [
 
 # Ignore specific rules globally
 ignore = [
-  'COM812', # https://docs.astral.sh/ruff/rules/missing-trailing-comma/
+  'COM812',  # https://docs.astral.sh/ruff/rules/missing-trailing-comma/
   # Replaced by 'D' plus pydocstyle and pydoclint
-  'DOC', # https://docs.astral.sh/ruff/rules/#pydoclint-doc
+  'DOC',  # https://docs.astral.sh/ruff/rules/#pydoclint-doc
   # Disable, as [tool.format_docstring] split one-line docstrings into the canonical multi-line layout
-  'D200', # https://docs.astral.sh/ruff/rules/unnecessary-multiline-docstring/
+  'D200',  # https://docs.astral.sh/ruff/rules/unnecessary-multiline-docstring/
 ]
 
 # Ignore specific rules in certain files or directories
 [tool.ruff.lint.per-file-ignores]
 '*/__init__.py' = [
-  'F401', # re-exports are intentional in __init__.py
+  'F401',  # re-exports are intentional in __init__.py
 ]
 'tests/**' = [
-  'ANN',    # https://docs.astral.sh/ruff/rules/#flake8-annotations-ann
-  'D',      # https://docs.astral.sh/ruff/rules/#pydocstyle-d
-  'DOC',    # https://docs.astral.sh/ruff/rules/#pydoclint-doc
-  'INP001', # https://docs.astral.sh/ruff/rules/implicit-namespace-package/
-  'S101',   # https://docs.astral.sh/ruff/rules/assert/
+  'ANN',  # https://docs.astral.sh/ruff/rules/#flake8-annotations-ann
+  'D',  # https://docs.astral.sh/ruff/rules/#pydocstyle-d
+  'DOC',  # https://docs.astral.sh/ruff/rules/#pydoclint-doc
+  'INP001',  # https://docs.astral.sh/ruff/rules/implicit-namespace-package/
+  'S101',  # https://docs.astral.sh/ruff/rules/assert/
 ]
 'docs/**' = [
-  'INP001', # https://docs.astral.sh/ruff/rules/implicit-namespace-package/
-  'T201',   # https://docs.astral.sh/ruff/rules/print/
+  'INP001',  # https://docs.astral.sh/ruff/rules/implicit-namespace-package/
+  'T201',  # https://docs.astral.sh/ruff/rules/print/
 ]
 'docs/docs/tutorials/**' = [
-  'E402', # https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file/
+  'E402',  # https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file/
 ]
 
 # Specific options for certain rules
@@ -258,7 +258,7 @@ max-complexity = 10
 # https://peps.python.org/pep-0008/#maximum-line-length
 # Use 99 characters as the project-wide maximum for regular code lines.
 # Use 72 characters for docstrings.
-max-line-length = 99 # See also `line-length` in [tool.ruff]
+max-line-length = 99  # See also `line-length` in [tool.ruff]
 max-doc-length = 72
 
 [tool.ruff.lint.pydocstyle]

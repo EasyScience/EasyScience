@@ -417,42 +417,45 @@ class Bumps(MinimizerBase):
         weights : np.ndarray
             Flattened weight array.
         samples : int, default=10000
-            Number of raw samples to draw across all chains, before thinning.
-            A guaranteed minimum, not an exact count: DREAM advances in
-            blocks of 10 generations (one generation = one draw per chain)
-            and stops at the first block boundary at or past ``samples``.
+            Number of raw samples to draw across all chains, before
+            thinning. A guaranteed minimum, not an exact count: DREAM
+            advances in blocks of 10 generations (one generation = one
+            draw per chain) and stops at the first block boundary at or
+            past ``samples``.
         burn : int, default=2000
             Burn-in generations to discard. BUMPS counts ``burn`` in
-            generations while ``samples`` counts raw draws, so ``burn=500``
-            discards ``500 * n_chains`` raw samples.
+            generations while ``samples`` counts raw draws, so
+            ``burn=500`` discards ``500 * n_chains`` raw samples.
         thin : int, default=10
-            Thinning interval — only every ``thin``-th generation is stored.
+            Thinning interval — only every ``thin``-th generation is
+            stored.
         population : int | None, default=None
-            BUMPS DREAM population count per parameter (number of parallel
-            chains): BUMPS creates ``ceil(population * n_parameters)`` chains.
+            BUMPS DREAM population count per parameter (number of
+            parallel chains): BUMPS creates ``ceil(population *
+            n_parameters)`` chains.
         resume_state : MCMCDraw | None, default=None
             A BUMPS ``MCMCDraw`` state object from a previous
-            ``mcmc_sample()`` call (e.g. ``PosteriorResults.sampler_state``).
-            When provided, DREAM **continues** the saved chain instead of
-            starting cold.  The population, parameter count, and parameter
-            names must match the current model — a ``ValueError`` is raised
-            otherwise.
+            ``mcmc_sample()`` call (e.g.
+            ``PosteriorResults.sampler_state``). When provided, DREAM
+            **continues** the saved chain instead of starting cold.  The
+            population, parameter count, and parameter names must match
+            the current model — a ``ValueError`` is raised otherwise.
 
-            ``samples`` must be the **total** number of raw samples, not an
-            increment: to extend an existing chain of ``N`` raw samples by
-            ``M``, pass ``samples=N + M`` (DREAM keeps only the last
-            ``samples`` draws in its buffer). The `Sampler.extend` helper
-            computes this for you.
+            ``samples`` must be the **total** number of raw samples, not
+            an increment: to extend an existing chain of ``N`` raw
+            samples by ``M``, pass ``samples=N + M`` (DREAM keeps only
+            the last ``samples`` draws in its buffer). The
+            ``Sampler.extend`` helper computes this for you.
 
-            ``burn`` is forced to 0 on resume: a previously-converged chain is
-            never re-burned.
+            ``burn`` is forced to 0 on resume: a previously-converged
+            chain is never re-burned.
 
-            The ``population`` and ``initializer`` parameters
-            have **no effect** when ``resume_state`` is provided — they
-            are determined by the saved state.
+            The ``population`` and ``initializer`` parameters have **no
+            effect** when ``resume_state`` is provided — they are
+            determined by the saved state.
 
-            Resuming against *different* data is undefined behaviour (the
-            chain's likelihood changes underneath it).
+            Resuming against *different* data is undefined behaviour
+            (the chain's likelihood changes underneath it).
         sampler_kwargs : dict | None, default=None
             Additional keyword arguments forwarded to
             ``bumps.fitters.fit``.
@@ -475,9 +478,9 @@ class Bumps(MinimizerBase):
         ------
         ValueError
             If the input shapes or weights are invalid, if
-            ``progress_callback`` is not callable, or if ``resume_state``
-            is incompatible with the current model (parameter count,
-            names/order, or population mismatch).
+            ``progress_callback`` is not callable, or if
+            ``resume_state`` is incompatible with the current model
+            (parameter count, names/order, or population mismatch).
         FitError
             If DREAM sampling was aborted by the user (via
             ``abort_test``).
@@ -608,28 +611,32 @@ class Bumps(MinimizerBase):
         population: int | None,
         burn: int,
     ) -> tuple[int, int]:
-        """Check that ``resume_state`` is compatible with ``problem`` and
+        """
+        Check that ``resume_state`` is compatible with ``problem`` and
         resolve the population and burn values to use when resuming.
 
         Parameters
         ----------
         problem : FitProblem
-            The freshly built BUMPS ``FitProblem`` for the current model.
+            The freshly built BUMPS ``FitProblem`` for the current
+            model.
         resume_state : MCMCDraw
             The saved chain state to resume from.
         population : int | None
             The caller-supplied population scale factor, or ``None``.
         burn : int
-            The caller-supplied burn-in, ignored (with a warning) on resume.
+            The caller-supplied burn-in, ignored (with a warning) on
+            resume.
 
         Returns
         -------
         tuple[int, int]
             ``(population, burn)`` to pass to DREAM. The population is
             returned as a **negative** number, which BUMPS'
-            ``initpop.generate`` reads as an absolute chain count, exactly
-            reproducing the saved state's population. ``burn`` is always 0:
-            a previously converged chain is never re-burned.
+            ``initpop.generate`` reads as an absolute chain count,
+            exactly reproducing the saved state's population. ``burn``
+            is always 0: a previously converged chain is never
+            re-burned.
 
         Raises
         ------
