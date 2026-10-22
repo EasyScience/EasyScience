@@ -10,11 +10,11 @@ from .descriptor_str import DescriptorStr
 from .parameter import Parameter
 
 __all__ = [
-    DescriptorAnyType,
-    DescriptorArray,
-    DescriptorBase,
-    DescriptorBool,
-    DescriptorNumber,
-    DescriptorStr,
-    Parameter,
+    'DescriptorAnyType',
+    'DescriptorArray',
+    'DescriptorBase',
+    'DescriptorBool',
+    'DescriptorNumber',
+    'DescriptorStr',
+    'Parameter',
 ]

@@ -168,7 +168,6 @@ class TestNewBase:
         assert 'unique_name' in obj_dict['nested_new_base']
         assert 'display_name' in obj_dict['nested_new_base']
 
-
     def test_from_dict(self):
         # When
         obj_dict = {
