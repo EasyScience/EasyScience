@@ -17,6 +17,53 @@ making data analysis easier.
 [EasyScience framework](https://easyscience.org).
 -->
 
+## Who is it for
+
+**EasyScience** is the foundation for scientific libraries and
+applications. It is for developers who build on its numbers, which carry
+a **unit**, an **uncertainty** and **bounds**, and for scientists who
+use them directly to analyse data. It provides:
+
+- numbers (`Parameter`, `DescriptorNumber`) that know their unit,
+  uncertainty and bounds, with arithmetic and mathematical functions
+  that carry all three along,
+- fitting of a model to data with several minimizers, and Bayesian
+  sampling of the posterior.
+
+## A first example
+
+Bragg's law gives the lattice spacing from a wavelength and the Bragg
+angle. Each number has an uncertainty, and the result has one too:
+
+```python
+import easyscience as es
+from easyscience import DescriptorNumber
+
+wavelength = DescriptorNumber(name='wavelength', value=1.54, unit='angstrom', variance=0.01**2)
+angle = DescriptorNumber(name='angle', value=22.5, unit='deg', variance=0.1**2)
+
+d = wavelength / (2 * es.math.sin(angle))
+d.convert_unit('nm')
+print(f'd = {d.value:.4f} ± {d.error:.4f} {d.unit}')
+```
+
+```text
+d = 0.2012 ± 0.0016 nm
+```
+
+## Where to start
+
+- **New to EasyScience?** Follow the
+  [Installation & Setup](../installation-and-setup/index.md), then the
+  [Basics](../tutorials/basics/index.md) tutorials.
+- **Want to fit data?** Continue with the
+  [Fitting](../tutorials/fitting/index.md) tutorials.
+- **Building on EasyScience?** Read the
+  [Concepts](../user-guide/concepts.md) and the
+  [API Reference](../api-reference/index.md).
+- **Following a workshop?** See
+  [Workshops & Schools](../tutorials/workshops/index.md).
+
 ## License
 
 **EasyScience** library is released under the

@@ -163,8 +163,8 @@ cov = { depends-on = [
 # 📓 Notebook Management
 ########################
 
-notebook-convert = 'jupytext docs/docs/tutorials/*.py --from py:percent --to ipynb'
-notebook-strip = 'nbstripout docs/docs/tutorials/*.ipynb'
+notebook-convert = 'jupytext docs/docs/tutorials/**/*.py --from py:percent --to ipynb'
+notebook-strip = 'nbstripout docs/docs/tutorials/**/*.ipynb'
 notebook-tweak = 'python tools/tweak_notebooks.py docs/docs/tutorials/'
 notebook-exec = 'python -m pytest --nbmake docs/docs/tutorials/ --nbmake-timeout=1200 --overwrite --color=yes -n auto -v'
 

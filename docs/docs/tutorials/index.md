@@ -15,17 +15,25 @@ section of the documentation.
 
 The tutorials are organized into the following categories:
 
-## Workshops & Schools
+## [Basics](basics/index.md)
 
-- [Fitting QENS](fitting-qens.ipynb) – A tutorial demonstrating how to
-  fit a quasielastic neutron scattering (QENS) data using EasyScience
-  framework.
-- [Fitting SANS](fitting-sans.ipynb) – A tutorial demonstrating how to
-  fit a small-angle neutron scattering (SANS) data using EasyScience
-  framework.
-- [Bayesian analysis](fitting-bayesian.ipynb) – A tutorial showing how
-  to run Bayesian MCMC sampling on a model with EasyScience to obtain
-  full posterior distributions for the parameters.
-- [Progress Callback](progress-callback.ipynb) – A tutorial showing how
-  to monitor fitting progress across minimizer backends and update a
-  notebook UI while a fit is running.
+Short notebooks on working with numbers that carry units, uncertainties
+and bounds: arithmetic, the functions of `es.math`, how the choice of
+formula changes an uncertainty, and what correlation does to it. Each
+part ends with exercises with hints and solutions.
+
+## [Fitting](fitting/index.md)
+
+Fit a straight line, spheres in small-angle scattering and a
+quasi-elastic line, then derive quantities from the fit with their
+uncertainties. A last notebook compares those uncertainties with the
+full Bayesian posterior.
+
+## [Workshops & Schools](workshops/index.md)
+
+The notebooks that follow the analysis of one QENS and one SANS data set
+step by step, written as exercises for a group.
+
+## [Advanced Topics](advanced/index.md)
+
+Bayesian sampling of the posterior and monitoring the progress of a fit.
