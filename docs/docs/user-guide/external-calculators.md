@@ -44,8 +44,8 @@ across is a callable.
 
 - **EasyScience is the only store of parameter state.** Values,
   uncertainties, bounds, fixed flags and dependencies live in the
-  `Parameter` objects of the model. The calculator does not keep its
-  own copy.
+  `Parameter` objects of the model. The calculator does not keep its own
+  copy.
 - **The calculator reads the model when asked to calculate.** Each
   evaluation uses the current values of the independent parameters and
   of the dependent parameters derived from them.
