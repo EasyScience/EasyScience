@@ -17,6 +17,8 @@ class ObjectRegistry:
     """
 
     def __init__(self):
+        # A dict with object names as keys and a list of their object
+        # types as values, with weak references
         self._store = weakref.WeakValueDictionary()
 
     def __getitem__(self, name: str) -> object:
