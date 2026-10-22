@@ -3,12 +3,11 @@
 Technique libraries built on EasyScience usually compute their model
 with an external package (for example refnx or refl1d for
 reflectometry). This page describes how such a calculator connects to
-the EasyScience model and to `Fitter`, from the library author's point
-of view.
+the EasyScience model and to `Fitter`.
 
 EasyScience does not provide a calculator base class, a factory or a
 registry. A calculator is any object your library defines; the only
-thing EasyScience sees is the fit function you hand to `Fitter`.
+thing EasyScience sees is the fit function passed to `Fitter`.
 
 ## General overview
 
@@ -45,8 +44,8 @@ across is a callable.
 
 - **EasyScience is the only store of parameter state.** Values,
   uncertainties, bounds, fixed flags and dependencies live in the
-  `Parameter` objects of the model. The calculator does not keep a
-  second copy that has to be kept in step.
+  `Parameter` objects of the model. The calculator does not keep its
+  own copy.
 - **The calculator reads the model when asked to calculate.** Each
   evaluation uses the current values of the independent parameters and
   of the dependent parameters derived from them.
@@ -112,8 +111,7 @@ print(model.slope.value, model.intercept.value)  # close to 3.0 and 1.5
 ```
 
 During the fit, the engine sets the parameter values and then calls the
-fit function, so the calculator always sees the values being tried. With
-the undo stack enabled, the final values are committed as one undo step.
+fit function, so the calculator always uses the values being tried.
 
 Dependent parameters need no special handling. If the intercept is made
 dependent on the slope, the engine fits only the slope and the
