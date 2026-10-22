@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2026 EasyScience contributors <https://github.com/easyscience>
 # SPDX-License-Identifier: BSD-3-Clause
 
+import gc
+
 import pytest
 
 from easyscience import global_object
@@ -16,6 +18,9 @@ class TestDesciptorBase:
         # This avoids the error: TypeError: Can't instantiate abstract class DescriptorBase with abstract methods __init__
         DescriptorBase.__abstractmethods__ = set()
         DescriptorBase.__repr__ = lambda x: 'DescriptorBase'
+        # The registry holds weak references; collect objects left over from
+        # earlier tests so they cannot vanish between the count and the assert
+        gc.collect()
         self.objs_before_new_descriptor = len(global_object.registry)
         descriptor = DescriptorBase(
             description='description',
