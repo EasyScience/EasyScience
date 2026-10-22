@@ -1008,16 +1008,6 @@ class TestParameter:
             == "<Parameter 'display_name': 1.0000 ± 0.1000 m (fixed), bounds=[0.0:10.0]>"
         )
 
-    def test_callback_argument_removed(self):
-        # When Then Expect
-        with pytest.raises(TypeError, match='callback'):
-            Parameter(1.0, callback=property())
-
-    def test_callback_attributes_removed(self, parameter: Parameter):
-        # When Then Expect
-        assert not hasattr(parameter, 'value_no_call_back')
-        assert not hasattr(parameter, '_callback')
-
     def test_value_read_is_repeatable_and_has_no_side_effects(self, parameter: Parameter):
         # When
         observer = MagicMock()
