@@ -17,7 +17,6 @@ from easyscience import global_object
 class TestParameter:
     @pytest.fixture
     def parameter(self) -> Parameter:
-        self.mock_callback = MagicMock()
         parameter = Parameter(
             value=1,
             unit='m',
@@ -27,7 +26,6 @@ class TestParameter:
             description='description',
             url='url',
             display_name='display_name',
-            callback=self.mock_callback,
         )
         return parameter
 
@@ -55,7 +53,6 @@ class TestParameter:
         assert parameter._min.unit == 'm'
         assert parameter._max.value == 10
         assert parameter._max.unit == 'm'
-        assert parameter._callback == self.mock_callback
         assert parameter._independent == True
 
         # From super
@@ -70,7 +67,6 @@ class TestParameter:
 
     def test_init_value_min_exception(self):
         # When
-        mock_callback = MagicMock()
         value = -1
 
         # Then Expect
@@ -84,12 +80,10 @@ class TestParameter:
                 description='description',
                 url='url',
                 display_name='display_name',
-                callback=mock_callback,
             )
 
     def test_init_value_max_exception(self):
         # When
-        mock_callback = MagicMock()
         value = 100
 
         # Then Expect
@@ -103,7 +97,6 @@ class TestParameter:
                 description='description',
                 url='url',
                 display_name='display_name',
-                callback=mock_callback,
             )
 
     def test_make_dependent_on(self, normal_parameter: Parameter):
@@ -130,11 +123,8 @@ class TestParameter:
         normal_parameter.value == 4
         self.compare_parameters(normal_parameter, 2 * independent_parameter)
 
-    def test_dependent_parameter_update_pushes_value_to_callback(self, parameter: Parameter):
-        # When # Simulate a calculator bound to the parameter via the callback (issue #281)
-        calculator = {'value': parameter._scalar.value}
-        self.mock_callback.fget.side_effect = lambda: calculator['value']
-        self.mock_callback.fset.side_effect = lambda value: calculator.update(value=value)
+    def test_dependent_parameter_update_follows_independent(self, parameter: Parameter):
+        # When
         independent_parameter = Parameter(
             display_name='independent', value=1, unit='m', variance=0.01, min=0, max=10
         )
@@ -144,28 +134,21 @@ class TestParameter:
             dependency_expression='2*a', dependency_map={'a': independent_parameter}
         )
 
-        # Expect # Making the parameter dependent pushes the computed value to the calculator
-        assert calculator['value'] == 2.0
-        self.mock_callback.fset.assert_called_with(2.0)
-        assert self.mock_callback.fset.call_count == 1
+        # Expect # Making the parameter dependent computes its value
+        assert parameter.value == 2.0
+        assert parameter.unit == 'm'
 
         # Then
         independent_parameter.value = 3
 
-        # Expect # The change of the independent parameter propagates to the calculator
-        assert calculator['value'] == 6.0
-        self.mock_callback.fset.assert_called_with(6.0)
-        assert self.mock_callback.fset.call_count == 2
-        # Reading the value must not return a stale calculator value
+        # Expect # The change of the independent parameter propagates (issue #281)
         assert parameter.value == 6.0
+        assert parameter.unit == 'm'
 
-    def test_dependent_parameter_update_pushes_value_to_callback_with_desired_unit(
+    def test_dependent_parameter_update_follows_independent_with_desired_unit(
         self, parameter: Parameter
     ):
-        # When # Simulate a calculator bound to the parameter via the callback (issue #281)
-        calculator = {'value': parameter._scalar.value}
-        self.mock_callback.fget.side_effect = lambda: calculator['value']
-        self.mock_callback.fset.side_effect = lambda value: calculator.update(value=value)
+        # When
         independent_parameter = Parameter(
             display_name='independent', value=1, unit='m', variance=0.01, min=0, max=10
         )
@@ -177,16 +160,16 @@ class TestParameter:
             desired_unit='cm',
         )
 
-        # Expect # The calculator receives the value converted to the desired unit
-        assert calculator['value'] == 200.0
-        self.mock_callback.fset.assert_called_with(200.0)
+        # Expect # The value is converted to the desired unit
+        assert parameter.value == 200.0
+        assert parameter.unit == 'cm'
 
         # Then
         independent_parameter.value = 2
 
         # Expect
-        assert calculator['value'] == 400.0
         assert parameter.value == 400.0
+        assert parameter.unit == 'cm'
 
     def test_dependent_parameter_make_dependent_on_with_desired_unit(
         self, normal_parameter: Parameter
@@ -815,8 +798,6 @@ class TestParameter:
 
     def test_set_min(self, parameter: Parameter):
         # When Then
-        self.mock_callback.fget.return_value = 1.0  # Ensure fget returns a scalar value
-
         parameter.min = 0.1
 
         # Expect
@@ -1027,34 +1008,23 @@ class TestParameter:
             == "<Parameter 'display_name': 1.0000 ± 0.1000 m (fixed), bounds=[0.0:10.0]>"
         )
 
-    def test_value_match_callback(self, parameter: Parameter):
+    def test_value_read_is_repeatable_and_has_no_side_effects(self, parameter: Parameter):
         # When
-        self.mock_callback.fget.return_value = 1.0
-
-        # Then Expect
-        assert parameter.value == 1.0
-        assert parameter._callback.fget.call_count == 1
-
-    def test_value_no_match_callback(self, parameter: Parameter):
-        # When
-        self.mock_callback.fget.return_value = 2.0
-
-        # Then Expect
-        assert parameter.value == 2.0
-        assert parameter._callback.fget.call_count == 1
-
-    def test_set_value(self, parameter: Parameter):
-        # When
-        # First call returns 1.0 that is used to enforce the undo/redo functionality to register the value has changed
-        # Second and third call returns 2.0 is used in the constraint check
-        self.mock_callback.fget.side_effect = [1.0, 2.0, 2.0]
+        observer = MagicMock()
+        parameter._attach_observer(observer)
 
         # Then
+        values = [parameter.value for _ in range(3)]
+
+        # Expect
+        assert values == [1.0, 1.0, 1.0]
+        assert observer.mock_calls == []
+
+    def test_set_value(self, parameter: Parameter):
+        # When Then
         parameter.value = 2
 
         # Expect
-        parameter._callback.fset.assert_called_with(2)
-        assert parameter._callback.fset.call_count == 1
         assert parameter._scalar == sc.scalar(2, unit='m')
 
     def test_set_value_dependent_parameter(self, normal_parameter: Parameter):
@@ -1100,13 +1070,11 @@ class TestParameter:
 
     def test_copy(self, parameter: Parameter):
         # When Then
-        self.mock_callback.fget.return_value = 1.0  # Ensure fget returns a scalar value
         parameter_copy = parameter.__copy__()
 
         # Expect
         assert type(parameter_copy) == Parameter
         assert id(parameter_copy._scalar) != id(parameter._scalar)
-        assert isinstance(parameter_copy._callback, property)
 
         assert parameter_copy._scalar == parameter._scalar
         assert parameter_copy._min == parameter._min
@@ -1158,10 +1126,7 @@ class TestParameter:
         expected: Parameter,
         expected_reverse: Parameter,
     ):
-        # When
-        parameter._callback = property()
-
-        # Then
+        # When Then
         result = parameter + test
         result_reverse = test + parameter
 
@@ -1203,7 +1168,6 @@ class TestParameter:
 
     def test_addition_with_descriptor_number(self, parameter: Parameter):
         # When
-        parameter._callback = property()
         descriptor_number = DescriptorNumber(display_name='test', value=1, variance=0.1, unit='cm')
 
         # Then
@@ -1291,10 +1255,7 @@ class TestParameter:
         expected: Parameter,
         expected_reverse: Parameter,
     ):
-        # When
-        parameter._callback = property()
-
-        # Then
+        # When Then
         result = parameter - test
         result_reverse = test - parameter
 
@@ -1358,7 +1319,6 @@ class TestParameter:
 
     def test_subtraction_with_descriptor_number(self, parameter: Parameter):
         # When
-        parameter._callback = property()
         descriptor_number = DescriptorNumber(display_name='test', value=1, variance=0.1, unit='cm')
 
         # Then
@@ -1448,10 +1408,7 @@ class TestParameter:
         expected: Parameter,
         expected_reverse: Parameter,
     ):
-        # When
-        parameter._callback = property()
-
-        # Then
+        # When Then
         result = parameter * test
         result_reverse = test * parameter
 
@@ -1556,10 +1513,7 @@ class TestParameter:
     def test_multiplication_with_descriptor_number(
         self, parameter: Parameter, test, expected, expected_reverse
     ):
-        # When
-        parameter._callback = property()
-
-        # Then
+        # When Then
         result = parameter * test
         result_reverse = test * parameter
 
@@ -1599,10 +1553,7 @@ class TestParameter:
     def test_multiplication_with_scalar(
         self, parameter: Parameter, test, expected, expected_reverse
     ):
-        # When
-        parameter._callback = property()
-
-        # Then
+        # When Then
         result = parameter * test
         result_reverse = test * parameter
 
@@ -1676,10 +1627,7 @@ class TestParameter:
         ids=['crossing_zero', 'only_positive', 'only_negative'],
     )
     def test_division_with_parameter(self, parameter: Parameter, test, expected, expected_reverse):
-        # When
-        parameter._callback = property()
-
-        # Then
+        # When Then
         result = parameter / test
         result_reverse = test / parameter
 
@@ -1775,10 +1723,7 @@ class TestParameter:
     def test_division_with_descriptor_number_and_number(
         self, parameter: Parameter, test, expected, expected_reverse
     ):
-        # When
-        parameter._callback = property()
-
-        # Then
+        # When Then
         result = parameter / test
         result_reverse = test / parameter
 
@@ -1809,10 +1754,7 @@ class TestParameter:
         ids=['descriptor_number', 'number'],
     )
     def test_zero_value_divided_by_parameter(self, parameter: Parameter, test, expected):
-        # When
-        parameter._callback = property()
-
-        # Then
+        # When Then
         result = test / parameter
 
         # Expect
@@ -1906,7 +1848,6 @@ class TestParameter:
     )
     def test_divide_parameter_by_zero(self, parameter: Parameter, test):
         # When
-        parameter._callback = property()
 
         # Then Expect
         with pytest.raises(ZeroDivisionError):

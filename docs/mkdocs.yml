@@ -194,6 +194,7 @@ nav:
       - Controlling Log Output: user-guide/controlling-log-output.md
       - Serializing Dependent Parameters:
           user-guide/parameter-dependency-serialization.md
+      - Connecting an External Calculator: user-guide/external-calculators.md
   - Tutorials:
       - Tutorials: tutorials/index.md
       - Bayesian analysis: tutorials/fitting-bayesian.ipynb

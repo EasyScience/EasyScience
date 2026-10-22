@@ -195,7 +195,7 @@ class EngineBase(metaclass=ABCMeta):
             np.ndarray
                 Points calculated at ``x``.
             """
-            # Update the `Parameter` values and the callback if needed
+            # Update the `Parameter` values
             # TODO THIS IS NOT THREAD SAFE :-(
 
             for name, value in kwargs.items():
@@ -205,7 +205,6 @@ class EngineBase(metaclass=ABCMeta):
                     if self._cached_pars[par_name].value != value:
                         self._cached_pars[par_name].value = value
 
-                    # Since we are calling the parameter fset will be called.
             # TODO Pre processing here
             return_data = func(x)
             # TODO Loading or manipulating data here
