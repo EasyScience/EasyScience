@@ -10,8 +10,8 @@ from easyscience.base_classes import NewBase
 class TestNewBase:
     @pytest.fixture
     def clear(self):
-        # Clear the global object map before each test
-        global_object.map._clear()
+        # Clear the global object registry before each test
+        global_object.registry.clear()
 
     def test_constructor_defaults(self, clear):
         # When Then
@@ -20,7 +20,7 @@ class TestNewBase:
         assert obj._unique_name == 'NewBase_0'
         assert obj._default_unique_name is True
         assert obj._display_name is None
-        assert global_object.map.get_item_by_key('NewBase_0') is obj
+        assert global_object.registry['NewBase_0'] is obj
 
     def test_constructor_with_arguments(self):
         # When Then
@@ -29,7 +29,7 @@ class TestNewBase:
         assert obj._unique_name == 'custom_name'
         assert obj._default_unique_name is False
         assert obj._display_name == 'My Object'
-        assert global_object.map.get_item_by_key('custom_name') is obj
+        assert global_object.registry['custom_name'] is obj
 
     def test_constructor_invalid_unique_name(self):
         # When Then Expect
@@ -71,8 +71,8 @@ class TestNewBase:
         # Expect
         assert obj.unique_name == 'new_unique_name'
         assert obj._default_unique_name is False
-        assert global_object.map.get_item_by_key('new_unique_name') is obj
-        assert global_object.map.get_item_by_key('NewBase_0') is obj
+        assert global_object.registry['new_unique_name'] is obj
+        assert global_object.registry['NewBase_0'] is obj
 
     def test_unique_name_setter_invalid(self):
         # When
@@ -187,7 +187,7 @@ class TestNewBase:
         assert isinstance(obj, NewBase)
         assert obj.unique_name == 'from_dict_name'
         assert obj.display_name == 'From Dict Object'
-        assert global_object.map.get_item_by_key('from_dict_name') is obj
+        assert global_object.registry['from_dict_name'] is obj
 
     def test_from_dict_not_easyscience(self):
         # When
@@ -242,7 +242,7 @@ class TestNewBase:
         assert isinstance(obj_copy, NewBase)
         assert obj_copy.unique_name != obj.unique_name
         assert obj_copy.display_name == obj.display_name
-        assert global_object.map.get_item_by_key(obj_copy.unique_name) is obj_copy
+        assert global_object.registry[obj_copy.unique_name] is obj_copy
 
     def test_deepcopy(self):
         # When
@@ -255,4 +255,4 @@ class TestNewBase:
         assert isinstance(obj_deepcopy, NewBase)
         assert obj_deepcopy.unique_name != obj.unique_name
         assert obj_deepcopy.display_name == obj.display_name
-        assert global_object.map.get_item_by_key(obj_deepcopy.unique_name) is obj_deepcopy
+        assert global_object.registry[obj_deepcopy.unique_name] is obj_deepcopy

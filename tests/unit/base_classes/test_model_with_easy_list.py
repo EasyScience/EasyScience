@@ -15,8 +15,8 @@ from easyscience.variable import Parameter
 
 @pytest.fixture(autouse=True)
 def clear():
-    """Clear global object map before each test."""
-    global_object.map._clear()
+    """Clear global object registry before each test."""
+    global_object.registry.clear()
 
 
 @pytest.mark.parametrize(
@@ -86,7 +86,7 @@ def test_dict_round_trip_unnamed_model_keeps_coefficient_names():
     )
 
     d = model.to_dict()
-    global_object.map._clear()  # the explicit name is kept, so free it first
+    global_object.registry.clear()  # the explicit name is kept, so free it first
     new_model = CoefficientModel.from_dict(d)
 
     assert 'unique_name' not in d

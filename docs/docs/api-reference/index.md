@@ -13,7 +13,7 @@ available in EasyScience.
 - [fitting](fitting.md) – Fitting and sampling, including `Fitter`,
   `Sampler` and the available minimizers.
 - [global_object](global_object.md) – Global singleton providing shared
-  services (logger, map, undo/redo stack, script manager).
+  services (logger, object registry, undo/redo stack, script manager).
 - [job](job.md) – Job and experiment abstractions for running and
   organizing analyses.
 - [utils](utils.md) – Miscellaneous utility functions and helpers (class

@@ -163,8 +163,8 @@ reported the same way, with the underlying error message appended.
   first and call `resolve_all_parameter_dependencies` on the collection
   as a whole.
 - **Keep the referenced objects alive.** Lookup goes through the global
-  object map, so a parameter that has been garbage-collected cannot be
-  found.
+  object registry, so a parameter that has been garbage-collected cannot
+  be found.
 - **Do not load the same data twice in one session.** Serializer ids are
   restored verbatim. If the original parameters, or an earlier load of
   the same file, are still alive, a dependency can be bound to that

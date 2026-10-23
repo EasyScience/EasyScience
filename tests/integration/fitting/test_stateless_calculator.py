@@ -41,9 +41,9 @@ class PolynomialCalculator:
 
 @pytest.fixture(autouse=True)
 def clear():
-    global_object.map._clear()
+    global_object.registry.clear()
     yield
-    global_object.map._clear()
+    global_object.registry.clear()
     if global_object.stack:
         global_object.stack.clear()
         global_object.stack.enabled = False

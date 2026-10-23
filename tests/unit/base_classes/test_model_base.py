@@ -104,8 +104,8 @@ class TestModelBase:
 
     @pytest.fixture
     def clear(self):
-        # Clear the global object map before each test
-        global_object.map._clear()
+        # Clear the global object registry before each test
+        global_object.registry.clear()
 
     def test_init(self):
         # When Then
@@ -195,7 +195,7 @@ class TestModelBase:
                 )
             ),
         )
-        global_object.map._clear()
+        global_object.registry.clear()
         # Then
         new_model = MockModelComponent.from_dict(obj_dict)
         # Expect
@@ -204,11 +204,10 @@ class TestModelBase:
         assert new_model._room_temperature.value == 22.0
         assert isinstance(new_model._temperature, Parameter)
         assert isinstance(new_model._room_temperature, DescriptorNumber)
-        assert len(global_object.map.vertices()) == 4
-        assert global_object.map.get_item_by_key('Parameter_0') is new_model._temperature
+        assert len(global_object.registry) == 4
+        assert global_object.registry['Parameter_0'] is new_model._temperature
         assert (
-            len([param for param in global_object.map.vertices() if param.startswith('Parameter')])
-            == 1
+            len([param for param in global_object.registry if param.startswith('Parameter')]) == 1
         )
 
     def test_from_dict_nested(self, monkeypatch, clear):
@@ -236,7 +235,7 @@ class TestModelBase:
                 )
             ),
         )
-        global_object.map._clear()
+        global_object.registry.clear()
         # Then
         new_model = MockModelFull.from_dict(obj_dict)
         # Expect
@@ -250,15 +249,14 @@ class TestModelBase:
         assert isinstance(new_model._area, Parameter)
         assert isinstance(new_model.component._temperature, Parameter)
         assert isinstance(new_model.component._room_temperature, DescriptorNumber)
-        assert len(global_object.map.vertices()) == 7
-        assert global_object.map.get_item_by_key('Parameter_0') in [
+        assert len(global_object.registry) == 7
+        assert global_object.registry['Parameter_0'] in [
             new_model._pressure,
             new_model._area,
             new_model.component._temperature,
         ]
         assert (
-            len([param for param in global_object.map.vertices() if param.startswith('Parameter')])
-            == 3
+            len([param for param in global_object.registry if param.startswith('Parameter')]) == 3
         )
 
     def test_from_dict_not_easyscience(self):
@@ -314,7 +312,7 @@ class TestModelBase:
             'temperature',
             property(lambda self: (_ for _ in ()).throw(Exception('Simulated failure'))),
         )
-        global_object.map._clear()
+        global_object.registry.clear()
         # Then Expect
         with pytest.raises(
             SyntaxError,

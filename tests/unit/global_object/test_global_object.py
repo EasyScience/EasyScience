@@ -16,7 +16,7 @@ class TestGlobalObject:
 
         # Expect
         assert global_object.log == GlobalObject().log
-        assert global_object.map == GlobalObject().map
+        assert global_object.registry == GlobalObject().registry
         assert global_object.stack == GlobalObject().stack
         assert global_object.debug == GlobalObject().debug
 
@@ -50,10 +50,10 @@ class TestGlobalObject:
 
     @pytest.fixture
     def clear_global_map(self):
-        """Clear global map before and after each test"""
-        global_object.map._clear()
+        """Clear global registry before and after each test"""
+        global_object.registry.clear()
         yield
-        global_object.map._clear()
+        global_object.registry.clear()
 
     def test_singleton_behavior(self):
         """Test that GlobalObject is truly a singleton"""
@@ -64,7 +64,7 @@ class TestGlobalObject:
         # Then
         assert obj1 is obj2
         assert id(obj1) == id(obj2)
-        assert obj1.map is obj2.map
+        assert obj1.registry is obj2.registry
         assert obj1.log is obj2.log
 
     def test_instantiate_stack(self, clear_global_map):
@@ -94,7 +94,7 @@ class TestGlobalObject:
         assert global_obj.debug is global_obj2.debug
 
     def test_generate_unique_name_empty_map(self, clear_global_map):
-        """Test unique name generation with empty map"""
+        """Test unique name generation with empty registry"""
         # Given
         global_obj = GlobalObject()
 
@@ -157,10 +157,10 @@ class TestGlobalObject:
         param2 = Parameter(display_name='test2', value=2.0)
 
         # Then
-        assert len(global_obj.map.vertices()) == 2
-        assert param1.unique_name in global_obj.map.vertices()
-        assert param2.unique_name in global_obj.map.vertices()
+        assert len(global_obj.registry) == 2
+        assert param1.unique_name in global_obj.registry
+        assert param2.unique_name in global_obj.registry
 
         # Test retrieval
-        retrieved1 = global_obj.map.get_item_by_key(param1.unique_name)
+        retrieved1 = global_obj.registry[param1.unique_name]
         assert retrieved1 is param1

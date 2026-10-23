@@ -36,7 +36,7 @@ class TestParameter:
 
     @pytest.fixture
     def clear(self):
-        global_object.map._clear()
+        global_object.registry.clear()
 
     def compare_parameters(self, parameter1: Parameter, parameter2: Parameter):
         assert parameter1.value == parameter2.value
