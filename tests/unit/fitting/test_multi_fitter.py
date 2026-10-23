@@ -246,7 +246,7 @@ class TestPrecomputeReshaping:
 
     def test_rejects_bare_parameter(self):
         """The ModelBase-gated EasyList rejects bare parameters (a
-        Parameter is a EasyBase, but EasyList only harvests parameters
+        Parameter is an EasyBase, but EasyList only harvests parameters
         from ModelBase members)."""
         model = Line(1.0, 0.5)
         with pytest.raises(TypeError, match='Items must be one of'):

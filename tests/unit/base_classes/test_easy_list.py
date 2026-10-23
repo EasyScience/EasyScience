@@ -115,11 +115,11 @@ class TestEasyList:
         assert el._protected_types == [Alpha, Beta]
 
     def test_init_invalid_protected_types_raises(self):
-        with pytest.raises(TypeError, match='protected_types must be a EasyBase subclass'):
+        with pytest.raises(TypeError, match='protected_types must be an EasyBase subclass'):
             EasyList(protected_types=int)
 
     def test_init_invalid_protected_types_list_raises(self):
-        with pytest.raises(TypeError, match='protected_types must be a EasyBase subclass'):
+        with pytest.raises(TypeError, match='protected_types must be an EasyBase subclass'):
             EasyList(protected_types=[int, str])
 
     def test_init_with_data_kwarg(self):
@@ -141,10 +141,10 @@ class TestEasyList:
         el.append(a)
         assert len(el) == 1
 
-    def test_append_non_newbase_raises(self):
+    def test_append_non_easybase_raises(self):
         el = EasyList()
         with pytest.raises(TypeError, match='Items must be one of'):
-            el.append('not a EasyBase')
+            el.append('not an EasyBase')
 
     def test_insert_wrong_type_raises(self):
         el = EasyList(protected_types=Alpha)

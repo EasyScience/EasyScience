@@ -74,7 +74,7 @@ class EasyList(ModelBase, MutableSequence[ProtectedType_]):
             self._protected_types = list(protected_types)
         else:
             raise TypeError(
-                'protected_types must be a EasyBase subclass or an iterable of EasyBase subclasses'
+                'protected_types must be an EasyBase subclass or an iterable of EasyBase subclasses'
             )
         self._data: List[ProtectedType_] = []
 
