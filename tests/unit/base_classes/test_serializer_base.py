@@ -17,8 +17,8 @@ import pytest
 from easyscience import DescriptorNumber
 from easyscience import Parameter
 from easyscience import global_object
-from easyscience.base_classes import ModelBase
 from easyscience.base_classes import EasyBase
+from easyscience.base_classes import ModelBase
 from easyscience.base_classes import SerializerBase
 
 

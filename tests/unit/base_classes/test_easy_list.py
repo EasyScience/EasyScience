@@ -6,9 +6,9 @@ import logging
 import pytest
 
 from easyscience import global_object
+from easyscience.base_classes.easy_base import EasyBase
 from easyscience.base_classes.easy_list import EasyList
 from easyscience.base_classes.model_base import ModelBase
-from easyscience.base_classes.easy_base import EasyBase
 from easyscience.variable import DescriptorNumber
 from easyscience.variable import Parameter
 

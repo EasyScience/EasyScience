@@ -19,8 +19,8 @@ from easyscience import global_object
 from easyscience.base_classes.serializer_base import SerializerBase
 from easyscience.variable.descriptor_base import DescriptorBase
 
-from .model_base import ModelBase
 from .easy_base import EasyBase
+from .model_base import ModelBase
 
 ProtectedType_ = TypeVar('ProtectedType', bound=EasyBase)
 
