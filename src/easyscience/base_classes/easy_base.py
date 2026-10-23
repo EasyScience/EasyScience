@@ -17,9 +17,9 @@ from easyscience import global_object
 from .serializer_base import SerializerBase
 
 
-class NewBase:
+class EasyBase:
     """
-    This is the new base class for easyscience objects.
+    This is the base class for easyscience objects.
 
     It provides serialization capabilities as well as unique naming and
     display naming.
@@ -132,7 +132,7 @@ class NewBase:
         return serializer._convert_to_dict(self, skip=skip, full_encode=False)
 
     @classmethod
-    def from_dict(cls, obj_dict: Dict[str, Any]) -> NewBase:
+    def from_dict(cls, obj_dict: Dict[str, Any]) -> EasyBase:
         """
         Re-create an EasyScience object from a full encoded dictionary.
 
@@ -144,7 +144,7 @@ class NewBase:
 
         Returns
         -------
-        NewBase
+        EasyBase
             Reformed EasyScience object.
 
         Raises
@@ -175,7 +175,7 @@ class NewBase:
         new_class_objs = list(k for k in dir(self.__class__) if not k.startswith('_'))
         return sorted(new_class_objs)
 
-    def __copy__(self) -> NewBase:
+    def __copy__(self) -> EasyBase:
         """Return a copy of the object."""
         temp = self.to_dict(skip=['unique_name'])
         new_obj = self.__class__.from_dict(temp)

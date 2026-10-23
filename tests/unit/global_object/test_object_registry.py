@@ -7,7 +7,7 @@ import pytest
 
 from easyscience import Parameter
 from easyscience import global_object
-from easyscience.base_classes import NewBase
+from easyscience.base_classes import EasyBase
 from easyscience.global_object.object_registry import ObjectRegistry
 
 
@@ -25,7 +25,7 @@ class TestObjectRegistry:
 
     @pytest.fixture
     def base_object(self):
-        return NewBase(display_name='test')
+        return EasyBase(display_name='test')
 
     @pytest.fixture
     def parameter_object(self):
@@ -46,7 +46,7 @@ class TestObjectRegistry:
 
     def test_weakref(self, clear):
         # When
-        test_obj = NewBase(display_name='test')
+        test_obj = EasyBase(display_name='test')
         assert global_object.registry.names() == [test_obj.unique_name]
         # Then
         del test_obj
@@ -103,7 +103,7 @@ class TestObjectRegistry:
         assert len(test_registry) == 0
 
     @pytest.mark.parametrize(
-        'cls, kwargs', [(NewBase, {'display_name': 'test'}), (Parameter, {'value': 2.0})]
+        'cls, kwargs', [(EasyBase, {'display_name': 'test'}), (Parameter, {'value': 2.0})]
     )
     def test_identical_unique_names_exception(self, clear, cls, kwargs):
         # When
@@ -117,17 +117,17 @@ class TestObjectRegistry:
         # When/Then
         with pytest.raises(ValueError, match='already exists'):
             # Try to add another object with same unique_name
-            duplicate_obj = NewBase(display_name='duplicate', unique_name=base_object.unique_name)
+            duplicate_obj = EasyBase(display_name='duplicate', unique_name=base_object.unique_name)
 
     def test_unique_name_change_still_in_registry(self, clear, base_object, parameter_object):
         # When
-        assert global_object.registry['NewBase_0'] == base_object
+        assert global_object.registry['EasyBase_0'] == base_object
         assert global_object.registry['Parameter_0'] == parameter_object
         # Then
         base_object.unique_name = 'test3'
         parameter_object.unique_name = 'test4'
         # Expect
-        assert global_object.registry['NewBase_0'] == base_object
+        assert global_object.registry['EasyBase_0'] == base_object
         assert global_object.registry['Parameter_0'] == parameter_object
         assert global_object.registry['test3'] == base_object
         assert global_object.registry['test4'] == parameter_object

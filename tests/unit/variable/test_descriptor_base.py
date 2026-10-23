@@ -6,8 +6,8 @@ import gc
 import pytest
 
 from easyscience import global_object
+from easyscience.base_classes import EasyBase
 from easyscience.base_classes import EasyList
-from easyscience.base_classes import NewBase
 from easyscience.variable import DescriptorNumber
 from easyscience.variable.descriptor_base import DescriptorBase
 
