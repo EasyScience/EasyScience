@@ -72,7 +72,7 @@ class TestEasyBase:
         assert obj.unique_name == 'new_unique_name'
         assert obj._default_unique_name is False
         assert global_object.registry['new_unique_name'] is obj
-        assert global_object.registry['EasyBase_0'] is obj
+        assert 'EasyBase_0' not in global_object.registry
 
     def test_unique_name_setter_invalid(self):
         # When
