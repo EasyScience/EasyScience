@@ -3,12 +3,11 @@
 Technique libraries built on EasyScience usually compute their model
 with an external package (for example refnx or refl1d for
 reflectometry). This page describes how such a calculator connects to
-the EasyScience model and to `Fitter`, from the library author's point
-of view.
+the EasyScience model and to `Fitter`.
 
 EasyScience does not provide a calculator base class, a factory or a
 registry. A calculator is any object your library defines; the only
-thing EasyScience sees is the fit function you hand to `Fitter`.
+thing EasyScience sees is the fit function passed to `Fitter`.
 
 ## General overview
 
@@ -45,8 +44,8 @@ across is a callable.
 
 - **EasyScience is the only store of parameter state.** Values,
   uncertainties, bounds, fixed flags and dependencies live in the
-  `Parameter` objects of the model. The calculator does not keep a
-  second copy that has to be kept in step.
+  `Parameter` objects of the model. The calculator does not keep its own
+  copy.
 - **The calculator reads the model when asked to calculate.** Each
   evaluation uses the current values of the independent parameters and
   of the dependent parameters derived from them.
@@ -112,7 +111,7 @@ print(model.slope.value, model.intercept.value)  # close to 3.0 and 1.5
 ```
 
 During the fit, the engine sets the parameter values and then calls the
-fit function, so the calculator always sees the values being tried.
+fit function, so the calculator always uses the values being tried.
 
 Dependent parameters need no special handling. If the intercept is made
 dependent on the slope, the engine fits only the slope and the
@@ -329,25 +328,3 @@ progress payload count the same quantity as the budget for each
 minimizer, so they are not comparable across minimizers. It is a budget,
 not a cancel button, and it does not bound elapsed time when an
 evaluation is slow.
-
-## Migrating from `InterfaceFactoryTemplate`
-
-EasyScience 3.0 removes the calculator factory and the parameter
-callbacks that let a backend own parameter state. Libraries built on the
-old mechanism need these changes:
-
-- Replace imports of `easyscience.fitting.calculators`
-  (`InterfaceFactoryTemplate`, `ItemContainer`) with calculator code
-  owned by your library. Backend selection and switching live there too.
-- Remove `Parameter(..., callback=...)`. It is no longer accepted and
-  raises `TypeError`. Read the current value with `Parameter.value`
-  inside your fit function instead; `value_no_call_back` is gone because
-  `value` no longer calls a backend.
-- Remove binding generation. The only thing EasyScience needs from your
-  library is the callable handed to `Fitter(model, fit_function)`.
-- `AnalysisBase` no longer takes an `interface` argument. Its
-  constructor arguments are keyword-only, and `AnalysisBase.calculator`
-  stores whatever object your library chooses.
-- If your code replaced a calculator instance after creating a `Fitter`,
-  hand the fitter a new fit function. A closure created earlier still
-  captures the previous calculator.

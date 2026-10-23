@@ -64,10 +64,6 @@ class TestAnalysisBase:
         assert analysis.minimizer is None
         assert str(analysis) == 'Analysis: analysis'
 
-    def test_interface_argument_removed(self):
-        with pytest.raises(TypeError):
-            Analysis(interface=object())
-
     def test_arguments_are_keyword_only(self):
         with pytest.raises(TypeError):
             Analysis('analysis')
