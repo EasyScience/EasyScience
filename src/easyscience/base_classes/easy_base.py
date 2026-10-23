@@ -77,9 +77,10 @@ class EasyBase:
                 self._unique_name = old_unique_name
                 raise
             if old_unique_name in registry and registry[old_unique_name] is self:
-                # Remove the old name from the registry if it points to this object.
-                # Note: This check is necessary because the registry may have been
-                # updated by another object with the same old name.
+                # Only drop the old name if it is still ours. If it was
+                # discarded while this object stayed alive (e.g. in
+                # ModelBase.from_dict or registry.clear()), it may since
+                # have been given to another object.
                 registry.discard(old_unique_name)
         self._default_unique_name = False
 

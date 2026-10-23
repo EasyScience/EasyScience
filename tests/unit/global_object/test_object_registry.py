@@ -152,6 +152,17 @@ class TestObjectRegistry:
         assert global_object.registry['EasyBase_0'] is base_object
         assert len(global_object.registry) == 1
 
+    def test_unique_name_reusable_after_rename(self, clear):
+        # When
+        first = EasyBase(unique_name='original')
+        first.unique_name = 'renamed'
+        # Then
+        second = EasyBase(unique_name='original')
+        # Expect
+        assert second.unique_name == 'original'
+        assert global_object.registry['original'] is second
+        assert global_object.registry['renamed'] is first
+
     def test_discard(self, clear, base_object):
         """Test discarding a name completely"""
         # Given
