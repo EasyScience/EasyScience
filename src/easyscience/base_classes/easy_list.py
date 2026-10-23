@@ -20,9 +20,9 @@ from easyscience.base_classes.serializer_base import SerializerBase
 from easyscience.variable.descriptor_base import DescriptorBase
 
 from .model_base import ModelBase
-from .new_base import NewBase
+from .easy_base import EasyBase
 
-ProtectedType_ = TypeVar('ProtectedType', bound=NewBase)
+ProtectedType_ = TypeVar('ProtectedType', bound=EasyBase)
 
 
 class EasyList(ModelBase, MutableSequence[ProtectedType_]):
@@ -31,7 +31,7 @@ class EasyList(ModelBase, MutableSequence[ProtectedType_]):
     def __init__(
         self,
         *args: ProtectedType_ | Iterable[ProtectedType_],
-        protected_types: list[Type[NewBase]] | Type[NewBase] | None = None,
+        protected_types: list[Type[EasyBase]] | Type[EasyBase] | None = None,
         unique_name: Optional[str] = None,
         display_name: Optional[str] = None,
         **kwargs: Any,
@@ -43,9 +43,9 @@ class EasyList(ModelBase, MutableSequence[ProtectedType_]):
         ----------
         *args : ProtectedType_ | Iterable[ProtectedType_]
             Initial items to add to the list.
-        protected_types : list[Type[NewBase]] | Type[NewBase] | None, default=None
-            Types that are allowed in the list. Can be a single NewBase
-            subclass or a list of them. If None, any ``NewBase`` object
+        protected_types : list[Type[EasyBase]] | Type[EasyBase] | None, default=None
+            Types that are allowed in the list. Can be a single EasyBase
+            subclass or a list of them. If None, any ``EasyBase`` object
             is accepted, including descriptors and parameters. Both bare
             descriptors and ``ModelBase`` items contribute to
             ``get_all_variables`` and hence to fitting. By default,
@@ -60,21 +60,21 @@ class EasyList(ModelBase, MutableSequence[ProtectedType_]):
         Raises
         ------
         TypeError
-            If ``protected_types`` is not a supported NewBase type or
+            If ``protected_types`` is not a supported EasyBase type or
             iterable of supported types.
         """
         super().__init__(unique_name=unique_name, display_name=display_name)
         if protected_types is None:
-            self._protected_types = [NewBase]
-        elif isinstance(protected_types, type) and issubclass(protected_types, NewBase):
+            self._protected_types = [EasyBase]
+        elif isinstance(protected_types, type) and issubclass(protected_types, EasyBase):
             self._protected_types = [protected_types]
         elif isinstance(protected_types, Iterable) and all(
-            issubclass(t, NewBase) for t in protected_types
+            issubclass(t, EasyBase) for t in protected_types
         ):
             self._protected_types = list(protected_types)
         else:
             raise TypeError(
-                'protected_types must be a NewBase subclass or an iterable of NewBase subclasses'
+                'protected_types must be a EasyBase subclass or an iterable of EasyBase subclasses'
             )
         self._data: List[ProtectedType_] = []
 
@@ -385,7 +385,7 @@ class EasyList(ModelBase, MutableSequence[ProtectedType_]):
         # protected_types holds classes, which the generic encoder
         # cannot handle; they are encoded explicitly below.
         dict_repr = super().to_dict(skip=[*skip, 'protected_types'])
-        if self._protected_types != [NewBase]:
+        if self._protected_types != [EasyBase]:
             dict_repr['protected_types'] = [
                 {'@module': cls_.__module__, '@class': cls_.__name__}
                 for cls_ in self._protected_types
@@ -394,7 +394,7 @@ class EasyList(ModelBase, MutableSequence[ProtectedType_]):
         return dict_repr
 
     @classmethod
-    def from_dict(cls, obj_dict: Dict[str, Any]) -> NewBase:
+    def from_dict(cls, obj_dict: Dict[str, Any]) -> EasyBase:
         """
         Re-create an EasyScience object from a full encoded dictionary.
 
@@ -406,7 +406,7 @@ class EasyList(ModelBase, MutableSequence[ProtectedType_]):
 
         Returns
         -------
-        NewBase
+        EasyBase
             Reformed EasyScience object.
 
         Raises

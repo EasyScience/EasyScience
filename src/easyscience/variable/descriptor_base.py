@@ -10,10 +10,10 @@ from typing import List
 from typing import Optional
 
 from easyscience import global_object
-from easyscience.base_classes.new_base import NewBase
+from easyscience.base_classes.easy_base import EasyBase
 
 
-class DescriptorBase(NewBase, metaclass=abc.ABCMeta):
+class DescriptorBase(EasyBase, metaclass=abc.ABCMeta):
     """
     This is the base of all variable descriptions for models.
 

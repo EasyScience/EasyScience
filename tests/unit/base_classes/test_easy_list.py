@@ -8,20 +8,20 @@ import pytest
 from easyscience import global_object
 from easyscience.base_classes.easy_list import EasyList
 from easyscience.base_classes.model_base import ModelBase
-from easyscience.base_classes.new_base import NewBase
+from easyscience.base_classes.easy_base import EasyBase
 from easyscience.variable import DescriptorNumber
 from easyscience.variable import Parameter
 
 
-class Alpha(NewBase):
-    """Concrete subclass of NewBase for testing."""
+class Alpha(EasyBase):
+    """Concrete subclass of EasyBase for testing."""
 
     def __init__(self, unique_name=None, display_name=None):
         super().__init__(unique_name=unique_name, display_name=display_name)
 
 
-class Beta(NewBase):
-    """Another concrete subclass of NewBase for testing."""
+class Beta(EasyBase):
+    """Another concrete subclass of EasyBase for testing."""
 
     def __init__(self, unique_name=None, display_name=None):
         super().__init__(unique_name=unique_name, display_name=display_name)
@@ -91,7 +91,7 @@ class TestEasyList:
         el = EasyList()
         assert len(el) == 0
         assert len(el._protected_types) == 1
-        assert el._protected_types[0] == NewBase
+        assert el._protected_types[0] == EasyBase
 
     def test_init_with_items(self):
         a = Alpha(unique_name='a1')
@@ -115,11 +115,11 @@ class TestEasyList:
         assert el._protected_types == [Alpha, Beta]
 
     def test_init_invalid_protected_types_raises(self):
-        with pytest.raises(TypeError, match='protected_types must be a NewBase subclass'):
+        with pytest.raises(TypeError, match='protected_types must be a EasyBase subclass'):
             EasyList(protected_types=int)
 
     def test_init_invalid_protected_types_list_raises(self):
-        with pytest.raises(TypeError, match='protected_types must be a NewBase subclass'):
+        with pytest.raises(TypeError, match='protected_types must be a EasyBase subclass'):
             EasyList(protected_types=[int, str])
 
     def test_init_with_data_kwarg(self):
@@ -144,7 +144,7 @@ class TestEasyList:
     def test_append_non_newbase_raises(self):
         el = EasyList()
         with pytest.raises(TypeError, match='Items must be one of'):
-            el.append('not a NewBase')
+            el.append('not a EasyBase')
 
     def test_insert_wrong_type_raises(self):
         el = EasyList(protected_types=Alpha)
@@ -550,7 +550,7 @@ class TestEasyList:
         assert d['protected_types'][0]['@class'] == 'Alpha'
 
     def test_to_dict_default_protected_type_not_serialized(self):
-        a1 = NewBase(unique_name='nb1')
+        a1 = EasyBase(unique_name='nb1')
         el = EasyList(a1, unique_name='my_list')
         d = el.to_dict()
         assert 'protected_types' not in d
@@ -653,9 +653,9 @@ class TestEasyList:
         assert el.get_all_variables() == []
 
     def test_get_all_variables_no_modelbase_elements(self):
-        """An EasyList with only plain NewBase elements (not ModelBase) should return an empty list."""
+        """An EasyList with only plain EasyBase elements (not ModelBase) should return an empty list."""
         a1 = Alpha(unique_name='a1')
-        a2 = NewBase(unique_name='nb1')
+        a2 = EasyBase(unique_name='nb1')
         el = EasyList(a1, a2)
         assert el.get_all_variables() == []
 
@@ -685,7 +685,7 @@ class TestEasyList:
         assert names == {'temperature', 'volume'}
 
     def test_get_all_variables_mixed_elements(self):
-        """Only ModelBase-derived elements contribute variables; plain NewBase elements are skipped."""
+        """Only ModelBase-derived elements contribute variables; plain EasyBase elements are skipped."""
         m1 = MockModel(unique_name='m1', temperature=10, volume=5.0)
         a1 = Alpha(unique_name='a1')
         el = EasyList(m1, a1)
@@ -776,9 +776,9 @@ class TestEasyList:
         assert outer_list.get_all_variables() == [p1, p2]
 
     def test_get_all_variables_nested_easylist(self):
-        """An EasyList containing another EasyList with mixed NewBase/ModelBase elements
+        """An EasyList containing another EasyList with mixed EasyBase/ModelBase elements
         should collect variables from the inner EasyList's ModelBase items,
-        skipping plain NewBase items."""
+        skipping plain EasyBase items."""
         inner_model = MockModel(unique_name='inner_m', temperature=50, volume=3.0)
         inner_plain = Alpha(unique_name='inner_a')
         inner_list = EasyList(inner_model, inner_plain)

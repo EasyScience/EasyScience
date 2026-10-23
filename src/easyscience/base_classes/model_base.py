@@ -15,11 +15,11 @@ if TYPE_CHECKING:
 
 from ..variable import Parameter
 from ..variable.descriptor_base import DescriptorBase
-from .new_base import NewBase
+from .easy_base import EasyBase
 from .serializer_base import SerializerBase
 
 
-class ModelBase(NewBase):
+class ModelBase(EasyBase):
     """
     This is the base class for all model classes in EasyScience. It
     provides methods to get parameters for fitting and analysis as well

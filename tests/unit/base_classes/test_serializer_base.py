@@ -18,7 +18,7 @@ from easyscience import DescriptorNumber
 from easyscience import Parameter
 from easyscience import global_object
 from easyscience.base_classes import ModelBase
-from easyscience.base_classes import NewBase
+from easyscience.base_classes import EasyBase
 from easyscience.base_classes import SerializerBase
 
 
@@ -675,23 +675,23 @@ class TestSerializerBase:
         # When
         serialized_dict = {
             '@module': 'easyscience.base_classes',
-            '@class': 'NewBase',
+            '@class': 'EasyBase',
             'display_name': 'test',
         }
-        monkeypatch.setattr(NewBase, 'from_dict', MagicMock())
+        monkeypatch.setattr(EasyBase, 'from_dict', MagicMock())
         # Then
         obj = SerializerBase._deserialize_value(serialized_dict)
         # Expect
-        NewBase.from_dict.assert_called_once_with(serialized_dict)
+        EasyBase.from_dict.assert_called_once_with(serialized_dict)
 
     def test_deserialize_value_easyscience_no_from_dict(self, monkeypatch):
         # When
         serialized_dict = {
             '@module': 'easyscience.base_classes',
-            '@class': 'NewBase',
+            '@class': 'EasyBase',
             'display_name': 'test',
         }
-        monkeypatch.delattr(NewBase, 'from_dict')
+        monkeypatch.delattr(EasyBase, 'from_dict')
         monkeypatch.setattr(SerializerBase, '_convert_from_dict', MagicMock())
         # Then
         obj = SerializerBase._deserialize_value(serialized_dict)
@@ -702,7 +702,7 @@ class TestSerializerBase:
         # When
         serialized_dict = {
             '@module': 'easyscience.base_classes',
-            '@class': 'NewBase',
+            '@class': 'EasyBase',
             'display_name': 'test',
         }
         monkeypatch.setattr(SerializerBase, '_import_class', MagicMock(side_effect=ImportError()))
