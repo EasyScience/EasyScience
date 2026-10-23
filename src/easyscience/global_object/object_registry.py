@@ -35,15 +35,14 @@ class ObjectRegistry:
         return len(self._store)
 
     def names(self) -> list[str]:
-        """All registered unique names, including retained old names."""
+        """All registered unique names."""
         return list(self._store)
 
     def objects(self) -> list[object]:
         """All registered objects that are still alive.
 
         The list holds strong references, so it keeps those objects alive
-        until it is released. An object renamed via ``unique_name`` keeps
-        its old name registered, so it can appear more than once.
+        until it is released.
         """
         return list(self._store.values())
 

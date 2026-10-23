@@ -119,7 +119,9 @@ class TestObjectRegistry:
             # Try to add another object with same unique_name
             duplicate_obj = EasyBase(display_name='duplicate', unique_name=base_object.unique_name)
 
-    def test_unique_name_change_still_in_registry(self, clear, base_object, parameter_object):
+    def test_unique_name_change_replaces_registry_entry(
+        self, clear, base_object, parameter_object
+    ):
         # When
         assert global_object.registry['EasyBase_0'] == base_object
         assert global_object.registry['Parameter_0'] == parameter_object
@@ -127,10 +129,39 @@ class TestObjectRegistry:
         base_object.unique_name = 'test3'
         parameter_object.unique_name = 'test4'
         # Expect
-        assert global_object.registry['EasyBase_0'] == base_object
-        assert global_object.registry['Parameter_0'] == parameter_object
+        assert 'EasyBase_0' not in global_object.registry
+        assert 'Parameter_0' not in global_object.registry
         assert global_object.registry['test3'] == base_object
         assert global_object.registry['test4'] == parameter_object
+
+    def test_unique_name_change_to_taken_name_keeps_old_entry(
+        self, clear, base_object, parameter_object
+    ):
+        # When Then
+        with pytest.raises(ValueError, match='already exists'):
+            base_object.unique_name = parameter_object.unique_name
+        # Expect
+        assert base_object.unique_name == 'EasyBase_0'
+        assert global_object.registry['EasyBase_0'] is base_object
+        assert global_object.registry['Parameter_0'] is parameter_object
+
+    def test_unique_name_change_to_same_name(self, clear, base_object):
+        # When
+        base_object.unique_name = 'EasyBase_0'
+        # Then
+        assert global_object.registry['EasyBase_0'] is base_object
+        assert len(global_object.registry) == 1
+
+    def test_unique_name_reusable_after_rename(self, clear):
+        # When
+        first = EasyBase(unique_name='original')
+        first.unique_name = 'renamed'
+        # Then
+        second = EasyBase(unique_name='original')
+        # Expect
+        assert second.unique_name == 'original'
+        assert global_object.registry['original'] is second
+        assert global_object.registry['renamed'] is first
 
     def test_discard(self, clear, base_object):
         """Test discarding a name completely"""
@@ -221,12 +252,11 @@ class TestObjectRegistry:
         # Then
         assert test_registry.objects() == [kept]
 
-    def test_objects_lists_renamed_object_once_per_name(self, clear, base_object):
-        """A renamed object keeps its old name, so it is returned once for each name."""
+    def test_objects_lists_renamed_object_once(self, clear, base_object):
+        """A renamed object drops its old name, so it is returned once."""
         # When
         base_object.unique_name = 'renamed'
 
         # Then
-        objects = global_object.registry.objects()
-        assert len(objects) == 2
-        assert all(obj is base_object for obj in objects)
+        assert global_object.registry.objects() == [base_object]
+        assert global_object.registry.names() == ['renamed']

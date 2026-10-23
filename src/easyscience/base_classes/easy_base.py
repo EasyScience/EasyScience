@@ -50,7 +50,7 @@ class EasyBase:
         """
         Set a new unique name for the object.
 
-        The old name is still kept in the registry.
+        The old name is removed from the registry.
 
         Parameters
         ----------
@@ -61,11 +61,27 @@ class EasyBase:
         ------
         TypeError
             If ``new_unique_name`` is not a string.
+        ValueError
+            If ``new_unique_name`` is already registered to another object.
         """
         if not isinstance(new_unique_name, str):
             raise TypeError('Unique name has to be a string.')
-        self._unique_name = new_unique_name
-        self._global_object.registry.add(self)
+        registry = self._global_object.registry
+        old_unique_name = self._unique_name
+        if new_unique_name != old_unique_name:
+            self._unique_name = new_unique_name
+            try:
+                registry.add(self)
+            except ValueError:
+                # Keep the old name if the new one is taken
+                self._unique_name = old_unique_name
+                raise
+            if old_unique_name in registry and registry[old_unique_name] is self:
+                # Only drop the old name if it is still ours. If it was
+                # discarded while this object stayed alive (e.g. in
+                # ModelBase.from_dict or registry.clear()), it may since
+                # have been given to another object.
+                registry.discard(old_unique_name)
         self._default_unique_name = False
 
     @property
