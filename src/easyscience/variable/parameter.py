@@ -18,7 +18,6 @@ from scipp import UnitError
 from scipp import Variable
 
 from easyscience import global_object
-from easyscience.global_object.undo_redo import property_stack
 
 from .descriptor_number import DescriptorNumber
 from .descriptor_number import notify_observers
@@ -526,7 +525,6 @@ class Parameter(DescriptorNumber):
         return self._scalar.value
 
     @value.setter
-    @property_stack
     def value(self, value: numbers.Number) -> None:
         """
         Set the value of self.
@@ -691,12 +689,9 @@ class Parameter(DescriptorNumber):
         return self._min.value
 
     @min.setter
-    @property_stack
     def min(self, min_value: numbers.Number) -> None:
         """
         Set the minimum value for fitting.
-
-        - implements undo/redo functionality.
 
         Parameters
         ----------
@@ -750,12 +745,9 @@ class Parameter(DescriptorNumber):
         return self._max.value
 
     @max.setter
-    @property_stack
     def max(self, max_value: numbers.Number) -> None:
         """
         Get the maximum value for fitting.
-
-        - implements undo/redo functionality.
 
         Parameters
         ----------
@@ -809,12 +801,9 @@ class Parameter(DescriptorNumber):
         return self._fixed
 
     @fixed.setter
-    @property_stack
     def fixed(self, fixed: bool) -> None:
         """
         Change the parameter vary while fitting state.
-
-        - implements undo/redo functionality.
 
         Parameters
         ----------
@@ -833,9 +822,6 @@ class Parameter(DescriptorNumber):
         if self._independent:
             self._fixed = fixed
         else:
-            if self._global_object.stack.enabled:
-                # Remove the recorded change from the stack
-                global_object.stack.pop()
             raise AttributeError(
                 'This is a dependent parameter, dependent parameters cannot be fixed.'
             )

@@ -41,7 +41,7 @@ easyscience                        # root — controls everything
 │   ├── easyscience.fitting.lmfit  # LMFit fitting runtime messages
 │   └── easyscience.fitting.dfo    # DFO fitting runtime messages
 ├── easyscience.variable           # parameter warnings
-└── easyscience.global_object      # undo/redo, debugging diagnostics
+└── easyscience.global_object      # debugging diagnostics
 ```
 
 Setting the level on a parent logger affects all its children, because

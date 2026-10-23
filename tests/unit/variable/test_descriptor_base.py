@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2026 EasyScience contributors <https://github.com/easyscience>
 # SPDX-License-Identifier: BSD-3-Clause
 
+import gc
+
 import pytest
 
 from easyscience import global_object
@@ -16,6 +18,9 @@ class TestDesciptorBase:
         # This avoids the error: TypeError: Can't instantiate abstract class DescriptorBase with abstract methods __init__
         DescriptorBase.__abstractmethods__ = set()
         DescriptorBase.__repr__ = lambda x: 'DescriptorBase'
+        # The registry holds weak references; collect objects left over from
+        # earlier tests so they cannot vanish between the count and the assert
+        gc.collect()
         self.objs_before_new_descriptor = len(global_object.registry)
         descriptor = DescriptorBase(
             description='description',
@@ -149,21 +154,12 @@ class TestDesciptorBase:
         with pytest.raises(TypeError):
             descriptor.url = url
 
-    @pytest.mark.parametrize('stack_enabled,stack_elements', [(False, 0), (True, 1)])
-    def test_set_display_name_without_global_object_stack(
-        self, descriptor: DescriptorBase, stack_enabled, stack_elements
-    ):
-        # When
-        descriptor.__repr__ = lambda x: 'DescriptorBase'
-        global_object.stack.clear()
-        global_object.stack._enabled = stack_enabled
-
-        # Then
+    def test_set_display_name(self, descriptor: DescriptorBase):
+        # When Then
         descriptor.display_name = 'new_display_name'
 
         # Expect
         assert descriptor.display_name == 'new_display_name'
-        assert len(global_object.stack.history) == stack_elements
 
     def test_copy(self, descriptor: DescriptorBase):
         # When Then

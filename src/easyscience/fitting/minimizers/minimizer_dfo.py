@@ -136,17 +136,11 @@ class DFO(MinimizerBase):
 
         self._p_0 = {f'p{key}': self._cached_pars[key].value for key in self._cached_pars.keys()}
 
-        # Why do we do this? Because a fitting template has to have global_object instantiated outside pre-runtime
-        from easyscience import global_object
-
-        stack_status = global_object.stack.enabled
-        global_object.stack.enabled = False
-
         kwargs = self._prepare_kwargs(tolerance, max_evaluations, **kwargs)
 
         try:
             model_results = self._dfo_fit(self._cached_pars, model, **kwargs)
-            self._set_parameter_fit_result(model_results, stack_status)
+            self._set_parameter_fit_result(model_results)
             results = self._gen_fit_results(model_results, weights)
         except FitError:
             self._restore_parameter_values()
@@ -154,8 +148,6 @@ class DFO(MinimizerBase):
         except Exception as e:
             self._restore_parameter_values()
             raise FitError(e)
-        finally:
-            global_object.stack.enabled = stack_status
         return results
 
     def _make_model(
@@ -288,9 +280,7 @@ class DFO(MinimizerBase):
 
         return adapter
 
-    def _set_parameter_fit_result(
-        self, fit_result: Any, stack_status: bool, ci: float = 0.95
-    ) -> None:
+    def _set_parameter_fit_result(self, fit_result: Any, ci: float = 0.95) -> None:
         """
         Update parameters to their final values and assign a std error
         to them.
@@ -299,27 +289,16 @@ class DFO(MinimizerBase):
         ----------
         fit_result : Any
             Fit object which contains info on the fit.
-        stack_status : bool
-            Whether the undo stack was enabled.
         ci : float, default=0.95
             Confidence interval for calculating errors. Default 95%. By
             default, 0.95.
         """
-        from easyscience import global_object
-
         pars = self._cached_pars
-        if stack_status:
-            self._restore_parameter_values()
-            global_object.stack.enabled = True
-            global_object.stack.beginMacro('Fitting routine')
 
         error_matrix = self._error_from_jacobian(fit_result.jacobian, fit_result.resid, ci)
         for idx, par in enumerate(pars.values()):
             par.value = fit_result.x[idx]
             par.error = error_matrix[idx, idx]
-
-        if stack_status:
-            global_object.stack.endMacro()
 
     def _gen_fit_results(self, fit_results: Any, weights: np.ndarray, **kwargs: Any) -> FitResults:
         """

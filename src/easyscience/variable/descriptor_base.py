@@ -11,7 +11,6 @@ from typing import Optional
 
 from easyscience import global_object
 from easyscience.base_classes.new_base import NewBase
-from easyscience.global_object.undo_redo import property_stack
 
 
 class DescriptorBase(NewBase, metaclass=abc.ABCMeta):

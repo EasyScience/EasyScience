@@ -54,10 +54,6 @@ class TestBumpsFit:
 
     def test_fit(self, minimizer: Bumps, monkeypatch) -> None:
         # When
-        from easyscience import global_object
-
-        global_object.stack.enabled = False
-
         # Mock FitDriver. driver.fit() returns (x, fx); driver.stderr() returns dx.
         mock_driver_instance = MagicMock()
         mock_driver_instance.clip = MagicMock()
@@ -92,7 +88,7 @@ class TestBumpsFit:
         minimizer._cached_pars_vals = {'mock_parm_1': (1, 0.0)}
 
         # Patch _set_parameter_fit_result. It now receives prefix-stripped names.
-        def fake_set_parameter_fit_result(fit_result, stack_status, par_names):
+        def fake_set_parameter_fit_result(fit_result, par_names):
             for index, name in enumerate(par_names):
                 minimizer._cached_pars[name].value = fit_result.x[index]
 
@@ -148,7 +144,7 @@ class TestBumpsFit:
         with pytest.raises(ValueError):
             minimizer.fit(x=np.array([1, 2, 3]), y=np.array([1, 2, 3]), weights=weights)
 
-    def test_set_parameter_fit_result_no_stack_status(self, minimizer: Bumps):
+    def test_set_parameter_fit_result(self, minimizer: Bumps):
         # When
         minimizer._cached_pars = {
             'a': MagicMock(),
@@ -166,7 +162,7 @@ class TestBumpsFit:
         mock_fit_result.dx = np.array([0.1, 0.2])
 
         # Then - names arrive already stripped of the minimizer prefix
-        minimizer._set_parameter_fit_result(mock_fit_result, False, ['a', 'b'])
+        minimizer._set_parameter_fit_result(mock_fit_result, ['a', 'b'])
 
         # Expect
         assert minimizer._cached_pars['a'].value == 1.0
@@ -184,7 +180,7 @@ class TestBumpsFit:
         mock_fit_result.x = np.array([1.0])
         mock_fit_result.dx = None
 
-        minimizer._set_parameter_fit_result(mock_fit_result, False, ['a'])
+        minimizer._set_parameter_fit_result(mock_fit_result, ['a'])
 
         assert minimizer._cached_pars['a'].value == 1.0
         assert minimizer._cached_pars['a'].error is None
@@ -355,10 +351,6 @@ class TestBumpsFit:
 
     def test_fit_progress_callback(self, minimizer: Bumps, monkeypatch) -> None:
         # When
-        from easyscience import global_object
-
-        global_object.stack.enabled = False
-
         progress_callback = MagicMock(return_value=True)
 
         mock_driver_instance = MagicMock()
@@ -525,10 +517,6 @@ class TestBumpsFit:
 
     def test_fit_exception_restores_values(self, minimizer: Bumps, monkeypatch) -> None:
         # When
-        from easyscience import global_object
-
-        global_object.stack.enabled = False
-
         from easyscience.variable import Parameter
 
         parameter = MagicMock(Parameter)
@@ -621,10 +609,6 @@ class TestFitToleranceAndBudgetDefaults:
 
     @staticmethod
     def _patch_driver_and_problem(minimizer: Bumps, monkeypatch) -> MagicMock:
-        from easyscience import global_object
-
-        global_object.stack.enabled = False
-
         mock_driver = MagicMock()
         mock_driver.fit = MagicMock(return_value=(np.array([42.0]), 0.0))
         mock_driver.stderr = MagicMock(return_value=np.array([0.1]))
@@ -723,10 +707,6 @@ class TestFitUnsuccessfulOutcomes:
 
     @staticmethod
     def _patch(minimizer: Bumps, monkeypatch, driver_result, history_step=None) -> MagicMock:
-        from easyscience import global_object
-
-        global_object.stack.enabled = False
-
         mock_driver = MagicMock()
         mock_driver.fit = MagicMock(return_value=driver_result)
         mock_driver.stderr = MagicMock(return_value=np.array([0.1]))
@@ -818,43 +798,6 @@ class TestFitUnsuccessfulOutcomes:
 
 
 # ===================================================================
-# _set_parameter_fit_result with stack_status=True
-# ===================================================================
-
-
-class TestSetParameterFitResultWithStack:
-    @pytest.fixture
-    def minimizer(self) -> Bumps:
-        return Bumps(
-            obj='obj',
-            fit_function='fit_function',
-            minimizer_enum=MagicMock(package='bumps', method='amoeba'),
-        )
-
-    def test_stack_status_true_calls_begin_end_macro(self, minimizer: Bumps) -> None:
-        from easyscience import global_object
-
-        global_object.stack.enabled = False
-
-        minimizer._cached_pars = {'a': MagicMock(), 'b': MagicMock()}
-        minimizer._cached_pars['a'].value = 'old_a'
-        minimizer._cached_pars['b'].value = 'old_b'
-        minimizer._restore_parameter_values = MagicMock()
-
-        mock_fit_result = MagicMock()
-        mock_fit_result.x = np.array([1.0, 2.0])
-        mock_fit_result.dx = np.array([0.1, 0.2])
-
-        minimizer._set_parameter_fit_result(mock_fit_result, True, ['a', 'b'])
-
-        assert minimizer._cached_pars['a'].value == 1.0
-        assert minimizer._cached_pars['a'].error == 0.1
-        assert minimizer._cached_pars['b'].value == 2.0
-        assert minimizer._cached_pars['b'].error == 0.2
-        minimizer._restore_parameter_values.assert_called_once()
-
-
-# ===================================================================
 # fit() with abort_test
 # ===================================================================
 
@@ -869,10 +812,6 @@ class TestFitWithAbortTest:
         )
 
     def test_abort_test_passed_to_fit_driver(self, minimizer: Bumps, monkeypatch) -> None:
-        from easyscience import global_object
-
-        global_object.stack.enabled = False
-
         mock_driver = MagicMock()
         mock_driver.clip = MagicMock()
         mock_driver.fit = MagicMock(return_value=(np.array([42.0]), 0.0))

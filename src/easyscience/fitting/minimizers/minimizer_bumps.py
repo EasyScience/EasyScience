@@ -218,12 +218,6 @@ class Bumps(MinimizerBase):
         )
         driver.clip()
 
-        # Why do we do this? Because a fitting template has to have global_object instantiated outside pre-runtime
-        from easyscience import global_object
-
-        stack_status = global_object.stack.enabled
-        global_object.stack.enabled = False
-
         try:
             # Drive the fit through the local FitDriver instance so the supplied
             # `monitors` (including the optional progress callback monitor) are
@@ -271,9 +265,7 @@ class Bumps(MinimizerBase):
             if best_x is None:
                 self._restore_parameter_values()
             else:
-                self._set_parameter_fit_result(
-                    model_results, stack_status, parameter_names(problem)
-                )
+                self._set_parameter_fit_result(model_results, parameter_names(problem))
             results = self._gen_fit_results(
                 model_results,
                 max_evaluations=max_evaluations,
@@ -282,8 +274,6 @@ class Bumps(MinimizerBase):
         except Exception as e:
             self._restore_parameter_values()
             raise FitError(e) from e
-        finally:
-            global_object.stack.enabled = stack_status
         return results
 
     @staticmethod
@@ -333,7 +323,6 @@ class Bumps(MinimizerBase):
     def _set_parameter_fit_result(
         self,
         fit_result: Any,
-        stack_status: bool,
         par_names: list[str],
     ) -> None:
         """
@@ -344,29 +333,18 @@ class Bumps(MinimizerBase):
         ----------
         fit_result : Any
             BUMPS OptimizeResult containing best-fit values and errors.
-        stack_status : bool
-            Whether the undo stack was enabled.
         par_names : list[str]
             Cached-parameter names in BUMPS problem order, already
             stripped of ``PARAMETER_PREFIX``. As seen in
             :func:`~easyscience.fitting.minimizers.bumps_utils.parameter_names`.
         """
-        from easyscience import global_object
-
         pars = self._cached_pars
         x_result = np.asarray(fit_result.x)
         stderr = None if fit_result.dx is None else np.asarray(fit_result.dx)
 
-        if stack_status:
-            self._restore_parameter_values()
-            global_object.stack.enabled = True
-            global_object.stack.beginMacro('Fitting routine')
-
         for index, name in enumerate(par_names):
             pars[name].value = x_result[index]
             pars[name].error = None if stderr is None else stderr[index]
-        if stack_status:
-            global_object.stack.endMacro()
 
     def _gen_fit_results(
         self,

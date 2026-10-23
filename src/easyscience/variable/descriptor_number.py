@@ -17,9 +17,6 @@ import scipp as sc
 from scipp import UnitError
 from scipp import Variable
 
-from easyscience.global_object.undo_redo import PropertyStack
-from easyscience.global_object.undo_redo import property_stack
-
 from .descriptor_base import DescriptorBase
 
 
@@ -257,7 +254,6 @@ class DescriptorNumber(DescriptorBase):
 
     @value.setter
     @notify_observers
-    @property_stack
     def value(self, value: numbers.Number) -> None:
         """
         Set the value of self.
@@ -314,7 +310,6 @@ class DescriptorNumber(DescriptorBase):
 
     @variance.setter
     @notify_observers
-    @property_stack
     def variance(self, variance_float: float) -> None:
         """
         Set the variance.
@@ -355,7 +350,6 @@ class DescriptorNumber(DescriptorBase):
 
     @error.setter
     @notify_observers
-    @property_stack
     def error(self, value: float) -> None:
         """
         Set the standard deviation for the parameter.
@@ -404,25 +398,11 @@ class DescriptorNumber(DescriptorBase):
             raise TypeError(f'{unit_str=} must be a string representing a valid scipp unit')
         new_unit = sc.Unit(unit_str)
 
-        # Save the current state for undo/redo
-        old_scalar = self._scalar
-
         # Perform the unit conversion
         try:
             new_scalar = self._scalar.to(unit=new_unit)
         except Exception as e:
             raise UnitError(f'Failed to convert unit: {e}') from e
-
-        # Define the setter function for the undo stack
-        def set_scalar(obj, scalar):
-            obj._scalar = scalar
-
-        # Push to undo stack
-        self._global_object.stack.push(
-            PropertyStack(
-                self, set_scalar, old_scalar, new_scalar, text=f'Convert unit to {unit_str}'
-            )
-        )
 
         # Update the scalar
         self._scalar = new_scalar

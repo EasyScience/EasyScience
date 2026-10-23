@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import gc
-from unittest.mock import patch
 
 import pytest
 from easy_test_models import CoefficientModel
@@ -35,12 +34,8 @@ class TestGlobalObjectIntegration:
     def clear_all(self):
         """Clear everything before and after each test"""
         global_object.registry.clear()
-        if global_object.stack:
-            global_object.stack.clear()
         yield
         global_object.registry.clear()
-        if global_object.stack:
-            global_object.stack.clear()
 
     def test_parameter_lifecycle_integration(self, clear_all):
         """Test complete parameter lifecycle with global object integration"""
@@ -53,23 +48,12 @@ class TestGlobalObjectIntegration:
         # Then - Should be registered in global registry
         assert param.unique_name in global_obj.registry
 
-        # When - Modify parameter with undo/redo enabled
-        if not global_obj.stack:
-            global_obj.instantiate_stack()
-        global_obj.stack.enabled = True
-
-        original_value = param.value
+        # When - Modify parameter
         param.value = 20.0
 
-        # Then - Should be able to undo/redo
+        # Then
         assert param.value == 20.0
-        assert global_obj.stack.canUndo()
-
-        global_obj.stack.undo()
-        assert param.value == original_value
-
-        global_obj.stack.redo()
-        assert param.value == 20.0
+        assert global_obj.registry[param.unique_name] is param
 
         # When - Delete parameter
         param_name = param.unique_name
@@ -107,16 +91,10 @@ class TestGlobalObjectIntegration:
         assert obj.width is param2
 
         # When - Modify through the container
-        if not global_obj.stack:
-            global_obj.instantiate_stack()
-        global_obj.stack.enabled = True
-
         obj.length.value = 15.0
 
-        # Then - Should be able to undo
-        assert global_obj.stack.canUndo()
-        global_obj.stack.undo()
-        assert obj.length.value == 10.0
+        # Then - The change is seen through the shared parameter
+        assert param1.value == 15.0
 
     def test_unique_name_generation_integration(self, clear_all):
         """Test unique name generation across different object types"""
@@ -180,55 +158,6 @@ class TestGlobalObjectIntegration:
 
         # Then - registry should be empty
         assert len(global_obj.registry) == 0
-
-    def test_complex_undo_redo_scenario(self, clear_all):
-        """Test complex undo/redo scenario with multiple objects"""
-        # Given
-        global_obj = GlobalObject()
-        if not global_obj.stack:
-            global_obj.instantiate_stack()
-        global_obj.stack.enabled = True
-
-        # Create a complex object structure
-        length = Parameter(display_name='length', value=10.0, unit='m')
-        width = Parameter(display_name='width', value=5.0, unit='m')
-        height = Parameter(display_name='height', value=3.0, unit='m')
-
-        box = Container(display_name='box', length=length, width=width, height=height)
-
-        # When - Perform multiple operations in a macro
-        global_obj.stack.beginMacro('Resize box')
-
-        length.value = 15.0
-        width.value = 7.0
-        height.value = 4.0
-
-        global_obj.stack.endMacro()
-
-        # Then - All changes should be applied
-        assert box.length.value == 15.0
-        assert box.width.value == 7.0
-        assert box.height.value == 4.0
-
-        # When - Undo macro
-        assert global_obj.stack.canUndo()
-        assert global_obj.stack.undoText() == 'Resize box'
-
-        global_obj.stack.undo()
-
-        # Then - All changes should be reverted
-        assert box.length.value == 10.0
-        assert box.width.value == 5.0
-        assert box.height.value == 3.0
-
-        # When - Redo macro
-        assert global_obj.stack.canRedo()
-        global_obj.stack.redo()
-
-        # Then - All changes should be reapplied
-        assert box.length.value == 15.0
-        assert box.width.value == 7.0
-        assert box.height.value == 4.0
 
     def test_error_handling_integration(self, clear_all):
         """Test error handling across the global object system"""
@@ -319,38 +248,6 @@ class TestGlobalObjectIntegration:
         assert new_obj.display_name == 'test_obj'
         assert new_obj.coefficients[0].value == param.value
 
-    def test_debug_mode_integration(self, clear_all):
-        """Test debug mode behavior across the system"""
-        # Given
-        global_obj = GlobalObject()
-        original_debug = global_obj.debug
-
-        try:
-            # When - Enable debug mode
-            global_obj.debug = True
-
-            if not global_obj.stack:
-                global_obj.instantiate_stack()
-            global_obj.stack.enabled = True
-
-            # Create and modify objects
-            param = Parameter(display_name='debug_test', value=1.0)
-
-            # This should trigger debug output in property_stack decorator
-            with patch('builtins.print') as mock_print:
-                param.value = 2.0
-
-                # Should have printed debug info (if debug mode works)
-                # Note: This depends on the debug implementation details
-
-            # Test that operations still work normally
-            assert param.value == 2.0
-            assert global_obj.stack.canUndo()
-
-        finally:
-            # Restore original debug state
-            global_obj.debug = original_debug
-
     def test_concurrent_access_simulation(self, clear_all):
         """Simulate concurrent access patterns"""
         import threading
@@ -360,12 +257,15 @@ class TestGlobalObjectIntegration:
         global_obj = GlobalObject()
         results = []
         errors = []
+        # The registry holds weak references, so keep the objects alive
+        params = []
 
         def create_objects(thread_id, count=10):
             """Create objects in a thread"""
             try:
                 for i in range(count):
                     param = Parameter(display_name=f'thread_{thread_id}_param_{i}', value=float(i))
+                    params.append(param)
                     results.append(param.unique_name)
                     time.sleep(0.001)  # Small delay to encourage race conditions
             except Exception as e:

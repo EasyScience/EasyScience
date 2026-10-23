@@ -100,12 +100,8 @@ class TestSerializerBase:
     def clear(self):
         """Clear everything before and after each test"""
         global_object.registry.clear()
-        if global_object.stack:
-            global_object.stack.clear()
         yield
         global_object.registry.clear()
-        if global_object.stack:
-            global_object.stack.clear()
 
     @pytest.fixture
     def serializer(self):
